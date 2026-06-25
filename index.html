@@ -1068,6 +1068,7 @@
         <span id="syncStatus" style="font-size:11px;font-family:var(--mono);color:var(--ink-faint);cursor:pointer;" title="Click to refresh from sheet">○ idle</span>
         <button class="export" id="tutOpenBtn" title="How it works" style="margin-right:2px">? Help</button>
         <button class="export" id="exportBtn" title="Copy this category's list to paste into chat">⤓ Export</button>
+        <button class="export" id="wanBackBtn" title="Back to welcome screen" style="background:transparent;border-color:rgba(255,255,255,.2);color:var(--on-dark-soft);">← Welcome</button>
       </div>
     </div>
   </header>
@@ -3612,6 +3613,18 @@ Enterprise / specialty:
   Micron 7450 3.84TB good health → $699.99
   KC3000 SSDs → leave at $0.00 (no price set — research required before publishing)
 
+Kingston DC-series enterprise SATA (RTL0624 pricing tiers):
+  DC400 480GB:    86-100%=$29.99 | 66-85%=$26.99 | 26-65%=$21.99 | ≤25%=$14.99
+  DC500R 480GB:   86-100%=$39.99 | 66-85%=$34.99 | 26-65%=$27.99 | ≤25%=$19.99
+  DC500R 960GB:   86-100%=$109.99 | 66-85%=$94.99 | 26-65%=$74.99 | ≤25%=$54.99
+  DC500R 3840GB:  86-100%=$419.99 | 66-85%=$369.99 | 26-65%=$284.99 | ≤25%=$209.99
+  DC600M 480GB:   86-100%=$79.99 | 66-85%=$69.99 | 26-65%=$54.99 | ≤25%=$39.99
+  DC600M 960GB:   86-100%=$109.99 | 66-85%=$94.99 | 26-65%=$74.99 | ≤25%=$54.99
+  Special: DC500R 3840GB For Parts (fails redundancy) → $320.00 regardless of health %
+
+Title format for DC-series: Brand Model MPN FormFactor — SizeGB (SizeTB) | X% Health
+Example: Kingston DC500R SEDC500R/480G 2.5" SATA SSD — 480GB | 98% Health
+
 ⚠️ RAM PRICING: Always double or triple check RAM prices against current sold comps on eBay — especially server-grade (ECC, RDIMM) and enterprise modules. Market value varies significantly by spec, rank, and capacity. Never guess — research first.
 
 ═══════════════════════════════════════════════
@@ -3844,11 +3857,30 @@ async function blitzLoadShopify(){
   const filter = document.getElementById('blitzBatchFilter').value.trim();
   toast('Loading drafts from Shopify…');
   try{
-    // Pull via Abribook GS proxy or direct Shopify API if available
-    // For now build from session entries as fallback
-    blitzReviewInit();
-    toast('Loaded from session — Shopify pull coming soon');
-  } catch(e){ toast('Could not load from Shopify'); }
+    const r = await fetch(GS_URL+'?action=haz_shopify_search&q='+encodeURIComponent(filter||'')+'&status=draft&t='+Date.now());
+    const j = await r.json();
+    if(j.ok && j.listings && j.listings.length){
+      _brQueue = j.listings.map((l,i)=>({
+        id: Date.now()+i,
+        sku: l.sku || 'SKU-'+i,
+        title: l.title,
+        price: l.price||'',
+        qty: 1,
+        metafields: {},
+        desc: l.title,
+        flagged: false,
+        approved: false,
+      }));
+      _brIdx = 0;
+      _brFlagged = [];
+      blitzRenderReview();
+      toast('Loaded '+j.listings.length+' draft listings');
+    } else {
+      toast('No drafts found — check batch filter or Shopify token');
+    }
+  } catch(e){
+    toast('Could not load from Shopify — check Apps Script');
+  }
 }
 
 function blitzReviewInit(){
@@ -4004,6 +4036,9 @@ document.addEventListener('keydown', ev=>{
 document.getElementById('welcomeWan').addEventListener('click', ()=>{
   document.getElementById('welcomeBackdrop').classList.add('hidden');
 });
+document.getElementById('wanBackBtn').addEventListener('click', ()=>{
+  document.getElementById('welcomeBackdrop').classList.remove('hidden');
+});
 document.getElementById('welcomeHaz').addEventListener('click', ()=>{
   document.getElementById('welcomeBackdrop').classList.add('hidden');
   hazOpen();
@@ -4014,11 +4049,125 @@ document.getElementById('hazBack').addEventListener('click', ()=>{
 });
 
 function hazOpen(){
+  hazBoardLoad();
   document.getElementById('hazWrap').classList.add('show');
-  document.getElementById('hazItemInput').focus();
+  document.getElementById('hazChatInput').focus();
+  if(_boardCards.length) document.getElementById('hazBoardBtn').style.background='rgba(74,222,128,.28)';
 }
 
 // ── Haz Logic ─────────────────────────────────────────────────────
+// ── Haz Store Price Database (SYG sold orders + active listings) ──────
+// Sources: sold = confirmed sell-through price, active = current asking price
+// Sold prices are weighted higher in matching — they reflect real market value
+const HAZ_STORE_PRICES = [
+  // Storage Drives (sold)
+  {title:"Samsung 860 EVO 1TB SSD", keywords:["860 evo 1tb","samsung 860 evo","mz-76e1t0"], price:109.99, source:"sold"},
+  {title:"Kingston KC2500 1TB NVMe", keywords:["kc2500 1tb","skc2500m8/1000g","kc2500 1000g","kc2500 1t"], price:109.99, source:"sold"},
+  {title:"Kingston KC2500 2TB NVMe", keywords:["kc2500 2tb","skc2500m8/2000g","kc2500 2000g","kc2500 2t"], price:109.99, source:"sold"},
+  {title:"Kingston KC3000 1TB NVMe", keywords:["kc3000 1tb","skc3000s/1024g","kc3000 1024","kc3000 1t"], price:119.99, source:"sold"},
+  {title:"Kingston KC3000 4TB NVMe", keywords:["kc3000 4tb","skc3000d/4096g","kc3000 4096","kc3000 4t"], price:399.99, source:"sold"},
+  {title:"Kingston DC400 480GB SATA", keywords:["dc400 480","sedc400s37/480g","kingston dc400"], price:26.99, source:"sold"},
+  {title:"Kingston DC500R 480GB SATA", keywords:["dc500r 480","sedc500r/480g","kingston dc500r 480"], price:39.99, source:"sold"},
+  {title:"Kingston DC500R 1.92TB SATA", keywords:["dc500r 1.92","sedc500r/1920g","dc500r 1920"], price:189.99, source:"sold"},
+  {title:"Kingston DC600M 960GB SATA", keywords:["dc600m 960","sedc600m/960g","kingston dc600m 960"], price:109.99, source:"sold"},
+  {title:"Intel 660p 1TB NVMe", keywords:["intel 660p 1tb","ssdpeknw010t8","intel ssd 660p","intel 660p"], price:86.99, source:"sold"},
+  {title:"Micron 7450 3.84TB NVMe Enterprise", keywords:["micron 7450 3.84","mtfdkbg3t8tfr","7450 3840","micron 7450 3tb"], price:699.99, source:"sold"},
+  {title:"Micron 7450 1.92TB NVMe Enterprise", keywords:["micron 7450 1.92","mtfdkbg1t9tfr","7450 1920","micron 7450 1tb"], price:419.99, source:"sold"},
+  {title:"Samsung 990 Pro 2TB NVMe", keywords:["990 pro 2tb","mz-v9p2t0","samsung 990 pro"], price:109.99, source:"sold"},
+  {title:"Samsung 990 EVO Plus 4TB NVMe", keywords:["990 evo plus 4tb","mz-v9s4t0","990 evo 4tb"], price:439.99, source:"sold"},
+  {title:"Samsung PM883 1.92TB SATA", keywords:["pm883 1.92","mz-7lh1t90","pm883 1920","samsung pm883"], price:189.99, source:"sold"},
+  {title:"Seagate Barracuda 1TB 2.5 HDD", keywords:["barracuda 1tb","st1000lm049","seagate barracuda laptop"], price:59.99, source:"sold"},
+  // RAM (sold)
+  {title:"SK Hynix DDR5 16GB 4800MHz SODIMM", keywords:["sk hynix ddr5","hynix ddr5 16gb","hmcg78mebsa092n","hynix ddr5 sodimm"], price:116.67, source:"sold"},
+  {title:"Micron 32GB DDR4 PC4-3200AA Kit", keywords:["micron 32gb ddr4","pc4-3200aa 32gb","micron ddr4 32gb"], price:59.99, source:"sold"},
+  {title:"Corsair Vengeance DDR5 Light Kit", keywords:["corsair vengeance ddr5","cmhlekit-d5","ddr5 light kit","corsair light kit"], price:9.99, source:"sold"},
+  // Laptops (sold)
+  {title:"Apple MacBook Air 2019 13 i5 8GB 256GB", keywords:["macbook air 2019","macbook a1932","macbook 2019"], price:170.00, source:"sold"},
+  {title:"Apple MacBook Air 2020 13 i5 8GB 256GB", keywords:["macbook air 2020","macbook a2289","macbook 2020"], price:244.99, source:"sold"},
+  {title:"Apple MacBook Pro 13 2016 i5 8GB 256GB", keywords:["macbook pro 13 2016","a1708 2016","macbook pro 2016 13"], price:154.99, source:"sold"},
+  {title:"Apple MacBook Pro 13 2016 TouchBar", keywords:["macbook pro touchbar 2016","a1706 2016","macbook touchbar 2016"], price:159.99, source:"sold"},
+  {title:"Apple MacBook Pro 16 2021 M1 Max", keywords:["macbook pro 16 2021","a2485 m1 max","macbook m1 max","macbook pro m1 max"], price:1249.99, source:"sold"},
+  {title:"Apple MacBook Pro 13 2017 i5 16GB 512GB", keywords:["macbook pro 13 2017","macbook pro 2017","a1706 2017"], price:140.00, source:"active"},
+  {title:"Dell OptiPlex 5080 i7 16GB", keywords:["dell optiplex 5080","optiplex 5080","dell optiplex i7"], price:189.99, source:"sold"},
+  {title:"Dell Precision M4600 i7", keywords:["dell precision m4600","precision m4600","dell precision laptop"], price:82.97, source:"sold"},
+  {title:"Dell Latitude 5480 For Parts", keywords:["dell latitude 5480","latitude 5480 parts"], price:44.99, source:"sold"},
+  {title:"HP ProBook x360 435 G7", keywords:["hp probook x360","probook 435","hp probook ryzen"], price:154.99, source:"sold"},
+  {title:"ASRock B460M Motherboard Bundle", keywords:["asrock b460m","b460m pro4","asrock i5 10400"], price:179.99, source:"sold"},
+  // GPUs (sold)
+  {title:"Gigabyte GTX 1070 8GB For Parts", keywords:["gtx 1070 parts","1070 for parts","geforce gtx 1070 parts"], price:49.99, source:"sold"},
+  {title:"EVGA RTX 2070 XC Ultra 8GB", keywords:["rtx 2070","evga 2070","geforce rtx 2070"], price:159.99, source:"sold"},
+  {title:"NVIDIA Quadro M5000 8GB", keywords:["quadro m5000","nvidia quadro m5000","m5000 gpu"], price:74.99, source:"sold"},
+  // Consoles (sold + active)
+  {title:"Microsoft Xbox One 500GB", keywords:["xbox one 500gb","xbox one 1540","xbox one original"], price:64.99, source:"sold"},
+  {title:"Microsoft Xbox One S 500GB", keywords:["xbox one s","xbox one s 500gb","xbox 1681"], price:159.97, source:"sold"},
+  {title:"Microsoft Xbox Series S 512GB", keywords:["xbox series s","series s console","xbox s 512gb","series s"], price:210.00, source:"active"},
+  {title:"Nintendo 3DS", keywords:["nintendo 3ds","3ds console","ctr-001","2ds","nintendo 2ds"], price:180.00, source:"active"},
+  // Phones (sold + active)
+  {title:"Samsung Galaxy S26 256GB", keywords:["galaxy s26","samsung s26","sm-s942u"], price:529.99, source:"sold"},
+  {title:"Samsung Galaxy A37 5G 128GB", keywords:["galaxy a37","samsung a37 5g","sm-s376v"], price:99.99, source:"sold"},
+  {title:"Samsung Galaxy S21 FE 128GB", keywords:["galaxy s21 fe","s21 fe","samsung s21 fe"], price:119.99, source:"active"},
+  {title:"Apple iPhone SE 3rd Gen 64GB", keywords:["iphone se 3rd","iphone se 2022","se 3rd gen","iphone se"], price:120.00, source:"active"},
+  {title:"Apple iPhone 15 Pro 256GB", keywords:["iphone 15 pro","15 pro iphone"], price:350.00, source:"active"},
+  // Tablets (sold + active)
+  {title:"Apple iPad Pro 12.9 3rd Gen 64GB", keywords:["ipad pro 12.9","ipad pro 3rd","a1876 ipad","ipad pro 64gb"], price:252.97, source:"sold"},
+  {title:"Samsung Galaxy Tab A7 Lite 32GB", keywords:["galaxy tab a7 lite","samsung tab a7","sm-t220"], price:39.99, source:"sold"},
+  // Other Electronics (sold + active)
+  {title:"Sony PlayStation Portal", keywords:["playstation portal","ps portal","cfi-y1001","ps5 remote player"], price:134.99, source:"sold"},
+  {title:"DJI Pocket 2 Creator Combo", keywords:["dji pocket 2","pocket 2 creator","dji pocket"], price:244.99, source:"sold"},
+  {title:"Samsung Galaxy Watch FE 40mm", keywords:["galaxy watch fe","samsung watch fe","sm-r866u"], price:54.97, source:"active"},
+  {title:"Apple TV 3rd Gen", keywords:["apple tv 3rd","apple tv a1469","apple tv 3"], price:24.00, source:"active"},
+  {title:"Apple TV 1st Gen", keywords:["apple tv 1st","apple tv vintage","apple tv a1218","apple tv 1"], price:48.97, source:"active"},
+  {title:"Marantz SR6006 7.1 Receiver", keywords:["marantz sr6006","marantz receiver","marantz surround"], price:150.00, source:"active"},
+  {title:"Sony STR-DE485 Receiver", keywords:["sony str-de485","sony receiver str","str-de485"], price:39.99, source:"active"},
+  {title:"Bravius TK-1000 Projector", keywords:["bravius projector","tk-1000 projector","bravius tk1000"], price:199.99, source:"active"},
+  {title:"Ryobi P271 Power Drill", keywords:["ryobi p271","ryobi drill","ryobi power drill"], price:34.99, source:"active"},
+  {title:"dbx 263A De-Esser", keywords:["dbx 263a","de-esser","dbx deesser"], price:69.99, source:"sold"},
+  {title:"AXIS P1265 Network Camera", keywords:["axis p1265","axis camera","axis network camera"], price:209.00, source:"sold"},
+  // Video Games - specific high value (sold)
+  {title:"Mario Party 8 Wii", keywords:["mario party 8","mario party wii"], price:35.00, source:"sold"},
+  {title:"Guitar Hero Metallica Wii", keywords:["guitar hero metallica"], price:39.99, source:"sold"},
+  {title:"Tatsunoko vs Capcom Wii", keywords:["tatsunoko vs capcom","tvc wii"], price:39.99, source:"sold"},
+  {title:"Jurassic Park Operation Genesis Xbox", keywords:["jurassic park operation genesis","operation genesis"], price:60.00, source:"sold"},
+  {title:"Super Smash Bros Brawl Wii", keywords:["smash bros brawl","smash bros wii","ssbb"], price:12.99, source:"sold"},
+  {title:"Pokemon Battle Revolution Wii", keywords:["pokemon battle revolution","battle revolution wii"], price:18.00, source:"sold"},
+  {title:"Michael Jackson Experience Wii", keywords:["michael jackson experience","mj experience wii"], price:21.00, source:"sold"},
+  {title:"Grand Theft Auto Trilogy PS2", keywords:["gta trilogy ps2","grand theft auto trilogy"], price:20.00, source:"sold"},
+  {title:"Plants vs Zombies PS3", keywords:["plants vs zombies ps3","pvz ps3"], price:20.00, source:"sold"},
+  {title:"Midnight Club LA Remix PSP", keywords:["midnight club la psp","midnight club la remix"], price:31.00, source:"sold"},
+  // Video Games - category averages (from sold history)
+  {title:"PS4 Game", keywords:["ps4 game","playstation 4 game","ps4 disc"], price:10.00, source:"active"},
+  {title:"PS5 Game", keywords:["ps5 game","playstation 5 game","ps5 disc"], price:25.00, source:"active"},
+  {title:"Wii Game", keywords:["wii game","nintendo wii game","wii disc"], price:10.00, source:"active"},
+  {title:"Nintendo Switch Game", keywords:["switch game","nintendo switch game","switch cartridge"], price:25.00, source:"active"},
+  {title:"Nintendo 3DS Game", keywords:["3ds game","nintendo 3ds game","3ds cartridge"], price:20.00, source:"active"},
+  {title:"Xbox 360 Game", keywords:["xbox 360 game","360 game","xbox 360 disc"], price:7.00, source:"active"},
+  {title:"PS3 Game", keywords:["ps3 game","playstation 3 game","ps3 disc"], price:6.00, source:"active"},
+  {title:"PS2 Game", keywords:["ps2 game","playstation 2 game","ps2 disc"], price:8.00, source:"active"},
+  {title:"PSP Game", keywords:["psp game","psp umd","playstation portable game"], price:12.00, source:"active"},
+];
+// Local fuzzy matching — returns {title, price, source} or null
+// Sold listings are weighted 2x over active listings
+function hazLocalMatch(text){
+  const lo = text.toLowerCase().replace(/[^a-z0-9 .\/]/g,' ');
+  const words = lo.split(/\s+/).filter(w=>w.length>1);
+  let best = null, bestScore = 0;
+  for(const entry of HAZ_STORE_PRICES){
+    let score = 0;
+    const sourceBonus = entry.source==='sold' ? 1.5 : 1.0;
+    for(const kw of entry.keywords){
+      if(lo.includes(kw)){
+        score += kw.split(' ').length * 2 * sourceBonus;
+        break;
+      }
+      const kwWords = kw.split(' ');
+      const matched = kwWords.filter(k => words.some(w => w.includes(k) || k.includes(w)));
+      score += matched.length * sourceBonus;
+    }
+    if(score > bestScore){ bestScore = score; best = entry; }
+  }
+  return bestScore >= 1.5 ? best : null;
+}
+
 const HAZ_FEE_RATE   = 0.13;
 const HAZ_OFFER_RATE = 0.40;
 const HAZ_MIN_RESALE = 45;
@@ -4033,10 +4182,6 @@ document.querySelectorAll('.haz-vibe-btn').forEach(btn=>{
   });
 });
 
-document.getElementById('hazChatSend').addEventListener('click', hazChatSend);
-document.getElementById('hazChatInput').addEventListener('keydown', ev=>{
-  if(ev.key==='Enter' && !ev.shiftKey){ ev.preventDefault(); hazChatSend(); }
-});
 document.getElementById('hazReset').addEventListener('click', hazReset);
 document.getElementById('hazCustomerBack').addEventListener('click',()=>{
   document.getElementById('hazCustomerView').classList.add('hidden');
@@ -4086,31 +4231,93 @@ function hazRemoveTyping(){
 async function hazProcessMessage(text){
   const lo = text.toLowerCase();
   if(!_hazVibe){
-    if(lo.includes('easy')||lo.includes('chill')) _hazVibe='easy';
-    else if(lo.includes('tough')||lo.includes('pushy')) _hazVibe='tough';
-    else if(lo.includes('desperate')||lo.includes('urgent')) _hazVibe='desperate';
+    if(lo.includes('easy')||lo.includes('chill')||lo.includes('relaxed')) _hazVibe='easy';
+    else if(lo.includes('tough')||lo.includes('pushy')||lo.includes('aggressive')) _hazVibe='tough';
+    else if(lo.includes('desperate')||lo.includes('urgent')||lo.includes('needs cash')) _hazVibe='desperate';
   }
-  try{
-    const systemPrompt = 'You are Haz, a buying assistant for SYG Elmwood Park, a used electronics reseller. Staff describe an item a customer wants to sell. Return ONLY a JSON object with these fields: {"item":"clean item name","condition":"brief condition summary","estimate":350,"confidence":"high|medium|low","pass":false,"pass_reason":""}. estimate is the realistic eBay sold price in USD as a number. pass is true if resale under $45 or item is a TV/appliance/oversized. Return ONLY the JSON, no other text.';
-    const r = await fetch(GS_URL, {
-      method:'POST',
-      body: JSON.stringify({action:'haz_claude', system: systemPrompt, userText: text})
-    });
-    const j = await r.json();
+
+  // Step 1: Try local store price match first — instant, no API needed
+  const localMatch = hazLocalMatch(text);
+  if(localMatch){
     hazRemoveTyping();
-    let parsed;
-    try{ parsed = JSON.parse((j.result||j.response||'{}').trim()); }
-    catch(e){ parsed = {}; }
-    if(!parsed.estimate && !parsed.pass){
-      hazAddBubble('haz','I could not identify that item. Can you describe it more — brand, model, size if applicable?');
-      return;
+    // Extract asking price from text if mentioned
+    const askMatch = text.match(/\$?\s*(\d+(?:\.\d+)?)\s*(?:dollars?|bucks?)?/gi);
+    let askingPrice = 0;
+    if(askMatch){
+      const nums = askMatch.map(m=>parseFloat(m.replace(/[^0-9.]/g,''))).filter(n=>n>10&&n<5000);
+      if(nums.length) askingPrice = nums[nums.length-1];
     }
-    hazRenderChatResult(parsed, _hazVibe);
-  } catch(err){
-    hazRemoveTyping();
-    hazAddBubble('haz','I am having trouble reaching my pricing engine right now. What is the customer asking for it? Give me the price and I will do the math.');
+    hazRenderChatResult({
+      item: localMatch.title,
+      condition: 'Based on description provided',
+      estimate: localMatch.price,
+      asking_price: askingPrice,
+      confidence: localMatch.source==='sold' ? 'high' : 'medium',
+      pass: localMatch.price < HAZ_MIN_RESALE,
+      pass_reason: localMatch.price < HAZ_MIN_RESALE ? 'Resale price $'+localMatch.price+' is below the $'+HAZ_MIN_RESALE+' minimum' : '',
+      source: localMatch.source==='sold' ? 'SYG Sold' : 'SYG Active'
+    }, _hazVibe);
+    return;
   }
+
+  // Step 2: No local match — ask for manual price input
+  hazRemoveTyping();
+  hazAddBubble('haz',
+    'I don\'t have that item in the store database yet. What do you think it can sell for? Give me a resale price and I\'ll calculate the offer.',
+    false
+  );
+  // Listen for the next message as a price input
+  _hazAwaitingPrice = text;
 }
+
+let _hazAwaitingPrice = null;
+
+// Price input mode — when Haz asks staff to provide a price manually
+function hazChatSend(){
+  const input = document.getElementById('hazChatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  if(!_hazVibe){
+    hazAddBubble('haz','Pick a customer vibe first (Easy / Tough / Desperate) so I can calibrate the offer.');
+    return;
+  }
+  input.value = '';
+  hazAddBubble('staff', text);
+
+  // If we were waiting for a price input
+  if(_hazAwaitingPrice){
+    const priceMatch = text.match(/\$?\s*(\d+(?:\.\d+)?)/);
+    if(priceMatch){
+      const price = parseFloat(priceMatch[1]);
+      _hazAwaitingPrice = null;
+      hazAddTyping();
+      setTimeout(()=>{
+        hazRemoveTyping();
+        hazRenderChatResult({
+          item: text.match(/\d+/) ? 'Item (price provided by staff)' : text,
+          condition: 'As described by staff',
+          estimate: price,
+          asking_price: 0,
+          confidence: 'medium',
+          pass: price < HAZ_MIN_RESALE,
+          pass_reason: price < HAZ_MIN_RESALE ? 'Resale $'+price+' is below $'+HAZ_MIN_RESALE+' floor' : '',
+          source: 'Manual'
+        }, _hazVibe);
+      }, 600);
+    } else {
+      hazAddBubble('haz', 'Just give me a number — like 150 or $200. What can this realistically sell for?');
+    }
+    return;
+  }
+
+  hazAddTyping();
+  setTimeout(()=> hazProcessMessage(text), 900);
+}
+
+document.getElementById('hazChatSend').addEventListener('click', hazChatSend);
+document.getElementById('hazChatInput').addEventListener('keydown', ev=>{
+  if(ev.key==='Enter' && !ev.shiftKey){ ev.preventDefault(); hazChatSend(); }
+});
 
 function hazRenderChatResult(data, vibe){
   const value   = data.estimate || 0;
@@ -4158,9 +4365,18 @@ function hazRenderChatResult(data, vibe){
 
   const confBadge = data.confidence==='high' ? ''
     : ' <span style="font-size:9px;background:#FEF9C3;color:#92400E;padding:1px 5px;border-radius:4px;font-style:normal;">'+(data.confidence||'medium')+' confidence</span>';
+  const sourceBadge = data.source
+    ? ' <span style="font-size:9px;padding:1px 6px;border-radius:4px;font-style:normal;font-weight:700;'
+      + (data.source==='SYG Sold' ? 'background:#DCFCE7;color:#166534;">' : 'background:#DBEAFE;color:#1D4ED8;">')
+      + data.source+'</span>'
+    : '';
 
-  const html = '<div><b>'+esc(item)+'</b>'+confBadge+'<br><span style="font-size:11.5px;opacity:.8;">'+esc(condition)+'</span></div>'
+  const html = '<div><b>'+esc(item)+'</b>'+confBadge+sourceBadge+'<br><span style="font-size:11.5px;opacity:.8;">'+esc(condition)+'</span></div>'
     +'<div style="margin-top:10px;font-size:11px;color:#166534;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Market est: <span style="font-family:var(--mono);font-size:13px;">$'+value+'</span> &nbsp;·&nbsp; Net after fees: <span style="font-family:var(--mono);">$'+Math.round(net)+'</span></div>'
+    +(data.asking_price && data.asking_price > 0 ? '<div style="margin-top:8px;padding:7px 10px;background:#FEF9C3;border:1px solid #FDE047;border-radius:8px;font-size:12px;color:#78350F;">'
+      + '⚠️ Customer asking <b>$'+data.asking_price+'</b> '
+      + (data.asking_price > maxOff ? '— above your max offer of $'+maxOff+'. Expect negotiation.' : data.asking_price > midOff ? '— above mid point. Open low and work up.' : '— within range. Open at $'+openOff+'.')
+      + '</div>' : '')
     +'<div class="haz-offer-cards">'
     +'<div class="haz-offer-card best"><span class="haz-offer-card-label">🟢 Open at</span><span class="haz-offer-card-amount">$'+openOff+'</span><span class="haz-offer-card-hint">Start here — room to move up</span></div>'
     +'<div class="haz-offer-card mid"><span class="haz-offer-card-label">🟡 If they push</span><span class="haz-offer-card-amount">$'+midOff+'</span><span class="haz-offer-card-hint">Use once — mid point</span></div>'
@@ -4225,6 +4441,15 @@ let _boardDrag  = null; // {cardId, startX, startY, origX, origY}
 let _boardPanning = false;
 let _panStart   = null;
 
+function hazBoardSave(){
+  try{ sessionStorage.setItem('hazBoard', JSON.stringify(_boardCards)); }catch(e){}
+}
+function hazBoardLoad(){
+  try{
+    const s = sessionStorage.getItem('hazBoard');
+    if(s){ _boardCards = JSON.parse(s); }
+  }catch(e){}
+}
 function hazBoardOpen(){
   document.getElementById('hazBoardView').classList.remove('hidden');
   hazBoardRender();
@@ -4297,6 +4522,7 @@ function hazBoardAddCard(data){
     expanded: false,
     acceptedPrice: ''
   });
+  hazBoardSave();
   hazBoardRender();
   // Auto-open board on first card
   if(_boardCards.length===1) hazBoardOpen();
