@@ -620,15 +620,19 @@
   .welcome-card-desc{font-size:11.5px;color:var(--on-dark-soft);line-height:1.5;}
 
   /* ── Haz ── */
-  .haz-wrap{position:fixed;inset:0;background:#F0F4F0;z-index:200;display:none;flex-direction:column;}
+  .haz-wrap{position:fixed;inset:0;background:#0D1A12;z-index:200;display:none;flex-direction:column;}
   .haz-wrap.show{display:flex;}
-  .haz-header{background:#0D1A12;border-bottom:3px solid #22C55E;padding:15px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
-  .haz-header-icon{font-size:20px;}
+  .haz-header{background:#0A1410;border-bottom:2px solid rgba(74,222,128,.25);padding:12px 18px;display:flex;align-items:center;gap:10px;flex:none;}
+  .haz-header-icon{font-size:18px;}
   .haz-header h2{margin:0;font-size:14px;font-weight:800;color:#4ADE80;letter-spacing:-.02em;flex:1;}
-  .haz-back{padding:6px 14px;background:transparent;border:1px solid rgba(74,222,128,.35);border-radius:var(--r-pill);
-    color:#4ADE80;font:700 11px/1 var(--sans);cursor:pointer;transition:all .15s;}
+  .haz-back{padding:5px 12px;background:transparent;border:1px solid rgba(74,222,128,.35);border-radius:var(--r-pill);color:#4ADE80;font:700 11px/1 var(--sans);cursor:pointer;}
   .haz-back:hover{background:rgba(74,222,128,.12);}
-  .haz-body{padding:16px 18px;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:13px;}
+  /* Two-column layout */
+  .haz-main{display:flex;flex:1;min-height:0;overflow:hidden;}
+  .haz-left{flex:1;min-width:0;display:flex;flex-direction:column;border-right:1px solid rgba(74,222,128,.12);background:#1A1F1A;overflow:hidden;}
+  .haz-right{width:420px;flex:none;display:flex;flex-direction:column;background:#F0F4F0;overflow:hidden;position:relative;}
+  @media(max-width:900px){.haz-main{flex-direction:column-reverse;}.haz-right{width:100%;flex:1;}.haz-left{flex:1;min-height:240px;}}
+  .haz-body{display:flex;flex-direction:column;gap:10px;padding:12px 14px;flex:1;min-height:0;overflow-y:auto;}
   .haz-search-box{background:#fff;border:2px solid #E5E7EB;border-radius:var(--r-lg);padding:13px 15px;transition:border-color .15s;}
   .haz-search-box:focus-within{border-color:#22C55E;box-shadow:0 0 0 4px rgba(34,197,94,.09);}
   .haz-search-label{font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;}
@@ -711,7 +715,7 @@
   .haz-vibe-name{font-size:11px;font-weight:700;color:var(--ink);display:block;}
   .haz-vibe-hint{font-size:9px;color:#9CA3AF;display:block;margin-top:1px;line-height:1.3;}
   .haz-chat-wrap{display:flex;flex-direction:column;flex:1;background:#fff;border:1px solid #E5E7EB;border-radius:var(--r-lg);overflow:hidden;min-height:300px;}
-  .haz-chat-messages{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:12px;}
+  .haz-chat-messages{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:12px;overscroll-behavior:contain;}
   .haz-chat-bubble{display:flex;gap:9px;align-items:flex-start;}
   .haz-chat-bubble.staff{flex-direction:row-reverse;}
   .haz-chat-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 11px/1 var(--sans);flex:none;margin-top:2px;}
@@ -741,8 +745,23 @@
   .haz-script-line.tough{background:#FEE2E2;border-left:3px solid #EF4444;color:#7F1D1D;}
   .haz-script-line.desperate{background:#FEF9C3;border-left:3px solid #F59E0B;color:#78350F;}
   .haz-script-line b{font-style:normal;font-weight:800;}
-  .haz-show-customer{margin-top:10px;padding:9px 14px;background:#0D1A12;color:#4ADE80;border:none;border-radius:var(--r-md);font:700 12px/1 var(--sans);cursor:pointer;width:100%;transition:background .15s;}
-  .haz-show-customer:hover{background:#166534;}
+  .haz-show-customer{margin-top:0;padding:9px 14px;background:#0D1A12;color:#4ADE80;border:none;border-radius:var(--r-md);font:700 12px/1 var(--sans);cursor:pointer;width:100%;transition:background .15s;}
+  .haz-show-customer:hover:not(:disabled){background:#166534;}
+  .haz-show-customer:disabled{background:#1A2A1A;color:#2D4A2D;cursor:not-allowed;}
+  .haz-offer-select-wrap{margin-top:10px;background:rgba(0,0,0,.15);border-radius:var(--r-md);padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+  .haz-offer-select-label{font-size:10px;font-weight:700;color:#4ADE80;text-transform:uppercase;letter-spacing:.1em;}
+  .haz-offer-select-chips{display:flex;gap:6px;}
+  .haz-osc{flex:1;padding:8px 6px;border-radius:8px;border:1.5px solid transparent;font:700 12px/1 var(--sans);cursor:pointer;transition:all .15s;text-align:center;}
+  .haz-osc.best{background:#1A3A1A;border-color:#2D6A2D;color:#4ADE80;}
+  .haz-osc.mid{background:#3A3010;border-color:#6A5A10;color:#FCD34D;}
+  .haz-osc.max{background:#3A1A1A;border-color:#6A2A2A;color:#FCA5A5;}
+  .haz-osc.selected.best{background:#166534;border-color:#4ADE80;color:#fff;}
+  .haz-osc.selected.mid{background:#854D0E;border-color:#FDE047;color:#fff;}
+  .haz-osc.selected.max{background:#991B1B;border-color:#FCA5A5;color:#fff;}
+  .haz-offer-custom-wrap{display:flex;gap:6px;}
+  .haz-offer-custom-input{flex:1;background:#0D1A12;border:1px solid #2D4A2D;border-radius:6px;padding:7px 10px;font:600 13px/1 var(--mono);color:#4ADE80;outline:none;}
+  .haz-offer-custom-input:focus{border-color:#4ADE80;}
+  .haz-offer-custom-input::placeholder{color:#2D4A2D;font-weight:400;}
   .haz-pass-card{background:#FEF2F2;border:1.5px solid #FECACA;border-radius:10px;padding:12px 14px;margin-top:8px;}
   .haz-pass-title{font-size:13px;font-weight:800;color:#B91C1C;margin-bottom:4px;}
   .haz-pass-text{font-size:12px;color:#7F1D1D;line-height:1.5;font-style:italic;}
@@ -758,29 +777,68 @@
   @keyframes hazTyping{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
   .haz-reset{width:100%;padding:9px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);font:600 12px/1 var(--sans);color:#6B7280;cursor:pointer;flex:none;}
   .haz-reset:hover{border-color:#9CA3AF;color:var(--ink);}
-  .haz-customer-view{position:absolute;inset:0;background:#fff;z-index:10;display:flex;flex-direction:column;}
+  .haz-customer-view{position:fixed;inset:0;background:#0D1A12;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
   .haz-customer-view.hidden{display:none;}
-  .haz-customer-head{background:#0D1A12;padding:24px 20px 20px;text-align:center;flex:none;}
-  .haz-customer-logo{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.03em;}
+  .haz-customer-card{background:#fff;border-radius:20px;width:100%;max-width:440px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+  .haz-customer-head{background:#0D1A12;padding:28px 24px 22px;text-align:center;flex:none;border-bottom:3px solid #22C55E;}
+  .haz-customer-logo{font-size:26px;font-weight:900;color:#fff;letter-spacing:-.04em;}
   .haz-customer-logo span{color:#4ADE80;}
-  .haz-customer-sub{font-size:11px;color:#6B7280;margin-top:4px;}
-  .haz-customer-body{flex:1;padding:20px;overflow-y:auto;}
-  .haz-customer-item{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;}
-  .haz-customer-condition{font-size:12.5px;color:#6B7280;margin-bottom:16px;}
-  .haz-customer-section{margin-bottom:16px;}
-  .haz-customer-section-label{font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
-  .haz-customer-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #F3F4F6;color:#374151;}
+  .haz-customer-sub{font-size:12px;color:#4ADE80;margin-top:5px;opacity:.7;letter-spacing:.05em;text-transform:uppercase;}
+  .haz-customer-body{flex:1;padding:24px;overflow-y:auto;}
+  .haz-customer-item{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:4px;letter-spacing:-.02em;}
+  .haz-customer-condition{font-size:12.5px;color:#6B7280;margin-bottom:20px;}
+  .haz-customer-section{margin-bottom:20px;}
+  .haz-customer-section-label{font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;}
+  .haz-customer-row{display:flex;justify-content:space-between;font-size:13.5px;padding:8px 0;border-bottom:1px solid #F3F4F6;color:#374151;}
   .haz-customer-row:last-child{border:none;}
-  .haz-customer-offer{background:#F0FDF4;border:2px solid #86EFAC;border-radius:12px;padding:18px 16px;text-align:center;margin-top:16px;}
-  .haz-customer-offer-label{font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
-  .haz-customer-offer-amount{font-size:36px;font-weight:900;color:#15803D;font-family:var(--mono);}
-  .haz-customer-offer-note{font-size:11.5px;color:#166534;margin-top:6px;line-height:1.5;}
-  .haz-customer-disclaimer{font-size:10.5px;color:#9CA3AF;text-align:center;margin-top:14px;line-height:1.5;}
-  .haz-customer-footer{padding:14px 16px;border-top:1px solid #F3F4F6;flex:none;}
+  .haz-customer-row span:last-child{font-weight:600;color:var(--ink);}
+  .haz-customer-offer{background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:2px solid #86EFAC;border-radius:16px;padding:24px 20px;text-align:center;margin-top:4px;}
+  .haz-customer-offer-label{font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;}
+  .haz-customer-offer-amount{font-size:52px;font-weight:900;color:#15803D;font-family:var(--mono);line-height:1;}
+  .haz-customer-offer-note{font-size:12px;color:#166534;margin-top:10px;line-height:1.5;opacity:.8;}
+  .haz-customer-disclaimer{font-size:11px;color:#9CA3AF;text-align:center;margin-top:16px;line-height:1.6;padding:0 4px;}
+  .haz-customer-footer{padding:16px 20px;border-top:1px solid #F3F4F6;flex:none;background:#FAFAFA;}
+  .haz-customer-back{width:100%;padding:11px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);font:600 12px/1 var(--sans);color:#9CA3AF;cursor:pointer;transition:all .15s;}
+  .haz-customer-back:hover{border-color:#9CA3AF;color:var(--ink);}
   .haz-mode-toggle{display:flex;border:1px solid rgba(74,222,128,.25);border-radius:var(--r-pill);overflow:hidden;margin-right:4px;}
   .haz-mode-btn{padding:5px 11px;font:600 11px/1 var(--sans);border:none;cursor:pointer;background:transparent;color:#6B7280;transition:all .15s;}
   .haz-mode-btn.on{background:#166534;color:#4ADE80;}
   .haz-mode-btn:hover:not(.on){color:#9CA3AF;}
+  .haz-tut-btn{padding:5px 11px;background:transparent;border:1px solid rgba(74,222,128,.25);border-radius:var(--r-pill);color:#6B7280;font:600 11px/1 var(--sans);cursor:pointer;transition:all .15s;margin-right:4px;}
+  .haz-tut-btn:hover{border-color:rgba(74,222,128,.5);color:#4ADE80;}
+  .haz-tut-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .haz-tut-backdrop.hidden{display:none;}
+  .haz-tut-box{background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+  .haz-tut-head{background:#0D1A12;padding:18px 20px 16px;display:flex;align-items:center;gap:12px;border-bottom:3px solid #22C55E;flex:none;}
+  .haz-tut-head h2{margin:0;font-size:15px;font-weight:800;color:#4ADE80;flex:1;letter-spacing:-.02em;}
+  .haz-tut-close{background:none;border:none;color:#4ADE80;font-size:20px;cursor:pointer;opacity:.6;line-height:1;}
+  .haz-tut-close:hover{opacity:1;}
+  .haz-tut-progress{display:flex;gap:5px;padding:12px 20px 0;flex:none;}
+  .haz-tut-pip{flex:1;height:3px;border-radius:2px;background:#E5E7EB;transition:background .2s;}
+  .haz-tut-pip.on{background:#22C55E;}
+  .haz-tut-body{flex:1;overflow-y:auto;padding:18px 20px;}
+  .haz-tut-slide{display:none;}
+  .haz-tut-slide.active{display:block;}
+  .haz-tut-slide h3{margin:0 0 10px;font-size:15px;font-weight:800;color:#0D1A12;letter-spacing:-.02em;}
+  .haz-tut-slide p{margin:0 0 10px;font-size:13px;color:#374151;line-height:1.65;}
+  .haz-tut-slide p:last-child{margin-bottom:0;}
+  .haz-tut-slide strong{color:#0D1A12;font-weight:700;}
+  .haz-tut-slide code{font-family:var(--mono);font-size:11.5px;background:#F0FDF4;color:#166534;padding:1px 5px;border-radius:4px;}
+  .haz-tut-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#22C55E;color:#fff;font-size:11px;font-weight:800;margin-right:6px;vertical-align:middle;}
+  .haz-tut-callout{border-left:3px solid #22C55E;border-radius:0 6px 6px 0;padding:9px 12px;margin:10px 0;font-size:12.5px;line-height:1.55;}
+  .haz-tut-callout{background:#F0FDF4;color:#166534;}
+  .haz-tut-callout.warn{background:#FFFBEB;border-color:#F59E0B;color:#92400E;}
+  .haz-tut-callout.red{background:#FEF2F2;border-color:#EF4444;color:#B91C1C;}
+  .haz-tut-tag{display:inline-block;padding:2px 7px;border-radius:var(--r-pill);font-size:10.5px;font-weight:700;margin:1px 2px;}
+  .haz-tut-tag.green{background:#DCFCE7;color:#166534;}
+  .haz-tut-tag.yellow{background:#FEF9C3;color:#854D0E;}
+  .haz-tut-tag.red{background:#FEE2E2;color:#991B1B;}
+  .haz-tut-footer{display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid #F3F4F6;flex:none;background:#FAFAFA;}
+  .haz-tut-prev{padding:8px 16px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);font:600 12px/1 var(--sans);color:#6B7280;cursor:pointer;}
+  .haz-tut-prev:hover{border-color:#9CA3AF;}
+  .haz-tut-next{padding:8px 20px;background:#16A34A;border:none;border-radius:var(--r-md);font:700 12px/1 var(--sans);color:#fff;cursor:pointer;margin-left:auto;}
+  .haz-tut-next:hover{background:#15803D;}
+  .haz-tut-counter{font-size:11px;color:#9CA3AF;font-family:var(--mono);}
   /* Quick reply chips */
   .haz-quick-replies{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px 4px;}
   .haz-qr{padding:7px 14px;border:1.5px solid #2D4A2D;border-radius:var(--r-pill);background:#1E2A1E;
@@ -796,7 +854,7 @@
   .haz-board-btn{padding:5px 12px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:var(--r-pill);
     color:#4ADE80;font:700 11px/1 var(--sans);cursor:pointer;transition:all .15s;margin-right:4px;}
   .haz-board-btn:hover{background:rgba(74,222,128,.22);}
-  .haz-board-view{position:absolute;inset:0;background:#1A1F1A;z-index:10;display:flex;flex-direction:column;}
+  .haz-board-view{display:flex;flex-direction:column;flex:1;min-height:0;}
   .haz-board-view.hidden{display:none;}
   .haz-board-toolbar{background:#0D1A12;border-bottom:1px solid rgba(74,222,128,.2);padding:10px 16px;
     display:flex;align-items:center;gap:12px;flex:none;}
@@ -809,7 +867,7 @@
   .haz-board-close{padding:5px 12px;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:var(--r-pill);
     color:#6B7280;font:600 11px/1 var(--sans);cursor:pointer;transition:all .15s;}
   .haz-board-close:hover{border-color:rgba(255,255,255,.25);color:#9CA3AF;}
-  .haz-board-canvas{flex:1;overflow:hidden;position:relative;cursor:grab;}
+  .haz-board-canvas{flex:1;overflow:hidden;position:relative;cursor:grab;overscroll-behavior:contain;}
   .haz-board-canvas.grabbing{cursor:grabbing;}
   .haz-board-inner{position:absolute;top:0;left:0;transform-origin:0 0;padding:40px;}
   .haz-board-empty{color:#374151;font-size:13px;text-align:center;padding:60px 20px;border:1.5px dashed #2D3D2D;border-radius:12px;min-width:300px;}
@@ -872,90 +930,193 @@
     <span class="haz-header-icon">🔍</span>
     <h2>Haz — Buying Intake</h2>
     <div class="haz-mode-toggle">
-      <button class="haz-mode-btn on" id="hazModeQuick" title="Quick mode — describe item freely">⚡ Quick</button>
-      <button class="haz-mode-btn" id="hazModeHelper" title="Helper mode — guided intake questions">🤝 Helper</button>
+      <button class="haz-mode-btn on" id="hazModeQuick" title="Quick mode">⚡ Quick</button>
+      <button class="haz-mode-btn" id="hazModeHelper" title="Helper mode">🤝 Helper</button>
     </div>
-    <button class="haz-board-btn" id="hazBoardBtn" title="Intake Board">📋 Board</button>
+    <button class="haz-tut-btn" id="hazTutBtn" title="How Haz works">? Help</button>
     <button class="haz-back" id="hazBack">← Back</button>
   </div>
 
-  <!-- Internal staff view -->
-  <div class="haz-body" id="hazStaffView">
+  <div class="haz-main">
 
-    <div class="haz-vibe-section">
-      <div class="haz-vibe-label">How does the customer seem?</div>
-      <div class="haz-vibe-cards">
-        <button class="haz-vibe-btn easy" data-vibe="easy">
-          <span class="haz-vibe-emoji">😊</span>
-          <span class="haz-vibe-name">Easy going</span>
-          <span class="haz-vibe-hint">Relaxed, likely to accept</span>
-        </button>
-        <button class="haz-vibe-btn tough" data-vibe="tough">
-          <span class="haz-vibe-emoji">😤</span>
-          <span class="haz-vibe-name">Tough</span>
-          <span class="haz-vibe-hint">Knows the value, will push</span>
-        </button>
-        <button class="haz-vibe-btn desperate" data-vibe="desperate">
-          <span class="haz-vibe-emoji">😰</span>
-          <span class="haz-vibe-name">Desperate</span>
-          <span class="haz-vibe-hint">Needs cash now, flexible</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Chat window -->
-    <div class="haz-chat-wrap" id="hazChatWrap">
-      <div class="haz-helper-progress" id="hazHelperProgress" style="display:none">
-        <div class="haz-helper-progress-bar"><div class="haz-helper-progress-fill" id="hazHelperFill" style="width:0%"></div></div>
-        <span class="haz-helper-step-label" id="hazHelperStepLabel">Step 1</span>
-      </div>
-      <div class="haz-chat-messages" id="hazChatMessages">
-        <div class="haz-chat-bubble haz">
-          <div class="haz-chat-avatar">H</div>
-          <div class="haz-chat-text">Hey, what is the customer bringing in? Tell me what it is, condition, and what they want for it. I will run the numbers.</div>
+    <!-- LEFT: Intake Board (always visible) -->
+    <div class="haz-left">
+      <div class="haz-board-toolbar">
+        <span class="haz-board-title">📋 Intake Board</span>
+        <div class="haz-board-zoom">
+          <button class="haz-zoom-btn" id="hazZoomOut">−</button>
+          <span class="haz-zoom-label" id="hazZoomLabel">100%</span>
+          <button class="haz-zoom-btn" id="hazZoomIn">+</button>
+          <button class="haz-zoom-btn" id="hazZoomReset" title="Reset zoom">⊙</button>
         </div>
       </div>
-      <div class="haz-quick-replies" id="hazQuickReplies" style="display:none"></div>
-      <div class="haz-chat-input-wrap">
-        <textarea class="haz-chat-input" id="hazChatInput" placeholder="e.g. PS5 slim, works fine, small scratch on top, they want $250..." rows="2"></textarea>
-        <button class="haz-chat-send" id="hazChatSend">↑</button>
+      <div class="haz-board-view" id="hazBoardView">
+        <div class="haz-board-canvas" id="hazBoardCanvas">
+          <div class="haz-board-inner" id="hazBoardInner">
+            <div class="haz-board-empty" id="hazBoardEmpty">No intakes yet — complete a chat to pin a card here.</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <button class="haz-reset" id="hazReset" style="display:none">↩ New intake</button>
-  </div>
-
-  <!-- Customer-facing view -->
-  <div class="haz-customer-view hidden" id="hazCustomerView">
-    <div class="haz-customer-head">
-      <div class="haz-customer-logo">SYG <span>Elmwood Park</span></div>
-      <div class="haz-customer-sub">Item Evaluation Summary</div>
-    </div>
-    <div class="haz-customer-body" id="hazCustomerBody"></div>
-    <div class="haz-customer-footer">
-      <button class="haz-customer-back" id="hazCustomerBack">← Back to staff view</button>
-    </div>
-  </div>
-
-  <!-- Intake Board -->
-  <div class="haz-board-view hidden" id="hazBoardView">
-    <div class="haz-board-toolbar">
-      <span class="haz-board-title">📋 Intake Board</span>
-      <div class="haz-board-zoom">
-        <button class="haz-zoom-btn" id="hazZoomOut">−</button>
-        <span class="haz-zoom-label" id="hazZoomLabel">100%</span>
-        <button class="haz-zoom-btn" id="hazZoomIn">+</button>
-        <button class="haz-zoom-btn" id="hazZoomReset" title="Reset zoom">⊙</button>
+    <!-- RIGHT: Chat + controls -->
+    <div class="haz-right">
+      <!-- Customer-facing view -->
+      <div class="haz-customer-view hidden" id="hazCustomerView">
+        <div class="haz-customer-card">
+          <div class="haz-customer-head">
+            <div class="haz-customer-logo">SYG <span>Elmwood Park</span></div>
+            <div class="haz-customer-sub">Item Evaluation</div>
+          </div>
+          <div class="haz-customer-body" id="hazCustomerBody"></div>
+          <div class="haz-customer-footer">
+            <button class="haz-customer-back" id="hazCustomerBack">← Back to staff view</button>
+          </div>
+        </div>
       </div>
-      <button class="haz-board-close" id="hazBoardClose">← Back to chat</button>
-    </div>
-    <div class="haz-board-canvas" id="hazBoardCanvas">
-      <div class="haz-board-inner" id="hazBoardInner">
-        <div class="haz-board-empty" id="hazBoardEmpty">No intakes yet — complete a Haz chat to pin a card here.</div>
+
+      <!-- Staff view -->
+      <div class="haz-body" id="hazStaffView">
+        <div class="haz-vibe-section">
+          <div class="haz-vibe-label">How does the customer seem?</div>
+          <div class="haz-vibe-cards">
+            <button class="haz-vibe-btn easy" data-vibe="easy">
+              <span class="haz-vibe-emoji">😊</span>
+              <span class="haz-vibe-name">Easy going</span>
+              <span class="haz-vibe-hint">Relaxed, likely to accept</span>
+            </button>
+            <button class="haz-vibe-btn tough" data-vibe="tough">
+              <span class="haz-vibe-emoji">😤</span>
+              <span class="haz-vibe-name">Tough</span>
+              <span class="haz-vibe-hint">Knows the value, will push</span>
+            </button>
+            <button class="haz-vibe-btn desperate" data-vibe="desperate">
+              <span class="haz-vibe-emoji">😰</span>
+              <span class="haz-vibe-name">Desperate</span>
+              <span class="haz-vibe-hint">Needs cash now, flexible</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="haz-chat-wrap" id="hazChatWrap">
+          <div class="haz-helper-progress" id="hazHelperProgress" style="display:none">
+            <div class="haz-helper-progress-bar"><div class="haz-helper-progress-fill" id="hazHelperFill" style="width:0%"></div></div>
+            <span class="haz-helper-step-label" id="hazHelperStepLabel">Step 1</span>
+          </div>
+          <div class="haz-chat-messages" id="hazChatMessages">
+            <div class="haz-chat-bubble haz">
+              <div class="haz-chat-avatar">H</div>
+              <div class="haz-chat-text">Hey, what is the customer bringing in? Tell me what it is, condition, and what they want for it. I will run the numbers.</div>
+            </div>
+          </div>
+          <div class="haz-quick-replies" id="hazQuickReplies" style="display:none"></div>
+          <div class="haz-chat-input-wrap">
+            <textarea class="haz-chat-input" id="hazChatInput" placeholder="e.g. PS5 slim, works fine, wants $250..." rows="2"></textarea>
+            <button class="haz-chat-send" id="hazChatSend">↑</button>
+          </div>
+        </div>
+
+        <button class="haz-reset" id="hazReset" style="display:none">↩ New intake</button>
       </div>
     </div>
-  </div>
 
+  </div>
+</div>
+
+<!-- ── Haz Tutorial Modal ── -->
+<div class="haz-tut-backdrop hidden" id="hazTutBackdrop">
+  <div class="haz-tut-box">
+    <div class="haz-tut-head">
+      <span>🔍</span>
+      <h2>How Haz Works</h2>
+      <button class="haz-tut-close" id="hazTutClose">×</button>
+    </div>
+    <div class="haz-tut-progress" id="hazTutProgress"></div>
+    <div class="haz-tut-body">
+
+      <div class="haz-tut-slide active" data-slide="0">
+        <h3>Welcome to Haz — Your Buying Assistant</h3>
+        <p><strong>Haz</strong> is the buying side of Abribook. When a customer walks in wanting to sell something, Haz helps you figure out what it's worth, how much to offer, and whether it's even worth buying at all.</p>
+        <p>It uses SYG's own sold order history and active listings as its price reference — so every number comes from what this store has actually sold, not just general market guesses.</p>
+        <div class="haz-tut-callout">New to buying? No problem — use <strong>🤝 Helper mode</strong> and Haz will walk you through every step with questions and tap buttons. No experience needed.</div>
+      </div>
+
+      <div class="haz-tut-slide" data-slide="1">
+        <h3><span class="haz-tut-badge">1</span>Pick the customer vibe first</h3>
+        <p>Before anything else, read the customer and tap one of the three vibe buttons. This changes how aggressive your offers are — not just the script, but the actual dollar amounts.</p>
+        <p><span class="haz-tut-tag green">😊 Easy going</span> Relaxed, not pushy. Max offer = <strong>40%</strong> of resale. Open at 72% of max.</p>
+        <p><span class="haz-tut-tag yellow">😤 Tough</span> Knows what they have, will push back. Max offer goes up to <strong>55%</strong> of resale — more room to negotiate.</p>
+        <p><span class="haz-tut-tag red">😰 Desperate</span> Needs cash now. Max offer drops to <strong>30%</strong> — open very low and hold firm.</p>
+        <div class="haz-tut-callout warn">You can change the vibe mid-conversation if your read changes. Just tap a different button — Haz recalculates instantly on the next intake.</div>
+      </div>
+
+      <div class="haz-tut-slide" data-slide="2">
+        <h3><span class="haz-tut-badge">2</span>⚡ Quick Mode — describe it naturally</h3>
+        <p>In Quick mode, just type what the customer is bringing in the way you'd describe it to a coworker. Haz reads the whole message — item, condition, missing parts, everything.</p>
+        <p>Examples that all work:<br>
+        <code>ps5 slim no controller no cables scratches</code><br>
+        <code>iphone 15 pro cracked screen locked to att wants 300</code><br>
+        <code>macbook pro 2020 no charger dead battery</code></p>
+        <p>Haz will automatically adjust the price down based on what's missing or damaged — no controller, no cables, cracked screens, bad batteries all affect the offer.</p>
+        <div class="haz-tut-callout">If the customer mentions a price they want — like "wants $250" — Haz picks that up too and tells you whether it's within range or above your max.</div>
+      </div>
+
+      <div class="haz-tut-slide" data-slide="3">
+        <h3><span class="haz-tut-badge">3</span>🤝 Helper Mode — guided questions</h3>
+        <p>New to buying or unsure about an item? Switch to Helper mode. Haz will ask you structured questions one by one — just tap the answer chips (or type if none fit).</p>
+        <p>Helper mode covers every important factor for each item type:</p>
+        <p><strong>Console:</strong> Powers on? Model? Controllers? Cables? Damage?<br>
+        <strong>Phone:</strong> Screen? iCloud lock? Carrier? Battery health? Storage?<br>
+        <strong>Laptop:</strong> Processor tier? RAM? Battery? Charger? Screen?<br>
+        <strong>GPU:</strong> Tested? Fans spinning? Any damage?</p>
+        <div class="haz-tut-callout">Each answer adjusts the price automatically. No charger knocks off $20. iCloud locked = instant pass. Cracked screen = −30–45%. You never have to do the math.</div>
+      </div>
+
+      <div class="haz-tut-slide" data-slide="4">
+        <h3><span class="haz-tut-badge">4</span>Reading the offer result</h3>
+        <p>After Haz runs the numbers, you get three color-coded offer tiers:</p>
+        <p><span class="haz-tut-tag green">🟢 Open at</span> Start here. This is your opening offer — leave room to move up.<br>
+        <span class="haz-tut-tag yellow">🟡 If they push</span> Use this once if they push back. Don't jump to it immediately.<br>
+        <span class="haz-tut-tag red">🔴 Walk away at</span> Your absolute ceiling. Do not go above this no matter what.</p>
+        <p>You also see the <strong>source badge</strong> — <code>SYG Sold</code> means price is from an actual sale at this store. <code>SYG Active</code> means it's a current listing price.</p>
+        <div class="haz-tut-callout warn">The walk-away number is a hard rule. Going above it means the margin disappears after eBay fees, shipping, and time. If they won't accept the max — pass.</div>
+      </div>
+
+      <div class="haz-tut-slide" data-slide="5">
+        <h3><span class="haz-tut-badge">5</span>Inventory projection</h3>
+        <p>Every result includes a projected sell time based on how long similar items have sat in SYG inventory before selling.</p>
+        <p><span class="haz-tut-tag green">🟢 Fast mover</span> Phones (~4d), SSDs (~10d), RAM (~6d), Consoles (~12d) — safe to buy.<br>
+        <span class="haz-tut-tag yellow">🟡 Medium</span> Laptops (~16d), GPUs (~14d) — fine, just be selective on condition.<br>
+        <span class="haz-tut-tag red">🔴 Slow mover</span> Tablets (~48d), Accessories (~97d), Logic boards (~244d) — think twice.</p>
+        <div class="haz-tut-callout red">Cables, chargers, and random accessories can sit for <strong>over a year</strong>. Unless it's something very specific we need, pass on generic accessories.</div>
+      </div>
+
+      <div class="haz-tut-slide" data-slide="6">
+        <h3><span class="haz-tut-badge">6</span>Items not in the database</h3>
+        <p>If Haz doesn't recognize the item, it will ask you to pull up eBay sold listings and enter at least <strong>5 sold prices</strong>. Haz will:</p>
+        <p>1. Collect prices as you type them (one by one or comma separated)<br>
+        2. Automatically remove outliers that are too high or too low<br>
+        3. Calculate a weighted median/average as the estimate<br>
+        4. Run the full offer calculation from that number</p>
+        <p>If you already know what it sells for — just type that one number alone. Haz will use it directly.</p>
+        <div class="haz-tut-callout">This keeps Haz honest on unfamiliar items — never make an offer based on a guess. Real sold comps only.</div>
+      </div>
+
+      <div class="haz-tut-slide" data-slide="7">
+        <h3><span class="haz-tut-badge">7</span>Show to customer &amp; the board</h3>
+        <p>When you are ready to present the offer, <strong>select which offer you are going with</strong> (open, mid, or max) — or type a custom amount. Then tap <strong>📋 Show to customer</strong>.</p>
+        <p>The customer sees a clean professional screen showing the market breakdown and your offer — no internal math, no tiers, no "walk away" language.</p>
+        <p>Every completed intake <strong>automatically pins a card</strong> to the Intake Board on the left. The board shows all your intakes for the session side by side. Expand any card for the full POS entry details — Make, Model, Condition, and all the attributes you need to fill in the company website.</p>
+        <div class="haz-tut-callout">Cards persist through page refreshes so you will not lose your work if the browser reloads during a busy day.</div>
+      </div>
+
+    </div>
+    <div class="haz-tut-footer">
+      <button class="haz-tut-prev" id="hazTutPrev">← Back</button>
+      <span class="haz-tut-counter" id="hazTutCounter">1 / 8</span>
+      <button class="haz-tut-next" id="hazTutNext">Next →</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── Tutorial Modal ── -->
@@ -3536,6 +3697,49 @@ updateUniPreview();
 renderUniEntries();
 updateGoalCounter();
 
+// ── Universal: auto-fill Condition Notes from Describe field ─────
+// When staff types in the Describe box, parse condition keywords and
+// suggest Condition Notes + Issues if those fields are still empty.
+(function(){
+  const descEl = document.getElementById('uniDesc');
+  const condEl = document.getElementById('uniCondition');
+  const issueEl = document.getElementById('uniIssues');
+  if(!descEl || !condEl || !issueEl) return;
+
+  descEl.addEventListener('input', function(){
+    // Only auto-fill if the condition/issues fields are still blank
+    if(condEl.value.trim() || issueEl.value.trim()) return;
+
+    const lo = this.value.toLowerCase();
+    const condParts = [];
+    const issueParts = [];
+
+    // Condition signals
+    if(/mint|like.?new|sealed|brand.?new|pristine/.test(lo))      condParts.push('Like new — no visible wear');
+    else if(/light|minor|slight|small/.test(lo) && /scratch|scuff|wear/.test(lo)) condParts.push('Used — minor scratches/scuffs');
+    else if(/heavy|significant|bad/.test(lo) && /scratch|scuff|wear|damage/.test(lo)) condParts.push('Used — heavy wear, visible scratches');
+    else if(/crack/.test(lo) && /screen|display/.test(lo))        condParts.push('Cracked screen');
+    else if(/crack/.test(lo))                                      condParts.push('Cracked housing/body');
+    else if(/good|works|functional|working|tested/.test(lo))      condParts.push('Used — Good condition');
+
+    // Issue signals → issues field
+    if(/no.?charger|without.?charger|missing.?charger/.test(lo))  issueParts.push('No charger included');
+    if(/no.?cable|without.?cable|missing.?cable/.test(lo))        issueParts.push('No cables included');
+    if(/no.?controller|without.?controller/.test(lo))             issueParts.push('No controller included');
+    if(/no.?box|without.?box|missing.?box/.test(lo))              issueParts.push('No original box');
+    if(/no.?battery|without.?battery/.test(lo))                   issueParts.push('No battery included');
+    if(/untest(ed)?|not.?test(ed)?/.test(lo))                     issueParts.push('Untested — sold as-is');
+    if(/for.?parts|parts.?only/.test(lo))                         issueParts.push('For parts or repair only');
+    if(/water.?damage/.test(lo))                                   issueParts.push('Water damage');
+    if(/dead.?battery|battery.?dead/.test(lo))                    issueParts.push('Dead battery');
+    if(/broken.?screen|screen.?broken/.test(lo))                  issueParts.push('Broken screen');
+
+    if(condParts.length) condEl.value = condParts.join('. ');
+    if(issueParts.length) issueEl.value = issueParts.join('. ');
+    if(condParts.length || issueParts.length) updateUniPreview();
+  });
+})();
+
 
 // ── Claude Manifest Initialization Prompt JS is loaded after modal HTML ──
 const MANIFEST_PROMPT = `You are assisting NJ02, a fill-in reseller for Sell Your Gadgets (SYG), operating the Shopify store "SYG Elmwood Park" (store handle: xpp09p-dz, Location GID: gid://shopify/Location/92108718115).
@@ -4075,8 +4279,57 @@ function hazOpen(){
   document.getElementById('hazWrap').classList.add('show');
   const inp = document.getElementById('hazChatInput');
   if(inp) setTimeout(()=>inp.focus(), 50);
-  if(_boardCards.length) document.getElementById('hazBoardBtn').style.background='rgba(74,222,128,.28)';
+  // board always visible
 }
+
+// ── Haz Tutorial ──────────────────────────────────────────────────
+(function(){
+  const SLIDES = 8;
+  let _hazTutSlide = 0;
+
+  function hazTutOpen(){
+    _hazTutSlide = 0;
+    hazTutRender();
+    document.getElementById('hazTutBackdrop').classList.remove('hidden');
+  }
+  function hazTutClose(){
+    document.getElementById('hazTutBackdrop').classList.add('hidden');
+  }
+  function hazTutRender(){
+    // Slides
+    document.querySelectorAll('.haz-tut-slide').forEach((el,i)=>{
+      el.classList.toggle('active', i===_hazTutSlide);
+    });
+    // Progress pips
+    const prog = document.getElementById('hazTutProgress');
+    if(prog){
+      prog.innerHTML = Array.from({length:SLIDES},(_,i)=>
+        `<div class="haz-tut-pip${i<=_hazTutSlide?' on':''}"></div>`
+      ).join('');
+    }
+    // Counter
+    const ctr = document.getElementById('hazTutCounter');
+    if(ctr) ctr.textContent = (_hazTutSlide+1)+' / '+SLIDES;
+    // Buttons
+    const prev = document.getElementById('hazTutPrev');
+    const next = document.getElementById('hazTutNext');
+    if(prev) prev.style.visibility = _hazTutSlide===0 ? 'hidden' : '';
+    if(next) next.textContent = _hazTutSlide===SLIDES-1 ? 'Done ✓' : 'Next →';
+  }
+
+  document.getElementById('hazTutBtn').addEventListener('click', hazTutOpen);
+  document.getElementById('hazTutClose').addEventListener('click', hazTutClose);
+  document.getElementById('hazTutBackdrop').addEventListener('click', ev=>{
+    if(ev.target===document.getElementById('hazTutBackdrop')) hazTutClose();
+  });
+  document.getElementById('hazTutNext').addEventListener('click',()=>{
+    if(_hazTutSlide < SLIDES-1){ _hazTutSlide++; hazTutRender(); }
+    else hazTutClose();
+  });
+  document.getElementById('hazTutPrev').addEventListener('click',()=>{
+    if(_hazTutSlide > 0){ _hazTutSlide--; hazTutRender(); }
+  });
+})();
 
 // ── Haz Mode Toggle ───────────────────────────────────────────────
 let HAZ_MODE = 'quick'; // 'quick' | 'helper'
@@ -4227,10 +4480,11 @@ function hazHelperStart(itemText){
   const questions = HAZ_QUESTIONS[category] || HAZ_QUESTIONS.general;
 
   // Extract asking price if mentioned
-  const askMatch = itemText.match(/\$?\s*(\d+(?:\.\d+)?)/gi);
+  const askMatch = itemText.match(/(?:want[s]?|asking|ask|offer|price|for)\s*\$?\s*(\d+(?:\.\d+)?)|\$\s*(\d+(?:\.\d+)?)/gi);
   let askingPrice = 0;
   if(askMatch){
-    const nums = askMatch.map(m=>parseFloat(m.replace(/[^0-9.]/g,''))).filter(n=>n>10&&n<5000);
+    const nums = askMatch.map(m=>{const n=m.match(/(\d+(?:\.\d+)?)/);return n?parseFloat(n[1]):0;})
+      .filter(n=>n>=20&&n<=4999&&!(n>=1900&&n<=2099));
     if(nums.length) askingPrice = nums[nums.length-1];
   }
 
@@ -4266,9 +4520,12 @@ function hazHelperNextQuestion(){
   });
 }
 
+let _hazQRCallback = null; // stores active quick-reply callback so typing works too
+
 function hazShowQuickReplies(opts, cb){
   const wrap = document.getElementById('hazQuickReplies');
   if(!wrap) return;
+  _hazQRCallback = cb;
   wrap.style.display = 'flex';
   wrap.innerHTML = opts.map((o,i)=>
     `<button class="haz-qr" data-idx="${i}">${esc(o)}</button>`
@@ -4276,11 +4533,21 @@ function hazShowQuickReplies(opts, cb){
   wrap.querySelectorAll('.haz-qr').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const val = opts[parseInt(btn.dataset.idx)];
-      wrap.style.display = 'none';
-      wrap.innerHTML = '';
+      hazClearQuickReplies();
       cb(val);
     });
   });
+  // Update placeholder to hint typing is also ok
+  const inp = document.getElementById('hazChatInput');
+  if(inp) inp.placeholder = 'Tap a button above or type your answer…';
+}
+
+function hazClearQuickReplies(){
+  const wrap = document.getElementById('hazQuickReplies');
+  if(wrap){ wrap.style.display='none'; wrap.innerHTML=''; }
+  _hazQRCallback = null;
+  const inp = document.getElementById('hazChatInput');
+  if(inp) inp.placeholder = 'e.g. PS5 slim, works fine, wants $250...';
 }
 
 function hazHelperFinish(){
@@ -4294,10 +4561,16 @@ function hazHelperFinish(){
   const basePrice = match ? match.price : 0;
 
   if(!basePrice){
-    // No match — ask for manual price
-    hazAddBubble('haz', 'I do not have a store price for this item. What do you think it can sell for? Give me a number and I will calculate the offer.');
-    _hazAwaitingPrice = 'helper_manual';
-    _helperState.manualMode = true;
+    // No match — ask for eBay sold comps
+    _hazUnknownItem = match ? match.title : (category + ' item');
+    _hazSoldComps = [];
+    hazAddBubble('haz',
+      'I do not have a store price for this item yet. Pull up eBay → search it → filter by <b>Sold listings</b>.<br><br>'
+      +'Enter at least <b>5 sold prices</b> (one by one or comma separated) and I will calculate a safe offer from real market data.',
+      true
+    );
+    _hazAwaitingPrice = 'comps';
+    _helperState = null; // exit helper flow, comp mode takes over
     return;
   }
 
@@ -4346,6 +4619,48 @@ function hazHelperFinish(){
 // ── Haz Store Price Database (SYG sold orders + active listings) ──────
 // Sources: sold = confirmed sell-through price, active = current asking price
 // Sold prices are weighted higher in matching — they reflect real market value
+// ── Haz Inventory Velocity (days-to-sell from SYG order history) ──
+// Source: Shopify sold orders — product.createdAt → order.createdAt
+// Pulled June 25 2026. Green <14d, Yellow 14-45d, Red >45d
+const HAZ_VELOCITY = {
+  // By keyword match — avg days to sell, sample size, risk level
+  'storage drives':     {avg:10,  max:61,  n:19, label:'Computer Parts',        risk:'green',  note:'Sells in ~10 days on avg'},
+  'ssds':               {avg:10,  max:61,  n:19, label:'SSDs',                  risk:'green',  note:'Sells in ~10 days on avg'},
+  'ram memory':         {avg:6,   max:6,   n:1,  label:'RAM',                   risk:'green',  note:'Sells fast ~6 days'},
+  'graphics card gpu':  {avg:14,  max:14,  n:1,  label:'GPU',                   risk:'yellow', note:'~2 weeks to sell'},
+  'cell phone':         {avg:4,   max:6,   n:2,  label:'Phones',                risk:'green',  note:'Phones move fast ~4 days'},
+  'laptop':             {avg:16,  max:82,  n:7,  label:'Laptops',               risk:'yellow', note:'Avg 2-3 weeks, some sit 2+ months'},
+  'desktop computer':   {avg:7,   max:7,   n:1,  label:'Desktop',               risk:'green',  note:'~1 week to sell'},
+  'tablet ipad':        {avg:48,  max:95,  n:2,  label:'Tablets',               risk:'red',    note:'Slow mover — avg 7 weeks'},
+  'console':            {avg:12,  max:12,  n:1,  label:'Consoles',              risk:'green',  note:'~12 days to sell'},
+  'smart watch':        {avg:1,   max:1,   n:1,  label:'Smartwatches',          risk:'green',  note:'Sells same day'},
+  'accessory':          {avg:97,  max:420, n:5,  label:'Accessories',           risk:'red',    note:'Very slow — can sit 3-14 months'},
+  'charger cable':      {avg:420, max:420, n:1,  label:'Cables/Chargers',       risk:'red',    note:'Can sit for over a year — avoid'},
+  'camera':             {avg:55,  max:55,  n:1,  label:'Cameras/AV',            risk:'red',    note:'Niche item — slow to move'},
+  'logic board parts':  {avg:244, max:244, n:1,  label:'Repair Parts',          risk:'red',    note:'Very niche — can sit 8+ months'},
+};
+
+// Match velocity entry from item text
+function hazVelocityMatch(text, category){
+  const lo = text.toLowerCase();
+  if(/charger|cable|usb|power.?adapter/.test(lo))      return HAZ_VELOCITY['charger cable'];
+  if(/logic.?board|repair.?part|board.?820/.test(lo))  return HAZ_VELOCITY['logic board parts'];
+  if(/camera|webcam|network.?cam/.test(lo))            return HAZ_VELOCITY['camera'];
+  if(/ipad|galaxy.?tab|tablet/.test(lo))               return HAZ_VELOCITY['tablet ipad'];
+  if(/smartwatch|galaxy.?watch|apple.?watch/.test(lo)) return HAZ_VELOCITY['smart watch'];
+  if(/phone|iphone|galaxy.?s|pixel/.test(lo))          return HAZ_VELOCITY['cell phone'];
+  if(/macbook|laptop|thinkpad|probook|precision|latitude|optiplex/.test(lo)){
+    if(/desktop|optiplex|nuc|mini.?pc/.test(lo)) return HAZ_VELOCITY['desktop computer'];
+    return HAZ_VELOCITY['laptop'];
+  }
+  if(/rtx|gtx|gpu|graphics.?card|radeon|geforce|quadro/.test(lo)) return HAZ_VELOCITY['graphics card gpu'];
+  if(/ps5|ps4|xbox|nintendo|console|switch/.test(lo)) return HAZ_VELOCITY['console'];
+  if(/ram|ddr|sodimm|dimm|memory/.test(lo))           return HAZ_VELOCITY['ram memory'];
+  if(category === 'accessory' || /speaker|headphone|receiver|projector|drone/.test(lo)) return HAZ_VELOCITY['accessory'];
+  if(category === 'storage' || /ssd|hdd|nvme|sata|hard.?drive/.test(lo)) return HAZ_VELOCITY['ssds'];
+  return null;
+}
+
 const HAZ_STORE_PRICES = [
   // Storage Drives (sold)
   {title:"Samsung 860 EVO 1TB SSD", keywords:["860 evo 1tb","samsung 860 evo","mz-76e1t0"], price:109.99, source:"sold"},
@@ -4487,26 +4802,7 @@ document.getElementById('hazCustomerBack').addEventListener('click',()=>{
   document.getElementById('hazCustomerView').classList.add('hidden');
 });
 
-function hazChatSend(){
-  const input = document.getElementById('hazChatInput');
-  const text = input.value.trim();
-  if(!text) return;
-  if(!_hazVibe){
-    hazAddBubble('haz','Pick a customer vibe first (Easy / Tough / Desperate) so I can calibrate the offer.');
-    return;
-  }
-  input.value = '';
-  hazAddBubble('staff', text);
-  hazAddTyping();
-  setTimeout(()=>{
-    hazRemoveTyping();
-    if(HAZ_MODE === 'helper'){
-      hazHelperStart(text);
-    } else {
-      hazProcessMessage(text);
-    }
-  }, 900);
-}
+// hazChatSend defined below in price input handler section
 
 function hazAddBubble(who, html, isHtml){
   const msgs = document.getElementById('hazChatMessages');
@@ -4535,6 +4831,168 @@ function hazRemoveTyping(){
   if(t) t.remove();
 }
 
+// ── Haz Smart Engine ──────────────────────────────────────────────
+
+// 1. Broad alias table — maps vague descriptions to searchable terms
+const HAZ_ALIASES = [
+  // Consoles — vague descriptions
+  {pattern:/small\s+white\s+xbox|xbox\s+small|xbox\s+s\b|series\s+s\b/i,       term:'xbox series s'},
+  {pattern:/big\s+black\s+xbox|xbox\s+series\s+x|series\s+x\b/i,               term:'xbox series x'},
+  {pattern:/old\s+xbox\s+one|xbox\s+one\s+s|xbox\s+1\s+s/i,                   term:'xbox one s'},
+  {pattern:/old\s+xbox|original\s+xbox\s+one|xbox\s+one\b/i,                   term:'xbox one'},
+  {pattern:/new\s+playstation|new\s+sony|ps5\s+slim|playstation\s+5\s+slim/i,  term:'playstation 5 slim'},
+  {pattern:/playstation\s+5|ps\s*5\b|sony\s+console\s+new/i,                   term:'playstation 5'},
+  {pattern:/ps\s*4\s+pro/i,                                                      term:'ps4 pro'},
+  {pattern:/ps\s*4\s+slim/i,                                                     term:'ps4 slim'},
+  {pattern:/ps\s*4\b|playstation\s+4/i,                                          term:'playstation 4'},
+  {pattern:/switch\s+oled/i,                                                     term:'nintendo switch oled'},
+  {pattern:/switch\s+lite/i,                                                     term:'nintendo switch lite'},
+  {pattern:/nintendo\s+switch|switch\s+console/i,                               term:'nintendo switch'},
+  {pattern:/old\s+nintendo\s+portable|3\s*ds|nintendo\s+3ds/i,                 term:'nintendo 3ds'},
+  // Phones — vague
+  {pattern:/apple\s+phone|apple\s+cell/i,                                       term:'iphone'},
+  {pattern:/samsung\s+phone|galaxy\s+phone/i,                                   term:'samsung galaxy'},
+  {pattern:/google\s+phone/i,                                                    term:'google pixel'},
+  // Laptops — vague
+  {pattern:/apple\s+laptop|mac\s+laptop/i,                                      term:'macbook'},
+  {pattern:/dell\s+laptop/i,                                                     term:'dell laptop'},
+  {pattern:/hp\s+laptop/i,                                                       term:'hp laptop'},
+  // Tablets — vague
+  {pattern:/apple\s+tablet/i,                                                    term:'ipad'},
+  {pattern:/samsung\s+tablet/i,                                                  term:'samsung galaxy tab'},
+];
+
+// Apply aliases to normalize vague text
+function hazApplyAliases(text){
+  let normalized = text;
+  for(const alias of HAZ_ALIASES){
+    if(alias.pattern.test(normalized)){
+      // Replace matched portion with known term
+      normalized = normalized.replace(alias.pattern, alias.term);
+      break;
+    }
+  }
+  return normalized;
+}
+
+// 2. Red flag detector — returns {flag, level, message, pass} or null
+function hazRedFlags(text){
+  const lo = text.toLowerCase();
+  // Hard pass — jailbroken/modified
+  if(/jailbreak(ed)?|modified|unlock(ed)?\s+ios|bypass(ed)?|checkra1n|palera1n|unc0ver/.test(lo)){
+    return {pass:true, level:'red', flag:'Jailbroken / Modified',
+      message:'Jailbroken or modified devices are a no-go. Resale risk is too high — buyers expect stock firmware and we cannot guarantee it. Pass on this one.',
+      script:'"Sorry, we are not able to take modified devices — it creates issues for us when reselling."'};
+  }
+  // Hard pass — clearly broken with no parts value
+  if(/completely\s+destroy(ed)?|shatter(ed)?\s+beyond|crushed|ran\s+over|burnt|burn\s+mark/.test(lo)){
+    return {pass:true, level:'red', flag:'Severely damaged',
+      message:'Item appears to be beyond any resale or parts value based on the description.',
+      script:'"Unfortunately this one is too far gone for us to do anything with it."'};
+  }
+  // Warning — water damage (not auto-pass, just flag)
+  if(/water.?damage|water.?damag|liquid.?damage|dropped.?in.?water|phone.?wet|fell.?in/.test(lo)){
+    return {pass:false, level:'yellow', flag:'Water damage',
+      message:'Water damage is a serious risk — corrosion can cause failures weeks after purchase even if it powers on now. Offer should be very low. Treat as for-parts pricing.',
+      script:'"We can look at it but water damage makes things tricky for us — if we do anything it would be a very low offer."'};
+  }
+  // Warning — won't turn on (not auto-pass — could be parts value)
+  if(/won.?t\s+(turn|power|boot|start)|does.?n.?t\s+(turn|power|boot|start|work)|not\s+(turning|powering|booting|starting|working)|dead\s+unit|completely\s+dead/.test(lo)){
+    return {pass:false, level:'yellow', flag:'Does not power on',
+      message:'Item does not power on. Offer only if there is clear parts value — price accordingly (−45% to −60% from working price).',
+      script:'"Since it does not turn on we can only look at it for parts value — that changes the number significantly."'};
+  }
+  // Warning — IMEI/blacklisted
+  if(/blacklist(ed)?|bad\s+imei|blocked\s+imei|reported\s+(lost|stolen)|stolen/.test(lo)){
+    return {pass:true, level:'red', flag:'Blacklisted / Bad IMEI',
+      message:'Blacklisted or stolen devices cannot be activated on any carrier. Hard pass — legal risk.',
+      script:'"We cannot take devices with bad IMEI or that have been reported stolen."'};
+  }
+  return null;
+}
+
+// 3. Vagueness detector — returns clarifying question or null
+function hazVaguenessCheck(text, category){
+  const lo = text.toLowerCase();
+  const words = lo.split(/\s+/).filter(w=>w.length>2);
+
+  // Too short / too vague
+  if(words.length <= 2 && category === 'general'){
+    return 'Can you tell me more? What brand is it, and what type of device — phone, laptop, console, tablet?';
+  }
+  // Laptop with no brand
+  if(category==='laptop' && !/apple|mac|dell|hp|lenovo|asus|acer|msi|razer|surface|samsung/.test(lo)){
+    return 'What brand is the laptop? And do you know the processor — Intel i5, i7, Apple M1, etc?';
+  }
+  // Phone with no brand or model
+  if(category==='phone' && !/iphone|galaxy|pixel|motorola|oneplus|lg\b/.test(lo)){
+    return 'What brand is the phone? iPhone, Samsung Galaxy, Pixel, or something else?';
+  }
+  // Console with no specific model
+  if(category==='console' && !/ps5|ps4|xbox|switch|3ds|wii|playstation|nintendo/.test(lo)){
+    return 'Which console is it? PlayStation, Xbox, Nintendo Switch?';
+  }
+  return null;
+}
+
+// 4. Bundle detector — splits "PS4 + 3 games + controller" into components
+function hazDetectBundle(text){
+  const lo = text.toLowerCase();
+  const extras = [];
+  let baseText = text;
+
+  // Games
+  const gameMatch = lo.match(/(\d+)\s+games?/);
+  if(gameMatch){
+    const count = parseInt(gameMatch[1]);
+    extras.push({label:`${count} game${count>1?'s':''}`, value: count * 9});
+    baseText = baseText.replace(new RegExp(gameMatch[0],'i'), '').trim();
+  }
+  // Extra controllers
+  const ctrlMatch = lo.match(/(\d+)\s+(?:extra\s+)?controllers?/);
+  if(ctrlMatch && !lo.match(/no\s+controller/)){
+    const count = parseInt(ctrlMatch[1]);
+    if(count > 1){
+      extras.push({label:`${count-1} extra controller${count-1>1?'s':''}`, value:(count-1)*20});
+      baseText = baseText.replace(new RegExp(ctrlMatch[0],'i'), '1 controller').trim();
+    }
+  }
+  // Headset
+  if(/headset|headphone/.test(lo)){
+    extras.push({label:'headset', value:15});
+  }
+  // Memory card
+  if(/memory\s+card|sd\s+card/.test(lo)){
+    extras.push({label:'memory card', value:10});
+  }
+
+  return extras.length > 0 ? {baseText, extras} : null;
+}
+
+// 5. Price sanity check — compares manual price to known store prices
+function hazSanityCheck(manualPrice, itemText){
+  const match = hazLocalMatch(itemText);
+  if(!match) return null;
+  const ratio = manualPrice / match.price;
+  if(ratio < 0.3){
+    return {type:'low', storePrice: match.price,
+      message:`That seems very low — ${match.title} typically sells for $${match.price} in our store. Are you sure $${manualPrice} is realistic?`};
+  }
+  if(ratio > 2.0){
+    return {type:'high', storePrice: match.price,
+      message:`That seems high — ${match.title} typically sells for $${match.price} in our store. Double-check the sold listings.`};
+  }
+  return null;
+}
+
+// 6. Negotiation memory — detect counter-offers in message
+function hazDetectCounter(text){
+  const lo = text.toLowerCase();
+  const counterMatch = lo.match(/(?:came?\s+down\s+to|now\s+want(?:s)?|counter(?:ed)?\s+(?:at|with|to)|accept(?:s)?\s+|will\s+take|go(?:es)?\s+down\s+to|down\s+to)\s*\$?\s*(\d+)/);
+  if(counterMatch) return parseFloat(counterMatch[1]);
+  return null;
+}
+
 async function hazProcessMessage(text){
   const lo = text.toLowerCase();
   if(!_hazVibe){
@@ -4543,47 +5001,323 @@ async function hazProcessMessage(text){
     else if(lo.includes('desperate')||lo.includes('urgent')||lo.includes('needs cash')) _hazVibe='desperate';
   }
 
-  // Step 1: Try local store price match first — instant, no API needed
-  const localMatch = hazLocalMatch(text);
+  // ── 6. Negotiation memory — counter-offer detection ──────────────
+  const counterPrice = hazDetectCounter(text);
+  if(counterPrice && _hazLastResult){
+    hazRemoveTyping();
+    const d = _hazLastResult;
+    const vo = {easy:{maxPct:0.40},tough:{maxPct:0.55},desperate:{maxPct:0.30}}[_hazVibe||'easy'];
+    const ourMax = Math.round(d.value * (vo?.maxPct||0.40));
+    if(counterPrice <= ourMax){
+      hazAddBubble('haz',
+        `Customer came down to <b>$${counterPrice}</b> — that is within your max of <b>$${ourMax}</b>. `
+        +(counterPrice <= Math.round(d.value*0.35) ? '🟢 <b>Good deal</b> — take it.' : '🟡 <b>Acceptable</b> — you can take it or try one more push down.')
+        +`<br><br>Script: "I can work with $${counterPrice}${counterPrice < ourMax ? ' — let me see what I can do for you' : ''}."`,
+        true);
+    } else {
+      hazAddBubble('haz',
+        `Customer wants <b>$${counterPrice}</b> but your max is <b>$${ourMax}</b>. `
+        +`That is $${counterPrice-ourMax} above what works for us.<br><br>`
+        +`Script: "I appreciate you coming down but I am still at <b>$${ourMax}</b> — that is genuinely my ceiling on this one."`,
+        true);
+    }
+    return;
+  }
+
+  // ── 1. Apply aliases — normalize vague descriptions ──────────────
+  const normalized = hazApplyAliases(text);
+
+  // ── 3. Red flag detection ────────────────────────────────────────
+  const flag = hazRedFlags(normalized);
+  if(flag){
+    hazRemoveTyping();
+    if(flag.pass){
+      _hazLastResult = null;
+      hazAddBubble('haz',
+        `<div class="haz-pass-card">`
+        +`<div class="haz-pass-title">🔴 ${esc(flag.flag)}</div>`
+        +`<div class="haz-pass-text">${esc(flag.message)}<br><br><i>${esc(flag.script)}</i></div></div>`,
+        true);
+      document.getElementById('hazReset').style.display='';
+    } else {
+      // Warning only — continue with reduced pricing
+      hazAddBubble('haz',
+        `<div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12.5px;color:#92400E;">`
+        +`⚠️ <b>${esc(flag.flag)}</b><br>${esc(flag.message)}<br><br><i>${esc(flag.script)}</i></div>`,
+        true);
+      // Continue processing with warning shown
+      _hazContinueAfterFlag = normalized;
+      setTimeout(()=>{ _hazContinueAfterFlag = null; hazProcessCore(normalized); }, 800);
+    }
+    return;
+  }
+
+  hazProcessCore(normalized);
+}
+
+let _hazContinueAfterFlag = null;
+
+async function hazProcessCore(text){
+  // ── 4. Bundle detection ──────────────────────────────────────────
+  const bundle = hazDetectBundle(text);
+  const baseText = bundle ? bundle.baseText : text;
+
+  // ── Step 1: Try local store price match ──────────────────────────
+  const localMatch = hazLocalMatch(baseText);
+
+  // ── 2. Vagueness check — ask for more info if needed ─────────────
+  const category = hazDetectCategory(baseText);
+  if(!localMatch){
+    const clarify = hazVaguenessCheck(baseText, category);
+    if(clarify && baseText.trim().split(/\s+/).length < 3){
+      hazRemoveTyping();
+      hazAddBubble('haz', clarify);
+      return;
+    }
+  }
+
   if(localMatch){
     hazRemoveTyping();
-    // Extract asking price from text if mentioned
-    const askMatch = text.match(/\$?\s*(\d+(?:\.\d+)?)\s*(?:dollars?|bucks?)?/gi);
+    // Extract asking price
+    const askMatch = text.match(/(?:want[s]?|asking|ask|offer|price|for)\s*\$?\s*(\d+(?:\.\d+)?)|\$\s*(\d+(?:\.\d+)?)/gi);
     let askingPrice = 0;
     if(askMatch){
-      const nums = askMatch.map(m=>parseFloat(m.replace(/[^0-9.]/g,''))).filter(n=>n>10&&n<5000);
+      const nums = askMatch.map(m=>{const n=m.match(/(\d+(?:\.\d+)?)/);return n?parseFloat(n[1]):0;}).filter(n=>n>=20&&n<=4999&&!(n>=1900&&n<=2099));
       if(nums.length) askingPrice = nums[nums.length-1];
     }
+
+    // Condition adjust
+    const {adj, condSummary, pass, passReason} = hazQuickConditionAdjust(text, category, localMatch.price);
+
+    if(pass){
+      _hazLastResult = null;
+      hazAddBubble('haz',
+        '<div><b>'+esc(localMatch.title)+'</b></div>'
+        +'<div class="haz-pass-card"><div class="haz-pass-title">🔴 Pass on this one</div>'
+        +'<div class="haz-pass-text">'+esc(passReason)+'<br><br>"Sorry, this one does not work for us based on its condition."</div></div>',
+        true);
+      document.getElementById('hazReset').style.display='';
+      return;
+    }
+
+    let adjustedPrice = Math.max(HAZ_MIN_RESALE, Math.round(localMatch.price + adj));
+
+    // Bundle — add extra value
+    let bundleNote = '';
+    if(bundle && bundle.extras.length){
+      const extraVal = bundle.extras.reduce((s,e)=>s+e.value, 0);
+      adjustedPrice += extraVal;
+      bundleNote = ' Bundle: +$'+extraVal+' ('+bundle.extras.map(e=>e.label).join(', ')+')';
+    }
+
+    const adjNote = (adj < 0 ? ' (−$'+Math.abs(adj)+' condition)' : adj > 0 ? ' (+$'+adj+' specs)' : '') + bundleNote;
+
     hazRenderChatResult({
       item: localMatch.title,
-      condition: 'Based on description provided',
-      estimate: localMatch.price,
+      condition: condSummary || 'Based on description provided',
+      estimate: adjustedPrice,
       asking_price: askingPrice,
       confidence: localMatch.source==='sold' ? 'high' : 'medium',
-      pass: localMatch.price < HAZ_MIN_RESALE,
-      pass_reason: localMatch.price < HAZ_MIN_RESALE ? 'Resale price $'+localMatch.price+' is below the $'+HAZ_MIN_RESALE+' minimum' : '',
-      source: localMatch.source==='sold' ? 'SYG Sold' : 'SYG Active'
+      pass: false, pass_reason: '',
+      source: localMatch.source==='sold' ? 'SYG Sold' : 'SYG Active',
+      adjNote
     }, _hazVibe);
     return;
   }
 
-  // Step 2: No local match — ask for manual price input
+  // Step 2: No match — comp mode
   hazRemoveTyping();
+  _hazUnknownItem = text;
+  _hazSoldComps = [];
   hazAddBubble('haz',
-    'I don\'t have that item in the store database yet. What do you think it can sell for? Give me a resale price and I\'ll calculate the offer.',
-    false
+    'I don\'t have that item in our store database yet. Pull up eBay → search the item → filter by <b>Sold listings</b>.<br><br>Enter at least <b>5 sold prices</b> one by one (or comma separated) so I can calculate a safe buying price from real market data.',
+    true
   );
-  // Listen for the next message as a price input
-  _hazAwaitingPrice = text;
+  _hazAwaitingPrice = 'comps';
+}
+// Reads free text and extracts condition signals to adjust base price
+function hazQuickConditionAdjust(text, category, basePrice){
+  const lo = text.toLowerCase();
+  let adj = 0;
+  const details = [];
+  let pass = false;
+  let passReason = '';
+  const conditions = [];
+
+  // ── Universal signals ────────────────────────────────────────────
+  // Hard pass signals
+  if(/icloud.?lock|locked.?icloud|activation.?lock/.test(lo)){
+    return {adj:0, adjDetails:[], condSummary:'iCloud locked', pass:true, passReason:'iCloud locked — cannot be activated'};
+  }
+  if(/google.?lock|google.?account.?lock|frp.?lock/.test(lo)){
+    return {adj:0, adjDetails:[], condSummary:'Google/FRP locked', pass:true, passReason:'Google account locked — cannot be activated'};
+  }
+  if(/does.?n.?t.?(turn|power|boot|start|work)|dead|won.?t.?(turn|power|boot|start)|not.?(turning|powering|booting|starting)|no.?power/.test(lo)){
+    return {adj:0, adjDetails:[], condSummary:'Does not power on', pass:true, passReason:'Does not power on'};
+  }
+
+  // Damage signals
+  if(/crack(ed|s)?.*screen|screen.*crack(ed|s)?|shatter(ed)?.*screen|screen.*shatter/.test(lo)){
+    const cut = Math.round(basePrice * 0.35);
+    adj -= cut; details.push('Cracked screen −$'+cut);
+    conditions.push('cracked screen');
+  } else if(/scratch(ed|es|y)?|scuff(ed|s)?|minor.?(wear|damage)|light.?(wear|damage)/.test(lo)){
+    const cut = Math.round(basePrice * 0.05);
+    adj -= cut; details.push('Scratches/scuffs −$'+cut);
+    conditions.push('minor scratches');
+  }
+  if(/heavy.?(wear|damage|scratch)|bad.?condition|poor.?condition|beat.?up/.test(lo)){
+    const cut = Math.round(basePrice * 0.12);
+    adj -= cut; details.push('Heavy wear −$'+cut);
+    conditions.push('heavy wear');
+  }
+  if(/crack(ed|s)?.*bod(y|ies)|bod(y|ies).*crack(ed|s)?|crack(ed|s)?.*hous(ing|e)|bent/.test(lo)){
+    const cut = Math.round(basePrice * 0.20);
+    adj -= cut; details.push('Cracked body/housing −$'+cut);
+    conditions.push('cracked housing');
+  }
+  if(/water.?damage|water.?damag|liquid.?damage/.test(lo)){
+    const cut = Math.round(basePrice * 0.45);
+    adj -= cut; details.push('Water damage −$'+cut);
+    conditions.push('water damage');
+  }
+  if(/untest(ed)?|not.?test(ed)?/.test(lo)){
+    const cut = Math.round(basePrice * 0.15);
+    adj -= cut; details.push('Untested −$'+cut);
+    conditions.push('untested');
+  }
+
+  // Console-specific
+  if(category === 'console'){
+    if(/no.?controller|without.?controller|0.?controller|missing.?controller/.test(lo)){
+      adj -= 20; details.push('No controller −$20');
+      conditions.push('no controller');
+    } else if(/1.?controller|one.?controller|single.?controller/.test(lo)){
+      adj -= 10; details.push('1 controller −$10');
+      conditions.push('1 controller');
+    }
+    if(/no.?cable|without.?cable|missing.?cable/.test(lo)){
+      adj -= 15; details.push('No cables −$15');
+      conditions.push('no cables');
+    } else if(/power.?only|hdmi.?only|no.?hdmi|no.?power/.test(lo)){
+      adj -= 8; details.push('Incomplete cables −$8');
+      conditions.push('missing cables');
+    }
+    if(/disc.?tray.?(broken|broken|stuck|won.?t)|broken.?disc.?tray/.test(lo)){
+      const cut = Math.round(basePrice * 0.25);
+      adj -= cut; details.push('Disc tray issue −$'+cut);
+      conditions.push('disc tray issue');
+    }
+  }
+
+  // Phone-specific
+  if(category === 'phone'){
+    if(/carrier.?lock|lock(ed)?.?(att|verizon|t.?mobile|sprint|metro)|att.?lock|verizon.?lock/.test(lo)){
+      const cut = Math.round(basePrice * 0.12);
+      adj -= cut; details.push('Carrier locked −$'+cut);
+      conditions.push('carrier locked');
+    }
+    if(/back.?glass.?crack|crack.?back/.test(lo)){
+      const cut = Math.round(basePrice * 0.08);
+      adj -= cut; details.push('Back glass cracked −$'+cut);
+      conditions.push('back glass cracked');
+    }
+    if(/battery.?(dead|bad|0%|drained|swoll)|swoll.*battery/.test(lo)){
+      adj -= 35; details.push('Bad battery −$35');
+      conditions.push('bad battery');
+    } else if(/battery.*(low|poor|weak|\d0%)|(\d0%).*(battery)/.test(lo)){
+      adj -= 15; details.push('Low battery health −$15');
+      conditions.push('low battery');
+    }
+  }
+
+  // Laptop-specific
+  if(category === 'laptop'){
+    if(/no.?charger|without.?charger|missing.?charger/.test(lo)){
+      adj -= 20; details.push('No charger −$20');
+      conditions.push('no charger');
+    }
+    if(/dead.?battery|battery.?dead|swoll.*battery|battery.?swell/.test(lo)){
+      adj -= 40; details.push('Dead/swollen battery −$40');
+      conditions.push('dead battery');
+    } else if(/bad.?battery|battery.?bad|battery.?(poor|low|weak)/.test(lo)){
+      adj -= 20; details.push('Poor battery −$20');
+      conditions.push('poor battery');
+    }
+    if(/key(s|board)?.?(miss|broken|stuck|pop.?off)|broken.?key/.test(lo)){
+      const cut = Math.round(basePrice * 0.10);
+      adj -= cut; details.push('Keyboard issue −$'+cut);
+      conditions.push('keyboard issue');
+    }
+  }
+
+  // GPU-specific
+  if(category === 'gpu'){
+    if(/fan(s)?.?(dead|broken|not.?spin|stuck)|broken.?fan/.test(lo)){
+      const cut = Math.round(basePrice * 0.25);
+      adj -= cut; details.push('Fan issue −$'+cut);
+      conditions.push('fan issue');
+    }
+    if(/for.?parts|broken|not.?work|doesn.?t.?work/.test(lo)){
+      const cut = Math.round(basePrice * 0.45);
+      adj -= cut; details.push('For parts/not working −$'+cut);
+      conditions.push('for parts');
+    }
+  }
+
+  // Mint/sealed bonus
+  if(/seal(ed)?|brand.?new|mint|like.?new|perfect/.test(lo)){
+    const bonus = Math.round(basePrice * 0.05);
+    adj += bonus; details.push('Like new +$'+bonus);
+    conditions.push('like new');
+  }
+
+  const condSummary = conditions.length ? conditions.join(', ') : 'As described';
+  return {adj, adjDetails: details, condSummary, pass, passReason};
 }
 
-let _hazAwaitingPrice = null;
 
-// Price input mode — when Haz asks staff to provide a price manually
+let _hazAwaitingPrice = null;
+let _hazUnknownItem = '';
+let _hazSoldComps = [];
+
+function hazExtractPrices(text){
+  // Extract all dollar amounts from text, ignore years
+  const matches = text.match(/\$?\s*(\d+(?:\.\d+)?)/g) || [];
+  return matches
+    .map(m => parseFloat(m.replace(/[^0-9.]/g,'')))
+    .filter(n => n >= 5 && n <= 5000 && !(n >= 1900 && n <= 2099));
+}
+
+function hazCalcMedian(arr){
+  const s = [...arr].sort((a,b)=>a-b);
+  const mid = Math.floor(s.length/2);
+  return s.length%2 ? s[mid] : (s[mid-1]+s[mid])/2;
+}
+
+function hazTrimOutliers(arr){
+  if(arr.length < 4) return arr;
+  const med = hazCalcMedian(arr);
+  // Keep values within 50%-200% of median
+  return arr.filter(p => p >= med*0.5 && p <= med*2.0);
+}
+
+// Price input mode — when Haz asks staff to provide comp data
 function hazChatSend(){
   const input = document.getElementById('hazChatInput');
   const text = input.value.trim();
   if(!text) return;
+
+  // If quick replies are active — typed answer overrides chip selection
+  if(_hazQRCallback){
+    input.value = '';
+    hazAddBubble('staff', text, false);
+    const cb = _hazQRCallback;
+    hazClearQuickReplies();
+    cb(text);
+    return;
+  }
+
   if(!_hazVibe){
     hazAddBubble('haz','Pick a customer vibe first (Easy / Tough / Desperate) so I can calibrate the offer.');
     return;
@@ -4591,28 +5325,91 @@ function hazChatSend(){
   input.value = '';
   hazAddBubble('staff', text);
 
-  // If we were waiting for a price input
-  if(_hazAwaitingPrice){
-    const priceMatch = text.match(/\$?\s*(\d+(?:\.\d+)?)/);
-    if(priceMatch){
-      const price = parseFloat(priceMatch[1]);
-      _hazAwaitingPrice = null;
-      hazAddTyping();
-      setTimeout(()=>{
-        hazRemoveTyping();
+  // Comp collection mode — building sold price list
+  if(_hazAwaitingPrice === 'comps'){
+    const newPrices = hazExtractPrices(text);
+    if(newPrices.length){
+
+      // Single price shortcut — if exactly one price and staff signals confidence, use it directly
+      const singleSignal = /^[\$]?\d+(\.\d+)?$/.test(text.trim()) ||
+        /^(just|only|around|about|roughly|maybe|sell.*(for|at)|worth|value)\s*[\$]?\d/i.test(text);
+      if(newPrices.length === 1 && (_hazSoldComps.length === 0 || (_hazSoldComps.length===1&&_hazSoldComps[0]===-1)) && singleSignal){
+        // Clear sentinel if present
+        if(_hazSoldComps.length===1&&_hazSoldComps[0]===-1) _hazSoldComps=[];
+        // 5. Sanity check on manual price
+        if(_hazSoldComps.length===0){
+          const sanity = hazSanityCheck(newPrices[0], _hazUnknownItem);
+          if(sanity){
+            hazAddBubble('haz', '⚠️ '+esc(sanity.message)+'<br>Type the price again to confirm, or enter eBay sold comps instead.', true);
+            _hazSoldComps.push(-1); // sentinel — skip sanity on next entry
+            return;
+          }
+        }
+        // Staff gave one confident number — use it directly
+        _hazAwaitingPrice = null;
+        const estimate = newPrices[0];
+        const itemText = _hazUnknownItem || 'Item';
+        _hazUnknownItem = '';
+        _hazSoldComps = [];
         hazRenderChatResult({
-          item: text.match(/\d+/) ? 'Item (price provided by staff)' : text,
-          condition: 'As described by staff',
-          estimate: price,
+          item: itemText,
+          condition: 'Based on staff estimate',
+          estimate,
           asking_price: 0,
           confidence: 'medium',
-          pass: price < HAZ_MIN_RESALE,
-          pass_reason: price < HAZ_MIN_RESALE ? 'Resale $'+price+' is below $'+HAZ_MIN_RESALE+' floor' : '',
-          source: 'Manual'
+          pass: estimate < HAZ_MIN_RESALE,
+          pass_reason: estimate < HAZ_MIN_RESALE ? 'Value $'+estimate+' is below $'+HAZ_MIN_RESALE+' floor' : '',
+          source: 'Staff Estimate'
         }, _hazVibe);
-      }, 600);
+        return;
+      }
+
+      _hazSoldComps.push(...newPrices);
+      const got = _hazSoldComps.length;
+      const need = 5;
+      if(got < need){
+        const remaining = need - got;
+        hazAddBubble('haz',
+          `Got ${got} so far: ${_hazSoldComps.map(p=>'$'+p).join(', ')}<br>`
+          +`Need <b>${remaining} more</b> — or if you already know the resale value, just type it alone and I will calculate from there.`,
+          true
+        );
+      } else {
+        // Have enough — calculate
+        _hazAwaitingPrice = null;
+        const trimmed = hazTrimOutliers(_hazSoldComps);
+        const median  = hazCalcMedian(trimmed);
+        const avg     = trimmed.reduce((s,p)=>s+p,0)/trimmed.length;
+        const estimate = Math.round((median*0.6 + avg*0.4));
+        const itemText = _hazUnknownItem || 'Unknown item';
+        _hazUnknownItem = '';
+        _hazSoldComps = [];
+
+        hazAddBubble('haz',
+          `Used ${trimmed.length} of ${got} comps (${got-trimmed.length} outlier${got-trimmed.length!==1?'s':''} removed).<br>`
+          +`Median: <b>$${median.toFixed(0)}</b> · Avg: <b>$${avg.toFixed(0)}</b> · Haz estimate: <b>$${estimate}</b>`,
+          true
+        );
+
+        setTimeout(()=>{
+          hazRenderChatResult({
+            item: itemText,
+            condition: 'Based on eBay sold comps',
+            estimate,
+            asking_price: 0,
+            confidence: trimmed.length >= 7 ? 'high' : 'medium',
+            pass: estimate < HAZ_MIN_RESALE,
+            pass_reason: estimate < HAZ_MIN_RESALE ? 'Market value $'+estimate+' is below the $'+HAZ_MIN_RESALE+' floor' : '',
+            source: 'eBay Comps ('+trimmed.length+')'
+          }, _hazVibe);
+        }, 400);
+      }
     } else {
-      hazAddBubble('haz', 'Just give me a number — like 150 or $200. What can this realistically sell for?');
+      hazAddBubble('haz',
+        'Enter the sold prices as numbers — like <b>85, 120, 95</b> or one at a time.<br>'
+        +'Or if you already know what it sells for, just type that one number alone.',
+        true
+      );
     }
     return;
   }
@@ -4623,7 +5420,7 @@ function hazChatSend(){
     if(HAZ_MODE === 'helper' && !_helperState){
       hazHelperStart(text);
     } else if(HAZ_MODE === 'helper' && _helperState){
-      // already in helper flow — ignore extra text
+      // already in helper flow, ignore stray text
     } else {
       hazProcessMessage(text);
     }
@@ -4654,16 +5451,16 @@ function hazRenderChatResult(data, vibe){
 
   const fees   = value * HAZ_FEE_RATE;
   const net    = value - fees;
-  const maxOff = Math.round(value * HAZ_OFFER_RATE);
 
   const vibeOffers = {
-    easy:      { open: Math.round(maxOff*0.72), mid: Math.round(maxOff*0.86) },
-    tough:     { open: Math.round(maxOff*0.45), mid: Math.round(maxOff*0.70) },
-    desperate: { open: Math.round(maxOff*0.30), mid: Math.round(maxOff*0.55) },
+    easy:      { maxPct: 0.40, open: 0.72, mid: 0.86 },
+    tough:     { maxPct: 0.55, open: 0.45, mid: 0.70 },
+    desperate: { maxPct: 0.30, open: 0.30, mid: 0.50 },
   };
-  const o = vibeOffers[vibe] || vibeOffers.easy;
-  const openOff = Math.max(5, o.open);
-  const midOff  = Math.max(openOff+5, o.mid);
+  const vo = vibeOffers[vibe] || vibeOffers.easy;
+  const maxOff  = Math.round(value * vo.maxPct);
+  const openOff = Math.max(5, Math.round(maxOff * vo.open));
+  const midOff  = Math.max(openOff + 5, Math.round(maxOff * vo.mid));
 
   const vibeClass = vibe || 'easy';
   const scripts = {
@@ -4687,9 +5484,31 @@ function hazRenderChatResult(data, vibe){
       + data.source+'</span>'
     : '';
 
+  // Velocity — how fast does this type of item sell?
+  const vel = hazVelocityMatch(item+' '+condition, hazDetectCategory(item+' '+data.source));
+  let velHtml = '';
+  if(vel){
+    const velBg  = vel.risk==='green'?'#DCFCE7':vel.risk==='yellow'?'#FEF9C3':'#FEE2E2';
+    const velClr = vel.risk==='green'?'#166534':vel.risk==='yellow'?'#92400E':'#991B1B';
+    const velIcon = vel.risk==='green'?'🟢':vel.risk==='yellow'?'🟡':'🔴';
+    // Project sell date from today
+    const sellDate = new Date();
+    sellDate.setDate(sellDate.getDate() + vel.avg);
+    const sellStr = sellDate.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const worstDate = new Date();
+    worstDate.setDate(worstDate.getDate() + vel.max);
+    const worstStr = worstDate.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    velHtml = `<div style="margin-top:8px;padding:8px 11px;background:${velBg};border-radius:8px;font-size:12px;color:${velClr};">
+      <div style="font-weight:700;margin-bottom:3px;">${velIcon} Inventory projection — ${vel.label}</div>
+      <div>Expected to sell: <b>~${sellStr}</b> (avg ${vel.avg}d) &nbsp;·&nbsp; Worst case: <b>${worstStr}</b> (${vel.max}d)</div>
+      <div style="margin-top:3px;opacity:.85;">${vel.note}</div>
+    </div>`
+  }
+
   const adjNote = data.adjNote || '';
   const html = '<div><b>'+esc(item)+'</b>'+confBadge+sourceBadge+'<br><span style="font-size:11.5px;opacity:.8;">'+esc(condition)+'</span></div>'
     +'<div style="margin-top:10px;font-size:11px;color:#166534;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Market est: <span style="font-family:var(--mono);font-size:13px;">$'+value+'</span>'+esc(adjNote)+' &nbsp;·&nbsp; Net after fees: <span style="font-family:var(--mono);">$'+Math.round(net)+'</span></div>'
+    + velHtml
     +(data.asking_price && data.asking_price > 0 ? '<div style="margin-top:8px;padding:7px 10px;background:#FEF9C3;border:1px solid #FDE047;border-radius:8px;font-size:12px;color:#78350F;">'
       + '⚠️ Customer asking <b>$'+data.asking_price+'</b> '
       + (data.asking_price > maxOff ? '— above your max offer of $'+maxOff+'. Expect negotiation.' : data.asking_price > midOff ? '— above mid point. Open low and work up.' : '— within range. Open at $'+openOff+'.')
@@ -4704,21 +5523,56 @@ function hazRenderChatResult(data, vibe){
     +'<div class="haz-script-line '+vibeClass+'">'+((scripts[vibe]||scripts.easy))+'</div>'
     +'<div class="haz-script-line '+vibeClass+'" style="margin-top:4px;font-size:11.5px;">'+(pushScript[vibe]||pushScript.easy)+'</div>'
     +'</div>'
-    +'<button class="haz-show-customer" id="hazShowCustomerBtn">📋 Show to customer</button>';
+    +'<div class="haz-offer-select-wrap" id="hazOfferSelectWrap">'
+    +'<div class="haz-offer-select-label">Which offer are you going with?</div>'
+    +'<div class="haz-offer-select-chips">'
+    +'<button class="haz-osc best" data-amt="'+openOff+'">🟢 $'+openOff+' (open)</button>'
+    +'<button class="haz-osc mid" data-amt="'+midOff+'">🟡 $'+midOff+' (mid)</button>'
+    +'<button class="haz-osc max" data-amt="'+maxOff+'">🔴 $'+maxOff+' (max)</button>'
+    +'</div>'
+    +'<div class="haz-offer-custom-wrap">'
+    +'<input class="haz-offer-custom-input" id="hazOfferCustomInput" type="number" placeholder="Or type custom amount..." min="1" max="9999">'
+    +'<button class="haz-show-customer" id="hazShowCustomerBtn" disabled>📋 Show to customer</button>'
+    +'</div>'
+    +'</div>';
 
   hazAddBubble('haz', html, true);
   setTimeout(()=>{
+    // Wire offer selector chips
+    document.querySelectorAll('.haz-osc').forEach(chip=>{
+      chip.addEventListener('click',()=>{
+        document.querySelectorAll('.haz-osc').forEach(c=>c.classList.remove('selected'));
+        chip.classList.add('selected');
+        document.getElementById('hazOfferCustomInput').value = '';
+        const btn = document.getElementById('hazShowCustomerBtn');
+        if(btn){ btn.disabled = false; btn.dataset.amt = chip.dataset.amt; }
+        if(_hazLastResult) _hazLastResult.acceptedOffer = parseFloat(chip.dataset.amt);
+      });
+    });
+    // Wire custom input
+    const customInp = document.getElementById('hazOfferCustomInput');
+    if(customInp) customInp.addEventListener('input', function(){
+      const val = parseFloat(this.value);
+      document.querySelectorAll('.haz-osc').forEach(c=>c.classList.remove('selected'));
+      const btn = document.getElementById('hazShowCustomerBtn');
+      if(btn){ btn.disabled = !val || val<1; btn.dataset.amt = val; }
+      if(_hazLastResult && val) _hazLastResult.acceptedOffer = val;
+    });
     const btn = document.getElementById('hazShowCustomerBtn');
     if(btn) btn.addEventListener('click', hazShowCustomer);
   }, 50);
   document.getElementById('hazReset').style.display='';
   // Auto-pin to board
-  hazBoardAddCard({item, condition, value, fees, net, openOff, midOff, maxOff, vibe});
+  hazBoardAddCard({item, condition, value, fees, net, openOff, midOff, maxOff, vibe, category: hazDetectCategory(item+' '+condition)});
 }
 
 function hazShowCustomer(){
   if(!_hazLastResult) return;
   const d = _hazLastResult;
+  const shownOffer = d.acceptedOffer || d.openOff;
+  // Update board card accepted price
+  const boardCard = _boardCards.find(c=>c.item===d.item);
+  if(boardCard && d.acceptedOffer){ boardCard.acceptedPrice = '$'+d.acceptedOffer; hazBoardSave(); hazBoardRender(); }
   document.getElementById('hazCustomerBody').innerHTML =
     '<div class="haz-customer-item">'+esc(d.item)+'</div>'
     +'<div class="haz-customer-condition">'+esc(d.condition)+'</div>'
@@ -4731,10 +5585,10 @@ function hazShowCustomer(){
     +'</div>'
     +'<div class="haz-customer-offer">'
     +'<div class="haz-customer-offer-label">Our offer</div>'
-    +'<div class="haz-customer-offer-amount">$'+d.openOff+'</div>'
+    +'<div class="haz-customer-offer-amount">$'+shownOffer+'</div>'
     +'<div class="haz-customer-offer-note">Cash offer &middot; Based on current resale market data</div>'
     +'</div>'
-    +'<div class="haz-customer-disclaimer">Prices are based on recent sold listings and account for all costs associated with reselling your item. This offer is valid today only.</div>';
+    +'<div class="haz-customer-disclaimer">Prices are based on recent sold listings and account for all costs of reselling your item. This offer is valid today only.</div>';
   document.getElementById('hazCustomerView').classList.remove('hidden');
 }
 
@@ -4745,8 +5599,7 @@ function hazReset(){
       ? 'Helper mode on. Tell me what the customer is bringing in and I will walk through the intake questions.'
       : 'Hey, what is the customer bringing in? Tell me what it is, condition, and what they want for it. I will run the numbers.')
     +'</div></div>';
-  const qr = document.getElementById('hazQuickReplies');
-  if(qr){ qr.style.display='none'; qr.innerHTML=''; }
+  hazClearQuickReplies();
   const prog = document.getElementById('hazHelperProgress');
   if(prog) prog.style.display='none';
   document.querySelectorAll('.haz-vibe-btn').forEach(b=>b.classList.remove('on'));
@@ -4754,6 +5607,8 @@ function hazReset(){
   _hazLastResult = null;
   _helperState = null;
   _hazAwaitingPrice = null;
+  _hazSoldComps = [];
+  _hazUnknownItem = '';
   document.getElementById('hazReset').style.display='none';
   document.getElementById('hazChatInput').value='';
   const inp = document.getElementById('hazChatInput');
@@ -4768,6 +5623,52 @@ let _boardDrag  = null; // {cardId, startX, startY, origX, origY}
 let _boardPanning = false;
 let _panStart   = null;
 
+// ── Board card POS field generator ───────────────────────────────
+function hazPosFields(card){
+  const cat = card.category || 'general';
+  const lo  = (card.item+' '+card.condition).toLowerCase();
+  const f   = (label, val) => `<span style="color:#4ADE80;font-weight:700;">${label}:</span> ${esc(val||'—')}`;
+
+  // Extract make/model from item title e.g. "Microsoft Xbox Series X" → make=Microsoft, model=Xbox Series X
+  const words = card.item.split(' ');
+  const make  = words[0] || '—';
+  const model = words.slice(1).join(' ') || '—';
+
+  // Universal fields
+  let lines = [
+    f('Make', make),
+    f('Model', model),
+    f('Condition', card.condition || 'As described'),
+    f('Est. value', '$'+card.value),
+    f('Offered', '$'+card.openOff+' → max $'+card.maxOff),
+    f('Accepted at', card.acceptedPrice || '—'),
+    f('Staff', LISTER_INITIAL||'—'),
+  ];
+
+  // Category-specific attributes
+  if(cat === 'console' || /xbox|playstation|nintendo|switch|console/.test(lo)){
+    lines.push('');
+    lines.push('<span style="color:#4ADE80;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.08em;">Attributes</span>');
+    lines.push(f('Storage Size', /1tb/.test(lo)?'1TB':/512gb/.test(lo)?'512GB':/825gb/.test(lo)?'825GB':'—'));
+    lines.push(f('Controller', /no.?controller|0.?controller/.test(lo)?'No':(/2.?controller/.test(lo)?'2':'1')));
+    lines.push(f('Power Cable', /no.?cable|no.?power/.test(lo)?'No':'Yes'));
+    lines.push(f('HDMI Cable', /no.?cable|no.?hdmi/.test(lo)?'No':'Yes'));
+    lines.push(f('Retail Box', /no.?box/.test(lo)?'No':'—'));
+  }
+  else if(cat === 'phone' || /iphone|galaxy s|pixel|smartphone/.test(lo)){
+    lines.push('');
+    lines.push('<span style="color:#4ADE80;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.08em;">Attributes</span>');
+    lines.push(f('Storage', /1tb/.test(lo)?'1TB':/512gb/.test(lo)?'512GB':/256gb/.test(lo)?'256GB':/128gb/.test(lo)?'128GB':/64gb/.test(lo)?'64GB':'—'));
+    lines.push(f('iCloud Status', /icloud.?lock|activation.?lock/.test(lo)?'Locked':'Clean'));
+    lines.push(f('Battery Health', /below.?50|dead.?battery/.test(lo)?'<50%':/50.?79/.test(lo)?'50-79%':'80%+'));
+    lines.push(f('IMEI Status', 'Clean'));
+    lines.push(f('Network', /unlocked/.test(lo)?'Unlocked':/att/.test(lo)?'AT&T':/verizon/.test(lo)?'Verizon':/t.?mobile/.test(lo)?'T-Mobile':'—'));
+    lines.push(f('Charger', /no.?charger/.test(lo)?'No':'—'));
+  }
+
+  return lines.join('<br>');
+}
+
 function hazBoardSave(){
   try{ sessionStorage.setItem('hazBoard', JSON.stringify(_boardCards)); }catch(e){}
 }
@@ -4777,23 +5678,22 @@ function hazBoardLoad(){
     if(s){ _boardCards = JSON.parse(s); }
   }catch(e){}
 }
-function hazBoardOpen(){
-  document.getElementById('hazBoardView').classList.remove('hidden');
-  hazBoardRender();
-}
-function hazBoardClose(){
-  document.getElementById('hazBoardView').classList.add('hidden');
-}
+function hazBoardOpen(){ hazBoardRender(); } // always visible, just render
+function hazBoardClose(){} // no-op — board always visible
 
-document.getElementById('hazBoardBtn').addEventListener('click', hazBoardOpen);
-document.getElementById('hazBoardClose').addEventListener('click', hazBoardClose);
+// No board btn needed since always visible — remove old references safely
+// Board is always visible in left panel — no btn/close needed
 
 document.getElementById('hazZoomIn').addEventListener('click',()=>{ _boardZoom = Math.min(2, _boardZoom+0.1); hazBoardApplyTransform(); });
 document.getElementById('hazZoomOut').addEventListener('click',()=>{ _boardZoom = Math.max(0.3, _boardZoom-0.1); hazBoardApplyTransform(); });
 document.getElementById('hazZoomReset').addEventListener('click',()=>{ _boardZoom=1; _boardPan={x:40,y:40}; hazBoardApplyTransform(); });
 
-// Mouse wheel zoom
+// Mouse wheel zoom — only when hovering the board canvas
+let _boardCanvasHovered = false;
+document.getElementById('hazBoardCanvas').addEventListener('mouseenter', ()=>{ _boardCanvasHovered=true; });
+document.getElementById('hazBoardCanvas').addEventListener('mouseleave', ()=>{ _boardCanvasHovered=false; });
 document.getElementById('hazBoardCanvas').addEventListener('wheel', ev=>{
+  if(!_boardCanvasHovered) return;
   ev.preventDefault();
   const delta = ev.deltaY > 0 ? -0.08 : 0.08;
   _boardZoom = Math.min(2, Math.max(0.3, _boardZoom + delta));
@@ -4853,7 +5753,7 @@ function hazBoardAddCard(data){
   hazBoardRender();
   // Auto-open board on first card
   if(_boardCards.length===1) hazBoardOpen();
-  else document.getElementById('hazBoardBtn').style.background='rgba(74,222,128,.28)';
+  // board always visible
 }
 
 function hazBoardRender(){
@@ -4913,11 +5813,7 @@ function hazBoardRender(){
           </div>
           <div class="haz-receipt-note-label" style="margin-top:10px;">For POS entry</div>
           <div class="haz-receipt-note">
-            Item: ${esc(card.item)}<br>
-            Condition: ${esc(card.condition)}<br>
-            Est. value: $${card.value}<br>
-            Offered: $${card.openOff} · Max: $${card.maxOff}<br>
-            Staff: ${esc(LISTER_INITIAL||'—')} · ${timeStr}
+            ${hazPosFields(card)}
           </div>
         </div>
         <div class="haz-receipt-timestamp">${timeStr}</div>
