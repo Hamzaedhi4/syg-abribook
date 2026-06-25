@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYG Abribook Lookup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F4F2; --surface:#FFFFFF; --surface-2:#FAFAF8;
+    --ink:#17191F; --ink-soft:#5C616C; --ink-faint:#9197A1;
+    --line:rgba(23,25,31,.09); --line-2:rgba(23,25,31,.16);
+    --accent:#4F5BFF; --accent-press:#3D49E6; --accent-ink:#2A2F9E; --accent-tint:#EDEEFF; --accent-tint-2:#DFE2FF;
+    --pass:#0E9F6E; --pass-ink:#0A6B4A; --pass-tint:#E6F6EF;
+    --fail:#E5484D; --fail-ink:#A3282C; --fail-tint:#FCECEC; --warn:#B5760A;
+    --header:#131419; --on-dark:#F4F5FA; --on-dark-soft:#A6ABB8;
+    --r-sm:8px; --r-md:10px; --r-lg:14px; --r-pill:999px;
+    --shadow-1:0 1px 2px rgba(20,22,30,.06);
+    --shadow-2:0 2px 6px rgba(20,22,30,.06), 0 8px 24px rgba(20,22,30,.08);
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    display:flex; justify-content:center; letter-spacing:-0.01em;}
+  .outer{display:flex; width:100%; max-width:1280px; min-height:100%; align-items:flex-start; gap:0;}
+  .wrap{width:100%; max-width:680px; display:flex; flex-direction:column; min-height:100vh; background:var(--bg); flex:0 0 680px;}
+  /* ── Draft panel ── */
+  .draft-panel{flex:1; min-width:320px; max-width:520px; background:var(--surface); border-left:1px solid var(--line-2);
+    display:flex; flex-direction:column; min-height:100vh; position:sticky; top:0; max-height:100vh; overflow-y:auto;}
+  .dp-header{background:var(--header); color:var(--on-dark); padding:20px 20px 18px; border-bottom:1px solid rgba(255,255,255,.07);
+    box-shadow:inset 0 -2px 0 #2A2F9E; flex:none;}
+  .dp-header h2{margin:0; font-size:15px; font-weight:600; letter-spacing:-0.02em;}
+  .dp-header p{margin:5px 0 0; font-size:11px; color:var(--on-dark-soft); line-height:1.5;}
+  .dp-body{flex:1; padding:16px 16px 0; display:flex; flex-direction:column; gap:0;}
+  .dp-entries{flex:1; display:flex; flex-direction:column; gap:10px; padding-bottom:12px;}
+  .dp-entry{background:var(--surface-2); border:1px solid var(--line-2); border-radius:var(--r-lg); padding:12px 13px; position:relative;
+    transition:opacity .18s, filter .18s;}
+  .dp-entry.dp-dim{opacity:.32; filter:saturate(0.3);}
+  .dp-entry.dp-dim:hover{opacity:.55; filter:saturate(0.5);}
+  .dp-entry.dp-dragging{opacity:.35; border-style:dashed;}
+  .dp-entry.dp-drag-over{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-tint);}
+  .dp-drag-handle{cursor:grab; color:var(--ink-faint); font-size:14px; padding:0 4px 0 0; line-height:1;
+    user-select:none; flex:none; transition:color .12s;}
+  .dp-drag-handle:hover{color:var(--ink-soft);}
+  .dp-drag-handle:active{cursor:grabbing;}
+  .dp-entry-head{display:flex; align-items:center; gap:8px; margin-bottom:9px;}
+  .dp-sku{font:700 11px/1 var(--mono); color:var(--accent-ink); background:var(--accent-tint); border:1px solid var(--accent-tint-2);
+    padding:4px 8px; border-radius:6px; flex:none;}
+  .dp-rmv{margin-left:auto; background:none; border:none; color:var(--ink-faint); font-size:16px; cursor:pointer; padding:0 2px; line-height:1;
+    border-radius:4px; transition:color .12s;}
+  .dp-rmv:hover{color:var(--fail);}
+  .dp-row{display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:7px;}
+  .dp-row.full{grid-template-columns:1fr;}
+  .dp-label{font-size:10px; font-weight:600; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.07em; margin-bottom:3px;}
+  .dp-input{width:100%; padding:7px 9px; border:1px solid var(--line-2); border-radius:var(--r-md); font-size:12.5px;
+    font-family:var(--mono); color:var(--ink); background:var(--surface); outline:none; transition:border-color .15s, box-shadow .15s;}
+  .dp-input::placeholder{color:var(--ink-faint);}
+  .dp-input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,91,255,.13);}
+  .dp-preview{font:600 12px/1.5 var(--mono); color:var(--accent-ink); background:var(--accent-tint); border:1px solid var(--accent-tint-2);
+    border-radius:var(--r-md); padding:8px 10px; word-break:break-all; min-height:32px;}
+  .dp-add-entry{width:100%; padding:10px; border:1px dashed var(--line-2); border-radius:var(--r-lg); background:transparent;
+    color:var(--ink-soft); font:600 12.5px/1 var(--sans); cursor:pointer; transition:all .15s; margin-bottom:12px;}
+  .dp-add-entry:hover{border-color:var(--accent); color:var(--accent-ink); background:var(--accent-tint);}
+  .dp-footer{padding:12px 16px 16px; border-top:1px solid var(--line); background:var(--surface); flex:none; position:sticky; bottom:0;}
+  .dp-preview-all{background:var(--surface-2); border:1px solid var(--line-2); border-radius:var(--r-md); padding:10px 12px;
+    font:600 11.5px/1.6 var(--mono); color:var(--ink); word-break:break-word; white-space:pre-wrap; min-height:40px;
+    max-height:160px; overflow-y:auto; margin-bottom:10px;}
+  .dp-preview-all:empty::before{content:"No entries yet — add one above"; color:var(--ink-faint); font-weight:400;}
+  .dp-copy-all{width:100%; padding:13px; border:none; border-radius:var(--r-md); background:var(--accent); color:#fff;
+    font:700 13.5px/1 var(--sans); cursor:pointer; box-shadow:var(--shadow-1); transition:background .15s, transform .05s; letter-spacing:-.01em;}
+  .dp-copy-all:hover{background:var(--accent-press);}
+  .dp-copy-all:active{transform:translateY(1px);}
+  .dp-clear{width:100%; margin-top:7px; padding:8px; border:1px solid var(--line-2); border-radius:var(--r-md); background:transparent;
+    color:var(--ink-soft); font:600 12px/1 var(--sans); cursor:pointer; transition:all .15s;}
+  .dp-clear:hover{border-color:var(--fail); color:var(--fail-ink); background:var(--fail-tint);}
+  .dp-sku-resolved{font-size:10px; color:var(--pass-ink); font-family:var(--mono); font-weight:600; margin-left:2px;}
+  @media(max-width:900px){ .outer{flex-direction:column;} .wrap{flex:none; max-width:100%; min-height:auto;}
+    .draft-panel{flex:none; min-width:100%; max-width:100%; min-height:auto; max-height:none; position:static; border-left:none; border-top:1px solid var(--line-2);} }
+  header{background:var(--header); color:var(--on-dark); padding:20px 22px 18px;
+    border-bottom:1px solid rgba(255,255,255,.07); box-shadow:inset 0 -2px 0 var(--accent);}
+  .title{display:flex; align-items:center; gap:11px; flex-wrap:wrap;}
+  .title h1{font-size:18px; font-weight:600; margin:0; letter-spacing:-0.02em;}
+  .title .sub{font-size:10.5px; font-weight:500; color:var(--on-dark-soft); text-transform:uppercase; letter-spacing:.14em;}
+  .tools{margin-left:auto; display:flex; align-items:center; gap:9px;}
+  .count{font:600 11px/1 var(--mono); color:#C9CCFF; background:rgba(99,108,255,.18); padding:6px 10px; border-radius:var(--r-pill); letter-spacing:.02em;}
+  .export{font:600 12px/1 var(--sans); color:var(--on-dark); background:transparent; border:1px solid rgba(255,255,255,.22);
+    padding:7px 13px; border-radius:var(--r-pill); cursor:pointer; transition:all .15s ease;}
+  .export:hover{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .guide{display:flex; align-items:center; gap:10px 13px; flex-wrap:wrap; padding:13px 18px; background:var(--surface); border-bottom:1px solid var(--line);}
+  .step{display:flex; align-items:center; gap:9px;}
+  .stepn{display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:var(--r-pill);
+    background:var(--accent-tint); color:var(--accent-ink); font:600 11px/1 var(--mono); flex:none;}
+  .steptxt{font-size:12.5px; color:var(--ink-soft); font-weight:450;}
+  .steptxt b{color:var(--accent-ink); font-family:var(--mono); font-weight:600; font-size:11.5px;}
+  .arrow{color:var(--ink-faint); font-weight:500; font-size:15px;}
+  .seg{display:inline-flex; gap:3px; padding:3px; border:1px solid var(--line-2); border-radius:var(--r-md); background:var(--surface-2);}
+  .seg button{padding:6px 14px; border:none; background:transparent; color:var(--ink-soft); font:600 12.5px/1 var(--sans);
+    cursor:pointer; border-radius:7px; transition:all .15s ease;}
+  .seg button:hover{color:var(--ink);}
+  .seg button.on{background:var(--accent); color:#fff; box-shadow:var(--shadow-1);}
+  .searchbar{padding:16px 18px 8px; position:sticky; top:0; background:var(--bg); z-index:5;}
+  .searchbar input{width:100%; padding:13px 15px; font-size:14.5px; font-family:var(--mono); border:1px solid var(--line-2);
+    border-radius:var(--r-lg); background:var(--surface); color:var(--ink); outline:none; box-shadow:var(--shadow-1);
+    transition:border-color .15s, box-shadow .15s;}
+  .searchbar input::placeholder{color:var(--ink-faint);}
+  .searchbar input:focus{border-color:var(--accent); box-shadow:0 0 0 4px rgba(79,91,255,.13);}
+  .hint{font-size:11.5px; color:var(--ink-soft); padding:6px 20px 0; line-height:1.5;}
+  .hint b{color:var(--accent-ink); font-weight:600; font-family:var(--mono); font-size:11px;}
+  .list{padding:10px 14px 6px; flex:1;}
+  .row{display:flex; align-items:center; gap:13px; width:100%; text-align:left; background:var(--surface);
+    border:1px solid var(--line); border-radius:var(--r-lg); padding:12px 13px; margin:8px 0; cursor:pointer; font:inherit; color:inherit;
+    box-shadow:var(--shadow-1); transition:border-color .15s, transform .08s, box-shadow .15s;}
+  .row:hover{border-color:rgba(79,91,255,.4); box-shadow:var(--shadow-2); transform:translateY(-1px);}
+  .row:active{transform:translateY(0);}
+  .row:focus-visible{outline:none; border-color:var(--accent); box-shadow:0 0 0 4px rgba(79,91,255,.16);}
+  .editbtn{font:600 11px/1 var(--sans); color:var(--ink-soft); background:var(--surface-2); border:1px solid var(--line-2);
+    padding:5px 10px; border-radius:6px; white-space:nowrap; cursor:pointer; transition:all .15s ease; flex:none;}
+  .editbtn:hover{color:var(--accent-ink); border-color:var(--accent); background:var(--accent-tint);}
+  .delbtn{font:600 11px/1 var(--sans); color:var(--ink-faint); background:transparent; border:1px solid var(--line);
+    padding:5px 10px; border-radius:6px; white-space:nowrap; cursor:pointer; transition:all .15s ease; flex:none;}
+  .delbtn:hover{color:#FCA5A5; border-color:rgba(239,68,68,.4); background:rgba(239,68,68,.08);}
+
+  /* ── Pin modal ── */
+  .pin-backdrop{position:fixed;inset:0;background:rgba(10,11,16,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .pin-backdrop.hidden{display:none;}
+  .pin-box{background:var(--surface);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);width:100%;max-width:320px;overflow:hidden;}
+  .pin-head{background:var(--header);padding:18px 20px 16px;display:flex;align-items:center;gap:10px;box-shadow:inset 0 -2px 0 #EF4444;}
+  .pin-head h3{margin:0;font-size:14px;font-weight:700;color:var(--on-dark);flex:1;}
+  .pin-close{background:none;border:none;color:var(--on-dark-soft);font-size:18px;cursor:pointer;line-height:1;}
+  .pin-close:hover{color:#fff;}
+  .pin-body{padding:18px 20px;}
+  .pin-label{font-size:12px;color:var(--ink-soft);margin-bottom:8px;line-height:1.5;}
+  .pin-label b{color:var(--ink);}
+  .pin-input{width:100%;padding:10px 12px;border:1px solid var(--line-2);border-radius:var(--r-md);
+    font:700 18px/1 var(--mono);color:var(--ink);background:var(--surface-2);outline:none;
+    letter-spacing:.25em;text-align:center;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;}
+  .pin-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(79,91,255,.13);}
+  .pin-input.pin-err{border-color:#EF4444;box-shadow:0 0 0 4px rgba(239,68,68,.13);animation:pinShake .25s ease;}
+  @keyframes pinShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+  .pin-err-msg{font-size:11.5px;color:#FCA5A5;margin-top:7px;min-height:16px;}
+  .pin-foot{display:flex;gap:8px;padding:0 20px 18px;}
+  .pin-confirm{flex:1;padding:10px;border:none;border-radius:var(--r-md);background:#EF4444;color:#fff;
+    font:700 13px/1 var(--sans);cursor:pointer;transition:background .12s;}
+  .pin-confirm:hover{background:#DC2626;}
+  .pin-cancel{padding:10px 16px;border:1px solid var(--line-2);border-radius:var(--r-md);background:transparent;
+    color:var(--ink-soft);font:600 13px/1 var(--sans);cursor:pointer;transition:all .12s;}
+  .pin-cancel:hover{border-color:var(--ink-soft);color:var(--ink);}
+  .code{font:700 14px/1.1 var(--mono); color:var(--accent-ink); background:var(--accent-tint); border:1px solid var(--accent-tint-2);
+    padding:8px 10px; border-radius:var(--r-sm); white-space:nowrap; min-width:84px; text-align:center; letter-spacing:.02em;}
+  .desc{flex:1; font-size:13.5px; line-height:1.4; color:var(--ink);}
+  .desc .star{color:var(--ink-faint);}
+  .badge{font:600 10.5px/1 var(--mono); color:var(--ink-soft); background:var(--surface-2); border:1px solid var(--line-2);
+    padding:5px 8px; border-radius:6px; white-space:nowrap;}
+  .ff{font:600 10.5px/1 var(--mono); color:#fff; background:var(--accent); padding:5px 8px; border-radius:6px; white-space:nowrap;}
+  .copyhint{font-size:9.5px; color:var(--ink-faint); white-space:nowrap; text-transform:uppercase; letter-spacing:.08em;}
+  mark{background:#FFF1B8; color:inherit; border-radius:3px; padding:0 2px;}
+  .empty{text-align:center; color:var(--ink-soft); padding:30px 16px; font-size:13.5px; line-height:1.6;}
+  .empty b{color:var(--ink); font-weight:600;}
+  .add{border-bottom:1px solid var(--line); background:var(--surface); padding:14px 18px 18px;}
+  .add summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--ink); list-style:none; display:flex; align-items:center; gap:8px; letter-spacing:-0.01em;}
+  .add summary::-webkit-details-marker{display:none;}
+  .add summary::before{content:"+"; display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px;
+    border-radius:6px; background:var(--accent-tint); color:var(--accent-ink); font-weight:700; font-size:14px; line-height:1;}
+  .add[open] summary::before{content:"\2212";}
+  .addgrid{display:grid; grid-template-columns:130px 1fr; gap:9px; margin-top:13px;}
+  .addgrid input{padding:10px 11px; border:1px solid var(--line-2); border-radius:var(--r-md); font-size:13px; font-family:var(--mono);
+    color:var(--ink); background:var(--surface); outline:none; transition:border-color .15s, box-shadow .15s;}
+  .addgrid input::placeholder{color:var(--ink-faint);}
+  .addgrid input:focus{border-color:var(--accent); box-shadow:0 0 0 4px rgba(79,91,255,.13);}
+  .addgrid input.full{grid-column:1 / -1; font-family:var(--sans);}
+  .recipe{font-size:11px; color:var(--ink-soft); margin:9px 2px 0; line-height:1.5;}
+  .recipe b{color:var(--accent-ink); font-family:var(--mono); font-weight:600;}
+  .addbtn{margin-top:11px; width:100%; padding:11px; border:none; border-radius:var(--r-md); background:var(--accent); color:#fff;
+    font:600 13.5px/1 var(--sans); cursor:pointer; box-shadow:var(--shadow-1); transition:background .15s, transform .05s;}
+  .addbtn:hover{background:var(--accent-press);}
+  .addbtn:active{transform:translateY(1px);}
+  .addmsg{font-size:11.5px; margin-top:8px; min-height:14px; line-height:1.45;}
+  .addmsg.err{color:var(--fail-ink);} .addmsg.ok{color:var(--pass-ink);}
+  .addmsg a{color:var(--accent); font-weight:600; text-decoration:underline; cursor:pointer;}
+  .addmsg b{color:var(--ink); font-family:var(--mono);}
+  .logwrap{display:flex; flex-direction:column; gap:12px; margin-top:14px;}
+  .loglabel{font-size:11px; color:var(--ink-soft); font-weight:600; margin-bottom:5px; text-transform:uppercase; letter-spacing:.06em;}
+  .loginput{padding:10px 11px; border:1px solid var(--line-2); border-radius:var(--r-md); font-size:13px; font-family:var(--mono);
+    color:var(--ink); background:var(--surface); outline:none; width:100%; transition:border-color .15s, box-shadow .15s;}
+  .loginput::placeholder{color:var(--ink-faint);}
+  .loginput:focus{border-color:var(--accent); box-shadow:0 0 0 4px rgba(79,91,255,.13);}
+  .resolve{font-size:11.5px; color:var(--ink-soft); min-height:15px; line-height:1.5; margin-top:6px;}
+  .resolve .ok{color:var(--pass-ink); font-weight:600; font-family:var(--mono);}
+  .resolve .warn{color:var(--warn); font-weight:600;}
+  .resolve .new{color:var(--accent-ink); font-weight:600;}
+  .resolve b{color:var(--accent-ink); font-family:var(--mono);}
+  .rbtns{display:flex; gap:9px;}
+  .rbtn{flex:1; padding:10px; border:1px solid var(--line-2); border-radius:var(--r-md); background:var(--surface); color:var(--ink-soft);
+    font:600 13px/1 var(--sans); cursor:pointer; transition:all .15s ease;}
+  .rbtn:hover{color:var(--ink);}
+  .rbtn.on-pass{background:var(--pass-tint); border-color:var(--pass); color:var(--pass-ink);}
+  .rbtn.on-fail{background:var(--fail-tint); border-color:var(--fail); color:var(--fail-ink);}
+  .logline{font:700 14px/1.45 var(--mono); color:var(--accent-ink); background:var(--accent-tint); border:1px solid var(--accent-tint-2);
+    border-radius:var(--r-md); padding:12px 13px; word-break:break-word;}
+  .logbtn{width:100%; padding:12px; border:none; border-radius:var(--r-md); background:var(--accent); color:#fff; font:600 14px/1 var(--sans);
+    cursor:pointer; box-shadow:var(--shadow-1); transition:background .15s, transform .05s;}
+  .logbtn:hover{background:var(--accent-press);}
+  .logbtn:active{transform:translateY(1px);}
+  .toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--header); color:#fff;
+    padding:12px 17px; border-radius:var(--r-md); font-size:13px; box-shadow:0 10px 30px rgba(0,0,0,.3); opacity:0; pointer-events:none;
+    transition:.2s; z-index:30; max-width:90%;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast code{font-family:var(--mono); color:#C9CCFF;}
+  @keyframes flashrow{ 0%,55%{ background:var(--accent-tint); border-color:var(--accent); box-shadow:0 0 0 4px rgba(79,91,255,.18);}
+    100%{ background:var(--surface); border-color:var(--line); box-shadow:var(--shadow-1);} }
+  .row.flash{ animation:flashrow 1.7s ease both; }
+  @media (max-width:460px){ .copyhint{display:none;} .addgrid{grid-template-columns:1fr;} .arrow{display:none;} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important;} .row.flash{ background:var(--accent-tint); border-color:var(--accent);} }
+
+  /* ── Lister identity ── */
+  .lister-bar{display:flex;align-items:center;gap:10px;padding:11px 22px;background:#1a1c23;border-bottom:1px solid rgba(255,255,255,.07);}
+  .lister-label{font-size:11px;font-weight:600;color:var(--on-dark-soft);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+  .lister-select{padding:6px 10px;border:1px solid rgba(255,255,255,.18);border-radius:var(--r-md);background:rgba(255,255,255,.07);
+    color:var(--on-dark);font:600 13px/1 var(--sans);cursor:pointer;outline:none;transition:border-color .15s;}
+  .lister-select:focus{border-color:var(--accent);}
+  .lister-select:disabled{opacity:.7;cursor:default;}
+  .lister-batch{padding:6px 10px;border:1px solid rgba(255,255,255,.18);border-radius:var(--r-md);background:rgba(255,255,255,.07);
+    color:var(--on-dark);font:600 13px/1 var(--mono);width:110px;outline:none;transition:border-color .15s;}
+  .lister-batch:focus{border-color:var(--accent);}
+  .lister-batch:disabled{opacity:.7;cursor:default;}
+  .lister-lock{padding:6px 14px;border:none;border-radius:var(--r-md);background:var(--accent);color:#fff;
+    font:600 12px/1 var(--sans);cursor:pointer;transition:background .15s;white-space:nowrap;}
+  .lister-lock:hover{background:var(--accent-press);}
+  .lister-pill{display:none;align-items:center;gap:7px;background:rgba(99,108,255,.22);border:1px solid rgba(99,108,255,.35);
+    border-radius:var(--r-pill);padding:5px 12px;}
+  .lister-pill.show{display:flex;}
+  .lister-pill-name{font:700 12px/1 var(--mono);color:#C9CCFF;}
+  .lister-hint{font-size:10.5px;color:var(--on-dark-soft);line-height:1.4;margin-left:4px;}
+  .lister-hint b{color:#C9CCFF;font-family:var(--mono);}
+
+  /* ── Tutorial modal ── */
+  .tut-backdrop{position:fixed;inset:0;background:rgba(10,11,16,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .tut-backdrop.hidden{display:none;}
+  .tut-box{background:var(--surface);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.35);width:100%;max-width:520px;overflow:hidden;}
+  .tut-head{background:var(--header);padding:20px 22px 18px;display:flex;align-items:center;gap:12px;box-shadow:inset 0 -2px 0 var(--accent);}
+  .tut-head-icon{font-size:22px;line-height:1;}
+  .tut-head h2{margin:0;font-size:16px;font-weight:700;color:var(--on-dark);letter-spacing:-.02em;flex:1;}
+  .tut-close{background:none;border:none;color:var(--on-dark-soft);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;border-radius:4px;transition:color .12s;}
+  .tut-close:hover{color:#fff;}
+  .tut-progress{display:flex;gap:5px;padding:14px 22px 0;}
+  .tut-pip{flex:1;height:3px;border-radius:2px;background:var(--line-2);transition:background .2s;}
+  .tut-pip.done{background:var(--accent);}
+  .tut-body{padding:20px 22px 16px;min-height:180px;}
+  .tut-slide{display:none;}
+  .tut-slide.active{display:block;}
+  .tut-slide h3{margin:0 0 10px;font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;}
+  .tut-slide p{margin:0 0 10px;font-size:13.5px;color:var(--ink-soft);line-height:1.65;}
+  .tut-slide p:last-child{margin-bottom:0;}
+  .tut-slide strong{color:var(--ink);font-weight:600;}
+  .tut-slide code{font-family:var(--mono);font-size:12px;background:var(--accent-tint);color:var(--accent-ink);padding:1px 5px;border-radius:4px;}
+  .tut-step-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;
+    background:var(--accent-tint);color:var(--accent-ink);font:700 12px/1 var(--mono);margin-right:6px;vertical-align:middle;}
+  .tut-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 22px 18px;border-top:1px solid var(--line);}
+  .tut-counter{font:600 11px/1 var(--mono);color:var(--ink-faint);}
+  .tut-btns{display:flex;gap:8px;}
+  .tut-btn{padding:8px 18px;border-radius:var(--r-md);font:600 13px/1 var(--sans);cursor:pointer;transition:all .15s;}
+  .tut-btn.sec{background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);}
+  .tut-btn.sec:hover{border-color:var(--ink-soft);color:var(--ink);}
+  .tut-btn.pri{background:var(--accent);border:1px solid transparent;color:#fff;}
+  .tut-btn.pri:hover{background:var(--accent-press);}
+  /* ── Prompt modal ── */
+  .prompt-btn{position:fixed;bottom:18px;left:18px;z-index:50;padding:9px 14px;border:none;border-radius:var(--r-pill);
+    background:#1a1c23;color:#C9CCFF;font:600 11.5px/1 var(--sans);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);
+    border:1px solid rgba(99,108,255,.35);transition:all .15s;letter-spacing:.01em;white-space:nowrap;}
+  .prompt-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .prompt-backdrop{position:fixed;inset:0;background:rgba(10,11,16,.75);z-index:110;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .prompt-backdrop.hidden{display:none;}
+  .prompt-box{background:var(--surface);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);width:100%;max-width:680px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+  .prompt-head{background:var(--header);padding:18px 22px 16px;display:flex;align-items:center;gap:12px;box-shadow:inset 0 -2px 0 var(--accent);flex:none;}
+  .prompt-head-icon{font-size:20px;line-height:1;}
+  .prompt-head h2{margin:0;font-size:15px;font-weight:700;color:var(--on-dark);letter-spacing:-.02em;flex:1;}
+  .prompt-head-sub{font-size:10.5px;color:var(--on-dark-soft);margin-top:3px;}
+  .prompt-close{background:none;border:none;color:var(--on-dark-soft);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;border-radius:4px;transition:color .12s;}
+  .prompt-close:hover{color:#fff;}
+  .prompt-body{padding:18px 22px;overflow-y:auto;flex:1;}
+  .prompt-body p{margin:0 0 10px;font-size:13px;color:var(--ink-soft);line-height:1.6;}
+  .prompt-body p:last-of-type{margin-bottom:14px;}
+  .prompt-text{width:100%;min-height:340px;padding:14px 15px;border:1px solid var(--line-2);border-radius:var(--r-lg);
+    font:500 12px/1.7 var(--mono);color:var(--ink);background:var(--surface-2);resize:vertical;outline:none;
+    transition:border-color .15s,box-shadow .15s;}
+  .prompt-text:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(79,91,255,.13);}
+  .prompt-foot{padding:14px 22px 18px;border-top:1px solid var(--line);background:var(--surface);flex:none;display:flex;gap:10px;align-items:center;}
+  .prompt-copy-btn{padding:11px 22px;border:none;border-radius:var(--r-md);background:var(--accent);color:#fff;
+    font:700 13px/1 var(--sans);cursor:pointer;transition:background .15s,transform .05s;flex:none;}
+  .prompt-copy-btn:hover{background:var(--accent-press);}
+  .prompt-copy-btn:active{transform:translateY(1px);}
+  .prompt-foot-hint{font-size:11.5px;color:var(--ink-soft);line-height:1.5;}
+  .prompt-foot-hint b{color:var(--accent-ink);font-family:var(--mono);font-size:11px;}
+  /* ── Format mode toggle ── */
+  .mode-toggle{display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(255,255,255,.04);
+    border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-soft);}
+  .mode-toggle-label{font-weight:600;color:var(--ink-soft);font-size:11.5px;white-space:nowrap;}
+  .mode-switch{display:flex;border:1px solid var(--line-2);border-radius:var(--r-pill);overflow:hidden;gap:0;}
+  .mode-btn{padding:5px 13px;font:600 11px/1 var(--sans);border:none;cursor:pointer;transition:all .15s;background:transparent;color:var(--ink-soft);}
+  .mode-btn.active-helper{background:#1e3a5f;color:#7DD3FC;}
+  .mode-btn.active-berserk{background:#3b1212;color:#FCA5A5;}
+  .mode-hint{font-size:10.5px;color:var(--ink-faint);font-style:italic;}
+
+  /* ── Wan suggestion banner ── */
+  .wan-banner{margin-top:7px;border-radius:var(--r-md);border:1px solid rgba(99,108,255,.3);
+    background:rgba(99,108,255,.08);overflow:hidden;animation:fadeSlideIn .18s ease;}
+  @keyframes fadeSlideIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+  .wan-banner.berserk-flash{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.07);}
+  .wan-head{display:flex;align-items:center;gap:8px;padding:7px 11px 6px;}
+  .wan-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex:none;}
+  .wan-label{font:600 11.5px/1 var(--sans);color:var(--ink);}
+  .wan-label span{color:#a78bfa;}
+  .wan-suggestion{padding:0 11px 7px;font:600 12.5px/1.4 var(--mono);color:var(--accent-ink);word-break:break-all;}
+  .wan-actions{display:flex;gap:6px;padding:0 11px 9px;}
+  .wan-btn{padding:5px 12px;border-radius:var(--r-md);font:600 11.5px/1 var(--sans);cursor:pointer;border:none;transition:all .12s;}
+  .wan-btn.accept{background:var(--accent);color:#fff;}
+  .wan-btn.accept:hover{background:var(--accent-press);}
+  .wan-btn.edit{background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);}
+  .wan-btn.edit:hover{border-color:var(--ink-soft);color:var(--ink);}
+  .wan-btn.dismiss{background:transparent;border:none;color:var(--ink-faint);font-size:11px;}
+  .wan-thinking{padding:7px 11px 9px;display:flex;align-items:center;gap:8px;color:var(--ink-faint);font-size:11.5px;}
+  .wan-dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);
+    animation:wanDot 1.1s infinite ease-in-out;}
+  .wan-dots span:nth-child(2){animation-delay:.18s;}
+  .wan-dots span:nth-child(3){animation-delay:.36s;}
+  @keyframes wanDot{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+
+  /* ── Undo pill ── */
+  .undo-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--r-pill);
+    background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#FCA5A5;
+    font:600 11px/1 var(--sans);cursor:pointer;transition:opacity .3s;margin-top:5px;}
+  .undo-pill:hover{background:rgba(239,68,68,.25);}
+  .undo-pill.fading{opacity:0;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<!-- ── Tutorial Modal ── -->
+<div class="tut-backdrop" id="tutBackdrop">
+  <div class="tut-box">
+    <div class="tut-head">
+      <span class="tut-head-icon">📖</span>
+      <h2>How Abribook Works</h2>
+      <button class="tut-close" id="tutClose" title="Close">×</button>
+    </div>
+    <div class="tut-progress" id="tutProgress"></div>
+    <div class="tut-body">
+
+      <div class="tut-slide active" data-slide="0">
+        <h3>Welcome to SYG Abribook</h3>
+        <p>Abribook is the intake logging and code lookup tool for <strong>Sell Your Gadgets</strong>. It helps you quickly identify storage drives and RAM modules, log their condition, and build a manifest that Claude uses to generate your Shopify listings.</p>
+        <p>This tutorial walks you through the full process — from picking up the item to handing off to Claude. It only takes a minute.</p>
+      </div>
+
+      <div class="tut-slide" data-slide="1">
+        <h3><span class="tut-step-badge">1</span>Select your name &amp; batch</h3>
+        <p>At the top of the screen, select your name from the dropdown and enter your batch number (e.g. <code>RTL0623</code>). These lock for the rest of the session.</p>
+        <p>Your initial will appear in every SKU you generate — for example, Juan's entries will read <code>NJ02-J-RTL0623-1</code> — so listings are always traceable back to you.</p>
+      </div>
+
+      <div class="tut-slide" data-slide="2">
+        <h3><span class="tut-step-badge">2</span>Inspect the item</h3>
+        <p><strong>For SSDs:</strong> Plug the drive into the test rig and open CrystalDiskInfo. Note the health %, serial number, and any physical damage you can see on the drive.</p>
+        <p><strong>For RAM:</strong> Seat the module in its corresponding slot on the RAM tester and observe the indicator lights. Each light represents a module within the RAM — a fully bright light means that section is healthy. A dim light indicates that section may not be functioning fully, which can cause slowdowns or failures under real workloads even if the stick appears to work. Note the serial number and any visible damage.</p>
+      </div>
+
+      <div class="tut-slide" data-slide="3">
+        <h3><span class="tut-step-badge">3</span>Look up the code</h3>
+        <p>Use the search bar on the left to find the item's Abribook code — search by drive name (e.g. <code>970 EVO</code>) or by code (e.g. <code>S2990P</code>). Switch between the <strong>Storage</strong> and <strong>RAM</strong> tabs as needed.</p>
+        <p>If the item isn't in the list yet, use <strong>Add a new code</strong> to register it. Follow the code recipe shown — keep it consistent with existing codes.</p>
+      </div>
+
+      <div class="tut-slide" data-slide="4">
+        <h3><span class="tut-step-badge">4</span>Fill in the draft entry</h3>
+        <p>In the <strong>Draft Log Entries</strong> panel on the right, enter the code, health % or Pass/Fail result, serial number, and any notes. The preview line updates live so you can see exactly what will be copied.</p>
+        <p>Add one entry per unit. For RAM pairs, enable <strong>Counting pairs</strong> and enter the quantity.</p>
+      </div>
+
+      <div class="tut-slide" data-slide="5">
+        <h3><span class="tut-step-badge">5</span>Copy all &amp; hand off to Claude</h3>
+        <p>Once you've logged all items for the batch, hit <strong>Copy All</strong> and open Claude. Paste the entries, then run the <strong>SYG Listing Generation skill</strong> to have Claude generate the listings from the manifest.</p>
+        <p style="color:#B91C1C;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.6;margin-top:4px;">
+          ⚠️ <strong style="color:#991B1B;">Pricing warning:</strong> Pricing for RAM must always be double or even triple checked — especially for server-grade and enterprise modules. Market value can vary significantly by spec and rank. When in doubt, research sold comps before publishing.
+        </p>
+      </div>
+
+    </div>
+    <div class="tut-foot">
+      <span class="tut-counter" id="tutCounter">1 of 6</span>
+      <div class="tut-btns">
+        <button class="tut-btn sec" id="tutPrev">← Back</button>
+        <button class="tut-btn pri" id="tutNext">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="outer">
+<div class="wrap">
+  <header>
+    <div class="title">
+      <h1>SYG Abribook</h1>
+      <span class="sub" id="sub">drive shorthand lookup</span>
+      <div class="tools">
+        <span class="count" id="count">0 codes</span>
+        <span id="syncStatus" style="font-size:11px;font-family:var(--mono);color:var(--ink-faint);cursor:pointer;" title="Click to refresh from sheet">○ idle</span>
+        <button class="export" id="tutOpenBtn" title="How it works" style="margin-right:2px">? Help</button>
+        <button class="export" id="exportBtn" title="Copy this category's list to paste into chat">⤓ Export</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Lister identity bar -->
+  <div class="lister-bar" id="listerBar">
+    <span class="lister-label">👤 Who's listing?</span>
+    <select class="lister-select" id="listerSelect">
+      <option value="">— Select name —</option>
+      <option value="J">Juan (J)</option>
+      <option value="IS">Ibrahim (IS)</option>
+      <option value="P">Paul (P)</option>
+    </select>
+    <input class="lister-batch" id="listerBatch" value="RTL" placeholder="Batch e.g. RTL0623" autocomplete="off" spellcheck="false" maxlength="12">
+    <button class="lister-lock" id="listerLockBtn">Lock in</button>
+    <div class="lister-pill" id="listerPill">
+      <span class="lister-pill-name" id="listerPillName"></span>
+    </div>
+    <span class="lister-hint" id="listerHint" style="display:none">Your initial appears in every SKU — e.g. <b id="skuExample">NJ02-J-RTL0623-1</b></span>
+  </div>
+
+  <div class="guide">
+    <div class="step">
+      <span class="stepn">1</span>
+      <span class="steptxt">Set your name &amp; batch</span>
+    </div>
+    <span class="arrow">→</span>
+    <div class="step">
+      <span class="stepn">2</span>
+      <span class="steptxt">Pick category</span>
+      <div class="seg">
+        <button id="segStorage" class="on" type="button">Storage</button>
+        <button id="segRam" type="button">RAM</button>
+      </div>
+    </div>
+    <span class="arrow">→</span>
+    <div class="step"><span class="stepn">3</span><span class="steptxt">Find your code</span></div>
+    <span class="arrow">→</span>
+    <div class="step"><span class="stepn">4</span><span class="steptxt">Fill entry details</span></div>
+    <span class="arrow">→</span>
+    <div class="step"><span class="stepn">5</span><span class="steptxt">Copy All → paste to Claude</span></div>
+  </div>
+
+  <div class="mode-toggle">
+    <span class="mode-toggle-label">⚙ Format assist:</span>
+    <div class="mode-switch">
+      <button class="mode-btn active-helper" id="modeHelper">🤝 Helper</button>
+      <button class="mode-btn" id="modeBerserk">⚡ Berserk</button>
+    </div>
+    <span class="mode-hint" id="modeHint">Wan suggests — you confirm</span>
+  </div>
+
+  <details class="add">
+    <summary>Add a new code</summary>
+    <div class="addgrid">
+      <input id="newCode" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="New code">
+      <input id="newDesc" class="full" placeholder="Write what you see on the label — anything goes" autocomplete="off" aria-label="Description">
+      <div id="wanBanner" style="display:none;grid-column:1/-1;"></div>
+      <div id="undoPill" style="display:none;grid-column:1/-1;"></div>
+      <input id="newRank" class="full" placeholder="Rank / org (e.g. 2Rx4)" autocomplete="off" aria-label="Rank and organization" style="display:none">
+      <input id="newJedec" class="full" placeholder="JEDEC spec (e.g. PC4-3200AA-RA2-12-MH1)" autocomplete="off" aria-label="JEDEC spec" style="display:none">
+      <input id="newFF" class="full" placeholder="Form factor (e.g. UDIMM, SODIMM, RDIMM)" autocomplete="off" aria-label="Form factor" style="display:none">
+    </div>
+    <div class="recipe" id="recipe"></div>
+    <button class="addbtn" id="addBtn">Add code</button>
+    <button class="addbtn" id="cancelEditBtn" style="display:none; background:var(--ink-soft); margin-top:6px;">Cancel edit</button>
+    <div class="addmsg" id="addMsg"></div>
+  </details>
+
+  <details class="add" id="logPanel">
+    <summary>Build a log line</summary>
+    <div class="logwrap">
+      <div>
+        <div class="loglabel">Code</div>
+        <input id="logCode" class="loginput" placeholder="Your saved code, e.g. S32PC4R2" autocomplete="off" spellcheck="false">
+        <div class="resolve" id="logResolve"></div>
+      </div>
+      <div id="ramResult">
+        <div class="loglabel">Result</div>
+        <div class="rbtns">
+          <button type="button" class="rbtn" id="logPass">Pass</button>
+          <button type="button" class="rbtn" id="logFail">Fail</button>
+        </div>
+      </div>
+      <div id="driveResult" style="display:none">
+        <div class="loglabel">Health</div>
+        <input id="logHealth" class="loginput" placeholder="e.g. 96%" autocomplete="off">
+      </div>
+      <div>
+        <div class="loglabel">Notes (optional)</div>
+        <input id="logNotes" class="loginput" placeholder="e.g. needs reseat" autocomplete="off">
+      </div>
+      <div class="logline" id="logPreview">*CODE</div>
+      <button class="logbtn" id="logBtn">Log — copy line</button>
+    </div>
+  </details>
+
+  <div class="searchbar">
+    <input id="q" type="text" autocomplete="off" spellcheck="false"
+           placeholder="Type a code or drive name…  e.g. C500 or samsung" aria-label="Search abribook">
+  </div>
+  <div class="hint">Search by code (e.g. <b>S2990P</b>) or drive name (e.g. <b>970 EVO</b>). Tap a code to copy it — double-tap for the full template line.</div>
+
+  <div class="list" id="list"></div>
+</div><!-- /.wrap -->
+
+<div class="draft-panel" id="draftPanel">
+  <div class="dp-header">
+    <h2>📋 <span style="font-size:11px;font-weight:600;background:rgba(99,108,255,.25);color:#C9CCFF;border-radius:var(--r-pill);padding:2px 8px;vertical-align:middle;margin-right:4px;">Step 4–5</span> Draft Log Entries</h2>
+    <p>Fill in one entry per unit. When all items are logged, hit <strong style="color:var(--on-dark)">Copy All</strong> and paste into Claude to generate listings.</p>
+  </div>
+  <div class="dp-body">
+    <div class="dp-entries" id="dpEntries"></div>
+    <button class="dp-add-entry" id="dpAddEntry">+ Add entry</button>
+  </div>
+  <div class="dp-footer">
+    <div class="dp-label" style="margin-bottom:6px">All entries</div>
+    <div class="dp-preview-all" id="dpPreviewAll"></div>
+    <button class="dp-copy-all" id="dpCopyAll">Copy all — paste into chat</button>
+    <button class="dp-clear" id="dpClear">Clear all entries</button>
+  </div>
+</div>
+
+</div><!-- /.outer -->
+<div class="toast" id="toast"></div>
+
+<script>
+const BUILTIN = {
+  storage:[
+    {code:'C1P',     desc:'Crucial P1 M.2 2280 (CT1000P1SSD8) — 1000GB (1TB)'},
+    {code:'CP5PS2',  desc:'Crucial P5 Plus (CT2000P5PSSD8) M.2 2280 — 2000GB (2TB)'},
+    {code:'C500X1',  desc:'Crucial MX500 (CT1000MX500SSD1) 2.5" SATA SSD — 1000GB (1TB)'},
+    {code:'C500X2',  desc:'Crucial MX500 (CT2000MX500SSD1) 2.5" SATA SSD — 2000GB (2TB)'},
+    {code:'I1660',   desc:'Intel SSD 660p (SSDPEKNW010T8) — 1000GB (1TB)'},
+    {code:'I2660',   desc:'Intel SSD 660p (SSDPEKNW020T8) — 2000GB (2TB)'},
+    {code:'KC25001', desc:'Kingston KC2500 (SKC2500M8/1000G) — 1000GB (1TB)'},
+    {code:'KC25002', desc:'Kingston KC2500 (SKC2500M8/2000G) — 2000GB (2TB)'},
+    {code:'K3840DC500R', desc:'Kingston DC500R (SEDC500R/3840G) 2.5" SATA — 3840GB (3.84TB)'},
+    {code:'K480DC400',   desc:'Kingston DC400 (SEDC400S37/480G) 2.5" SATA — 480GB'},
+    {code:'K480DC600M',  desc:'Kingston DC600M (SEDC600M/480G) 2.5" SATA — 480GB'},
+    {code:'K960DC500R',  desc:'Kingston DC500R (SEDC500R/960G) 2.5" SATA — 960GB'},
+    {code:'K960DC600M',  desc:'Kingston DC600M (SEDC600M/960G) 2.5" SATA — 960GB'},
+    {code:'M7450E1920', desc:'Micron 7450 Enterprise (MTFDKBG1T9TFR) M.2 Non-SED — 1920GB (1.92TB)'},
+    {code:'M7450E3840', desc:'Micron 7450 Enterprise (MTFDKBG3T8TFR) NVMe M.2 SSD — 3840GB (3.84TB)'},
+    {code:'S1870E',  desc:'Samsung 870 EVO (MZ-77E1T0) 2.5" SATA SSD — 1000GB (1TB)'},
+    {code:'S1980',   desc:'Samsung SSD 980 (MZ-V8V1T0) — 1000GB (1TB)'},
+    {code:'S1CUDA',  desc:'SeaGate Barracuda (ZA1000CM10003) Compute 120 SSD — 1000GB (1TB)'},
+    {code:'S2850E',  desc:'Samsung 850 EVO (MZ-75E2T0) 2.5" SATA SSD — 2000GB (2TB)'},
+    {code:'S2870E',  desc:'Samsung 870 EVO (MZ-77E2T0) 2.5" SATA SSD — 2000GB (2TB)'},
+    {code:'S2980',   desc:'Samsung 980 Pro (MZ-V8P2T0) — 2000GB (2TB)'},
+    {code:'S2990P',  desc:'Samsung 990 Pro (MZ-V9P2T0) — 2000GB (2TB)'},
+    {code:'S970E',   desc:'Samsung 970 EVO Plus NVMe M.2 SSD'},
+    {code:'S970E2',  desc:'Samsung 970 EVO Plus NVMe M.2 SSD — 2000GB (2TB)'},
+    {code:'WD5501',  desc:'Western Digital WD Blue SN550 (WDS100T2B0C) NVMe SSD — 1000GB (1TB)'},
+  ],
+  ram:[
+    {code:'A4PC3L1600', desc:'Axiom 4GB DDR3-1600 PC3L-12800 SODIMM Laptop Memory', jedec:'DDR3-1600 PC3L-12800', ff:'SODIMM'},
+    {code:'K8PC4R1X8', desc:'Kingston 8GB 1RX8 PC4-2400T-ED2-11 ECC Server Memory', rank:'1RX8', jedec:'PC4-2400T-ED2-11', ff:'RDIMM'},
+    {code:'SKX4PC3RX8', desc:'Skynix 4GB 2RX8 PC3-10600U-9-11-B1 Desktop Memory', rank:'2RX8', jedec:'PC3-10600U-9-11-B1', ff:'UDIMM'},
+    {code:'VD5EL', desc:'Vengeance RGB DDR5 Light Enhancement Kit (NO RAM)', rank:'CMHLEKIT-D5', jedec:'A919T61601LHM4', ff:'UDIMM'},
+  ]
+};
+let CUSTOM = {storage:[], ram:[]};
+let CATEGORY = 'storage';
+let logResultRam = '';
+const KEY='abribook:custom:v2';
+const OLDKEY='abribook:custom';
+
+// ── Google Sheets sync ────────────────────────────────────────────
+const GS_URL = 'https://script.google.com/macros/s/AKfycbw0XSFVMM0vHSgrzkfh8pr5D8m6NMXC2Xc4nF-X51NVKetyNGKhRr3OtzfuVerjRXLBRQ/exec';
+let _syncStatus = 'idle'; // idle | syncing | ok | error
+let _syncPollTimer = null;
+
+function setSyncStatus(s, msg){
+  _syncStatus = s;
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  const icons = {idle:'○', syncing:'↻', ok:'✓', error:'!'};
+  const colors = {idle:'var(--ink-faint)', syncing:'#F59E0B', ok:'#22C55E', error:'#EF4444'};
+  el.textContent = (icons[s]||'?') + ' ' + (msg||s);
+  el.style.color = colors[s]||'var(--ink-faint)';
+}
+
+async function gsGet(){
+  try{
+    setSyncStatus('syncing','fetching...');
+    const r = await fetch(GS_URL + '?t=' + Date.now());
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error||'fetch failed');
+    // Merge sheet codes into CUSTOM — sheet wins over local for same code
+    const merged = {storage:[], ram:[]};
+    j.codes.forEach(row=>{
+      const cat = (row.category||'storage').toLowerCase();
+      if(!merged[cat]) merged[cat]=[];
+      const entry = {code:row.code, desc:row.description, added_by:row.added_by||''};
+      if(row.rank) entry.rank=row.rank;
+      if(row.jedec) entry.jedec=row.jedec;
+      if(row.ff) entry.ff=row.ff;
+      merged[cat].push(entry);
+    });
+    // Keep any local-only codes not yet in sheet (pending push)
+    ['storage','ram'].forEach(cat=>{
+      const sheetCodes = new Set(merged[cat].map(x=>x.code.toUpperCase()));
+      (CUSTOM[cat]||[]).forEach(x=>{ if(!sheetCodes.has(x.code.toUpperCase())) merged[cat].push(x); });
+    });
+    CUSTOM = merged;
+    setSyncStatus('ok', 'synced');
+    render();
+    return true;
+  } catch(e){
+    setSyncStatus('error', 'sync failed');
+    return false;
+  }
+}
+
+async function gsPush(action, entry){
+  try{
+    setSyncStatus('syncing', action+'ing...');
+    const body = {action, ...entry};
+    if(LISTER_INITIAL) body.added_by = LISTER_INITIAL;
+    const r = await fetch(GS_URL, {
+      method:'POST',
+      body: JSON.stringify(body)
+    });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error||'push failed');
+    setSyncStatus('ok','saved');
+    return true;
+  } catch(e){
+    setSyncStatus('error','save failed — local only');
+    return false;
+  }
+}
+
+function startSyncPoll(){
+  if(_syncPollTimer) clearInterval(_syncPollTimer);
+  _syncPollTimer = setInterval(()=>gsGet(), 60000); // poll every 60s
+}
+
+async function loadCustom(){
+  // First load from local storage as instant fallback
+  try{ if(window.storage){
+    const r=await window.storage.get(KEY,false);
+    if(r&&r.value){ const o=JSON.parse(r.value); CUSTOM={storage:o.storage||[], ram:o.ram||[]}; }
+    const old=await window.storage.get(OLDKEY,false);
+    if(old&&old.value && !CUSTOM.storage.length){ CUSTOM={storage:JSON.parse(old.value)||[], ram:[]}; }
+  } }catch(e){}
+  // Then fetch from sheet (async — UI already shown with local data)
+  gsGet().then(()=> saveLocalCache());
+  startSyncPoll();
+  return CUSTOM;
+}
+
+async function saveLocalCache(){
+  try{ if(window.storage){ await window.storage.set(KEY, JSON.stringify(CUSTOM), false); } }catch(e){}
+}
+
+async function saveCustom(action, entry){
+  // Save to local cache immediately
+  await saveLocalCache();
+  // Push to sheet in background
+  if(action && entry) gsPush(action, entry).then(()=>{ saveLocalCache(); });
+}
+function catLabel(){ return CATEGORY==='ram'?'RAM':'storage'; }
+let SUPPRESSED_CODES = new Set();
+
+function all(){
+  const map=new Map();
+  (BUILTIN[CATEGORY]||[]).filter(x=>!SUPPRESSED_CODES.has(x.code.toUpperCase())).forEach(x=>map.set(x.code.toUpperCase(),x));
+  (CUSTOM[CATEGORY]||[]).forEach(x=>map.set(x.code.toUpperCase(),x));
+  return [...map.values()];
+}
+function allCategories(){ const map=new Map(); ["storage","ram"].forEach(cat=>{ (BUILTIN[cat]||[]).forEach(x=>map.set(x.code.toUpperCase(),x)); (CUSTOM[cat]||[]).forEach(x=>map.set(x.code.toUpperCase(),x)); }); return [...map.values()]; }
+function resolveCode(code){ const u=code.toUpperCase(); return allCategories().find(x=>x.code.toUpperCase()===u)||null; }
+function sizeOf(d){ const t=d.match(/\((\d+\s?TB)\)/i); if(t) return t[1].toUpperCase().replace(/\s/,''); const m=d.match(/(\d+(?:GB|TB))/i); return m?m[1].toUpperCase():''; }
+function esc(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function hl(t,q){ if(!q) return esc(t); const i=t.toLowerCase().indexOf(q.toLowerCase());
+  if(i<0) return esc(t); return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length)); }
+
+const listEl=document.getElementById('list'), qEl=document.getElementById('q'), countEl=document.getElementById('count');
+let shown=[];
+function render(){
+  const q=qEl.value.trim();
+  const data=all().sort((a,b)=>a.code.localeCompare(b.code));
+  shown = q ? data.filter(x=>(x.code+' '+x.desc+' '+(x.ff||'')).toLowerCase().includes(q.toLowerCase())) : data;
+  countEl.textContent = data.length+' code'+(data.length===1?'':'s');
+  if(shown.length===0){
+    if(!q && data.length===0){
+      listEl.innerHTML='<div class="empty"><b>No '+catLabel()+' codes yet.</b><br>Add your first one below so titles stay uniform.</div>';
+    } else {
+      listEl.innerHTML='<div class="empty">No codes match <b>'+esc(q)+'</b>.<br>Add it below so it\'s there next time.</div>';
+      const nc=document.getElementById('newCode'); if(nc&&!nc.value) nc.value=q.toUpperCase();
+    }
+    document.querySelector('.add').open=true; return;
+  }
+  listEl.innerHTML = shown.map(x=>{ const sz=sizeOf(x.desc);
+    return `<div class="row" role="button" tabindex="0" data-code="${esc(x.code)}" style="cursor:default">
+      <span class="code" style="cursor:pointer" data-copy="${esc(x.code)}">${hl(x.code,q)}</span>
+      <span class="desc" style="cursor:pointer" data-copy="${esc(x.code)}"><span class="star">* </span>${hl(x.desc,q)}</span>
+      ${x.ff?`<span class="ff">${esc(x.ff)}</span>`:''}
+      ${sz?`<span class="badge">${sz}</span>`:''}
+      <span class="copyhint" data-copy="${esc(x.code)}">tap to copy</span>
+      <button class="editbtn" data-edit="${esc(x.code)}">Edit</button>
+      <button class="delbtn" data-del="${esc(x.code)}">✕</button>
+    </div>`;
+  }).join('');
+  [...listEl.querySelectorAll('[data-copy]')].forEach(el=>el.addEventListener('click',e=>{ e.stopPropagation(); copyCode(el.dataset.copy); }));
+  [...listEl.querySelectorAll('.editbtn')].forEach(btn=>btn.addEventListener('click',e=>{ e.stopPropagation(); startEdit(btn.dataset.edit); }));
+  [...listEl.querySelectorAll('.delbtn')].forEach(btn=>btn.addEventListener('click',e=>{ e.stopPropagation(); pinPrompt(btn.dataset.del); }));
+}
+
+function setCategory(cat){
+  CATEGORY=cat;
+  document.getElementById('segStorage').classList.toggle('on',cat==='storage');
+  document.getElementById('segRam').classList.toggle('on',cat==='ram');
+  document.getElementById('sub').textContent = cat==='ram'?'RAM shorthand lookup':'drive shorthand lookup';
+  qEl.placeholder = cat==='ram'
+    ? 'Type a code or module name…  e.g. your code or samsung'
+    : 'Type a code or drive name…  e.g. C500 or samsung';
+  const nd=document.getElementById('newDesc');
+  if(nd) nd.placeholder = cat==='ram' ? 'Full RAM module title (keep it uniform)' : 'Full drive description';
+  document.getElementById('newRank').style.display = cat==='ram' ? '' : 'none';
+  document.getElementById('newJedec').style.display = cat==='ram' ? '' : 'none';
+  document.getElementById('newFF').style.display = cat==='ram' ? '' : 'none';
+  document.getElementById('ramResult').style.display = cat==='ram' ? '' : 'none';
+  document.getElementById('driveResult').style.display = cat==='ram' ? 'none' : '';
+  document.getElementById('recipe').innerHTML = cat==='ram'
+    ? 'Code recipe: <b>[Brand][Size][Class][Rank]</b> &nbsp;→&nbsp; e.g. <b>M32PC4R2X8</b> = Micron · 32GB · PC4 · 2Rx8. Rank, JEDEC spec &amp; form factor each get their own box below.'
+    : 'Code recipe: <b>[Brand][Capacity][Model][Variant]</b> &nbsp;→&nbsp; e.g. <b>S2870E</b> = Samsung · 2TB · 870 · EVO.';
+  logResultRam='';
+  const lp=document.getElementById('logPass'); if(lp) lp.className='rbtn';
+  const lf=document.getElementById('logFail'); if(lf) lf.className='rbtn';
+  const lh=document.getElementById('logHealth'); if(lh) lh.value='';
+  qEl.value=''; render(); updateLogPreview(); qEl.focus();
+}
+
+let toastT;
+function toast(html){ const t=document.getElementById('toast'); t.innerHTML=html; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1900); }
+function copyText(text,cb){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(cb).catch(()=>fallbackCopy(text,cb));
+  } else fallbackCopy(text,cb);
+}
+function fallbackCopy(text,cb){
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); cb&&cb();
+}
+const _copyClickTs = {};
+function copyCode(code){
+  const lc=document.getElementById('logCode'); if(lc){ lc.value=code; updateLogPreview(); }
+  const hit=resolveCode(code);
+  const now = Date.now();
+  const last = _copyClickTs[code] || 0;
+  const isDouble = (now - last) < 500;
+  _copyClickTs[code] = now;
+
+  if(isDouble){
+    // Double click — full template
+    const tmpl = CATEGORY==='ram'
+      ? code+' Pass/Fail NOTES SN: #'
+      : code+' #% Health NOTES SN: #';
+    let out = tmpl;
+    let isNew = false;
+    if(hit && !isBuiltinCode(hit.code)){ out=tmpl+'\n↳ new code — '+codeDefLine(hit); isNew=true; }
+    copyText(out, ()=>toast('Copied <code>'+esc(code)+'</code> with full template'+(isNew?', def included':'')));
+  } else {
+    // Single click — bare code only
+    copyText(code, ()=>toast('Copied <code>'+esc(code)+'</code> &mdash; double-tap for full template'));
+  }
+}
+function exportAll(){
+  const data=all().sort((a,b)=>a.code.localeCompare(b.code));
+  const label = CATEGORY==='ram'?'RAM':'Storage';
+  const text=['SYG Abribook ('+label+') — '+data.length+' codes'].concat(
+    data.map(x=>{ let line=x.code+' = '+x.desc; const extra=[];
+      if(x.rank) extra.push('rank '+x.rank); if(x.jedec) extra.push('JEDEC '+x.jedec); if(x.ff) extra.push(x.ff);
+      return extra.length?line+'  ['+extra.join('; ')+']':line; })).join('\n');
+  copyText(text,()=>toast('Copied all <code>'+data.length+'</code> '+label+' codes — paste into chat to sync'));
+}
+
+function currentResult(){ return CATEGORY==='ram' ? logResultRam : document.getElementById('logHealth').value.trim(); }
+function isBuiltinCode(code){ const u=code.toUpperCase(); return ["storage","ram"].some(cat=>(BUILTIN[cat]||[]).some(x=>x.code.toUpperCase()===u)); }
+function codeDefLine(x){
+  let s=x.code+' = '+x.desc; const extra=[];
+  if(x.rank) extra.push('rank '+x.rank); if(x.jedec) extra.push('JEDEC '+x.jedec); if(x.ff) extra.push(x.ff);
+  return extra.length ? s+'  ['+extra.join('; ')+']' : s;
+}
+function updateLogPreview(){
+  const code=document.getElementById('logCode').value.trim();
+  const res=currentResult();
+  const notes=document.getElementById('logNotes').value.trim();
+  let line='*'+(code||'CODE');
+  if(res) line+=' '+res;
+  if(notes) line+=' '+notes;
+  document.getElementById('logPreview').textContent=line;
+  const rEl=document.getElementById('logResolve');
+  if(code){
+    const hit=resolveCode(code);
+    if(hit){
+      let info='<span class="ok">✓ saved</span> &nbsp;'+esc(hit.desc);
+      if(CATEGORY==='ram'){
+        const bits=[];
+        if(hit.jedec) bits.push('JEDEC <b>'+esc(hit.jedec)+'</b>');
+        if(hit.rank) bits.push(esc(hit.rank));
+        if(hit.ff) bits.push(esc(hit.ff));
+        if(bits.length) info+='<br>'+bits.join(' &nbsp;·&nbsp; ');
+      }
+      if(!isBuiltinCode(hit.code)){
+        info+='<br><span class="new">＋ new to Claude</span> — Log will include its definition so it syncs.';
+      }
+      rEl.innerHTML=info;
+    } else {
+      rEl.innerHTML='<span class="warn">not saved yet</span> — add it above so its title'+(CATEGORY==='ram'?' + form factor':'')+' are on record.';
+    }
+  } else rEl.textContent='';
+}
+function setResult(which){
+  logResultRam = (logResultRam===which)?'':which;
+  document.getElementById('logPass').className='rbtn'+(logResultRam==='Pass'?' on-pass':'');
+  document.getElementById('logFail').className='rbtn'+(logResultRam==='Fail'?' on-fail':'');
+  updateLogPreview();
+}
+
+qEl.addEventListener('input',render);
+qEl.addEventListener('keydown',e=>{ if(e.key==='Enter'&&shown.length){copyCode(shown[0].code);} if(e.key==='Escape'){qEl.value='';render();} });
+document.getElementById('exportBtn').addEventListener('click',exportAll);
+document.getElementById('segStorage').addEventListener('click',()=>setCategory('storage'));
+document.getElementById('segRam').addEventListener('click',()=>setCategory('ram'));
+document.getElementById('logCode').addEventListener('input',updateLogPreview);
+document.getElementById('logNotes').addEventListener('input',updateLogPreview);
+document.getElementById('logHealth').addEventListener('input',updateLogPreview);
+document.getElementById('logPass').addEventListener('click',()=>setResult('Pass'));
+document.getElementById('logFail').addEventListener('click',()=>setResult('Fail'));
+document.getElementById('logBtn').addEventListener('click',()=>{
+  const line=document.getElementById('logPreview').textContent;
+  if(line==='*CODE'||line==='*'){ toast('Type your code first'); return; }
+  const code=document.getElementById('logCode').value.trim();
+  const hit=code?resolveCode(code):null;
+  let out=line, isNew=false;
+  if(hit && !isBuiltinCode(hit.code)){ out=line+'\n↳ new code — '+codeDefLine(hit); isNew=true; }
+  copyText(out,()=>toast('Logged <code>'+esc(line)+'</code>'+(isNew?' + its definition':'')+' — paste into chat'));
+});
+
+let EDITING = null; // code string being edited, or null
+
+function startEdit(code){
+  const hit = all().find(x=>x.code.toUpperCase()===code.toUpperCase());
+  if(!hit) return;
+  EDITING = hit.code;
+  document.querySelector('.add').open = true;
+  document.getElementById('newCode').value = hit.code;
+  document.getElementById('newDesc').value = hit.desc;
+  document.getElementById('newFF').value = hit.ff||'';
+  document.getElementById('newRank').value = hit.rank||'';
+  document.getElementById('newJedec').value = hit.jedec||'';
+  document.getElementById('addBtn').textContent = 'Save changes';
+  document.getElementById('cancelEditBtn').style.display = '';
+  addMsg.className='addmsg';
+  addMsg.textContent = 'Editing '+hit.code+' — make changes then save.';
+  document.getElementById('newDesc').focus();
+}
+
+function endEdit(){
+  EDITING = null;
+  document.getElementById('newCode').value = '';
+  document.getElementById('newDesc').value = '';
+  document.getElementById('newFF').value = '';
+  document.getElementById('newRank').value = '';
+  document.getElementById('newJedec').value = '';
+  document.getElementById('addBtn').textContent = 'Add code';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  addMsg.className='addmsg'; addMsg.textContent='';
+}
+
+// ── Pin modal ─────────────────────────────────────────────────────
+const PIN = '1829';
+let _pinTargetCode = null;
+
+function pinPrompt(code){
+  _pinTargetCode = code;
+  document.getElementById('pinCodeLabel').textContent = code;
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinInput').classList.remove('pin-err');
+  document.getElementById('pinErrMsg').textContent = '';
+  document.getElementById('pinBackdrop').classList.remove('hidden');
+  setTimeout(()=> document.getElementById('pinInput').focus(), 80);
+}
+
+function pinClose(){
+  document.getElementById('pinBackdrop').classList.add('hidden');
+  _pinTargetCode = null;
+}
+
+async function pinConfirmDelete(){
+  const entered = document.getElementById('pinInput').value.trim();
+  const inp = document.getElementById('pinInput');
+  if(entered !== PIN){
+    inp.classList.add('pin-err');
+    document.getElementById('pinErrMsg').textContent = 'Incorrect PIN — try again';
+    inp.value = '';
+    setTimeout(()=> inp.classList.remove('pin-err'), 600);
+    inp.focus();
+    return;
+  }
+  const code = _pinTargetCode;
+  pinClose();
+  await deleteCode(code);
+}
+
+async function deleteCode(code){
+  const isBuiltin = isBuiltinCode(code);
+  if(isBuiltin){
+    // Builtins can't be deleted from the sheet (they're hardcoded) but we can
+    // hide them locally by adding to a suppression list
+    let suppressed = [];
+    try{ const r = await window.storage?.get('abribook:suppressed',false); if(r?.value) suppressed=JSON.parse(r.value); }catch(e){}
+    if(!suppressed.includes(code.toUpperCase())) suppressed.push(code.toUpperCase());
+    try{ await window.storage?.set('abribook:suppressed', JSON.stringify(suppressed), false); }catch(e){}
+    SUPPRESSED_CODES = new Set(suppressed);
+    toast('Built-in code <code>'+esc(code)+'</code> hidden for this device');
+    render();
+    return;
+  }
+  // Custom code — remove locally and push delete to sheet
+  CUSTOM[CATEGORY] = (CUSTOM[CATEGORY]||[]).filter(x=> x.code.toUpperCase() !== code.toUpperCase());
+  await saveCustom('delete', {code, category: CATEGORY});
+  toast('Deleted <code>'+esc(code)+'</code>');
+  qEl.value=''; render();
+}
+
+// Pin modal button wiring happens in the second script block below, after modal HTML exists
+
+const addMsg=document.getElementById('addMsg');
+function isCustomCode(code){ return (CUSTOM[CATEGORY]||[]).some(x=>x.code.toUpperCase()===code.toUpperCase()); }
+function flashCode(code){
+  qEl.value=code; render();
+  requestAnimationFrame(()=>{
+    const row=[...listEl.querySelectorAll('.row')].find(b=>b.dataset.code.toUpperCase()===code.toUpperCase());
+    if(row){ row.classList.add('flash'); try{row.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){} setTimeout(()=>row.classList.remove('flash'),1700); }
+  });
+}
+async function attemptAdd(force){
+  const code=document.getElementById('newCode').value.trim();
+  const desc=document.getElementById('newDesc').value.trim();
+  const ff=document.getElementById('newFF').value.trim();
+  const rank=document.getElementById('newRank').value.trim();
+  const jedec=document.getElementById('newJedec').value.trim();
+  addMsg.className='addmsg';
+  if(!code||!desc){ addMsg.textContent='Enter both a code and a description.'; addMsg.classList.add('err'); return; }
+  if(/\s/.test(code)){ addMsg.textContent='Code can\'t contain spaces.'; addMsg.classList.add('err'); return; }
+
+  // --- Edit mode: replace in place ---
+  if(EDITING){
+    const entry={code,desc};
+    if(CATEGORY==='ram'){ if(rank) entry.rank=rank; if(jedec) entry.jedec=jedec; if(ff) entry.ff=ff; }
+    CUSTOM[CATEGORY]=(CUSTOM[CATEGORY]||[]).filter(x=>x.code.toUpperCase()!==EDITING.toUpperCase());
+    CUSTOM[CATEGORY].push(entry);
+    await saveCustom('edit', {code, description:desc, category:CATEGORY, rank, jedec, ff});
+    addMsg.textContent='Saved changes to '+code+'.'; addMsg.classList.add('ok');
+    endEdit(); qEl.value=''; render(); flashCode(code);
+    return;
+  }
+
+  // --- Add mode ---
+  const dupe=all().find(x=>x.code.toUpperCase()===code.toUpperCase());
+  if(dupe && !force){
+    if(isCustomCode(code)){
+      addMsg.innerHTML='⚠ <b>'+esc(code)+'</b> is already saved (highlighted below) — not added again. <a id="replaceLink">Replace it instead</a>';
+    } else {
+      addMsg.innerHTML='⚠ <b>'+esc(code)+'</b> is a built-in code (highlighted below). Pick a different code so nothing collides.';
+    }
+    addMsg.classList.add('err');
+    const rl=document.getElementById('replaceLink');
+    if(rl) rl.addEventListener('click',ev=>{ ev.preventDefault(); attemptAdd(true); });
+    flashCode(dupe.code);
+    return;
+  }
+  const entry={code,desc};
+  if(CATEGORY==='ram'){ if(rank) entry.rank=rank; if(jedec) entry.jedec=jedec; if(ff) entry.ff=ff; }
+  CUSTOM[CATEGORY]=(CUSTOM[CATEGORY]||[]).filter(x=>x.code.toUpperCase()!==code.toUpperCase());
+  CUSTOM[CATEGORY].push(entry);
+  await saveCustom('add', {code, description:desc, category:CATEGORY, rank, jedec, ff});
+  document.getElementById('newCode').value=''; document.getElementById('newDesc').value='';
+  document.getElementById('newFF').value=''; document.getElementById('newRank').value=''; document.getElementById('newJedec').value='';
+  qEl.value='';
+  addMsg.textContent=(force?'Replaced ':'Added ')+code+' in '+catLabel()+' — syncing to sheet…'; addMsg.classList.add('ok');
+  render();
+}
+document.getElementById('addBtn').addEventListener('click',()=>attemptAdd(false));
+document.getElementById('cancelEditBtn').addEventListener('click',()=>endEdit());
+
+// ── Wan Format Assist ─────────────────────────────────────────────
+let WAN_MODE = 'helper'; // per tab, NOT persisted
+let _wanDebounce = null;
+let _wanLastInput = '';
+let _wanPendingSuggestion = null;
+let _wanUndoText = null;
+let _wanUndoTimer = null;
+let WAN_KNOWLEDGE = []; // loaded from sheet — [{raw, formatted, added_by}]
+
+// ── WanKnowledge sheet sync ───────────────────────────────────────
+async function wanKnowledgeLoad(){
+  try{
+    const r = await fetch(GS_URL + '?action=wan_knowledge&t=' + Date.now());
+    const j = await r.json();
+    if(j.ok && j.knowledge) WAN_KNOWLEDGE = j.knowledge;
+  } catch(e){}
+}
+
+async function wanKnowledgePush(raw, formatted){
+  try{
+    await fetch(GS_URL, {
+      method:'POST',
+      body: JSON.stringify({
+        action:'add_wan_knowledge',
+        raw: raw.toLowerCase().trim(),
+        formatted: formatted.trim(),
+        added_by: LISTER_INITIAL || '?'
+      })
+    });
+    WAN_KNOWLEDGE.push({raw: raw.toLowerCase().trim(), formatted: formatted.trim()});
+  } catch(e){}
+}
+
+// ── Dedup check ───────────────────────────────────────────────────
+function wanKnowledgeDedup(raw, formatted){
+  const rawNorm = raw.toLowerCase().trim();
+  const fmtNorm = formatted.toLowerCase().trim();
+  // Check against BUILTIN
+  const allBuiltin = [...(BUILTIN.storage||[]), ...(BUILTIN.ram||[])];
+  const builtinMatch = allBuiltin.find(x =>
+    x.desc.toLowerCase() === fmtNorm ||
+    (x.desc.toLowerCase().includes(fmtNorm)) ||
+    fmtNorm.includes(x.desc.toLowerCase())
+  );
+  if(builtinMatch) return {dupe: true, source: 'builtin', entry: builtinMatch};
+  // Check against WanKnowledge
+  const knownRaw = WAN_KNOWLEDGE.find(x => x.raw === rawNorm);
+  if(knownRaw) return {dupe: true, source: 'knowledge_raw', entry: knownRaw};
+  const knownFmt = WAN_KNOWLEDGE.find(x => x.formatted.toLowerCase() === fmtNorm);
+  if(knownFmt) return {dupe: true, source: 'knowledge_fmt', entry: knownFmt};
+  return {dupe: false};
+}
+
+// ── Mode toggle ───────────────────────────────────────────────────
+document.getElementById('modeHelper').addEventListener('click', ()=> setWanMode('helper'));
+document.getElementById('modeBerserk').addEventListener('click', ()=> setWanMode('berserk'));
+
+function setWanMode(mode){
+  WAN_MODE = mode;
+  document.getElementById('modeHelper').className = 'mode-btn' + (mode==='helper' ? ' active-helper' : '');
+  document.getElementById('modeBerserk').className = 'mode-btn' + (mode==='berserk' ? ' active-berserk' : '');
+  document.getElementById('modeHint').textContent = mode==='helper'
+    ? 'Wan suggests — you confirm'
+    : '⚡ Wan shows reference only — your input is untouched';
+  clearWanBanner();
+}
+
+function clearWanBanner(){
+  const b = document.getElementById('wanBanner');
+  b.style.display = 'none'; b.innerHTML = '';
+  _wanPendingSuggestion = null;
+}
+
+function showWanSuggestion(suggestion, mpnBuilt){
+  _wanPendingSuggestion = suggestion;
+  const b = document.getElementById('wanBanner');
+  b.style.display = '';
+  const mpnFlag = mpnBuilt
+    ? `<div style="display:flex;align-items:center;gap:5px;padding:0 11px 7px;font-size:11px;color:#FCD34D;">
+        <span style="font-size:13px;">⚠️</span>
+        <span>MPN was constructed from pattern — <b>always verify before publishing</b></span>
+       </div>`
+    : '';
+  b.innerHTML = `<div class="wan-banner">
+    <div class="wan-head">
+      <div class="wan-avatar">W</div>
+      <span class="wan-label"><span>Wan</span> thinks you mean:</span>
+    </div>
+    <div class="wan-suggestion">${esc(suggestion)}</div>
+    ${mpnFlag}
+    <div class="wan-actions">
+      <button class="wan-btn accept" id="wanAccept">✓ Accept</button>
+      <button class="wan-btn edit" id="wanEdit">✎ Edit</button>
+      <button class="wan-btn dismiss" id="wanDismiss">✕ Dismiss</button>
+    </div>
+  </div>`;
+  document.getElementById('wanAccept').addEventListener('click', ()=> wanApply(suggestion));
+  document.getElementById('wanEdit').addEventListener('click', ()=>{
+    document.getElementById('newDesc').value = suggestion;
+    document.getElementById('newDesc').focus();
+    clearWanBanner();
+  });
+  document.getElementById('wanDismiss').addEventListener('click', clearWanBanner);
+}
+
+function showWanUnknown(rawText){
+  const b = document.getElementById('wanBanner');
+  b.style.display = '';
+  b.innerHTML = `<div class="wan-banner" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.07);">
+    <div class="wan-head">
+      <div class="wan-avatar" style="background:linear-gradient(135deg,#d97706,#f59e0b);">W</div>
+      <span class="wan-label" style="color:var(--ink-soft);">Wan doesn't recognize this one</span>
+    </div>
+    <div style="padding:0 11px 9px;font-size:12px;color:var(--ink-soft);line-height:1.5;">
+      Write what the formatted description should look like, then teach Wan so everyone benefits next time.
+    </div>
+    <div style="padding:0 11px 10px;display:flex;gap:7px;align-items:center;">
+      <input id="wanTeachInput" placeholder="e.g. Kingston DC500R (SEDC500R/480G) 2.5&quot; SATA — 480GB"
+        style="flex:1;padding:7px 10px;border:1px solid var(--line-2);border-radius:var(--r-md);
+        font:500 12px/1 var(--mono);color:var(--ink);background:var(--surface-2);outline:none;">
+      <button class="wan-btn accept" id="wanTeachSave" style="white-space:nowrap;">Teach Wan</button>
+      <button class="wan-btn dismiss" id="wanTeachSkip">Skip</button>
+    </div>
+  </div>`;
+  document.getElementById('wanTeachSkip').addEventListener('click', clearWanBanner);
+  document.getElementById('wanTeachSave').addEventListener('click', ()=>{
+    const formatted = document.getElementById('wanTeachInput').value.trim();
+    if(!formatted){ document.getElementById('wanTeachInput').style.borderColor='#EF4444'; return; }
+    const check = wanKnowledgeDedup(rawText, formatted);
+    if(check.dupe){
+      const msg = check.source === 'builtin'
+        ? `Wan already knows this from the built-in library (${check.entry.code} — ${check.entry.desc})`
+        : `Already in Wan's knowledge: "${check.entry.formatted}"`;
+      showWanTeachDupe(msg);
+      return;
+    }
+    wanKnowledgePush(rawText, formatted).then(()=>{
+      document.getElementById('newDesc').value = formatted;
+      clearWanBanner();
+      toast('Wan learned it — synced to sheet 🧠');
+      showUndoPill();
+      _wanUndoText = rawText;
+    });
+  });
+}
+
+function showWanTeachDupe(msg){
+  const b = document.getElementById('wanBanner');
+  b.style.display = '';
+  b.innerHTML = `<div class="wan-banner" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.06);">
+    <div class="wan-head">
+      <div class="wan-avatar" style="background:#7f1d1d;">W</div>
+      <span class="wan-label" style="color:#FCA5A5;">Already known</span>
+    </div>
+    <div style="padding:0 11px 9px;font-size:12px;color:var(--ink-soft);line-height:1.5;">${esc(msg)}</div>
+    <div style="padding:0 11px 10px;">
+      <button class="wan-btn dismiss" id="wanDupeOk">Got it</button>
+    </div>
+  </div>`;
+  document.getElementById('wanDupeOk').addEventListener('click', clearWanBanner);
+}
+
+function wanApply(suggestion){
+  const descEl = document.getElementById('newDesc');
+  _wanUndoText = descEl.value;
+  descEl.value = suggestion;
+  clearWanBanner();
+  showUndoPill();
+}
+
+function showUndoPill(){
+  clearTimeout(_wanUndoTimer);
+  const pill = document.getElementById('undoPill');
+  pill.style.display = '';
+  pill.innerHTML = `<span class="undo-pill" id="undoClick">↩ Undo Wan's change</span>`;
+  document.getElementById('undoClick').addEventListener('click', ()=>{
+    if(_wanUndoText !== null){
+      document.getElementById('newDesc').value = _wanUndoText;
+      _wanUndoText = null;
+    }
+    hideUndoPill();
+  });
+  _wanUndoTimer = setTimeout(()=>{
+    const el = document.getElementById('undoClick');
+    if(el){ el.classList.add('fading'); setTimeout(hideUndoPill, 350); }
+  }, 5000);
+}
+
+function hideUndoPill(){
+  const pill = document.getElementById('undoPill');
+  pill.style.display = 'none'; pill.innerHTML = '';
+  clearTimeout(_wanUndoTimer);
+}
+
+// ── Rules engine ──────────────────────────────────────────────────
+const WAN_BRANDS = {
+  samsung:'Samsung', kingston:'Kingston', crucial:'Crucial', micron:'Micron',
+  intel:'Intel', seagate:'Seagate', 'western digital':'Western Digital', wd:'Western Digital',
+  corsair:'Corsair', axiom:'Axiom', skynix:'Skynix', hynix:'SK Hynix',
+  'sk hynix':'SK Hynix', toshiba:'Toshiba', sandisk:'SanDisk', transcend:'Transcend',
+  patriot:'Patriot', teamgroup:'TeamGroup', pny:'PNY', addlink:'Addlink'
+};
+
+const WAN_FF_MAP = [
+  {keys:['nvme','m.2','m2','pcie','nand'], val:'NVMe M.2 2280'},
+  {keys:['2.5"','2.5 inch','2.5inch','sata 2.5','sata2.5'], val:'2.5" SATA'},
+  {keys:['sata','ata'], val:'2.5" SATA'},
+  {keys:['m.2 sata','m2 sata'], val:'M.2 2280 SATA'},
+];
+
+const WAN_SIZE_MAP = [
+  // size string → {gb, tb display}
+  {pat:/\b(4096|4000)\s*gb\b/i, gb:'4096GB', tb:'(4TB)'},
+  {pat:/\b4\s*tb\b/i,           gb:'4096GB', tb:'(4TB)'},
+  {pat:/\b3840\s*gb\b/i,        gb:'3840GB', tb:'(3.84TB)'},
+  {pat:/\b3\.84\s*tb\b/i,       gb:'3840GB', tb:'(3.84TB)'},
+  {pat:/\b2000\s*gb\b/i,        gb:'2000GB', tb:'(2TB)'},
+  {pat:/\b2\s*tb\b/i,           gb:'2000GB', tb:'(2TB)'},
+  {pat:/\b1920\s*gb\b/i,        gb:'1920GB', tb:'(1.92TB)'},
+  {pat:/\b1\.92\s*tb\b/i,       gb:'1920GB', tb:'(1.92TB)'},
+  {pat:/\b1024\s*gb\b/i,        gb:'1024GB', tb:'(1TB)'},
+  {pat:/\b1000\s*gb\b/i,        gb:'1000GB', tb:'(1TB)'},
+  {pat:/\b1\s*tb\b/i,           gb:'1000GB', tb:'(1TB)'},
+  {pat:/\b960\s*gb\b/i,         gb:'960GB',  tb:''},
+  {pat:/\b480\s*gb\b/i,         gb:'480GB',  tb:''},
+  {pat:/\b512\s*gb\b/i,         gb:'512GB',  tb:''},
+  {pat:/\b256\s*gb\b/i,         gb:'256GB',  tb:''},
+  {pat:/\b240\s*gb\b/i,         gb:'240GB',  tb:''},
+  {pat:/\b128\s*gb\b/i,         gb:'128GB',  tb:''},
+];
+
+// RAM type tokens
+const WAN_RAM_TYPE = [
+  {keys:['ecc','server'], val:'ECC Server Memory'},
+  {keys:['sodimm','laptop','notebook','so-dimm'], val:'Laptop Memory'},
+  {keys:['desktop','udimm'], val:'Desktop Memory'},
+  {keys:['server','rdimm'], val:'Server Memory'},
+];
+
+function wanNormalizeBrand(raw){
+  const lo = raw.toLowerCase();
+  for(const [k,v] of Object.entries(WAN_BRANDS)){
+    if(lo.includes(k)) return v;
+  }
+  // Capitalize first word as fallback
+  const first = raw.trim().split(/\s+/)[0];
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+// ── Known MPN construction patterns ──────────────────────────────
+// When the lister's input doesn't contain a real MPN, we can construct it
+// from the model name + size using known brand patterns
+// ── BUILTIN-seeded MPN pattern engine ────────────────────────────
+// Each entry: model keyword regex, size token builder, MPN template fn
+// Size token: converts raw GB number to what appears in the MPN
+// e.g. 1000GB → "1T0", 2000GB → "2T0", 480 → "480", 1920 → "1T9"
+
+function wanSizeToken(gbNum, style){
+  const n = parseInt(gbNum);
+  if(style === 'samsung_nvme'){
+    // MZ-V series: 1000→1T0, 2000→2T0
+    if(n>=2000) return '2T0'; if(n>=1000) return '1T0'; if(n>=500) return '500'; return null;
+  }
+  if(style === 'samsung_sata'){
+    // MZ-77E / MZ-75E: 1000→1T0, 2000→2T0, 500→500
+    if(n>=2000) return '2T0'; if(n>=1000) return '1T0'; if(n>=500) return '500'; return null;
+  }
+  if(style === 'micron_7450'){
+    // MTFDKBG: 1920→1T9, 3840→3T8
+    if(n>=3840) return '3T8'; if(n>=1920) return '1T9'; if(n>=960) return '960'; return null;
+  }
+  if(style === 'intel_660p'){
+    // SSDPEKNW: 1000→010, 2000→020
+    if(n>=2000) return '020'; if(n>=1000) return '010'; return null;
+  }
+  if(style === 'wd_sn550'){
+    // WDS{n}T2B0C: 1000→100
+    if(n>=1000) return String(Math.round(n/10)); return null;
+  }
+  if(style === 'crucial_ct'){
+    // CT{n}...: just the raw GB number
+    return String(n);
+  }
+  if(style === 'kingston_dc'){
+    // SEDC.../{n}G: raw GB number
+    return String(n);
+  }
+  if(style === 'kingston_kc'){
+    // SKC.../{n}G: raw GB number
+    return String(n);
+  }
+  if(style === 'seagate'){
+    // ZA{n}CM: 1000→1000
+    return String(n);
+  }
+  return String(n);
+}
+
+const WAN_MPN_PATTERNS = [
+  // ── Samsung NVMe (MZ-V family) ───────────────────────────────
+  {
+    test: /\b970\s*EVO\s*(Plus)?\b/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'samsung_nvme'); return t?`MZ-V7S${t}B`:null; }
+  },
+  {
+    test: /\b980\s*Pro\b/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'samsung_nvme'); return t?`MZ-V8P${t}`:null; }
+  },
+  {
+    test: /\b980\b(?!\s*Pro)/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'samsung_nvme'); return t?`MZ-V8V${t}`:null; }
+  },
+  {
+    test: /\b990\s*Pro\b/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'samsung_nvme'); return t?`MZ-V9P${t}`:null; }
+  },
+  // ── Samsung SATA ─────────────────────────────────────────────
+  {
+    test: /\b870\s*EVO\b/i,
+    ff: '2.5" SATA',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'samsung_sata'); return t?`MZ-77E${t}`:null; }
+  },
+  {
+    test: /\b850\s*EVO\b/i,
+    ff: '2.5" SATA',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'samsung_sata'); return t?`MZ-75E${t}`:null; }
+  },
+  // ── Kingston DC-series ────────────────────────────────────────
+  {
+    test: /\bDC\s*400\b/i,
+    ff: '2.5" SATA',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'kingston_dc'); return t?`SEDC400S37/${t}G`:null; }
+  },
+  {
+    test: /\bDC\s*500R\b/i,
+    ff: '2.5" SATA',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'kingston_dc'); return t?`SEDC500R/${t}G`:null; }
+  },
+  {
+    test: /\bDC\s*500M\b/i,
+    ff: '2.5" SATA',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'kingston_dc'); return t?`SEDC500M/${t}G`:null; }
+  },
+  {
+    test: /\bDC\s*600M\b/i,
+    ff: '2.5" SATA',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'kingston_dc'); return t?`SEDC600M/${t}G`:null; }
+  },
+  // ── Kingston KC-series ────────────────────────────────────────
+  {
+    test: /\bKC\s*2500\b/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'kingston_kc'); return t?`SKC2500M8/${t}G`:null; }
+  },
+  {
+    test: /\bKC\s*3000\b/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => {
+      const t=wanSizeToken(gbNum,'kingston_kc');
+      if(!t) return null;
+      const v = parseInt(gbNum)>=2048?'D':'S';
+      return `SKC3000${v}/${t}G`;
+    }
+  },
+  // ── Crucial ───────────────────────────────────────────────────
+  {
+    test: /\bP5\s*Plus\b/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'crucial_ct'); return t?`CT${t}P5PSSD8`:null; }
+  },
+  {
+    test: /\bP5\b(?!\s*Plus)/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'crucial_ct'); return t?`CT${t}P5SSD8`:null; }
+  },
+  {
+    test: /\bP1\b/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'crucial_ct'); return t?`CT${t}P1SSD8`:null; }
+  },
+  {
+    test: /\bMX\s*500\b/i,
+    ff: '2.5" SATA',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'crucial_ct'); return t?`CT${t}MX500SSD1`:null; }
+  },
+  // ── Intel 660p ────────────────────────────────────────────────
+  {
+    test: /\b660p?\b/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'intel_660p'); return t?`SSDPEKNW${t}T8`:null; }
+  },
+  // ── WD SN550 ─────────────────────────────────────────────────
+  {
+    test: /\bSN\s*550\b/i,
+    ff: 'NVMe M.2 2280',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'wd_sn550'); return t?`WDS${t}T2B0C`:null; }
+  },
+  // ── Micron 7450 ───────────────────────────────────────────────
+  {
+    test: /\b7450\b/i,
+    ff: 'NVMe M.2',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'micron_7450'); return t?`MTFDKBG${t}TFR`:null; }
+  },
+  // ── Seagate Barracuda ─────────────────────────────────────────
+  {
+    test: /\bBarracuda\b/i,
+    ff: '2.5" SATA',
+    build: (gbNum) => { const t=wanSizeToken(gbNum,'seagate'); return t?`ZA${t}CM10003`:null; }
+  },
+];
+
+function wanBuildMPN(modelText, sizeGB){
+  // sizeGB may look like "480GB (0.48TB)" or "1000GB (1TB)" or "480GB" — extract the number
+  const gbNum = sizeGB ? sizeGB.match(/(\d+)\s*GB/i)?.[1] : null;
+  if(!gbNum) return {mpn:null, ff:null};
+  for(const p of WAN_MPN_PATTERNS){
+    if(p.test.test(modelText)){
+      const mpn = p.build(gbNum);
+      return {mpn: mpn||null, ff: p.ff||null};
+    }
+  }
+  return {mpn:null, ff:null};
+}
+
+function wanExtractMPN(raw, excludeCode){
+  // MPN patterns: alphanumeric with dashes/slashes, at least 6 chars, contains digit
+  const matches = raw.match(/\b([A-Z0-9][A-Z0-9\-\/]{4,}[A-Z0-9])\b/gi) || [];
+  const excludeUpper = (excludeCode || '').toUpperCase();
+  return matches
+    .filter(m =>
+      /\d/.test(m) &&
+      !/^\d+GB$/i.test(m) &&
+      !/^\d+TB$/i.test(m) &&
+      m.toUpperCase() !== excludeUpper  // never use the Abribook code itself as MPN
+    )
+    .map(m => m.toUpperCase())[0] || null;
+}
+
+function wanExtractSize(raw){
+  for(const s of WAN_SIZE_MAP){
+    if(s.pat.test(raw)){
+      return s.tb ? s.gb + ' ' + s.tb : s.gb;
+    }
+  }
+  return null;
+}
+
+function wanExtractFF(raw, isNvmeMpn){
+  const lo = raw.toLowerCase();
+  // NVMe MPNs always infer NVMe M.2
+  if(isNvmeMpn) return 'NVMe M.2 2280';
+  for(const f of WAN_FF_MAP){
+    if(f.keys.some(k => lo.includes(k))) return f.val;
+  }
+  return null;
+}
+
+function wanExtractModelName(raw, brand, mpn){
+  // Remove brand, MPN, size tokens, FF tokens, leftover noise words
+  let s = raw;
+  if(brand) s = s.replace(new RegExp(brand.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'), '');
+  if(mpn) s = s.replace(new RegExp(mpn.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'), '');
+  s = s.replace(/\b\d+\s*(gb|tb)\b/gi,'').replace(/\bnvme\b/gi,'').replace(/\bm\.?2\b/gi,'')
+       .replace(/\b2280\b/g,'').replace(/\bsata\b/gi,'').replace(/\bpcie\b/gi,'')
+       .replace(/\bssd\b/gi,'').replace(/\bnand\b/gi,'').replace(/\bseries\b/gi,'')
+       .replace(/\bdata\s*center\b/gi,'').replace(/\bsolid\s*state\b/gi,'')
+       .replace(/[,\-_]+/g,' ').replace(/\s+/g,' ').trim();
+  // Title-case what remains
+  return s.split(' ').filter(Boolean).map(w =>
+    w.length <= 2 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  ).join(' ');
+}
+
+// ── Code recipe decoder ───────────────────────────────────────────
+// Maps brand initials used in code recipes to brand names + FF hints
+const WAN_CODE_BRAND_MAP = [
+  {prefix:/^S/,   brand:'Samsung',        sata2_5:['870E','850E','980'], nvme:['970','980P','990P','V7S','V8P','V9P','V8V']},
+  {prefix:/^K/,   brand:'Kingston',       sata2_5:['DC500','A400'],     nvme:['KC25','KC30','SKC']},
+  {prefix:/^C/,   brand:'Crucial',        sata2_5:['500X','MX5'],       nvme:['P5','P1','CP5']},
+  {prefix:/^M/,   brand:'Micron',         sata2_5:[],                   nvme:['7450','MTFD']},
+  {prefix:/^WD/,  brand:'Western Digital',sata2_5:[],                   nvme:['SN5','SN7','SN8']},
+  {prefix:/^I/,   brand:'Intel',          sata2_5:[],                   nvme:['660','670']},
+  {prefix:/^SG/,  brand:'Seagate',        sata2_5:['CUDA','BAR'],       nvme:[]},
+];
+
+// Known MPN prefix → form factor
+const WAN_MPN_FF = [
+  {prefixes:['MZ-V','SSDPEKNW','MTFD','SKC','WDS','CT'],  ff:'NVMe M.2 2280'},
+  {prefixes:['MZ-77','MZ-75','CT1000MX','CT2000MX','ZA'], ff:'2.5" SATA'},
+  {prefixes:['SEDC','SKC2500','SKC3000'],                  ff:'2.5" SATA'}, // DC-series are 2.5" SATA
+];
+
+// Override: some Kingston codes that look NVMe are actually SATA
+const WAN_MPN_SATA_OVERRIDES = ['SEDC'];
+
+function wanDecodeCodeField(codeStr){
+  // Try to extract brand, size and model hints from the code string itself
+  // e.g. K480DC500R → Kingston, 480GB, DC500R
+  const up = codeStr.toUpperCase();
+  let brand = null, sizeGB = null, modelHint = null, ff = null;
+
+  // 1. Identify brand from prefix
+  for(const b of WAN_CODE_BRAND_MAP){
+    if(b.prefix.test(up)){
+      brand = b.brand;
+      // 2. Extract size: look for 3-4 digit number (GB value) after brand initial(s)
+      const sizeMatch = up.match(/^[A-Z]{1,2}(\d{2,4})/);
+      if(sizeMatch){
+        const sizeNum = parseInt(sizeMatch[1]);
+        // Map to standard size
+        const sizeStr = sizeNum >= 1000 ? sizeNum+'GB' : sizeNum+'GB';
+        const sizeResult = wanExtractSize(sizeStr + ' storage');
+        sizeGB = sizeResult || sizeNum+'GB';
+        // 3. Model hint: everything after the size digits
+        const afterSize = up.slice(up.indexOf(sizeMatch[1]) + sizeMatch[1].length);
+        if(afterSize.length >= 3) modelHint = afterSize;
+        // 4. Infer FF from model hint
+        if(modelHint){
+          // Check SATA overrides first
+          if(WAN_MPN_SATA_OVERRIDES.some(p => modelHint.startsWith(p))) ff = '2.5" SATA';
+          else if(b.nvme.some(p => modelHint.includes(p))) ff = 'NVMe M.2 2280';
+          else if(b.sata2_5.some(p => modelHint.includes(p))) ff = '2.5" SATA';
+        }
+      }
+      break;
+    }
+  }
+  return {brand, sizeGB, modelHint, ff};
+}
+
+function wanRunRules(rawText, codeText){
+  const isRam = CATEGORY === 'ram';
+  // Combine code + desc for matching — code field is often more structured
+  const combined = ((codeText||'') + ' ' + rawText).trim();
+  const lo = combined.toLowerCase();
+
+  // ── Tier 1: BUILTIN exact/fuzzy match ────────────────────────
+  const allBuiltin = [...(BUILTIN.storage||[]), ...(BUILTIN.ram||[])];
+
+  // First: check if codeText exactly matches a BUILTIN code
+  if(codeText){
+    const exactCode = allBuiltin.find(x => x.code.toUpperCase() === codeText.toUpperCase());
+    if(exactCode) return {result: exactCode.desc, tier:1, mpnBuilt:false};
+  }
+
+  // Check if combined input contains a known MPN
+  for(const entry of allBuiltin){
+    const mpnMatch = entry.desc.match(/\(([^)]+)\)/);
+    if(mpnMatch){
+      const mpn = mpnMatch[1].toLowerCase();
+      if(lo.includes(mpn)) return {result: entry.desc, tier:1, mpnBuilt:false};
+    }
+    // Fuzzy keyword match
+    const words = entry.desc.toLowerCase().replace(/[()]/g,'').split(/[\s\-]+/).filter(w=>w.length>3);
+    if(words.filter(w => lo.includes(w)).length >= 3) return {result: entry.desc, tier:1, mpnBuilt:false};
+  }
+
+  // ── Tier 2: WanKnowledge learned pairs ────────────────────────
+  const exactRaw = WAN_KNOWLEDGE.find(x => lo.includes(x.raw) || x.raw.includes(lo.slice(0,20)));
+  if(exactRaw) return {result: exactRaw.formatted, tier:2, mpnBuilt:false};
+  for(const k of WAN_KNOWLEDGE){
+    const tokens = k.raw.split(/\s+/).filter(t=>t.length>3);
+    if(tokens.length >= 2 && tokens.filter(t=>lo.includes(t)).length >= Math.ceil(tokens.length*0.6)){
+      return {result: k.formatted, tier:2, mpnBuilt:false};
+    }
+  }
+
+  // ── Tier 3: Rules engine (code-aware) ─────────────────────────
+  if(isRam){
+    const brand = wanNormalizeBrand(combined);
+    const sizeMatch = combined.match(/\b(\d+)\s*gb\b/i);
+    const capacity = sizeMatch ? sizeMatch[1]+'GB' : null;
+    const rankMatch = combined.match(/\b([12]R[Xx]\d)\b/i);
+    const rank = rankMatch ? rankMatch[1].toUpperCase() : null;
+    const jedecMatch = combined.match(/\b(PC[34][\w\-]+)\b/i) || combined.match(/\b(DDR[345][\w\-]*)\b/i);
+    const jedec = jedecMatch ? jedecMatch[1].toUpperCase() : null;
+    const ffMatch = combined.match(/\b(UDIMM|SODIMM|RDIMM)\b/i);
+    const ff = ffMatch ? ffMatch[1].toUpperCase() : null;
+    let type = 'Desktop Memory';
+    for(const t of WAN_RAM_TYPE){ if(t.keys.some(k=>lo.includes(k))){ type=t.val; break; } }
+    if(!brand || !capacity) return {result: null, tier:3, mpnBuilt:false};
+    let out = brand;
+    if(capacity) out += ' ' + capacity;
+    if(rank) out += ' ' + rank;
+    if(jedec) out += ' ' + jedec;
+    out += ' ' + type;
+    if(ff && !out.includes(ff)) out += ' [' + ff + ']';
+    return {result: out, tier:3, mpnBuilt:false};
+  } else {
+    // Storage — use code field to decode brand/size/model if desc is sparse
+    const decoded = codeText ? wanDecodeCodeField(codeText) : {brand:null, sizeGB:null, modelHint:null, ff:null};
+
+    const brand = wanNormalizeBrand(rawText) || decoded.brand;
+    let mpn = wanExtractMPN(rawText, codeText);
+    const size = wanExtractSize(combined) || decoded.sizeGB;
+    let modelName = wanExtractModelName(rawText, brand, mpn);
+    if(!modelName && decoded.modelHint) modelName = decoded.modelHint;
+
+    // If no MPN found in desc, try to construct from model name + size using pattern engine
+    let mpnBuilt = false;
+    let builtFF = null;
+    if(!mpn){
+      const searchText = (modelName||'') + ' ' + rawText + ' ' + (decoded.modelHint||'');
+      const sizeRaw = size || decoded.sizeGB;
+      const built = wanBuildMPN(searchText, sizeRaw);
+      if(built.mpn){ mpn = built.mpn; mpnBuilt = true; builtFF = built.ff; }
+    }
+
+    const nvmeMpnPrefixes = ['MZ-V','SKC','WDS','CT','SSDPEKNW','MTFD'];
+    const isNvmeMpn = mpn ? nvmeMpnPrefixes.some(p=>mpn.startsWith(p)) : false;
+    let ff = wanExtractFF(combined, isNvmeMpn) || builtFF || decoded.ff;
+    if(mpn){
+      for(const m of WAN_MPN_FF){ if(m.prefixes.some(p=>mpn.startsWith(p))){ ff=m.ff; break; } }
+      if(WAN_MPN_SATA_OVERRIDES.some(p=>mpn.startsWith(p))) ff='2.5" SATA';
+    }
+
+    if(!brand || (!mpn && !size && !modelName && !decoded.modelHint)){
+      return {result:null, tier:3, mpnBuilt:false};
+    }
+
+    let out = brand;
+    if(modelName) out += ' ' + modelName;
+    if(mpn) out += ' (' + mpn + ')';
+    if(ff) out += ' ' + ff;
+    if(size) out += ' — ' + size;
+    return {result: out.trim(), tier:3, mpnBuilt};
+  }
+}
+
+function wanTrigger(){
+  const code = (document.getElementById('newCode')?.value || '').trim();
+  const desc = (document.getElementById('newDesc')?.value || '').trim();
+  const combined = (code + ' ' + desc).trim();
+  // Need at least something meaningful to work with
+  if(combined.length < 3) return;
+  // Don't fire if desc is already a well-formatted description (has em dash or parens with MPN)
+  if(desc.includes('—') && desc.includes('(')) return;
+  clearWanBanner();
+  hideUndoPill();
+  clearTimeout(_wanDebounce);
+  _wanDebounce = setTimeout(()=> wanFormatDesc(desc, code), 750);
+}
+
+function wanFormatDesc(rawText, codeText){
+  const code = codeText || (document.getElementById('newCode')?.value || '').trim();
+  const desc = rawText || '';
+  const combined = (code + ' ' + desc).trim();
+  if(combined.length < 2) return;
+  const {result, tier, mpnBuilt} = wanRunRules(desc, code);
+
+  if(!result){
+    showWanUnknown(combined);
+    return;
+  }
+
+  if(WAN_MODE === 'berserk'){
+    const b = document.getElementById('wanBanner');
+    b.style.display = '';
+    const tierLabel = tier===1?'from library':tier===2?'from memory':'rules engine';
+    const mpnWarn = mpnBuilt ? `<div style="padding:2px 11px 7px;font-size:11px;color:#FCD34D;">⚠️ MPN constructed — verify before publishing</div>` : '';
+    b.innerHTML = `<div class="wan-banner berserk-flash">
+      <div class="wan-head">
+        <div class="wan-avatar">W</div>
+        <span class="wan-label"><span>Wan</span> sees: <span style="font-size:10px;opacity:.6;">${tierLabel}</span></span>
+      </div>
+      <div class="wan-suggestion">${esc(result)}</div>
+      ${mpnWarn}
+    </div>`;
+    setTimeout(()=>{ clearWanBanner(); }, 3000);
+  } else {
+    showWanSuggestion(result, mpnBuilt);
+  }
+}
+
+// Wire debounce to BOTH code and desc fields
+document.getElementById('newCode').addEventListener('input', wanTrigger);
+document.getElementById('newDesc').addEventListener('input', wanTrigger);
+
+(async function init(){
+  CUSTOM=await loadCustom();
+  if(!CUSTOM.storage)CUSTOM.storage=[];
+  if(!CUSTOM.ram)CUSTOM.ram=[];
+  ['storage','ram'].forEach(c=>{ const seen=new Set(); CUSTOM[c]=(CUSTOM[c]||[]).filter(x=>{ const k=(x.code||'').toUpperCase(); if(!k||seen.has(k)) return false; seen.add(k); return true; }); });
+  // Load suppressed builtin codes
+  try{ const r=await window.storage?.get('abribook:suppressed',false); if(r?.value) SUPPRESSED_CODES=new Set(JSON.parse(r.value)); }catch(e){}
+  wanKnowledgeLoad();
+  setCategory('storage');
+})();
+
+// Manual refresh on sync status click
+document.getElementById('syncStatus').addEventListener('click', ()=>gsGet().then(()=>saveLocalCache()));
+
+// ── Tutorial ──────────────────────────────────────────────────────
+const TUT_KEY = 'abribook:tut:seen:v1';
+const tutSlides = document.querySelectorAll('.tut-slide');
+const tutTotal = tutSlides.length;
+let tutCurrent = 0;
+
+function tutBuildProgress(){
+  const bar = document.getElementById('tutProgress');
+  bar.innerHTML = Array.from({length:tutTotal}, (_,i)=>`<div class="tut-pip${i<=tutCurrent?' done':''}"></div>`).join('');
+}
+function tutShow(i){
+  tutCurrent = Math.max(0, Math.min(tutTotal-1, i));
+  tutSlides.forEach((s,idx)=>s.classList.toggle('active', idx===tutCurrent));
+  document.getElementById('tutCounter').textContent = (tutCurrent+1)+' of '+tutTotal;
+  document.getElementById('tutPrev').style.visibility = tutCurrent===0?'hidden':'visible';
+  document.getElementById('tutNext').textContent = tutCurrent===tutTotal-1?'Got it ✓':'Next →';
+  tutBuildProgress();
+}
+function tutOpen(){ document.getElementById('tutBackdrop').classList.remove('hidden'); tutShow(0); }
+function tutClose(){
+  document.getElementById('tutBackdrop').classList.add('hidden');
+  try{ localStorage.setItem(TUT_KEY,'1'); }catch(e){}
+}
+document.getElementById('tutClose').addEventListener('click', tutClose);
+document.getElementById('tutPrev').addEventListener('click', ()=>tutShow(tutCurrent-1));
+document.getElementById('tutNext').addEventListener('click', ()=>{
+  if(tutCurrent===tutTotal-1) tutClose(); else tutShow(tutCurrent+1);
+});
+document.getElementById('tutBackdrop').addEventListener('click', e=>{ if(e.target===document.getElementById('tutBackdrop')) tutClose(); });
+document.getElementById('tutOpenBtn').addEventListener('click', tutOpen);
+tutBuildProgress();
+// Auto-show on first load
+try{ if(!localStorage.getItem(TUT_KEY)) tutOpen(); else document.getElementById('tutBackdrop').classList.add('hidden'); }catch(e){ tutOpen(); }
+
+// ── Lister identity ───────────────────────────────────────────────
+let LISTER_INITIAL = '';
+let LISTER_BATCH = '';
+let LISTER_LOCKED = false;
+
+function listerSKU(entryNum){
+  if(!LISTER_INITIAL || !LISTER_BATCH) return '#'+entryNum;
+  return 'NJ02-'+LISTER_INITIAL+'-'+LISTER_BATCH+'-'+entryNum;
+}
+function listerComment(){
+  const names = {'J':'Juan','IS':'Ibrahim','P':'Paul'};
+  return '<!-- Listed by: '+(names[LISTER_INITIAL]||LISTER_INITIAL)+' ('+LISTER_INITIAL+') | NJ02 -->';
+}
+
+document.getElementById('listerLockBtn').addEventListener('click', ()=>{
+  const sel = document.getElementById('listerSelect');
+  const batch = document.getElementById('listerBatch').value.trim().toUpperCase();
+  if(!sel.value){ toast('Select your name first'); return; }
+  if(!batch || batch==='RTL'){ toast('Enter a full batch number, e.g. RTL0623'); return; }
+  LISTER_INITIAL = sel.value;
+  LISTER_BATCH = batch;
+  LISTER_LOCKED = true;
+  sel.disabled = true;
+  document.getElementById('listerBatch').disabled = true;
+  document.getElementById('listerLockBtn').style.display = 'none';
+  const pill = document.getElementById('listerPill');
+  pill.classList.add('show');
+  document.getElementById('listerPillName').textContent = '👤 '+sel.options[sel.selectedIndex].text+' · '+batch;
+  const hint = document.getElementById('listerHint');
+  hint.style.display = '';
+  document.getElementById('skuExample').textContent = listerSKU(1);
+  toast('Locked in as '+sel.options[sel.selectedIndex].text+' — batch '+batch);
+  dpUpdatePreviewAll();
+});
+
+// ── Draft Panel ──────────────────────────────────────────────────
+let dpEntries = []; // [{id, code, result, sn, notes}]
+let dpActiveId = null;
+
+function dpSetActive(id){
+  if(dpActiveId === id) return;
+  dpActiveId = id;
+  dpApplyDim();
+}
+function dpClearActive(){
+  // Only clear if focus left the entire panel
+  dpActiveId = null;
+  dpApplyDim();
+}
+function dpApplyDim(){
+  const all = document.querySelectorAll('.dp-entry');
+  if(dpActiveId === null || dpEntries.length <= 1){
+    all.forEach(el => el.classList.remove('dp-dim'));
+    return;
+  }
+  all.forEach(el => {
+    const isActive = el.id === 'dp-e-' + dpActiveId;
+    el.classList.toggle('dp-dim', !isActive);
+  });
+}
+let dpNextId = 1;
+
+function dpMakeEntry(){
+  return {id: dpNextId++, code:'', result:'', sn:'', notes:'', pairs:'', pairsOn:false};
+}
+function dpEntrySkuLabel(e){
+  const pos = dpEntries.findIndex(x=>x.id===e.id);
+  const num = pos === -1 ? e.id : pos + 1;
+  return listerSKU(num);
+}
+
+// Returns true if the resolved code belongs to RAM category
+function dpIsRam(code){
+  if(!code) return false;
+  const upper = code.toUpperCase();
+  return (BUILTIN.ram||[]).some(x=>x.code.toUpperCase()===upper)
+      || (CUSTOM.ram||[]).some(x=>x.code.toUpperCase()===upper);
+}
+
+function dpFmtHealth(raw){
+  if(!raw) return '';
+  const n = raw.replace(/[^0-9.]/g,'');
+  return n ? n + '% Health' : '';
+}
+
+function dpLineFor(e){
+  if(!e.code) return '';
+  const ram = dpIsRam(e.code);
+  let line = '*' + e.code;
+  if(ram){
+    if(e.result) line += ' ' + e.result;
+    if(e.pairsOn && e.pairs) line += ' Qty: ' + e.pairs + ' pair' + (parseInt(e.pairs)===1?'':'s');
+  } else {
+    const h = dpFmtHealth(e.result);
+    if(h) line += ' ' + h;
+  }
+  if(e.notes) line += ' ' + e.notes;
+  if(e.sn)    line += ' SN: ' + e.sn;
+  // Append lister SKU
+  line += ' | SKU: ' + dpEntrySkuLabel(e);
+  // Append lister HTML comment (visible in code view)
+  if(LISTER_INITIAL) line += ' ' + listerComment();
+  const hit = resolveCode(e.code);
+  if(hit && !isBuiltinCode(hit.code)){
+    line += '\n↳ new code — ' + codeDefLine(hit);
+  }
+  return line;
+}
+
+function dpUpdatePreviewAll(){
+  // Refresh ALL SKU labels to reflect current position
+  dpEntries.forEach(e=>{
+    const skuEl = document.getElementById('dp-sku-'+e.id);
+    if(skuEl) skuEl.textContent = dpEntrySkuLabel(e);
+  });
+  const lines = dpEntries.map(dpLineFor).filter(Boolean);
+  document.getElementById('dpPreviewAll').textContent = lines.join('\n');
+}
+
+function dpRebuildEntry(e){
+  // Full DOM rebuild — only call when structure changes (RAM/storage switch, pairsOn toggle)
+  const wrap = document.getElementById('dp-e-'+e.id);
+  if(!wrap) return;
+  const focused = document.activeElement;
+  const focusedField = focused ? focused.dataset.dpfield : null;
+  const newDiv = document.createElement('div');
+  newDiv.innerHTML = dpBuildEntryHTML(e);
+  const newEl = newDiv.firstElementChild;
+  wrap.replaceWith(newEl);
+  const finalWrap = document.getElementById('dp-e-'+e.id);
+  if(!finalWrap) return;
+  // Restore values
+  finalWrap.querySelector('[data-dpfield="result"]').value = e.result;
+  finalWrap.querySelector('[data-dpfield="sn"]').value = e.sn;
+  finalWrap.querySelector('[data-dpfield="notes"]').value = e.notes;
+  if(finalWrap.querySelector('[data-dpfield="pairs"]')) finalWrap.querySelector('[data-dpfield="pairs"]').value = e.pairs;
+  // Restore focus to same field
+  if(focusedField){
+    const refocus = finalWrap.querySelector('[data-dpfield="'+focusedField+'"]');
+    if(refocus) refocus.focus();
+  }
+}
+
+function dpRenderEntry(e){
+  const wrap = document.getElementById('dp-e-'+e.id);
+  if(!wrap) return;
+  const hit = e.code ? resolveCode(e.code) : null;
+  const ram = dpIsRam(e.code);
+
+  // Detect if a structural change requires full rebuild
+  const hasPairsRow = !!wrap.querySelector('.dp-pairs-row');
+  const needsRebuild = (ram && !hasPairsRow) || (!ram && hasPairsRow);
+  if(needsRebuild){ dpRebuildEntry(e); return; }
+
+  // Otherwise just patch the DOM in place — no focus loss
+  const resultLabel = wrap.querySelector('.dp-result-label');
+  const resultInput = wrap.querySelector('[data-dpfield="result"]');
+  if(resultLabel) resultLabel.textContent = ram ? 'Pass / Fail' : 'Health %';
+  if(resultInput){
+    resultInput.placeholder = ram ? 'Pass or Fail' : 'e.g. 96%';
+    if(ram && resultInput.value && resultInput.value.includes('%')){
+      resultInput.value = ''; e.result = '';
+    }
+  }
+  // Update pairs qty input if visible
+  const pairsInput = wrap.querySelector('[data-dpfield="pairs"]');
+  if(pairsInput) pairsInput.value = e.pairs;
+
+  const resolvedHtml = hit
+    ? `<span class="dp-sku-resolved">✓ ${esc(hit.desc.slice(0,38)+(hit.desc.length>38?'…':''))}</span>`
+    : (e.code ? `<span style="font-size:10px;color:var(--warn);font-weight:600;margin-left:4px">unknown code</span>` : '');
+  wrap.querySelector('.dp-resolved').innerHTML = resolvedHtml;
+  wrap.querySelector('.dp-preview').textContent = dpLineFor(e) || '—';
+  dpUpdatePreviewAll();
+}
+
+function dpBuildEntryHTML(e){
+  const ram = dpIsRam(e.code);
+  const pairsBlock = ram ? (
+    '<div class="dp-pairs-row" style="margin-bottom:7px">' +
+    '<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--ink-soft)">' +
+    '<input type="checkbox" class="dp-pairs-toggle" data-dpid="' + e.id + '" ' + (e.pairsOn ? 'checked' : '') + ' style="cursor:pointer;width:14px;height:14px;accent-color:var(--accent)">' +
+    ' Counting pairs</label>' +
+    (e.pairsOn ? '<div style="margin-top:7px"><div class="dp-label">Qty (Pairs)</div><input class="dp-input" placeholder="e.g. 3" data-dpid="' + e.id + '" data-dpfield="pairs" value="' + esc(e.pairs) + '" autocomplete="off" style="max-width:90px"></div>' : '') +
+    '</div>'
+  ) : '';
+  return `<div class="dp-entry" id="dp-e-${e.id}">
+    <div class="dp-entry-head">
+      <span class="dp-drag-handle" title="Drag to reorder" data-dpid="${e.id}">⠿</span>
+      <span class="dp-sku" id="dp-sku-${e.id}">${dpEntrySkuLabel(e)}</span>
+      <span class="dp-resolved"></span>
+      <button class="dp-rmv" data-dpid="${e.id}" title="Remove entry">×</button>
+    </div>
+    <div class="dp-row">
+      <div>
+        <div class="dp-label">Code</div>
+        <input class="dp-input" placeholder="e.g. S2990P" data-dpid="${e.id}" data-dpfield="code" value="${esc(e.code)}" autocomplete="off" spellcheck="false">
+      </div>
+      <div>
+        <div class="dp-label dp-result-label">${ram ? 'Pass / Fail' : 'Health %'}</div>
+        <input class="dp-input" placeholder="${ram ? 'Pass or Fail' : 'e.g. 96%'}" data-dpid="${e.id}" data-dpfield="result" value="${esc(e.result)}" autocomplete="off">
+      </div>
+    </div>
+    ${pairsBlock}
+    <div class="dp-row">
+      <div>
+        <div class="dp-label">Serial #</div>
+        <input class="dp-input" placeholder="S/N" data-dpid="${e.id}" data-dpfield="sn" value="${esc(e.sn)}" autocomplete="off" spellcheck="false">
+      </div>
+      <div>
+        <div class="dp-label">Notes</div>
+        <input class="dp-input" placeholder="optional" data-dpid="${e.id}" data-dpfield="notes" value="${esc(e.notes)}" autocomplete="off">
+      </div>
+    </div>
+    <div class="dp-label" style="margin-top:4px">Preview</div>
+    <div class="dp-preview">—</div>
+  </div>`;
+}
+
+function dpAddEntry(){
+  const e = dpMakeEntry();
+  dpEntries.push(e);
+  const container = document.getElementById('dpEntries');
+  const div = document.createElement('div');
+  div.innerHTML = dpBuildEntryHTML(e);
+  container.appendChild(div.firstElementChild);
+  dpRenderEntry(e);
+  dpSetActive(e.id);
+  // focus first input of new entry
+  const el = document.querySelector(`#dp-e-${e.id} input`);
+  if(el) el.focus();
+}
+
+function dpRemoveEntry(id){
+  dpEntries = dpEntries.filter(x=>x.id!==id);
+  const el = document.getElementById('dp-e-'+id);
+  if(el) el.remove();
+  if(dpActiveId === id) dpClearActive();
+  else dpApplyDim();
+  dpUpdatePreviewAll();
+}
+
+function dpHandleInput(ev){
+  const el = ev.target;
+  const id = parseInt(el.dataset.dpid);
+  const field = el.dataset.dpfield;
+  if(!id || !field) return;
+  const e = dpEntries.find(x=>x.id===id);
+  if(!e) return;
+  e[field] = el.value.trim();
+  dpRenderEntry(e);
+}
+
+function dpHandleBlur(ev){
+  const el = ev.target;
+  if(el.dataset.dpfield !== 'result') return;
+  const id = parseInt(el.dataset.dpid);
+  const e = dpEntries.find(x=>x.id===id);
+  if(!e || dpIsRam(e.code)) return; // RAM: leave as-is (Pass/Fail text)
+  const fmt = dpFmtHealth(e.result);
+  if(fmt){ el.value = fmt; e.result = fmt; dpRenderEntry(e); }
+}
+
+document.getElementById('dpEntries').addEventListener('input', dpHandleInput);
+document.getElementById('dpEntries').addEventListener('blur', dpHandleBlur, true);
+
+// Dim inactive entries on focus/blur
+document.getElementById('dpEntries').addEventListener('focusin', ev=>{
+  const entry = ev.target.closest('.dp-entry');
+  if(entry){ const id = parseInt(entry.id.replace('dp-e-','')); dpSetActive(id); }
+}, true);
+document.getElementById('dpEntries').addEventListener('focusout', ev=>{
+  // Only clear if focus moves outside the entire entries panel
+  setTimeout(()=>{
+    const panel = document.getElementById('dpEntries');
+    if(panel && !panel.contains(document.activeElement)) dpClearActive();
+  }, 50);
+}, true);
+document.getElementById('dpEntries').addEventListener('change', ev=>{
+  const cb = ev.target.closest('.dp-pairs-toggle');
+  if(!cb) return;
+  const id = parseInt(cb.dataset.dpid);
+  const e = dpEntries.find(x=>x.id===id);
+  if(!e) return;
+  e.pairsOn = cb.checked;
+  if(!e.pairsOn) e.pairs = '';
+  dpRebuildEntry(e);
+});
+document.getElementById('dpEntries').addEventListener('click', ev=>{
+  const btn = ev.target.closest('.dp-rmv');
+  if(btn) dpRemoveEntry(parseInt(btn.dataset.dpid));
+});
+
+document.getElementById('dpAddEntry').addEventListener('click', dpAddEntry);
+
+// ── Drag to reorder ───────────────────────────────────────────────
+let _dragId = null;
+
+// Enable draggable only when mousedown on the handle
+document.getElementById('dpEntries').addEventListener('mousedown', ev=>{
+  const handle = ev.target.closest('.dp-drag-handle');
+  if(!handle) return;
+  const entry = handle.closest('.dp-entry');
+  if(!entry) return;
+  entry.setAttribute('draggable', 'true');
+  // Remove draggable after a tick so it doesn't persist on click
+  entry.addEventListener('dragend', ()=> entry.removeAttribute('draggable'), {once:true});
+});
+
+document.getElementById('dpEntries').addEventListener('dragstart', ev=>{
+  const entry = ev.target.closest('.dp-entry');
+  if(!entry || !entry.getAttribute('draggable')) return;
+  _dragId = parseInt(entry.id.replace('dp-e-',''));
+  entry.classList.add('dp-dragging');
+  ev.dataTransfer.effectAllowed = 'move';
+  ev.dataTransfer.setData('text/plain', String(_dragId));
+});
+
+document.getElementById('dpEntries').addEventListener('dragend', ev=>{
+  const entry = ev.target.closest('.dp-entry');
+  if(entry){
+    entry.classList.remove('dp-dragging');
+    entry.removeAttribute('draggable');
+  }
+  document.querySelectorAll('.dp-drag-over').forEach(el=>el.classList.remove('dp-drag-over'));
+  _dragId = null;
+});
+
+document.getElementById('dpEntries').addEventListener('dragover', ev=>{
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect = 'move';
+  const entry = ev.target.closest('.dp-entry');
+  document.querySelectorAll('.dp-drag-over').forEach(el=>el.classList.remove('dp-drag-over'));
+  if(entry && entry.id !== 'dp-e-'+_dragId) entry.classList.add('dp-drag-over');
+});
+
+document.getElementById('dpEntries').addEventListener('dragleave', ev=>{
+  const entry = ev.target.closest('.dp-entry');
+  if(entry) entry.classList.remove('dp-drag-over');
+});
+
+document.getElementById('dpEntries').addEventListener('drop', ev=>{
+  ev.preventDefault();
+  const targetEntry = ev.target.closest('.dp-entry');
+  if(!targetEntry || !_dragId) return;
+  targetEntry.classList.remove('dp-drag-over');
+  const targetId = parseInt(targetEntry.id.replace('dp-e-',''));
+  if(targetId === _dragId) return;
+
+  const fromIdx = dpEntries.findIndex(e=>e.id===_dragId);
+  const toIdx   = dpEntries.findIndex(e=>e.id===targetId);
+  if(fromIdx===-1 || toIdx===-1) return;
+
+  const [moved] = dpEntries.splice(fromIdx, 1);
+  dpEntries.splice(toIdx, 0, moved);
+
+  const container = document.getElementById('dpEntries');
+  const dragEl    = document.getElementById('dp-e-'+_dragId);
+  const targetEl  = document.getElementById('dp-e-'+targetId);
+  if(fromIdx < toIdx) container.insertBefore(dragEl, targetEl.nextSibling);
+  else                container.insertBefore(dragEl, targetEl);
+
+  dpUpdatePreviewAll();
+});
+
+document.getElementById('dpCopyAll').addEventListener('click', ()=>{
+  if(!LISTER_LOCKED){ toast('Select and lock your name first (Step 1)'); return; }
+  const lines = dpEntries.map(dpLineFor).filter(Boolean);
+  if(!lines.length){ toast('No entries to copy yet'); return; }
+  copyText(lines.join('\n'), ()=>toast('Copied '+lines.length+' entr'+(lines.length===1?'y':'ies')+' — paste into Claude'));
+});
+
+document.getElementById('dpClear').addEventListener('click', ()=>{
+  if(!dpEntries.length) return;
+  dpEntries = [];
+  dpNextId = 1;
+  document.getElementById('dpEntries').innerHTML = '';
+  dpUpdatePreviewAll();
+});
+
+
+// ── Claude Manifest Initialization Prompt JS is loaded after modal HTML ──
+const MANIFEST_PROMPT = `You are assisting NJ02, a fill-in reseller for Sell Your Gadgets (SYG), operating the Shopify store "SYG Elmwood Park" (store handle: xpp09p-dz, Location GID: gid://shopify/Location/92108718115).
+
+═══════════════════════════════════════════════
+WHAT YOU ARE RECEIVING
+═══════════════════════════════════════════════
+Below this prompt I will paste a batch manifest — a list of entries generated by the SYG Abribook tool. Each line represents one intake unit. Your job is to parse every entry, log it, and generate Shopify draft listings from it.
+
+═══════════════════════════════════════════════
+MANIFEST LINE FORMAT
+═══════════════════════════════════════════════
+Each entry follows this pattern:
+
+  *CODE [Health% or Pass/Fail] [NOTES] SN: [serial] | SKU: [sku] <!-- Listed by: [Name] ([Initial]) | NJ02 -->
+
+Where:
+- *CODE        = Abribook shorthand code identifying the exact model (e.g. S2990P, K8PC4R1X8)
+- Health%      = Drive health from CrystalDiskInfo (e.g. "36% Health") — SSDs only
+- Pass/Fail    = RAM test result from the RAM tester
+- Qty: N pairs = RAM only, when multiple pairs of the same module are logged together
+- NOTES        = Any additional observations (e.g. "Does not read", "Enterprise pull", "New open box")
+- SN:          = Serial number (may say "Varies per unit" for multi-qty entries)
+- SKU:         = Full SKU in format NJ02-[INITIAL]-[BATCH]-[N] e.g. NJ02-J-RTL0623-1
+- HTML comment = Staff attribution — visible in source only, never shown to customers
+
+If a line ends with:
+  ↳ new code — CODE = Full description  [optional JEDEC/rank/FF metadata]
+...that means the code is not yet in the built-in library. Use the full description from that line for the product.
+
+═══════════════════════════════════════════════
+ABRIBOOK CODE → PRODUCT LOOKUP
+═══════════════════════════════════════════════
+The following built-in codes are always recognized. Use these exact descriptions:
+
+STORAGE:
+  C1P       = Crucial P1 M.2 2280 (CT1000P1SSD8) — 1000GB (1TB)
+  CP5PS2    = Crucial P5 Plus (CT2000P5PSSD8) M.2 2280 — 2000GB (2TB)
+  C500X1    = Crucial MX500 (CT1000MX500SSD1) 2.5" SATA SSD — 1000GB (1TB)
+  C500X2    = Crucial MX500 (CT2000MX500SSD1) 2.5" SATA SSD — 2000GB (2TB)
+  I1660     = Intel SSD 660p (SSDPEKNW010T8) — 1000GB (1TB)
+  I2660     = Intel SSD 660p (SSDPEKNW020T8) — 2000GB (2TB)
+  KC25001   = Kingston KC2500 (SKC2500M8/1000G) — 1000GB (1TB)
+  KC25002   = Kingston KC2500 (SKC2500M8/2000G) — 2000GB (2TB)
+  K3000C1024= Kingston KC3000 (SKC3000S/1024G) — 1024GB (1TB)
+  K3000C4096= Kingston KC3000 (SKC3000D/4096G) — 4096GB (4TB)
+  M7450E1920= Micron 7450 Enterprise (MTFDKBG1T9TFR) M.2 Non-SED — 1920GB (1.92TB)
+  M7450E3840= Micron 7450 Enterprise (MTFDKBG3T8TFR) NVMe M.2 SSD — 3840GB (3.84TB)
+  S1870E    = Samsung 870 EVO (MZ-77E1T0) 2.5" SATA SSD — 1000GB (1TB)
+  S1980     = Samsung SSD 980 (MZ-V8V1T0) — 1000GB (1TB)
+  S1CUDA    = SeaGate Barracuda (ZA1000CM10003) Compute 120 SSD — 1000GB (1TB)
+  S2850E    = Samsung 850 EVO (MZ-75E2T0) 2.5" SATA SSD — 2000GB (2TB)
+  S2870E    = Samsung 870 EVO (MZ-77E2T0) 2.5" SATA SSD — 2000GB (2TB)
+  S2980     = Samsung 980 Pro (MZ-V8P2T0) — 2000GB (2TB)
+  S2990P    = Samsung 990 Pro (MZ-V9P2T0) — 2000GB (2TB)
+  S970E     = Samsung 970 EVO Plus NVMe M.2 SSD
+  S970E2    = Samsung 970 EVO Plus NVMe M.2 SSD — 2000GB (2TB)
+  WD5501    = Western Digital WD Blue SN550 (WDS100T2B0C) NVMe SSD — 1000GB (1TB)
+
+RAM:
+  A4PC3L1600  = Axiom 4GB DDR3-1600 PC3L-12800 SODIMM Laptop Memory [SODIMM]
+  K8PC4R1X8   = Kingston 8GB 1RX8 PC4-2400T-ED2-11 ECC Server Memory [RDIMM]
+  K16PC4R2X8  = Kingston 16GB 2Rx8 PC4-3200AA-EE1-12 Desktop Memory [UDIMM]
+  M32PC4R2X8  = Micron 32GB 2RX8 PC4-3200AA-UB2-11 Desktop Memory [UDIMM]
+  SKX4PC3RX8  = Skynix 4GB 2RX8 PC3-10600U-9-11-B1 Desktop Memory [UDIMM]
+  VD5EL       = Corsair Vengeance RGB DDR5 Light Enhancement Kit (CMHLEKIT-D5) — NO RAM [UDIMM]
+
+Any code not in this list will have its definition included in the manifest line itself (↳ new code).
+
+═══════════════════════════════════════════════
+SKU FORMAT
+═══════════════════════════════════════════════
+SKUs follow: NJ02-[LISTER_INITIAL]-[BATCH]-[N]
+Example: NJ02-J-RTL0623-1
+- NJ02       = store/reseller identifier
+- J / IS / P = lister initial (Juan, Ibrahim, Paul)
+- RTL0623    = batch identifier (RTL + MMDD)
+- N          = item number within the batch
+
+Use the SKU exactly as shown in the manifest line. Do not alter it.
+
+═══════════════════════════════════════════════
+PRICING RULES (SSD — override sold comps)
+═══════════════════════════════════════════════
+2TB drives:
+  Bad health  (≤25%)    → $119.99
+  Exception: 0% / does not read → $109.99
+  Medium health (26–65%) → $126.99
+  Good health (66–100%) → $134.99
+
+1TB drives:
+  Good health (66–100%) → $109.99
+  Bad health  (≤25%)    → $119.99
+  Super bad / 0% / not detected → $109.99
+
+Enterprise / specialty:
+  Micron 7450 3.84TB good health → $699.99
+  KC3000 SSDs → leave at $0.00 (no price set — research required before publishing)
+
+⚠️ RAM PRICING: Always double or triple check RAM prices against current sold comps on eBay — especially server-grade (ECC, RDIMM) and enterprise modules. Market value varies significantly by spec, rank, and capacity. Never guess — research first.
+
+═══════════════════════════════════════════════
+TITLE FORMAT RULES
+═══════════════════════════════════════════════
+- SSDs (functional):   Brand MPN Size Type — X% Health
+- SSDs (for parts):    Brand MPN Size Type — X% Health For Parts
+- SSDs (0%/no read):   Brand MPN Size Type — 0% Health For Parts
+- RAM (pairs):         Brand TotalGB (NxYGB) JEDEC Type [optional lot ref]
+- Lots (all ship together, qty=1): prefix with "Lot of (N)"
+- Multi-qty (individual units, qty>1): NO "Lot of" prefix — just the item title
+- No "Used" at end of titles
+- Health separated with " — " (em dash with spaces)
+- No trailing item numbers
+
+═══════════════════════════════════════════════
+CONDITION & RETURNS
+═══════════════════════════════════════════════
+For Parts (health ≤25% or does not read):
+  - Description condition row: "For Parts; [exact defect]. Sold as-is for parts or repair only. No returns."
+  - Return Policy cell: "No Returns — Sold As-Is For Parts"
+
+Functional items:
+  - Description condition row: "Used – Excellent; [notes]. Please review all photos for exact condition and included items."
+  - Return Policy cell: "30 Days Free Return"
+
+Enterprise pulls: note "enterprise pull, may show light cosmetic wear"
+RAM pairs: note "fully tested and passing" or "indicator lights passed on RAM tester"
+
+═══════════════════════════════════════════════
+SHOPIFY LISTING SPEC
+═══════════════════════════════════════════════
+- Status: DRAFT always
+- Vendor: Brand name (Samsung, Kingston, Micron, etc.)
+- Product type: Computer Parts
+- Inventory: tracked=true, quantity per manifest (pairs listings = number of pairs)
+- HTML description: two-section table (Item Specifications + Shipping & Returns)
+  Header row color: #1F4E79 (dark blue), alternating #ffffff / #f9f9f9 rows
+  Shipping cell always: "Free Shipping"
+- HTML comment in description source (not visible to customers):
+  <!-- Listed by: [Full Name] ([Initial]) | NJ02 -->
+
+═══════════════════════════════════════════════
+WHAT TO DO NOW
+═══════════════════════════════════════════════
+1. Parse every manifest line I paste below this prompt.
+2. Confirm your understanding: list each item with code resolved, SKU, quantity, health/result, and proposed price.
+3. Wait for my go-ahead before creating any Shopify listings.
+4. Once confirmed, push all listings as DRAFT products and report the GID for each.
+
+If any line is ambiguous or a code is unresolvable, flag it before proceeding.`;
+
+// Start with one blank entry ready
+dpAddEntry();
+
+</script>
+<!-- ── Claude Manifest Init Prompt button ── -->
+<button class="prompt-btn" id="promptBtn">🤖 Claude Manifest Initialization Prompt</button>
+
+<!-- ── Prompt Modal ── -->
+<div class="prompt-backdrop hidden" id="promptBackdrop">
+  <div class="prompt-box">
+    <div class="prompt-head">
+      <span class="prompt-head-icon">🤖</span>
+      <div style="flex:1">
+        <h2>Claude Manifest Initialization Prompt</h2>
+        <div class="prompt-head-sub">Copy this prompt, open a new Claude conversation, paste it first — then paste your manifest entries.</div>
+      </div>
+      <button class="prompt-close" id="promptClose">×</button>
+    </div>
+    <div class="prompt-body">
+      <p>Use this prompt to start every new Claude session before pasting your Abribook manifest. It tells Claude everything it needs to know about the store, the SKU format, the pricing rules, and what to do with the entries you paste.</p>
+      <textarea class="prompt-text" id="promptText" readonly></textarea>
+    </div>
+    <div class="prompt-foot">
+      <button class="prompt-copy-btn" id="promptCopyBtn">Copy prompt</button>
+      <span class="prompt-foot-hint">Paste into a <b>new Claude chat</b>, then paste your manifest entries right after.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Pin Modal ── -->
+<div class="pin-backdrop hidden" id="pinBackdrop">
+  <div class="pin-box">
+    <div class="pin-head">
+      <h3>🔐 Master PIN required</h3>
+      <button class="pin-close" id="pinClose">×</button>
+    </div>
+    <div class="pin-body">
+      <div class="pin-label">Enter the master PIN to delete <b id="pinCodeLabel"></b>. This cannot be undone.</div>
+      <input class="pin-input" id="pinInput" type="password" maxlength="6" placeholder="····" autocomplete="off">
+      <div class="pin-err-msg" id="pinErrMsg"></div>
+    </div>
+    <div class="pin-foot">
+      <button class="pin-cancel" id="pinCancel">Cancel</button>
+      <button class="pin-confirm" id="pinConfirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Pin modal wiring ──────────────────────────────────────────────
+document.getElementById('pinClose').addEventListener('click', pinClose);
+document.getElementById('pinCancel').addEventListener('click', pinClose);
+document.getElementById('pinConfirm').addEventListener('click', pinConfirmDelete);
+document.getElementById('pinBackdrop').addEventListener('click', e=>{ if(e.target===document.getElementById('pinBackdrop')) pinClose(); });
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') pinConfirmDelete(); if(e.key==='Escape') pinClose(); });
+
+// ── Prompt modal wiring ───────────────────────────────────────────
+document.getElementById('promptText').value = MANIFEST_PROMPT;
+document.getElementById('promptBtn').addEventListener('click', ()=>{
+  document.getElementById('promptBackdrop').classList.remove('hidden');
+});
+document.getElementById('promptClose').addEventListener('click', ()=>{
+  document.getElementById('promptBackdrop').classList.add('hidden');
+});
+document.getElementById('promptBackdrop').addEventListener('click', e=>{
+  if(e.target === document.getElementById('promptBackdrop'))
+    document.getElementById('promptBackdrop').classList.add('hidden');
+});
+document.getElementById('promptCopyBtn').addEventListener('click', ()=>{
+  copyText(MANIFEST_PROMPT, ()=>{
+    const btn = document.getElementById('promptCopyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.style.background = 'var(--pass)';
+    setTimeout(()=>{ btn.textContent = 'Copy prompt'; btn.style.background = ''; }, 2200);
+  });
+});
+</script>
+
+</body>
+</html>
