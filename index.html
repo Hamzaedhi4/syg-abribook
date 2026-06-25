@@ -4051,7 +4051,8 @@ document.getElementById('hazBack').addEventListener('click', ()=>{
 function hazOpen(){
   hazBoardLoad();
   document.getElementById('hazWrap').classList.add('show');
-  document.getElementById('hazChatInput').focus();
+  const inp = document.getElementById('hazChatInput');
+  if(inp) setTimeout(()=>inp.focus(), 50);
   if(_boardCards.length) document.getElementById('hazBoardBtn').style.background='rgba(74,222,128,.28)';
 }
 
