@@ -337,9 +337,455 @@
     font:600 11px/1 var(--sans);cursor:pointer;transition:opacity .3s;margin-top:5px;}
   .undo-pill:hover{background:rgba(239,68,68,.25);}
   .undo-pill.fading{opacity:0;pointer-events:none;}
+
+
+  /* ── Universal Manifest MVP ── */
+  .dp-tabs{display:flex;gap:6px;padding:12px 16px 0;background:var(--surface);border-bottom:1px solid var(--line);}
+  .dp-tab{flex:1;padding:9px 10px;border:1px solid var(--line-2);border-bottom:none;border-radius:var(--r-md) var(--r-md) 0 0;background:var(--surface-2);color:var(--ink-soft);font:700 12px/1 var(--sans);cursor:pointer;transition:all .15s;}
+  .dp-tab.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .dp-tab-panel{display:none;}
+  .dp-tab-panel.on{display:block;}
+  .uni-form{background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:12px 13px;margin-bottom:12px;}
+  .uni-select,.uni-textarea{width:100%;padding:8px 9px;border:1px solid var(--line-2);border-radius:var(--r-md);font-size:12.5px;font-family:var(--sans);color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;}
+  .uni-select{font-weight:650;}
+  .uni-textarea{min-height:70px;resize:vertical;line-height:1.45;}
+  .uni-textarea.big{min-height:105px;}
+  .uni-select:focus,.uni-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,91,255,.13);}
+  .uni-preview-shell{margin-top:10px;border:1px solid var(--line-2);border-radius:var(--r-lg);overflow:hidden;background:var(--surface);}
+  .uni-preview-head{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface-2);border-bottom:1px solid var(--line);padding:8px 10px;}
+  .uni-preview-head b{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;}
+  .uni-preview-toggle{border:1px solid var(--line-2);background:transparent;color:var(--ink-soft);border-radius:var(--r-pill);padding:4px 9px;font:700 10.5px/1 var(--sans);cursor:pointer;}
+  .uni-html-preview{padding:10px;background:#fff;max-height:220px;overflow:auto;}
+  .uni-raw-html{display:none;padding:10px;background:var(--surface-2);font:600 10.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word;color:var(--accent-ink);max-height:220px;overflow:auto;}
+  .uni-entry{background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:12px 13px;position:relative;margin-bottom:10px;}
+  .uni-entry-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .uni-type{font:700 11px/1 var(--mono);color:var(--accent-ink);background:var(--accent-tint);border:1px solid var(--accent-tint-2);padding:4px 8px;border-radius:6px;}
+  .uni-status{font:700 10px/1 var(--sans);color:var(--pass-ink);background:var(--pass-tint);border:1px solid rgba(14,159,110,.25);padding:4px 7px;border-radius:999px;margin-left:auto;}
+  .dp-sync-all{width:100%;margin-top:7px;padding:10px;border:1px solid rgba(14,159,110,.35);border-radius:var(--r-md);background:var(--pass-tint);color:var(--pass-ink);font:700 12px/1 var(--sans);cursor:pointer;transition:all .15s;}
+  .dp-sync-all:hover{background:#D8F1E7;}
+  .manifest-warning{font-size:10.8px;line-height:1.45;color:var(--warn);padding:8px 2px 0;}
+
+  .work-select{padding:6px 10px;border:1px solid rgba(255,255,255,.18);border-radius:var(--r-md);background:rgba(255,255,255,.07);color:var(--on-dark);font:700 12.5px/1 var(--sans);cursor:pointer;outline:none;transition:border-color .15s, box-shadow .15s;}
+  .work-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,108,255,.18);}
+  .wrap{perspective:1400px;}
+  .work-page{display:none;transform-origin:left center;backface-visibility:hidden;}
+  .work-page.on{display:block;animation:bookPageIn .38s cubic-bezier(.2,.75,.2,1) both;}
+  .work-page.page-turning{animation:bookPageIn .38s cubic-bezier(.2,.75,.2,1) both;}
+  @keyframes bookPageIn{
+    0%{opacity:.25;transform:rotateY(-18deg) translateX(-10px);filter:brightness(.96);}
+    55%{opacity:1;transform:rotateY(2deg) translateX(0);filter:brightness(1);}
+    100%{opacity:1;transform:rotateY(0deg) translateX(0);filter:brightness(1);}
+  }
+  .universal-page{padding:14px 18px 18px;}
+  .universal-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-1);overflow:hidden;}
+  .universal-card-head{background:var(--header);color:var(--on-dark);padding:16px 18px;box-shadow:inset 0 -2px 0 var(--accent);}
+  .universal-card-head h2{margin:0;font-size:16px;font-weight:700;letter-spacing:-.02em;}
+  .universal-card-head p{margin:5px 0 0;color:var(--on-dark-soft);font-size:11.5px;line-height:1.5;}
+  .universal-card-body{padding:14px;}
+  .page-hidden{display:none!important;}
+
+
+
+  /* ── Universal QC + Goal Counter ── */
+  .goal-wrap{display:flex;align-items:center;gap:6px;margin-left:4px;}
+  .goal-input{width:74px;padding:6px 9px;border:1px solid rgba(255,255,255,.18);border-radius:var(--r-md);background:rgba(255,255,255,.07);color:var(--on-dark);font:700 12px/1 var(--mono);outline:none;}
+  .goal-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,108,255,.18);}
+  .goal-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(99,108,255,.35);background:rgba(99,108,255,.14);color:#C9CCFF;border-radius:var(--r-pill);padding:5px 9px;font:800 11px/1 var(--mono);white-space:nowrap;}
+  .goal-pill.goal-hit{border-color:rgba(14,159,110,.55);background:rgba(14,159,110,.20);color:#A7F3D0;}
+  .smoke-celebration{position:fixed;inset:0;z-index:999;pointer-events:none;overflow:hidden;background:radial-gradient(circle at 50% 100%,rgba(79,91,255,.12),transparent 45%);animation:smokeFade 3.2s ease forwards;}
+  .smoke-celebration::before,.smoke-celebration::after{content:"";position:absolute;left:-10%;right:-10%;bottom:-22%;height:55%;background:radial-gradient(circle at 12% 80%,rgba(255,255,255,.45),transparent 18%),radial-gradient(circle at 30% 70%,rgba(201,204,255,.36),transparent 22%),radial-gradient(circle at 52% 82%,rgba(255,255,255,.42),transparent 20%),radial-gradient(circle at 72% 70%,rgba(201,204,255,.35),transparent 23%),radial-gradient(circle at 90% 82%,rgba(255,255,255,.35),transparent 20%);filter:blur(16px);animation:smokeRise 3.2s ease-out forwards;}
+  .smoke-celebration::after{bottom:-18%;opacity:.65;animation-duration:3.8s;animation-delay:.15s;transform:scaleX(1.2);}
+  .smoke-msg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:rgba(19,20,25,.92);color:#fff;border:1px solid rgba(201,204,255,.4);box-shadow:0 20px 60px rgba(0,0,0,.45);border-radius:18px;padding:18px 22px;text-align:center;font:800 18px/1.25 var(--sans);letter-spacing:-.02em;}
+  .smoke-msg span{display:block;margin-top:7px;color:#C9CCFF;font:700 12px/1.4 var(--mono);}
+  @keyframes smokeRise{0%{transform:translateY(35%) scale(1);opacity:0;}18%{opacity:.9;}100%{transform:translateY(-80%) scale(1.35);opacity:0;}}
+  @keyframes smokeFade{0%{opacity:0;}12%{opacity:1;}100%{opacity:0;}}
+  .uni-qc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 12px;}
+  .uni-qc-card{border:1px solid var(--line-2);background:var(--surface);border-radius:var(--r-lg);padding:10px 11px;}
+  .conf-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+  .conf-label{font:800 11px/1 var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);}
+  .conf-score{font:900 12px/1 var(--mono);color:var(--accent-ink);}
+  .conf-bar{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-bottom:7px;}
+  .conf-fill{height:100%;width:0%;border-radius:999px;background:var(--accent);transition:width .18s ease;}
+  .conf-note{font-size:11px;line-height:1.45;color:var(--ink-soft);}
+  .req-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .req-chip{font:700 10.5px/1 var(--sans);border-radius:999px;padding:5px 7px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink-soft);}
+  .req-chip.ok{border-color:rgba(14,159,110,.32);background:var(--pass-tint);color:var(--pass-ink);}
+  .req-chip.miss{border-color:rgba(229,72,77,.25);background:var(--fail-tint);color:var(--fail-ink);}
+  .uni-dynamic-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:7px;}
+  .uni-field-card{min-width:0;}
+  .needs-research-box{border:1px solid rgba(181,118,10,.35);background:rgba(255,241,184,.32);border-radius:var(--r-lg);padding:10px 11px;margin:8px 0 11px;color:var(--warn);font-size:11.5px;line-height:1.5;}
+  .needs-research-box label{display:flex;align-items:center;gap:7px;font-weight:800;color:var(--warn);cursor:pointer;margin-bottom:5px;}
+  .needs-research-box input{accent-color:var(--warn);}
+  .uni-status.low{color:var(--fail-ink);background:var(--fail-tint);border-color:rgba(229,72,77,.25);}
+  .uni-status.med{color:var(--warn);background:rgba(255,241,184,.55);border-color:rgba(181,118,10,.25);}
+  .uni-status.high{color:var(--pass-ink);background:var(--pass-tint);border-color:rgba(14,159,110,.25);}
+  @media(max-width:520px){.uni-qc-grid,.uni-dynamic-grid{grid-template-columns:1fr;}.goal-wrap{flex-wrap:wrap;}}
+
+
+  /* ── Universal Tutorial + Photo/Policy Additions ── */
+  .uni-help-btn{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:var(--on-dark);border-radius:var(--r-pill);padding:7px 12px;font:800 11.5px/1 var(--sans);cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .uni-help-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .universal-card-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .photo-reminder{display:flex;align-items:flex-start;gap:10px;margin:10px 0 12px;padding:11px 12px;border-radius:var(--r-lg);border:1px solid rgba(79,91,255,.25);background:var(--accent-tint);color:var(--accent-ink);font-size:12px;line-height:1.5;}
+  .photo-reminder .photo-icon{font-size:18px;line-height:1;flex:none;}
+  .photo-reminder b{display:block;margin-bottom:2px;color:var(--accent-ink);font-weight:900;}
+  .photo-reminder.wait{border-color:rgba(181,118,10,.28);background:rgba(255,241,184,.42);color:var(--warn);}
+  .photo-reminder.wait b{color:var(--warn);}
+  .photo-reminder.ready{border-color:rgba(14,159,110,.32);background:var(--pass-tint);color:var(--pass-ink);}
+  .photo-reminder.ready b{color:var(--pass-ink);}
+  .uni-policy-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:4px 0 8px;}
+  .uni-policy-card{min-width:0;}
+  .uni-mini-note{font-size:10.7px;color:var(--ink-soft);line-height:1.45;margin-top:4px;}
+  .uni-tut-key{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent-tint);color:var(--accent-ink);font:900 11px/1 var(--mono);margin-right:6px;}
+  .uni-tut-list{margin:9px 0 0;padding-left:18px;color:var(--ink-soft);font-size:13.2px;line-height:1.6;}
+  .uni-tut-list strong{color:var(--ink);}
+  @media(max-width:520px){.uni-policy-grid{grid-template-columns:1fr;}.universal-card-title-row{flex-direction:column;}.uni-help-btn{align-self:flex-start;}}
+
+
+
+  /* ── Display Fix: compact lister/header controls ── */
+  .lister-bar{
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px 12px;
+    padding:13px 18px;
+    overflow:hidden;
+  }
+  .lister-bar .lister-label{font-size:10.5px;letter-spacing:.14em;}
+  #listerSelect{flex:1 1 220px;min-width:170px;max-width:100%;height:40px;font-size:14px;}
+  #listerBatch{flex:0 0 112px;height:40px;font-size:13px;text-align:center;}
+  #workPageSelect{
+    flex:1 1 300px;
+    min-width:260px;
+    max-width:100%;
+    height:40px;
+    padding:8px 12px;
+    font-size:13px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  #listerLockBtn{order:8;height:40px;margin-left:auto;padding-left:16px;padding-right:16px;}
+  .goal-wrap{
+    order:9;
+    flex:1 1 100%;
+    min-width:0;
+    padding:8px 10px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:var(--r-md);
+    background:rgba(255,255,255,.045);
+  }
+  .goal-wrap .lister-label{flex:0 0 auto;}
+  .goal-input{min-width:70px;}
+  #listerPill{order:10;}
+  #listerHint{order:11;flex:1 1 100%;margin-left:0;}
+
+  /* Keep the step guide readable inside the 680px book page */
+  .guide{
+    flex-wrap:wrap;
+    align-items:center;
+    gap:12px 16px;
+    padding:16px 18px;
+  }
+  .guide .arrow{display:none;}
+  .guide .step{flex:0 1 auto;min-width:max-content;}
+  .guide .seg{margin-left:2px;}
+  .mode-toggle{flex-wrap:wrap;gap:8px 10px;padding:10px 14px;}
+  .mode-hint{flex:1 1 210px;}
+
+  @media(max-width:900px){
+    #listerSelect,#workPageSelect{flex:1 1 100%;width:100%;}
+    #listerBatch{flex:1 1 120px;}
+    #listerLockBtn{margin-left:0;flex:1 1 120px;}
+    .guide .step{flex:1 1 190px;min-width:0;}
+  }
+
+  /* ── Blitzting ── */
+  .blitz-page{padding:0;}
+  .blitz-mode-bar{display:flex;gap:8px;padding:14px 18px 12px;background:var(--surface);border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap;}
+  .blitz-mode-bar h2{margin:0;font-size:15px;font-weight:700;color:var(--ink);flex:1;letter-spacing:-.02em;}
+  .blitz-tab{padding:7px 16px;border-radius:var(--r-pill);border:1px solid var(--line-2);background:transparent;
+    font:600 12px/1 var(--sans);color:var(--ink-soft);cursor:pointer;transition:all .15s;}
+  .blitz-tab.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .blitz-tab:hover:not(.on){border-color:var(--accent);color:var(--accent-ink);}
+
+  /* Template Clone */
+  .blitz-section{padding:16px 18px;display:none;}
+  .blitz-section.on{display:block;}
+  .blitz-clone-master{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:14px;}
+  .blitz-clone-master h3{margin:0 0 10px;font-size:13px;font-weight:700;color:var(--ink);}
+  .blitz-clone-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  .blitz-clone-row.full{grid-template-columns:1fr;}
+  .blitz-clone-label{font-size:10px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;}
+  .blitz-clone-input{width:100%;padding:8px 10px;border:1px solid var(--line-2);border-radius:var(--r-md);
+    font:500 13px/1 var(--mono);color:var(--ink);background:var(--surface-2);outline:none;transition:border-color .15s;}
+  .blitz-clone-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,91,255,.1);}
+  .blitz-clone-checks{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;}
+  .blitz-clone-check{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-soft);cursor:pointer;}
+  .blitz-clone-check input{accent-color:var(--accent);}
+  .blitz-clone-count{display:flex;align-items:center;gap:10px;margin:10px 0;}
+  .blitz-clone-count label{font-size:12.5px;color:var(--ink-soft);font-weight:600;}
+  .blitz-clone-count input{width:60px;padding:6px 8px;border:1px solid var(--line-2);border-radius:var(--r-md);
+    font:700 13px/1 var(--mono);color:var(--ink);background:var(--surface-2);outline:none;text-align:center;}
+  .blitz-gen-btn{padding:10px 22px;background:var(--accent);color:#fff;border:none;border-radius:var(--r-md);
+    font:700 13px/1 var(--sans);cursor:pointer;transition:background .15s;}
+  .blitz-gen-btn:hover{background:var(--accent-press);}
+  .blitz-slots{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .blitz-slot{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:12px 14px;}
+  .blitz-slot-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .blitz-slot-num{font:700 11px/1 var(--mono);color:var(--accent-ink);background:var(--accent-tint);
+    padding:3px 8px;border-radius:6px;border:1px solid var(--accent-tint-2);}
+  .blitz-slot-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .blitz-slot-fields.one{grid-template-columns:1fr;}
+  .blitz-serial-wrap{position:relative;}
+  .blitz-serial-suggest{font-size:10.5px;color:var(--ink-soft);margin-top:4px;display:flex;align-items:center;gap:6px;}
+  .blitz-serial-suggest b{font-family:var(--mono);color:var(--accent-ink);font-size:10.5px;}
+  .blitz-use-btn{padding:2px 8px;border:1px solid var(--accent-tint-2);border-radius:4px;background:var(--accent-tint);
+    color:var(--accent-ink);font:600 10px/1 var(--sans);cursor:pointer;}
+  .blitz-copy-all{margin-top:14px;width:100%;padding:11px;background:var(--pass);color:#fff;border:none;
+    border-radius:var(--r-md);font:700 13px/1 var(--sans);cursor:pointer;transition:background .15s;}
+  .blitz-copy-all:hover{background:var(--pass-ink);}
+
+  /* Speed Review */
+  .blitz-review-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .blitz-review-toggle{display:flex;border:1px solid var(--line-2);border-radius:var(--r-pill);overflow:hidden;}
+  .blitz-review-toggle button{padding:6px 14px;font:600 11.5px/1 var(--sans);border:none;cursor:pointer;
+    background:transparent;color:var(--ink-soft);transition:all .15s;}
+  .blitz-review-toggle button.on{background:var(--accent);color:#fff;}
+  .blitz-review-filter{padding:6px 10px;border:1px solid var(--line-2);border-radius:var(--r-md);
+    font:500 12px/1 var(--sans);color:var(--ink);background:var(--surface-2);outline:none;}
+  .blitz-review-load{padding:6px 14px;border:1px solid var(--accent);border-radius:var(--r-md);
+    background:transparent;color:var(--accent-ink);font:600 12px/1 var(--sans);cursor:pointer;}
+  .blitz-progress-bar{height:4px;background:var(--line-2);border-radius:2px;margin-bottom:14px;overflow:hidden;}
+  .blitz-progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s;}
+  .blitz-progress-label{font:600 11px/1 var(--mono);color:var(--ink-faint);margin-bottom:8px;}
+  .blitz-card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);overflow:hidden;
+    box-shadow:var(--shadow-2);}
+  .blitz-card-head{padding:14px 16px 12px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:10px;}
+  .blitz-card-title{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-.02em;flex:1;line-height:1.35;}
+  .blitz-card-flag{display:inline-block;padding:2px 8px;border-radius:var(--r-pill);font-size:10px;font-weight:700;
+    background:rgba(239,68,68,.12);color:#EF4444;border:1px solid rgba(239,68,68,.25);}
+  .blitz-card-body{padding:12px 16px;}
+  .blitz-card-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+  .blitz-card-field{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);padding:8px 10px;}
+  .blitz-card-field label{font-size:10px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:3px;}
+  .blitz-card-field input,.blitz-card-field select{width:100%;border:none;background:transparent;font:600 13px/1 var(--mono);
+    color:var(--ink);outline:none;padding:0;}
+  .blitz-card-metafields{margin-top:10px;}
+  .blitz-card-metafields summary{font-size:11.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;margin-bottom:6px;}
+  .blitz-card-mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+  .blitz-card-mf-item{display:flex;flex-direction:column;gap:2px;}
+  .blitz-card-mf-item label{font-size:9.5px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+  .blitz-card-mf-item input{border:1px solid var(--line-2);border-radius:6px;padding:5px 8px;font:500 12px/1 var(--mono);
+    color:var(--ink);background:var(--surface-2);outline:none;width:100%;}
+  .blitz-card-mf-item input:focus{border-color:var(--accent);}
+  .blitz-card-desc{margin-top:10px;}
+  .blitz-card-desc summary{font-size:11.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;}
+  .blitz-card-desc-body{margin-top:8px;max-height:180px;overflow-y:auto;border:1px solid var(--line);
+    border-radius:var(--r-md);padding:10px;font-size:12px;color:var(--ink-soft);background:var(--surface-2);}
+  .blitz-card-actions{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);background:var(--surface-2);}
+  .blitz-action{flex:1;padding:10px;border:none;border-radius:var(--r-md);font:700 13px/1 var(--sans);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .blitz-action.approve{background:var(--pass);color:#fff;}
+  .blitz-action.approve:hover{background:var(--pass-ink);}
+  .blitz-action.flag{background:rgba(239,68,68,.1);color:#EF4444;border:1px solid rgba(239,68,68,.25);}
+  .blitz-action.flag:hover{background:rgba(239,68,68,.2);}
+  .blitz-action.edit{background:var(--accent-tint);color:var(--accent-ink);border:1px solid var(--accent-tint-2);}
+  .blitz-action.edit:hover{background:var(--accent-tint-2);}
+  .blitz-kbd-legend{display:flex;gap:12px;flex-wrap:wrap;padding:10px 0 0;font-size:10.5px;color:var(--ink-faint);}
+  .blitz-kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;
+    border:1px solid var(--line-2);border-radius:4px;background:var(--surface);font:700 10px/1 var(--mono);
+    color:var(--ink-soft);margin-right:3px;}
+  .blitz-empty{text-align:center;padding:40px 20px;color:var(--ink-faint);font-size:13px;}
+  .blitz-flagged-banner{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:var(--r-md);
+    padding:10px 14px;font-size:12.5px;color:#EF4444;margin-bottom:12px;display:none;}
+
+  /* ── Welcome screen ── */
+  .welcome-backdrop{position:fixed;inset:0;background:#0D0F14;z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .welcome-backdrop.hidden{display:none;}
+  .welcome-box{width:100%;max-width:440px;text-align:center;}
+  .welcome-logo{font-size:26px;font-weight:900;color:#fff;letter-spacing:-.04em;margin-bottom:4px;}
+  .welcome-logo span{color:var(--accent);}
+  .welcome-sub{font-size:12px;color:var(--on-dark-soft);margin-bottom:36px;}
+  .welcome-q{font-size:15px;font-weight:700;color:var(--on-dark);margin-bottom:20px;letter-spacing:-.02em;}
+  .welcome-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .welcome-card{background:#1A1C24;border:2px solid rgba(255,255,255,.08);border-radius:16px;padding:26px 18px;
+    cursor:pointer;transition:all .18s;text-align:center;}
+  .welcome-card:hover{transform:translateY(-3px);}
+  .welcome-card.wan:hover{border-color:var(--accent);box-shadow:0 8px 32px rgba(79,91,255,.2);}
+  .welcome-card.haz:hover{border-color:#22C55E;box-shadow:0 8px 32px rgba(34,197,94,.15);}
+  .welcome-card-icon{font-size:34px;margin-bottom:10px;line-height:1;}
+  .welcome-card-name{font-size:17px;font-weight:800;color:#fff;margin-bottom:3px;}
+  .welcome-card.wan .welcome-card-name{color:#A5B4FC;}
+  .welcome-card.haz .welcome-card-name{color:#4ADE80;}
+  .welcome-card-desc{font-size:11.5px;color:var(--on-dark-soft);line-height:1.5;}
+
+  /* ── Haz ── */
+  .haz-wrap{position:fixed;inset:0;background:#F4F4F2;z-index:200;overflow-y:auto;display:none;}
+  .haz-wrap.show{display:block;}
+  .haz-header{background:#0D1A12;border-bottom:3px solid #22C55E;padding:15px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+  .haz-header-icon{font-size:20px;}
+  .haz-header h2{margin:0;font-size:14px;font-weight:800;color:#4ADE80;letter-spacing:-.02em;flex:1;}
+  .haz-back{padding:6px 14px;background:transparent;border:1px solid rgba(74,222,128,.35);border-radius:var(--r-pill);
+    color:#4ADE80;font:700 11px/1 var(--sans);cursor:pointer;transition:all .15s;}
+  .haz-back:hover{background:rgba(74,222,128,.12);}
+  .haz-body{padding:16px 18px;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:13px;}
+  .haz-search-box{background:#fff;border:2px solid #E5E7EB;border-radius:var(--r-lg);padding:13px 15px;transition:border-color .15s;}
+  .haz-search-box:focus-within{border-color:#22C55E;box-shadow:0 0 0 4px rgba(34,197,94,.09);}
+  .haz-search-label{font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;}
+  .haz-search-input{width:100%;border:none;outline:none;font:500 14px/1.4 var(--sans);color:var(--ink);background:transparent;resize:none;min-height:48px;}
+  .haz-search-input::placeholder{color:#9CA3AF;}
+  .haz-vibe-section{background:#fff;border:1px solid #E5E7EB;border-radius:var(--r-lg);padding:13px 15px;}
+  .haz-vibe-label{font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:9px;}
+  .haz-vibe-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .haz-vibe-btn{padding:10px 6px;border:2px solid #E5E7EB;border-radius:var(--r-md);background:#fff;
+    cursor:pointer;text-align:center;transition:all .15s;font-family:var(--sans);}
+  .haz-vibe-btn.on.easy{border-color:#22C55E;background:#F0FDF4;}
+  .haz-vibe-btn.on.tough{border-color:#EF4444;background:#FEF2F2;}
+  .haz-vibe-btn.on.desperate{border-color:#F59E0B;background:#FFFBEB;}
+  .haz-vibe-emoji{font-size:20px;display:block;margin-bottom:3px;}
+  .haz-vibe-name{font-size:11px;font-weight:700;color:var(--ink);display:block;}
+  .haz-vibe-hint{font-size:9px;color:#9CA3AF;display:block;margin-top:1px;line-height:1.3;}
+  .haz-analyze-btn{width:100%;padding:13px;background:#16A34A;color:#fff;border:none;border-radius:var(--r-lg);
+    font:800 13px/1 var(--sans);cursor:pointer;transition:background .15s;}
+  .haz-analyze-btn:hover:not(:disabled){background:#15803D;}
+  .haz-analyze-btn:disabled{background:#9CA3AF;cursor:not-allowed;}
+  .haz-loading{text-align:center;padding:22px;color:#6B7280;font-size:13px;display:none;}
+  .haz-loading.show{display:block;}
+  .haz-spinner{display:inline-block;width:18px;height:18px;border:2px solid #E5E7EB;border-top-color:#22C55E;
+    border-radius:50%;animation:hazSpin .7s linear infinite;margin-bottom:6px;vertical-align:middle;margin-right:6px;}
+  @keyframes hazSpin{to{transform:rotate(360deg);}}
+  .haz-result{background:#fff;border:1px solid #E5E7EB;border-radius:var(--r-lg);overflow:hidden;display:none;}
+  .haz-result.show{display:block;}
+  .haz-result-head{padding:13px 15px 11px;border-bottom:1px solid #F3F4F6;}
+  .haz-result-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:2px;letter-spacing:-.02em;}
+  .haz-result-condition{font-size:11.5px;color:#6B7280;}
+  .haz-comps{padding:11px 15px;border-bottom:1px solid #F3F4F6;}
+  .haz-comps-label{font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;}
+  .haz-comp-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #F9FAFB;font-size:12px;}
+  .haz-comp-row:last-child{border:none;}
+  .haz-comp-source{color:#6B7280;}
+  .haz-comp-price{font:700 12.5px/1 var(--mono);color:var(--ink);}
+  .haz-comp-badge{font-size:9px;padding:2px 6px;border-radius:var(--r-pill);font-weight:700;}
+  .haz-comp-badge.internal{background:#DBEAFE;color:#1D4ED8;}
+  .haz-comp-badge.ebay{background:#FEF3C7;color:#92400E;}
+  .haz-calc{padding:11px 15px;border-bottom:1px solid #F3F4F6;background:#FAFAFA;}
+  .haz-calc-label{font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;}
+  .haz-calc-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#374151;}
+  .haz-calc-row.total{font-weight:800;color:var(--ink);font-size:13px;border-top:1px solid #E5E7EB;margin-top:5px;padding-top:8px;}
+  .haz-verdict{padding:13px 15px;}
+  .haz-verdict-card{border-radius:var(--r-md);padding:14px 15px;}
+  .haz-verdict-card.good{background:#F0FDF4;border:1px solid #BBF7D0;}
+  .haz-verdict-card.warn{background:#FFFBEB;border:1px solid #FDE68A;}
+  .haz-verdict-card.pass{background:#FEF2F2;border:1px solid #FECACA;}
+  .haz-verdict-icon{font-size:18px;margin-bottom:5px;}
+  .haz-verdict-title{font-size:13px;font-weight:800;margin-bottom:3px;}
+  .haz-verdict-card.good .haz-verdict-title{color:#15803D;}
+  .haz-verdict-card.warn .haz-verdict-title{color:#92400E;}
+  .haz-verdict-card.pass .haz-verdict-title{color:#B91C1C;}
+  .haz-offer-range{font-size:24px;font-weight:900;font-family:var(--mono);margin:7px 0 4px;}
+  .haz-verdict-card.good .haz-offer-range{color:#16A34A;}
+  .haz-verdict-card.warn .haz-offer-range{color:#D97706;}
+  .haz-verdict-card.pass .haz-offer-range{color:#DC2626;}
+  .haz-script{margin-top:10px;padding:10px 12px;background:rgba(0,0,0,.05);border-radius:var(--r-md);
+    font-size:12px;color:#374151;line-height:1.65;font-style:italic;}
+  .haz-script b{font-style:normal;font-weight:700;color:var(--ink);}
+  .haz-script-label{font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+  .haz-reset{width:100%;padding:10px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);
+    font:600 12px/1 var(--sans);color:#6B7280;cursor:pointer;margin-top:2px;transition:all .15s;}
+  .haz-reset:hover{border-color:#9CA3AF;color:var(--ink);}
 </style>
-</head>
 <body>
+
+<!-- ── Welcome Screen ── -->
+<div class="welcome-backdrop" id="welcomeBackdrop">
+  <div class="welcome-box">
+    <div class="welcome-logo">SYG <span>Abribook</span></div>
+    <div class="welcome-sub">Sell Your Gadgets — Elmwood Park</div>
+    <div class="welcome-q">Who do you want to work with today?</div>
+    <div class="welcome-cards">
+      <div class="welcome-card wan" id="welcomeWan">
+        <div class="welcome-card-icon">📖</div>
+        <div class="welcome-card-name">Wan</div>
+        <div class="welcome-card-desc">Listing intake<br>RAM &amp; Storage</div>
+      </div>
+      <div class="welcome-card haz" id="welcomeHaz">
+        <div class="welcome-card-icon">🔍</div>
+        <div class="welcome-card-name">Haz</div>
+        <div class="welcome-card-desc">Buying intake<br>Offer calculator</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Haz Tool ── -->
+<div class="haz-wrap" id="hazWrap">
+  <div class="haz-header">
+    <span class="haz-header-icon">🔍</span>
+    <h2>Haz — Buying Intake</h2>
+    <button class="haz-back" id="hazBack">← Back</button>
+  </div>
+  <div class="haz-body">
+
+    <div class="haz-search-box">
+      <div class="haz-search-label">What is the customer selling?</div>
+      <textarea class="haz-search-input" id="hazItemInput" placeholder="e.g. Samsung 980 Pro 2TB, works fine, some scratches on top&#10;or: PS4 slim 500GB, no controller, turns on" rows="3"></textarea>
+    </div>
+
+    <div class="haz-vibe-section">
+      <div class="haz-vibe-label">How does the customer seem?</div>
+      <div class="haz-vibe-cards">
+        <button class="haz-vibe-btn easy" data-vibe="easy">
+          <span class="haz-vibe-emoji">😊</span>
+          <span class="haz-vibe-name">Easy going</span>
+          <span class="haz-vibe-hint">Relaxed, not pushy, will likely accept</span>
+        </button>
+        <button class="haz-vibe-btn tough" data-vibe="tough">
+          <span class="haz-vibe-emoji">😤</span>
+          <span class="haz-vibe-name">Tough</span>
+          <span class="haz-vibe-hint">Knows the value, will push back hard</span>
+        </button>
+        <button class="haz-vibe-btn desperate" data-vibe="desperate">
+          <span class="haz-vibe-emoji">😰</span>
+          <span class="haz-vibe-name">Desperate</span>
+          <span class="haz-vibe-hint">Needs cash now, urgent, flexible</span>
+        </button>
+      </div>
+    </div>
+
+    <button class="haz-analyze-btn" id="hazAnalyzeBtn" disabled>🔍 Analyze &amp; Calculate Offer</button>
+
+    <div class="haz-loading" id="hazLoading">
+      <span class="haz-spinner"></span> Haz is pulling comps and running the numbers…
+    </div>
+
+    <div class="haz-result" id="hazResult">
+      <div class="haz-result-head">
+        <div class="haz-result-title" id="hazResultTitle">—</div>
+        <div class="haz-result-condition" id="hazResultCondition">—</div>
+      </div>
+      <div class="haz-comps">
+        <div class="haz-comps-label">Comp Data</div>
+        <div id="hazCompRows"></div>
+      </div>
+      <div class="haz-calc">
+        <div class="haz-calc-label">Offer Calculation</div>
+        <div id="hazCalcRows"></div>
+      </div>
+      <div class="haz-verdict">
+        <div class="haz-verdict-card" id="hazVerdictCard">
+          <div class="haz-verdict-icon" id="hazVerdictIcon"></div>
+          <div class="haz-verdict-title" id="hazVerdictTitle"></div>
+          <div class="haz-offer-range" id="hazOfferRange"></div>
+          <div class="haz-script-label" style="margin-top:10px;">What to say</div>
+          <div class="haz-script" id="hazScript"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="haz-reset" id="hazReset" style="display:none">↩ New intake</button>
+
+  </div>
+</div>
 
 <!-- ── Tutorial Modal ── -->
 <div class="tut-backdrop" id="tutBackdrop">
@@ -401,6 +847,67 @@
   </div>
 </div>
 
+
+<!-- ── Universal Tutorial Modal ── -->
+<div class="tut-backdrop hidden" id="uniTutBackdrop">
+  <div class="tut-box">
+    <div class="tut-head">
+      <span class="tut-head-icon">📘</span>
+      <h2>Universal Page Tutorial</h2>
+      <button class="tut-close" id="uniTutClose" title="Close">×</button>
+    </div>
+    <div class="tut-progress" id="uniTutProgress"></div>
+    <div class="tut-body">
+      <div class="tut-slide active" data-uni-slide="0">
+        <h3>What Universal does</h3>
+        <p>The Universal page is for items that are <strong>not RAM or storage</strong>: CPUs, GPUs, consoles, laptops, desktops, phones, and motherboards.</p>
+        <p>You are not writing the final listing here. You are building a clean manifest entry that Claude can later use to fix the website-generated title, HTML description, and metafields in bulk.</p>
+      </div>
+      <div class="tut-slide" data-uni-slide="1">
+        <h3><span class="uni-tut-key">1</span>Start with the Website SKU</h3>
+        <p>The company website creates the rough listing first. Copy that listing's SKU into Abribook.</p>
+        <p><strong>Website SKU is the matching key.</strong> If it is wrong or missing, Claude cannot safely match your item to the correct website listing.</p>
+      </div>
+      <div class="tut-slide" data-uni-slide="2">
+        <h3><span class="uni-tut-key">2</span>Choose what is in your hand</h3>
+        <p>Use <strong>What's In My Hand Right Now?</strong> to choose the item type. Abribook changes the required fields, checklist, confidence score, and HTML preview based on that choice.</p>
+        <ul class="uni-tut-list">
+          <li><strong>Laptop/Desktop:</strong> CPU, RAM, storage, GPU, OS, testing, condition.</li>
+          <li><strong>Phone:</strong> storage, carrier/lock status, battery, screen, testing.</li>
+          <li><strong>GPU/Motherboard:</strong> model, testing, damage, ports/socket details.</li>
+        </ul>
+      </div>
+      <div class="tut-slide" data-uni-slide="3">
+        <h3><span class="uni-tut-key">3</span>Describe it like a human</h3>
+        <p>Type the real specs and condition in plain English. Abribook is designed so a lister can quickly write what they see without thinking about spreadsheet columns.</p>
+        <p>Good example: <code>Dell Precision 5570, i7-12800H, 32GB RAM, 1TB SSD, RTX A2000. Boots to BIOS. No charger. Minor lid scratches.</code></p>
+      </div>
+      <div class="tut-slide" data-uni-slide="4">
+        <h3><span class="uni-tut-key">4</span>Use confidence + Needs Research</h3>
+        <p>The <strong>Listing Confidence</strong> meter tells you if the entry has enough information for Claude to prepare listing data. High confidence means it is probably ready for review. Low confidence means important facts are missing.</p>
+        <p>Use <strong>Needs Research</strong> when the item is unclear, locked, damaged in a confusing way, missing model/specs, or needs pricing verification. It keeps bad guesses out of the final listing workflow.</p>
+      </div>
+      <div class="tut-slide" data-uni-slide="5">
+        <h3><span class="uni-tut-key">5</span>Photos come after data</h3>
+        <p>After the required data is filled and the entry reaches ready/high confidence, Abribook will tell you it is time to take photos.</p>
+        <p>That keeps the flow clean: <strong>identify → test → enter data → take photos → add to manifest queue → export the whole batch to Claude.</strong></p>
+      </div>
+      <div class="tut-slide" data-uni-slide="6">
+        <h3><span class="uni-tut-key">6</span>Review the whole batch at the end</h3>
+        <p>Each item goes into the manifest queue first. At the end, review everything together, sync it to the Universal Sheet, then copy the Claude manifest-prep prompt.</p>
+        <p>Claude should use the Website SKU to return corrected titles, HTML descriptions, metafields, and missing-info warnings for bulk listing edits.</p>
+      </div>
+    </div>
+    <div class="tut-foot">
+      <span class="tut-counter" id="uniTutCounter">1 of 7</span>
+      <div class="tut-btns">
+        <button class="tut-btn sec" id="uniTutPrev">← Back</button>
+        <button class="tut-btn pri" id="uniTutNext">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="outer">
 <div class="wrap">
   <header>
@@ -426,6 +933,17 @@
       <option value="P">Paul (P)</option>
     </select>
     <input class="lister-batch" id="listerBatch" value="RTL" placeholder="Batch e.g. RTL0623" autocomplete="off" spellcheck="false" maxlength="12">
+    <span class="lister-label" style="margin-left:4px">Abribook Page</span>
+    <select class="work-select" id="workPageSelect" title="Choose the active Abribook page">
+      <option value="batch">Batch — RAM/Storage</option>
+      <option value="universal">Universal — Other Items</option>
+      <option value="blitzting">⚡ Blitzting</option>
+    </select>
+    <div class="goal-wrap" title="Personal daily manifest goal">
+      <span class="lister-label">Daily Goal</span>
+      <input class="goal-input" id="dailyGoalInput" type="number" min="1" max="999" placeholder="Goal">
+      <span class="goal-pill" id="dailyGoalPill">0 / —</span>
+    </div>
     <button class="lister-lock" id="listerLockBtn">Lock in</button>
     <div class="lister-pill" id="listerPill">
       <span class="lister-pill-name" id="listerPillName"></span>
@@ -433,6 +951,7 @@
     <span class="lister-hint" id="listerHint" style="display:none">Your initial appears in every SKU — e.g. <b id="skuExample">NJ02-J-RTL0623-1</b></span>
   </div>
 
+  <div class="work-page on" id="batchPage">
   <div class="guide">
     <div class="step">
       <span class="stepn">1</span>
@@ -516,21 +1035,225 @@
   <div class="hint">Search by code (e.g. <b>S2990P</b>) or drive name (e.g. <b>970 EVO</b>). Tap a code to copy it — double-tap for the full template line.</div>
 
   <div class="list" id="list"></div>
+  </div><!-- /#batchPage -->
+
+  <div class="work-page universal-page" id="universalPage">
+    <div class="universal-card">
+      <div class="universal-card-head">
+        <div class="universal-card-title-row">
+          <div>
+            <h2>Universal Manifest Intake</h2>
+            <p>A separate Abribook page for CPUs, GPUs, consoles, laptops, desktops, phones, and motherboards. Store the website SKU and plain-English facts first, then prep everything in bulk at the end.</p>
+          </div>
+          <button class="uni-help-btn" id="uniTutOpenBtn" type="button">📘 Universal Tutorial</button>
+        </div>
+      </div>
+      <div class="universal-card-body">
+<div class="uni-form">
+        <div class="dp-row full">
+          <div>
+            <div class="dp-label">Website SKU #</div>
+            <input class="dp-input" id="uniWebsiteSku" placeholder="SKU from company website" autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+        <div class="dp-row full">
+          <div>
+            <div class="dp-label">What's In My Hand Right Now?</div>
+            <select class="uni-select" id="uniItemType">
+              <option value="Laptop">Laptop</option>
+              <option value="Desktop">Desktop</option>
+              <option value="Phone">Phone</option>
+              <option value="Console">Console</option>
+              <option value="GPU">GPU</option>
+              <option value="CPU">CPU</option>
+              <option value="Motherboard">Motherboard</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="uni-qc-grid">
+          <div class="uni-qc-card">
+            <div class="conf-head"><span class="conf-label">Listing Confidence</span><span class="conf-score" id="uniConfidenceScore">0%</span></div>
+            <div class="conf-bar"><div class="conf-fill" id="uniConfidenceFill"></div></div>
+            <div class="conf-note" id="uniConfidenceNote">Start with SKU, item type, description, testing, and condition.</div>
+          </div>
+          <div class="uni-qc-card">
+            <div class="conf-label">Required for this item</div>
+            <div class="req-list" id="uniReqList"></div>
+          </div>
+        </div>
+
+        <div class="photo-reminder wait" id="uniPhotoReminder"><span class="photo-icon">📸</span><div><b>Photos later — data first.</b><span>Fill the required facts, testing, and condition first. Abribook will tell you when this item is ready for photos.</span></div></div>
+
+        <div id="uniDynamicFields" class="uni-dynamic-grid"></div>
+
+        <div class="dp-row full">
+          <div>
+            <div class="dp-label">Describe item + specs</div>
+            <textarea class="uni-textarea big" id="uniDesc" placeholder='Example: Dell Precision 5570 laptop, i7-12800H, 32GB RAM, 1TB SSD, RTX A2000, 15.6&quot; screen.'></textarea>
+          </div>
+        </div>
+        <div class="dp-row full">
+          <div>
+            <div class="dp-label">Testing notes</div>
+            <textarea class="uni-textarea" id="uniTesting" placeholder="Example: Boots to BIOS. Screen and keyboard work."></textarea>
+          </div>
+        </div>
+        <div class="dp-row full">
+          <div>
+            <div class="dp-label">Condition notes</div>
+            <textarea class="uni-textarea" id="uniCondition" placeholder="Example: Used, minor lid scratches."></textarea>
+          </div>
+        </div>
+        <div class="dp-row full">
+          <div>
+            <div class="dp-label">Issues / missing parts</div>
+            <textarea class="uni-textarea" id="uniIssues" placeholder="Example: No charger included. Disc drive untested."></textarea>
+          </div>
+        </div>
+        <div class="uni-policy-grid">
+          <div class="uni-policy-card">
+            <div class="dp-label">Shipping</div>
+            <select class="uni-select" id="uniShippingPolicy" disabled title="SYG uses free shipping by default">
+              <option value="Free Shipping" selected>Free Shipping</option>
+            </select>
+            <div class="uni-mini-note">Locked to Free Shipping because SYG uses free shipping by default.</div>
+          </div>
+          <div class="uni-policy-card">
+            <div class="dp-label">Returns</div>
+            <select class="uni-select" id="uniReturnPolicy">
+              <option value="Returns accepted according to the listing return policy.">Returns accepted</option>
+              <option value="No returns accepted for this item.">No returns accepted</option>
+              <option value="For parts or repair item. Returns are not accepted.">For parts / no returns</option>
+              <option value="Return eligibility depends on final listing terms. Please review before purchase.">Review listing terms</option>
+            </select>
+            <div class="uni-mini-note">Useful when some items keep returns on and others do not.</div>
+          </div>
+        </div>
+        <div class="needs-research-box">
+          <label><input type="checkbox" id="uniNeedsResearch"> Mark as Needs Research</label>
+          Use this when the item cannot be confidently identified, has unknown lock status, missing specs, unclear damage, or needs pricing/comp verification before Claude prepares final listing data.
+        </div>
+        <div class="dp-row full">
+          <div>
+            <div class="dp-label">Notes for Claude</div>
+            <input class="dp-input" id="uniClaudeNotes" placeholder="optional instruction" autocomplete="off">
+          </div>
+        </div>
+        <div class="uni-preview-shell">
+          <div class="uni-preview-head"><b>HTML Description Preview</b><button class="uni-preview-toggle" id="uniToggleRaw" type="button">Raw HTML</button></div>
+          <div class="uni-html-preview" id="uniHtmlPreview"></div>
+          <div class="uni-raw-html" id="uniRawHtml"></div>
+        </div>
+        <button class="dp-add-entry" id="uniAddEntry" style="margin:12px 0 0">+ Add universal entry</button>
+      </div>
+      </div>
+    </div>
+  </div><!-- /#universalPage -->
+
+  <!-- ── Blitzting Page ── -->
+  <div class="work-page blitz-page" id="blitzPage">
+
+    <div class="blitz-mode-bar">
+      <h2>⚡ Blitzting</h2>
+      <button class="blitz-tab on" id="blitzTabClone">Template Clone</button>
+      <button class="blitz-tab" id="blitzTabReview">Speed Review</button>
+    </div>
+
+    <!-- Template Clone Section -->
+    <div class="blitz-section on" id="blitzClone">
+
+      <div class="blitz-clone-master">
+        <h3>① Master Entry</h3>
+        <div class="blitz-clone-row">
+          <div>
+            <div class="blitz-clone-label">Code</div>
+            <input class="blitz-clone-input" id="blitzMasterCode" placeholder="e.g. K480DC500R" autocomplete="off">
+          </div>
+          <div>
+            <div class="blitz-clone-label">Health %</div>
+            <input class="blitz-clone-input" id="blitzMasterHealth" placeholder="e.g. 98" autocomplete="off">
+          </div>
+        </div>
+        <div class="blitz-clone-row full">
+          <div>
+            <div class="blitz-clone-label">Notes</div>
+            <input class="blitz-clone-input" id="blitzMasterNotes" placeholder="e.g. Initialized in GPT style" autocomplete="off">
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <div class="blitz-clone-label">What differs per unit?</div>
+          <div class="blitz-clone-checks">
+            <label class="blitz-clone-check"><input type="checkbox" id="blitzDiffHealth" checked> Health %</label>
+            <label class="blitz-clone-check"><input type="checkbox" id="blitzDiffSerial" checked> Serial Number</label>
+            <label class="blitz-clone-check"><input type="checkbox" id="blitzDiffNotes"> Notes</label>
+          </div>
+        </div>
+
+        <div class="blitz-clone-count">
+          <label>How many units?</label>
+          <input type="number" id="blitzCloneCount" value="3" min="1" max="20">
+          <button class="blitz-gen-btn" id="blitzGenSlots">Generate slots →</button>
+        </div>
+      </div>
+
+      <div class="blitz-slots" id="blitzSlots"></div>
+
+      <button class="blitz-copy-all" id="blitzCopyAll" style="display:none">✓ Copy All entries</button>
+    </div>
+
+    <!-- Speed Review Section -->
+    <div class="blitz-section" id="blitzReview">
+
+      <div class="blitz-review-toolbar">
+        <div class="blitz-review-toggle">
+          <button class="on" id="blitzSrcSession">Session entries</button>
+          <button id="blitzSrcShopify">Pull from Shopify</button>
+        </div>
+        <input class="blitz-review-filter" id="blitzBatchFilter" placeholder="Filter by batch e.g. RTL0624" style="display:none">
+        <button class="blitz-review-load" id="blitzLoadShopify" style="display:none">Load drafts</button>
+      </div>
+
+      <div class="blitz-flagged-banner" id="blitzFlaggedBanner"></div>
+      <div class="blitz-progress-label" id="blitzProgressLabel"></div>
+      <div class="blitz-progress-bar"><div class="blitz-progress-fill" id="blitzProgressFill" style="width:0%"></div></div>
+
+      <div id="blitzCardWrap"></div>
+
+      <div class="blitz-kbd-legend">
+        <span><kbd class="blitz-kbd">A</kbd> Approve</span>
+        <span><kbd class="blitz-kbd">F</kbd> Flag</span>
+        <span><kbd class="blitz-kbd">E</kbd> Edit</span>
+        <span><kbd class="blitz-kbd">→</kbd> Next</span>
+        <span><kbd class="blitz-kbd">←</kbd> Back</span>
+      </div>
+    </div>
+
+  </div><!-- /#blitzPage -->
 </div><!-- /.wrap -->
 
 <div class="draft-panel" id="draftPanel">
   <div class="dp-header">
-    <h2>📋 <span style="font-size:11px;font-weight:600;background:rgba(99,108,255,.25);color:#C9CCFF;border-radius:var(--r-pill);padding:2px 8px;vertical-align:middle;margin-right:4px;">Step 4–5</span> Draft Log Entries</h2>
-    <p>Fill in one entry per unit. When all items are logged, hit <strong style="color:var(--on-dark)">Copy All</strong> and paste into Claude to generate listings.</p>
+    <h2>📋 <span style="font-size:11px;font-weight:600;background:rgba(99,108,255,.25);color:#C9CCFF;border-radius:var(--r-pill);padding:2px 8px;vertical-align:middle;margin-right:4px;">Manifest</span> Batch Queue</h2>
+    <p>Store the data first. Review the full batch at the end, then copy the Claude manifest-prep prompt or sync to the Universal Sheet.</p>
   </div>
   <div class="dp-body">
-    <div class="dp-entries" id="dpEntries"></div>
-    <button class="dp-add-entry" id="dpAddEntry">+ Add entry</button>
+    <div class="dp-tab-panel on" id="dpPanelBatch">
+      <div class="manifest-warning">Batch is for RAM/storage intake logging. Log codes, health, serials and notes — Claude generates listings from this data.</div>
+      <div class="dp-entries" id="dpEntries"></div>
+      <button class="dp-add-entry" id="dpAddEntry">+ Add batch entry</button>
+    </div>
+    <div class="dp-tab-panel" id="dpPanelUniversal">
+      <div class="manifest-warning">Universal intake now lives on the main page. Use the Work Page dropdown beside Who's listing to switch pages.</div>
+            <div class="dp-entries" id="uniEntries"></div>
+    </div>
   </div>
   <div class="dp-footer">
-    <div class="dp-label" style="margin-bottom:6px">All entries</div>
+    <div class="dp-label" style="margin-bottom:6px">All manifest entries</div>
     <div class="dp-preview-all" id="dpPreviewAll"></div>
-    <button class="dp-copy-all" id="dpCopyAll">Copy all — paste into chat</button>
+    <button class="dp-copy-all" id="dpCopyAll">Copy Claude manifest-prep prompt</button>
+    <button class="dp-sync-all" id="dpSyncAll">Sync entries to Universal Sheet</button>
     <button class="dp-clear" id="dpClear">Clear all entries</button>
   </div>
 </div>
@@ -582,6 +1305,7 @@ const OLDKEY='abribook:custom';
 
 // ── Google Sheets sync ────────────────────────────────────────────
 const GS_URL = 'https://script.google.com/macros/s/AKfycbw0XSFVMM0vHSgrzkfh8pr5D8m6NMXC2Xc4nF-X51NVKetyNGKhRr3OtzfuVerjRXLBRQ/exec';
+const UNIVERSAL_GS_URL = 'https://script.google.com/macros/s/AKfycbycINQrg_0zyFYwM_lhWyEEmrjW9YDYpSEdYbE4sEUKhdv3DTcPOjDUkrhLaYg6PoPz/exec';
 let _syncStatus = 'idle'; // idle | syncing | ok | error
 let _syncPollTimer = null;
 
@@ -1866,6 +2590,7 @@ function dpRebuildEntry(e){
   const finalWrap = document.getElementById('dp-e-'+e.id);
   if(!finalWrap) return;
   // Restore values
+  if(finalWrap.querySelector('[data-dpfield="websiteSku"]')) finalWrap.querySelector('[data-dpfield="websiteSku"]').value = e.websiteSku || '';
   finalWrap.querySelector('[data-dpfield="result"]').value = e.result;
   finalWrap.querySelector('[data-dpfield="sn"]').value = e.sn;
   finalWrap.querySelector('[data-dpfield="notes"]').value = e.notes;
@@ -1962,6 +2687,7 @@ function dpAddEntry(){
   container.appendChild(div.firstElementChild);
   dpRenderEntry(e);
   dpSetActive(e.id);
+  updateGoalCounter && updateGoalCounter();
   // focus first input of new entry
   const el = document.querySelector(`#dp-e-${e.id} input`);
   if(el) el.focus();
@@ -1974,6 +2700,7 @@ function dpRemoveEntry(id){
   if(dpActiveId === id) dpClearActive();
   else dpApplyDim();
   dpUpdatePreviewAll();
+  updateGoalCounter && updateGoalCounter();
 }
 
 function dpHandleInput(ev){
@@ -2101,18 +2828,541 @@ document.getElementById('dpEntries').addEventListener('drop', ev=>{
 
 document.getElementById('dpCopyAll').addEventListener('click', ()=>{
   if(!LISTER_LOCKED){ toast('Select and lock your name first (Step 1)'); return; }
-  const lines = dpEntries.map(dpLineFor).filter(Boolean);
-  if(!lines.length){ toast('No entries to copy yet'); return; }
-  copyText(lines.join('\n'), ()=>toast('Copied '+lines.length+' entr'+(lines.length===1?'y':'ies')+' — paste into Claude'));
+  const entries = allManifestObjects ? allManifestObjects() : dpEntries.map(batchEntryObject);
+  if(!entries.length){ toast('No entries to copy yet'); return; }
+  const prompt = buildClaudePrepPrompt ? buildClaudePrepPrompt() : dpEntries.map(dpLineFor).filter(Boolean).join('\n');
+  copyText(prompt, ()=>toast('Copied Claude manifest-prep prompt for '+entries.length+' entr'+(entries.length===1?'y':'ies')));
 });
 
 document.getElementById('dpClear').addEventListener('click', ()=>{
-  if(!dpEntries.length) return;
+  if(!dpEntries.length && (!uniEntriesData || !uniEntriesData.length)) return;
   dpEntries = [];
   dpNextId = 1;
+  uniEntriesData = [];
+  uniNextId = 1;
   document.getElementById('dpEntries').innerHTML = '';
+  renderUniEntries && renderUniEntries();
   dpUpdatePreviewAll();
+  updateGoalCounter && updateGoalCounter();
 });
+
+
+// ── Universal Manifest MVP ───────────────────────────────────────
+let uniEntriesData = [];
+let uniNextId = 1;
+let uniRawMode = false;
+
+function switchManifestTab(tab){
+  const isBatch = tab === 'batch';
+  const batchTab = document.getElementById('dpTabBatch');
+  const uniTab = document.getElementById('dpTabUniversal');
+  if(batchTab) batchTab.classList.toggle('on', isBatch);
+  if(uniTab) uniTab.classList.toggle('on', !isBatch);
+  const batchPanel = document.getElementById('dpPanelBatch');
+  const uniPanel = document.getElementById('dpPanelUniversal');
+  if(batchPanel) batchPanel.classList.toggle('on', isBatch);
+  if(uniPanel) uniPanel.classList.toggle('on', !isBatch);
+}
+
+let CURRENT_WORK_PAGE = 'batch';
+function switchWorkPage(page){
+  const pages = {
+    batch: document.getElementById('batchPage'),
+    universal: document.getElementById('universalPage'),
+    blitzting: document.getElementById('blitzPage'),
+  };
+  Object.entries(pages).forEach(([k,el])=>{ if(el) el.classList.toggle('on', k===page); });
+  CURRENT_WORK_PAGE = page;
+
+  if(page==='universal'){
+    switchManifestTab('universal');
+    maybeAutoOpenUniTutorial();
+  } else if(page==='batch'){
+    switchManifestTab('batch');
+  }
+
+  const h = document.querySelector('#draftPanel .dp-header h2');
+  const p = document.querySelector('#draftPanel .dp-header p');
+  const pill = '<span style="font-size:11px;font-weight:600;background:rgba(99,108,255,.25);color:#C9CCFF;border-radius:var(--r-pill);padding:2px 8px;vertical-align:middle;margin-right:4px;">Manifest</span>';
+  if(h) h.innerHTML = page==='universal'
+    ? '📋 '+pill+' Universal Queue'
+    : page==='blitzting'
+    ? '⚡ '+pill+' Blitzting'
+    : '📋 '+pill+' Batch Queue';
+  if(p) p.textContent = page==='universal'
+    ? 'Universal entries are stored here first. Review everything, then copy the Claude manifest-prep prompt or sync to the Universal Sheet.'
+    : page==='blitzting'
+    ? 'Template Clone or Speed Review your listings fast.'
+    : 'Store RAM/storage data first. Review the full batch at the end, then copy the Claude manifest-prep prompt or sync to the Universal Sheet.';
+}
+
+function htmlEscapeLoose(s){ return esc(String(s||'')); }
+function nl2br(s){ return htmlEscapeLoose(s).replace(/\n/g,'<br>'); }
+
+const UNIVERSAL_TYPE_RULES = {
+  Laptop: {
+    fields:['Brand','Model','Processor','RAM','Storage','GPU','Display','OS','Accessories'],
+    required:['Brand','Model','Processor','RAM','Storage','Display'],
+    cheat:'Include CPU, RAM, storage, GPU if any, screen size/resolution, charger/battery info, testing, condition.'
+  },
+  Desktop: {
+    fields:['Brand / Build','Processor','RAM','Storage','GPU','OS','Form Factor','Accessories'],
+    required:['Processor','RAM','Storage','Condition Notes','Testing Notes'],
+    cheat:'Include CPU, RAM, storage, GPU, OS, power/display test, and missing parts.'
+  },
+  Phone: {
+    fields:['Brand','Model','Storage','Carrier / Lock Status','Battery Health','Color','IMEI / FRP / iCloud','Accessories'],
+    required:['Brand','Model','Storage','Carrier / Lock Status','IMEI / FRP / iCloud'],
+    cheat:'Do not claim unlocked/clean unless verified. Include storage, carrier/lock status, battery health, screen condition.'
+  },
+  Console: {
+    fields:['Brand','Console Model','Edition / Storage','Color','Controller Included','Cables Included','Accessories'],
+    required:['Console Model','Testing Notes','Condition Notes','Controller Included','Cables Included'],
+    cheat:'Include edition/storage, controllers, cables, power/display test, disc/game test if applicable.'
+  },
+  GPU: {
+    fields:['Brand','GPU Model / Chipset','VRAM','Ports','Power Connectors','Cooling / Fans','Accessories'],
+    required:['Brand','GPU Model / Chipset','VRAM','Testing Notes','Condition Notes'],
+    cheat:'Include chipset, VRAM, display output, fan spin, artifact test, damaged PCB/ports if any.'
+  },
+  CPU: {
+    fields:['Brand','CPU Model','Socket','Generation','Cores / Threads','Condition Detail'],
+    required:['Brand','CPU Model','Testing Notes','Condition Notes'],
+    cheat:'Include model, socket if known, visual condition, bent pins/pads, and whether it was tested.'
+  },
+  Motherboard: {
+    fields:['Brand','Model','Socket','Chipset','Form Factor','I/O Shield','CPU Support Notes','Accessories'],
+    required:['Brand','Model','Socket','Chipset','Testing Notes','Condition Notes'],
+    cheat:'Include socket/chipset/form factor, I/O shield, socket damage, bent pins, and power/POST test if available.'
+  }
+};
+
+let uniTypedFields = {};
+let goalCelebrated = false;
+
+function uniTypeRule(){ return UNIVERSAL_TYPE_RULES[document.getElementById('uniItemType')?.value || 'Laptop'] || UNIVERSAL_TYPE_RULES.Laptop; }
+function keyForField(label){ return String(label).toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''); }
+function collectUniTypedFields(){
+  const out = {};
+  document.querySelectorAll('[data-unifield]').forEach(el=>{ out[el.dataset.unifield] = el.value.trim(); });
+  return out;
+}
+function typedFieldValue(fields, label){ return (fields||{})[keyForField(label)] || ''; }
+function renderUniDynamicFields(){
+  const container = document.getElementById('uniDynamicFields');
+  if(!container) return;
+  const existing = collectUniTypedFields();
+  uniTypedFields = {...uniTypedFields, ...existing};
+  const rule = uniTypeRule();
+  container.innerHTML = rule.fields.map(label=>{
+    const key = keyForField(label);
+    const val = uniTypedFields[key] || '';
+    return `<div class="uni-field-card"><div class="dp-label">${htmlEscapeLoose(label)}</div><input class="dp-input" data-unifield="${key}" placeholder="${htmlEscapeLoose(label)}" value="${htmlEscapeLoose(val)}" autocomplete="off"></div>`;
+  }).join('');
+  container.querySelectorAll('[data-unifield]').forEach(el=>el.addEventListener('input', updateUniPreview));
+}
+function requiredValueFor(req, e){
+  const typed = e?.typedFields || collectUniTypedFields();
+  const lower = String(req).toLowerCase();
+  if(lower === 'testing notes') return e?.testing || document.getElementById('uniTesting')?.value || '';
+  if(lower === 'condition notes') return e?.condition || document.getElementById('uniCondition')?.value || '';
+  return typedFieldValue(typed, req);
+}
+function uniConfidenceFor(e){
+  const rule = UNIVERSAL_TYPE_RULES[e.itemType] || uniTypeRule();
+  const checks = [
+    {name:'Code', ok:!!e.code},
+    {name:'Item Type', ok:!!e.itemType},
+    {name:'Description', ok:!!e.desc},
+    {name:'Testing Notes', ok:!!e.testing},
+    {name:'Condition Notes', ok:!!e.condition},
+    ...rule.required.map(r=>({name:r, ok:!!requiredValueFor(r,e)}))
+  ];
+  const unique = [];
+  const seen = new Set();
+  checks.forEach(c=>{ const k=c.name.toLowerCase(); if(!seen.has(k)){ seen.add(k); unique.push(c); }});
+  const ok = unique.filter(c=>c.ok).length;
+  const score = unique.length ? Math.round((ok/unique.length)*100) : 0;
+  const missing = unique.filter(c=>!c.ok).map(c=>c.name);
+  let level = score >= 85 ? 'High' : score >= 55 ? 'Medium' : 'Low';
+  if(e.needsResearch) level = 'Needs Research';
+  return {score, level, missing, checks:unique};
+}
+function updateUniConfidence(e){
+  const data = e || uniMakePreviewObject();
+  const c = uniConfidenceFor(data);
+  const scoreEl = document.getElementById('uniConfidenceScore');
+  const fill = document.getElementById('uniConfidenceFill');
+  const note = document.getElementById('uniConfidenceNote');
+  const reqList = document.getElementById('uniReqList');
+  if(scoreEl) scoreEl.textContent = c.level + ' · ' + c.score + '%';
+  if(fill) fill.style.width = c.score + '%';
+  if(note) note.textContent = c.missing.length ? ('Missing: ' + c.missing.slice(0,5).join(', ') + (c.missing.length>5?'…':'')) : 'Looks ready for Claude review.';
+  if(reqList) reqList.innerHTML = c.checks.map(x=>`<span class="req-chip ${x.ok?'ok':'miss'}">${x.ok?'✓':'!'} ${htmlEscapeLoose(x.name)}</span>`).join('');
+  updateUniPhotoReminder(data, c);
+}
+function updateUniPhotoReminder(e, c){
+  const box = document.getElementById('uniPhotoReminder');
+  if(!box) return;
+  if(e.needsResearch){
+    box.className = 'photo-reminder wait';
+    box.innerHTML = '<span class="photo-icon">🔎</span><div><b>Hold photos until research is resolved.</b><span>This item is marked Needs Research. Verify the missing/uncertain facts first, then photograph it with the correct defects and accessories in mind.</span></div>';
+    return;
+  }
+  if(c.score >= 85){
+    box.className = 'photo-reminder ready';
+    box.innerHTML = '<span class="photo-icon">📸</span><div><b>Data looks ready — take photos now.</b><span>Capture the item, serial/model labels, included accessories, defects, ports, and any issue mentioned in the notes before adding it to the final queue.</span></div>';
+  } else {
+    const missing = c.missing.slice(0,3).join(', ');
+    box.className = 'photo-reminder wait';
+    box.innerHTML = '<span class="photo-icon">📸</span><div><b>Photos later — data first.</b><span>Finish the required data'+(missing ? ': '+htmlEscapeLoose(missing) : '')+'. Then Abribook will tell you when to photograph the item.</span></div>';
+  }
+}
+function universalTitlePreview(e){
+  const f = e.typedFields || {};
+  const v = label => typedFieldValue(f,label);
+  const type = e.itemType;
+  if(type==='Laptop') return [v('Brand'),v('Model'),v('Display'),v('Processor'),v('RAM'),v('Storage'),v('GPU'),'Laptop'].filter(Boolean).join(' ');
+  if(type==='Desktop') return [v('Brand / Build')||'Desktop PC',v('Processor'),v('RAM'),v('Storage'),v('GPU')].filter(Boolean).join(' ');
+  if(type==='Phone') return [v('Brand'),v('Model'),v('Storage'),v('Carrier / Lock Status'),'Phone'].filter(Boolean).join(' ');
+  if(type==='Console') return [v('Brand'),v('Console Model'),v('Edition / Storage'),'Console'].filter(Boolean).join(' ');
+  if(type==='GPU') return [v('Brand'),v('GPU Model / Chipset'),v('VRAM'),'Graphics Card'].filter(Boolean).join(' ');
+  if(type==='CPU') return [v('Brand'),v('CPU Model'),'Processor CPU'].filter(Boolean).join(' ');
+  if(type==='Motherboard') return [v('Brand'),v('Model'),v('Socket'),v('Chipset'),'Motherboard'].filter(Boolean).join(' ');
+  return e.desc ? e.desc.slice(0,80) : type;
+}
+function compactTableHtml(entry){
+  const e = entry && entry.itemType ? entry : uniMakePreviewObject();
+  const f = e.typedFields || {};
+  const row = (label, value)=>`<tr><td style="width:34%;padding:8px 10px;font-weight:bold;background:#f7f7f7;border:1px solid #ddd;">${htmlEscapeLoose(label)}</td><td style="padding:8px 10px;border:1px solid #ddd;">${value ? nl2br(value) : '—'}</td></tr>`;
+  const baseRows = [row('Website SKU', e.websiteSku), row('Item Type', e.itemType)];
+  const typeRows = (UNIVERSAL_TYPE_RULES[e.itemType]?.fields || []).map(label=>row(label, typedFieldValue(f,label)));
+  const rows = baseRows.concat(typeRows).concat([
+    row('Item / Specs', e.desc),
+    row('Testing', e.testing),
+    row('Condition', e.condition),
+    row('Issues / Missing Parts', e.issues),
+    row('Shipping', e.shippingPolicy),
+    row('Returns', e.returnPolicy)
+  ]).join('');
+  const title = universalTitlePreview(e) || 'Item Details';
+  return `<div style="font-family:Arial,Helvetica,sans-serif;color:#222;max-width:720px;line-height:1.45;">
+  <h3 style="margin:0 0 10px;font-size:18px;color:#111;">${htmlEscapeLoose(title)}</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:14px;border:1px solid #ddd;"><tbody>${rows}</tbody></table>
+  <p style="font-size:13px;color:#555;margin-top:12px;">Please review all item details, condition notes, shipping terms, return terms, and included accessories before purchasing.</p>
+</div>`;
+}
+function uniMakePreviewObject(){
+  return {
+    id: 0,
+    websiteSku: document.getElementById('uniWebsiteSku')?.value.trim() || '',
+    itemType: document.getElementById('uniItemType')?.value || 'Laptop',
+    typedFields: collectUniTypedFields(),
+    desc: document.getElementById('uniDesc')?.value.trim() || '',
+    testing: document.getElementById('uniTesting')?.value.trim() || '',
+    condition: document.getElementById('uniCondition')?.value.trim() || '',
+    issues: document.getElementById('uniIssues')?.value.trim() || '',
+    shippingPolicy: document.getElementById('uniShippingPolicy')?.value || 'Free Shipping',
+    returnPolicy: document.getElementById('uniReturnPolicy')?.value || 'Returns accepted according to the listing return policy.',
+    claudeNotes: document.getElementById('uniClaudeNotes')?.value.trim() || '',
+    needsResearch: !!document.getElementById('uniNeedsResearch')?.checked
+  };
+}
+function updateUniPreview(){
+  const e = uniMakePreviewObject();
+  const html = compactTableHtml(e);
+  const prev = document.getElementById('uniHtmlPreview');
+  const raw = document.getElementById('uniRawHtml');
+  if(prev) prev.innerHTML = html;
+  if(raw) raw.textContent = html;
+  updateUniConfidence(e);
+}
+function uniStatusFor(e){
+  const c = uniConfidenceFor(e);
+  if(e.needsResearch) return 'Needs Research';
+  if(!e.websiteSku || !e.desc) return 'Missing Info';
+  if(c.score < 55) return 'Missing Info';
+  if(c.score < 85) return 'Review';
+  return 'Ready for Claude';
+}
+function uniMakeFromForm(){
+  const e = uniMakePreviewObject();
+  e.id = uniNextId++;
+  e.confidence = uniConfidenceFor(e);
+  e.status = uniStatusFor(e);
+  e.titlePreview = universalTitlePreview(e);
+  e.htmlPreview = compactTableHtml(e);
+  return e;
+}
+function uniStatusClass(e){
+  if(e.status === 'Ready for Claude') return 'high';
+  if(e.status === 'Review') return 'med';
+  return 'low';
+}
+function uniEntryLine(e, idx){
+  const fields = Object.entries(e.typedFields||{}).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join(' | ');
+  return `UNIVERSAL #${idx+1} | Website SKU: ${e.websiteSku||'MISSING'} | Type: ${e.itemType} | Confidence: ${e.confidence?.level||'—'} ${e.confidence?.score??''}% | Status: ${e.status}\nTitle Preview: ${e.titlePreview||'—'}\nTyped Fields: ${fields||'—'}\nDescription: ${e.desc||'—'}\nTesting: ${e.testing||'—'}\nCondition: ${e.condition||'—'}\nIssues/Missing: ${e.issues||'—'}
+Shipping: ${e.shippingPolicy||'—'}
+Returns: ${e.returnPolicy||'—'}${e.claudeNotes?'\nClaude Notes: '+e.claudeNotes:''}`;
+}
+function renderUniEntries(){
+  const box = document.getElementById('uniEntries');
+  if(!box) return;
+  if(!uniEntriesData.length){ box.innerHTML = '<div class="empty" style="padding:16px 8px">No universal entries yet.</div>'; dpUpdatePreviewAll(); updateGoalCounter(); return; }
+  box.innerHTML = uniEntriesData.map((e, i)=>`<div class="uni-entry" id="uni-e-${e.id}">
+    <div class="uni-entry-head"><span class="dp-sku">${htmlEscapeLoose(listerSKU(dpEntries.length+i+1))}</span><span class="uni-type">${htmlEscapeLoose(e.itemType)}</span><span class="uni-status ${uniStatusClass(e)}">${htmlEscapeLoose(e.status)}</span><button class="dp-rmv" data-uniid="${e.id}" title="Remove universal entry">×</button></div>
+    <div class="dp-label">Website SKU</div><div class="dp-preview" style="margin-bottom:8px">${htmlEscapeLoose(e.websiteSku||'MISSING')}</div>
+    <div class="dp-label">Confidence</div><div class="dp-preview" style="margin-bottom:8px">${htmlEscapeLoose((e.confidence?.level||'—')+' · '+(e.confidence?.score??0)+'%'+(e.confidence?.missing?.length?' | Missing: '+e.confidence.missing.join(', '):''))}</div>
+    <div class="dp-label">Preview</div><div class="dp-preview">${htmlEscapeLoose(uniEntryLine(e,i))}</div>
+  </div>`).join('');
+  dpUpdatePreviewAll();
+  updateGoalCounter();
+}
+function clearUniForm(){
+  ['uniWebsiteSku','uniDesc','uniTesting','uniCondition','uniIssues','uniClaudeNotes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const nr=document.getElementById('uniNeedsResearch'); if(nr) nr.checked=false;
+  document.querySelectorAll('[data-unifield]').forEach(el=>el.value='');
+  uniTypedFields = {};
+  updateUniPreview();
+}
+function batchEntryObject(e, idx){
+  const ram = dpIsRam(e.code);
+  const hit = resolveCode(e.code);
+  return {
+    panel:'Batch', item_type: ram ? 'RAM' : 'Storage', website_sku:'', abribook_code:e.code||'', serial_number:e.sn||'', health_test_result:e.result||'',
+    raw_item_description: hit ? hit.desc : '', testing_notes: ram ? (e.result||'') : (e.result ? 'Drive health: '+e.result : ''), condition_notes:e.notes||'', known_issues:'',
+    notes_for_claude: e.pairsOn && e.pairs ? ('Qty: '+e.pairs+' pairs') : '', title_preview:'', html_description_preview:'', metafields_preview:'',
+    status: e.code ? 'Ready for Claude' : 'Missing Info', entry_line: dpLineFor(e)
+  };
+}
+// Maps Universal typed fields to exact Shopify metafield keys
+function uniMapMetafields(e){
+  const f = e.typedFields || {};
+  const type = e.itemType || '';
+  const v = (k) => f[k] || '';
+  const out = {};
+
+  // Always-present fields
+  if(type)             out.type              = type;
+  if(v('Brand'))       out.brand             = v('Brand');
+
+  // Model / MPN
+  const model = v('Model') || v('Console Model') || v('GPU Model / Chipset') || v('CPU Model') || v('Model / Build') || '';
+  if(model)            out.model             = model;
+
+  const mpn = v('Model Number') || v('MPN') || '';
+  if(mpn)              out.model_number      = mpn;
+  if(mpn)              out.mpn               = mpn;
+
+  // Storage
+  const storage = v('Storage') || v('Edition / Storage') || v('Storage Capacity') || '';
+  if(storage)          out.storage_capacity  = storage;
+
+  // Color
+  if(v('Color'))       out.color             = v('Color');
+
+  // Screen / Display
+  const screen = v('Display') || v('Screen Size') || '';
+  if(screen)           out.screen_size       = screen;
+
+  // Connectivity / Network
+  const network = v('Carrier / Lock Status') || v('Network') || v('Connectivity') || '';
+  if(network)          out.network           = network;
+  if(v('Connectivity')) out.connectivity     = v('Connectivity');
+
+  // Processor
+  const cpu = v('Processor') || v('CPU Model') || '';
+  if(cpu)              out.processor         = cpu;
+
+  // RAM
+  if(v('RAM'))         out.ram               = v('RAM');
+
+  // GPU
+  const gpu = v('GPU') || v('GPU Model / Chipset') || '';
+  if(gpu)              out.gpu               = gpu;
+
+  // OS
+  const os = v('OS') || v('Operating System') || '';
+  if(os)               out.operating_system  = os;
+
+  // Features / accessories
+  const features = v('Features') || v('Accessories') || '';
+  if(features)         out.features          = features;
+
+  // Platform / socket / chipset
+  const platform = v('Platform') || v('Socket') || v('Chipset') || '';
+  if(platform)         out.platform          = platform;
+
+  // Release year
+  if(v('Release Year')) out.release_year     = v('Release Year');
+
+  // Game name (console-specific)
+  if(v('Game name'))   out.game_name         = v('Game name');
+
+  // UPC
+  if(v('UPC'))         out.upc               = v('UPC');
+
+  return out;
+}
+
+function universalEntryObject(e){
+  return {
+    panel:'Universal', item_type:e.itemType, website_sku:e.websiteSku||'', abribook_code:'', serial_number:'', health_test_result:'',
+    raw_item_description:e.desc||'', testing_notes:e.testing||'', condition_notes:e.condition||'', known_issues:e.issues||'', notes_for_claude:[e.claudeNotes||'', e.shippingPolicy ? ('Shipping: '+e.shippingPolicy) : '', e.returnPolicy ? ('Returns: '+e.returnPolicy) : ''].filter(Boolean).join(' | '),
+    title_preview:e.titlePreview||'', html_description_preview:e.htmlPreview||compactTableHtml(e), metafields_preview:JSON.stringify(uniMapMetafields(e)), status:e.status||'Draft',
+    needs_research:e.needsResearch?'Yes':'', entry_line: uniEntryLine(e,0)
+  };
+}
+function allManifestObjects(){
+  const batch = dpEntries.filter(e=>e.code || e.sn || e.result || e.notes).map(batchEntryObject);
+  const uni = uniEntriesData.map(universalEntryObject);
+  return batch.concat(uni).map((e, i)=>({...e, entry_id: e.entry_id || '', batch_id: LISTER_BATCH || '', lister: LISTER_INITIAL || '', internal_sku: listerSKU(i+1)}));
+}
+function buildClaudePrepPrompt(){
+  const entries = allManifestObjects();
+  const payload = entries.map((e, i)=>({
+    entry_number:i+1, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister, website_sku:e.website_sku, panel:e.panel, item_type:e.item_type,
+    abribook_code:e.abribook_code, serial_number:e.serial_number, health_test_result:e.health_test_result, raw_item_description:e.raw_item_description,
+    testing_notes:e.testing_notes, condition_notes:e.condition_notes, known_issues_missing_parts:e.known_issues, notes_for_claude:e.notes_for_claude,
+    title_preview:e.title_preview, html_description_preview:e.html_description_preview, metafields_preview:e.metafields_preview, needs_research:e.needs_research||'', status:e.status
+  }));
+  return `You are preparing the SYG manifest for bulk listing edits.\n\nRules:\n- Website SKU is the matching key. Do not change it.\n- Do not invent missing specs. Mark missing info as MISSING.\n- For Batch entries, preserve Abribook code, serial, health/test result, and notes.\n- For Universal entries, use the item type and typed fields to generate category-correct title, compact HTML description, and metafields.\n- Every final HTML description must include Shipping and Returns rows using the provided policy values.\n- Respect Needs Research. If an entry is Needs Research, explain what must be verified before listing.\n- If an entry is ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- Universal item types are CPU, GPU, Console, Laptop, Desktop, Phone, Motherboard.\n\nSHOPIFY METAFIELD KEYS (namespace: custom) — use ONLY these exact keys, no others:\n  type, brand, model, model_number, features, screen_size, color, connectivity,\n  processor, storage_capacity, operating_system, ram, gpu, mpn, network,\n  platform, release_year, game_name, upc\n\nPer item type, fill only the relevant keys:\n- Console:     type, brand, model, model_number, storage_capacity, color, network, mpn\n- Phone:       type, brand, model, model_number, storage_capacity, color, network, operating_system, screen_size, mpn, upc\n- Laptop:      type, brand, model, model_number, processor, ram, storage_capacity, gpu, operating_system, screen_size, mpn\n- Desktop:     type, brand, model, processor, ram, storage_capacity, gpu, operating_system, mpn\n- GPU:         type, brand, model, model_number, gpu, features, mpn\n- CPU:         type, brand, model, model_number, processor, platform, mpn\n- Motherboard: type, brand, model, model_number, platform, features, mpn\n\nDo NOT output keys like console_model, edition_storage, controller_included, cables_included, shipping, returns, or any other freeform keys not in the list above.\n\nReturn one completed row per Website SKU with these columns:\nWebsite SKU | Internal SKU | Item Type | Corrected Title | Final HTML Description | Final Metafields | Missing Info Warnings | Photo Reminder | Status\n\nBatch manifest data:\n${JSON.stringify(payload,null,2)}`;
+}
+function dpManifestPreviewText(){
+  const batchLines = dpEntries.map(dpLineFor).filter(Boolean);
+  const uniLines = uniEntriesData.map(uniEntryLine);
+  return batchLines.concat(uniLines).join('\n\n');
+}
+
+function updateGoalCounter(){
+  const total = dpEntries.length + uniEntriesData.length;
+  const input = document.getElementById('dailyGoalInput');
+  const pill = document.getElementById('dailyGoalPill');
+  const goal = parseInt(input?.value || '0', 10);
+  if(!pill) return;
+  pill.textContent = goal ? `${total} / ${goal}` : `${total} / —`;
+  pill.classList.toggle('goal-hit', !!goal && total >= goal);
+  if(goal && total >= goal && !goalCelebrated){
+    goalCelebrated = true;
+    smokeCelebrate(total, goal);
+  }
+  if(goal && total < goal) goalCelebrated = false;
+}
+function smokeCelebrate(total, goal){
+  const old = document.querySelector('.smoke-celebration');
+  if(old) old.remove();
+  const layer = document.createElement('div');
+  layer.className = 'smoke-celebration';
+  layer.innerHTML = `<div class="smoke-msg">Daily Goal Hit 🔥<span>${total} / ${goal} entries logged</span></div>`;
+  document.body.appendChild(layer);
+  setTimeout(()=>layer.remove(), 3900);
+}
+// Override preview updater so Batch + Universal show together.
+const _oldDpUpdatePreviewAll = dpUpdatePreviewAll;
+dpUpdatePreviewAll = function(){
+  dpEntries.forEach(e=>{
+    const skuEl = document.getElementById('dp-sku-'+e.id);
+    if(skuEl) skuEl.textContent = dpEntrySkuLabel(e);
+  });
+  const el = document.getElementById('dpPreviewAll');
+  if(el) el.textContent = dpManifestPreviewText();
+};
+
+async function syncManifestEntries(){
+  const entries = allManifestObjects();
+  if(!entries.length){ toast('No manifest entries to sync'); return; }
+  if(!LISTER_LOCKED){ toast('Lock lister + batch first'); return; }
+  let ok = 0, fail = 0;
+  for(const entry of entries){
+    try{
+      const body = {action:'upsert_entry', entry};
+      const r = await fetch(UNIVERSAL_GS_URL, {method:'POST', body:JSON.stringify(body)});
+      const j = await r.json();
+      if(j.ok) ok++; else fail++;
+    }catch(err){ fail++; }
+  }
+  toast('Universal Sheet sync: '+ok+' saved'+(fail?(', '+fail+' failed'):''));
+}
+
+
+// Universal tutorial modal
+let uniTutSlide = 0;
+function uniTutSlides(){ return [...document.querySelectorAll('[data-uni-slide]')]; }
+function renderUniTut(){
+  const slides = uniTutSlides();
+  slides.forEach((s,i)=>s.classList.toggle('active', i===uniTutSlide));
+  const counter = document.getElementById('uniTutCounter');
+  if(counter) counter.textContent = (uniTutSlide+1)+' of '+slides.length;
+  const progress = document.getElementById('uniTutProgress');
+  if(progress) progress.innerHTML = slides.map((_,i)=>`<span class="tut-pip ${i<=uniTutSlide?'done':''}"></span>`).join('');
+  const prev = document.getElementById('uniTutPrev');
+  const next = document.getElementById('uniTutNext');
+  if(prev) prev.style.visibility = uniTutSlide===0 ? 'hidden' : 'visible';
+  if(next) next.textContent = uniTutSlide === slides.length-1 ? 'Done' : 'Next →';
+}
+function openUniTutorial(){
+  uniTutSlide = 0;
+  renderUniTut();
+  const b = document.getElementById('uniTutBackdrop');
+  if(b) b.classList.remove('hidden');
+}
+function closeUniTutorial(){
+  const b = document.getElementById('uniTutBackdrop');
+  if(b) b.classList.add('hidden');
+  try{ localStorage.setItem('abribook:universal:tutorial:seen','1'); }catch(e){}
+}
+function maybeAutoOpenUniTutorial(){
+  try{
+    if(localStorage.getItem('abribook:universal:tutorial:seen') !== '1') setTimeout(openUniTutorial, 320);
+  }catch(e){ setTimeout(openUniTutorial, 320); }
+}
+if(document.getElementById('uniTutOpenBtn')) document.getElementById('uniTutOpenBtn').addEventListener('click', openUniTutorial);
+if(document.getElementById('uniTutClose')) document.getElementById('uniTutClose').addEventListener('click', closeUniTutorial);
+if(document.getElementById('uniTutPrev')) document.getElementById('uniTutPrev').addEventListener('click',()=>{ if(uniTutSlide>0){ uniTutSlide--; renderUniTut(); }});
+if(document.getElementById('uniTutNext')) document.getElementById('uniTutNext').addEventListener('click',()=>{ const slides=uniTutSlides(); if(uniTutSlide<slides.length-1){ uniTutSlide++; renderUniTut(); } else closeUniTutorial(); });
+if(document.getElementById('uniTutBackdrop')) document.getElementById('uniTutBackdrop').addEventListener('click',ev=>{ if(ev.target.id==='uniTutBackdrop') closeUniTutorial(); });
+renderUniTut();
+
+// Universal UI wiring
+if(document.getElementById('workPageSelect')){
+  document.getElementById('workPageSelect').addEventListener('change',e=>switchWorkPage(e.target.value));
+}
+['uniWebsiteSku','uniDesc','uniTesting','uniCondition','uniIssues','uniClaudeNotes','uniNeedsResearch','uniShippingPolicy','uniReturnPolicy'].forEach(id=>{
+  const el=document.getElementById(id); if(el) el.addEventListener('input', updateUniPreview);
+  if(el) el.addEventListener('change', updateUniPreview);
+});
+if(document.getElementById('uniItemType')) document.getElementById('uniItemType').addEventListener('change',()=>{
+  uniTypedFields = {};
+  renderUniDynamicFields();
+  updateUniPreview();
+});
+if(document.getElementById('dailyGoalInput')) document.getElementById('dailyGoalInput').addEventListener('input', updateGoalCounter);
+if(document.getElementById('uniToggleRaw')) document.getElementById('uniToggleRaw').addEventListener('click',()=>{
+  uniRawMode = !uniRawMode;
+  document.getElementById('uniHtmlPreview').style.display = uniRawMode ? 'none' : '';
+  document.getElementById('uniRawHtml').style.display = uniRawMode ? 'block' : 'none';
+  document.getElementById('uniToggleRaw').textContent = uniRawMode ? 'Preview' : 'Raw HTML';
+});
+if(document.getElementById('uniAddEntry')) document.getElementById('uniAddEntry').addEventListener('click',()=>{
+  const e = uniMakeFromForm();
+  if(!e.websiteSku){ toast('Universal entry needs the website SKU'); return; }
+  if(!e.desc){ toast('Describe the item/specs first'); return; }
+  uniEntriesData.push(e);
+  renderUniEntries();
+  clearUniForm();
+  toast('Universal entry added');
+});
+if(document.getElementById('uniEntries')) document.getElementById('uniEntries').addEventListener('click',ev=>{
+  const btn = ev.target.closest('[data-uniid]'); if(!btn) return;
+  const id = parseInt(btn.dataset.uniid);
+  uniEntriesData = uniEntriesData.filter(e=>e.id!==id);
+  renderUniEntries();
+});
+if(document.getElementById('dpSyncAll')) document.getElementById('dpSyncAll').addEventListener('click', syncManifestEntries);
+renderUniDynamicFields();
+updateUniPreview();
+renderUniEntries();
+updateGoalCounter();
 
 
 // ── Claude Manifest Initialization Prompt JS is loaded after modal HTML ──
@@ -2267,6 +3517,559 @@ If any line is ambiguous or a code is unresolvable, flag it before proceeding.`;
 
 // Start with one blank entry ready
 dpAddEntry();
+
+// ── Blitzting ────────────────────────────────────────────────────
+const SHOPIFY_MF_KEYS = ['type','brand','model','model_number','features','screen_size','color',
+  'connectivity','processor','storage_capacity','operating_system','ram','gpu','mpn',
+  'network','platform','release_year','game_name','upc'];
+
+// Tab switching
+document.getElementById('blitzTabClone').addEventListener('click',()=>{
+  document.getElementById('blitzTabClone').classList.add('on');
+  document.getElementById('blitzTabReview').classList.remove('on');
+  document.getElementById('blitzClone').classList.add('on');
+  document.getElementById('blitzReview').classList.remove('on');
+});
+document.getElementById('blitzTabReview').addEventListener('click',()=>{
+  document.getElementById('blitzTabReview').classList.add('on');
+  document.getElementById('blitzTabClone').classList.remove('on');
+  document.getElementById('blitzReview').classList.add('on');
+  document.getElementById('blitzClone').classList.remove('on');
+  blitzReviewInit();
+});
+
+// ── Template Clone ────────────────────────────────────────────────
+let _blitzSlotCount = 0;
+let _blitzSlotData = [];
+
+// Serial suggestion: detect numeric suffix pattern
+function blitzSuggestSerial(serials){
+  const last = serials.filter(Boolean).pop();
+  if(!last || last.length < 6) return null;
+  // Check if last N chars are hex digits
+  const m = last.match(/^([A-F0-9]*)([A-F0-9]{4,})$/i);
+  if(!m) return null;
+  try{
+    const prefix = m[1];
+    const suffix = m[2];
+    const next = (parseInt(suffix,16)+1).toString(16).toUpperCase().padStart(suffix.length,'0');
+    return prefix + next;
+  } catch(e){ return null; }
+}
+
+document.getElementById('blitzGenSlots').addEventListener('click',()=>{
+  const code    = document.getElementById('blitzMasterCode').value.trim();
+  const health  = document.getElementById('blitzMasterHealth').value.trim();
+  const notes   = document.getElementById('blitzMasterNotes').value.trim();
+  const count   = Math.min(20, Math.max(1, parseInt(document.getElementById('blitzCloneCount').value)||3));
+  const diffH   = document.getElementById('blitzDiffHealth').checked;
+  const diffS   = document.getElementById('blitzDiffSerial').checked;
+  const diffN   = document.getElementById('blitzDiffNotes').checked;
+
+  _blitzSlotCount = count;
+  _blitzSlotData  = Array.from({length:count}, ()=>({health, serial:'', notes}));
+
+  const wrap = document.getElementById('blitzSlots');
+  wrap.innerHTML = '';
+
+  for(let i=0;i<count;i++){
+    const slot = document.createElement('div');
+    slot.className = 'blitz-slot';
+    slot.id = 'blitz-slot-'+i;
+
+    const fieldsHtml = [];
+    if(diffH) fieldsHtml.push(`
+      <div>
+        <div class="blitz-clone-label">Health %</div>
+        <input class="blitz-clone-input" id="blitz-h-${i}" placeholder="${health||'%'}" value="${health}" autocomplete="off">
+      </div>`);
+    if(diffS) fieldsHtml.push(`
+      <div class="blitz-serial-wrap">
+        <div class="blitz-clone-label">Serial Number</div>
+        <input class="blitz-clone-input" id="blitz-s-${i}" placeholder="Serial" autocomplete="off">
+        <div class="blitz-serial-suggest" id="blitz-ss-${i}" style="display:none">
+          💡 Wan suggests: <b id="blitz-ssv-${i}"></b>
+          <button class="blitz-use-btn" data-slot="${i}">Use</button>
+        </div>
+      </div>`);
+    if(diffN) fieldsHtml.push(`
+      <div>
+        <div class="blitz-clone-label">Notes</div>
+        <input class="blitz-clone-input" id="blitz-n-${i}" placeholder="${notes||'Notes'}" value="${notes}" autocomplete="off">
+      </div>`);
+
+    const colClass = fieldsHtml.length === 1 ? 'one' : '';
+    slot.innerHTML = `
+      <div class="blitz-slot-head">
+        <span class="blitz-slot-num">${listerSKU(i+1)}</span>
+        <span style="font-size:12px;color:var(--ink-soft);">${esc(code)||'—'}</span>
+      </div>
+      <div class="blitz-slot-fields ${colClass}">${fieldsHtml.join('')}</div>`;
+    wrap.appendChild(slot);
+  }
+
+  // Wire serial suggestion
+  if(diffS){
+    for(let i=0;i<count;i++){
+      const inp = document.getElementById('blitz-s-'+i);
+      if(!inp) continue;
+      inp.addEventListener('input', ()=>{
+        const filled = Array.from({length:count},(_,j)=>(document.getElementById('blitz-s-'+j)||{}).value||'');
+        const suggest = blitzSuggestSerial(filled.slice(0,i+1));
+        for(let j=i+1;j<count;j++){
+          const ss = document.getElementById('blitz-ss-'+j);
+          const ssv = document.getElementById('blitz-ssv-'+j);
+          const sInp = document.getElementById('blitz-s-'+j);
+          if(!ss||!ssv||!sInp||sInp.value) continue;
+          if(suggest){
+            ssv.textContent = suggest;
+            ss.style.display = 'flex';
+          } else {
+            ss.style.display = 'none';
+          }
+        }
+      });
+    }
+    // Wire Use buttons
+    wrap.addEventListener('click', ev=>{
+      const btn = ev.target.closest('.blitz-use-btn');
+      if(!btn) return;
+      const j = parseInt(btn.dataset.slot);
+      const ssv = document.getElementById('blitz-ssv-'+j);
+      const inp = document.getElementById('blitz-s-'+j);
+      if(inp && ssv){ inp.value = ssv.textContent; inp.dispatchEvent(new Event('input')); }
+      document.getElementById('blitz-ss-'+j).style.display='none';
+    });
+  }
+
+  document.getElementById('blitzCopyAll').style.display = '';
+});
+
+document.getElementById('blitzCopyAll').addEventListener('click',()=>{
+  if(!LISTER_LOCKED){ toast('Lock in your name first'); return; }
+  const code   = document.getElementById('blitzMasterCode').value.trim();
+  const health = document.getElementById('blitzMasterHealth').value.trim();
+  const notes  = document.getElementById('blitzMasterNotes').value.trim();
+  const diffH  = document.getElementById('blitzDiffHealth').checked;
+  const diffS  = document.getElementById('blitzDiffSerial').checked;
+  const diffN  = document.getElementById('blitzDiffNotes').checked;
+
+  const lines = [];
+  for(let i=0;i<_blitzSlotCount;i++){
+    const h = diffH ? (document.getElementById('blitz-h-'+i)||{}).value||health : health;
+    const s = diffS ? (document.getElementById('blitz-s-'+i)||{}).value||'' : '';
+    const n = diffN ? (document.getElementById('blitz-n-'+i)||{}).value||notes : notes;
+    const hFmt = h ? h.replace(/%/g,'')+'% Health' : '';
+    let line = '*'+code+(hFmt?' '+hFmt:'')+(n?' '+n:'')+(s?' SN: '+s:'');
+    line += ' | SKU: '+listerSKU(i+1);
+    line += ' <!-- Listed by: '+(LISTER_INITIAL==='J'?'Juan':LISTER_INITIAL==='IS'?'Ibrahim':'Paul')+' ('+LISTER_INITIAL+') | NJ02 -->';
+    lines.push(line);
+  }
+  copyText(lines.join('\n'), ()=> toast('Copied '+_blitzSlotCount+' cloned entries'));
+});
+
+// ── Speed Review ──────────────────────────────────────────────────
+let _brQueue = [];
+let _brIdx   = 0;
+let _brSource = 'session'; // 'session' | 'shopify'
+let _brFlagged = [];
+
+document.getElementById('blitzSrcSession').addEventListener('click',()=>{
+  _brSource='session';
+  document.getElementById('blitzSrcSession').classList.add('on');
+  document.getElementById('blitzSrcShopify').classList.remove('on');
+  document.getElementById('blitzBatchFilter').style.display='none';
+  document.getElementById('blitzLoadShopify').style.display='none';
+  blitzReviewInit();
+});
+document.getElementById('blitzSrcShopify').addEventListener('click',()=>{
+  _brSource='shopify';
+  document.getElementById('blitzSrcShopify').classList.add('on');
+  document.getElementById('blitzSrcSession').classList.remove('on');
+  document.getElementById('blitzBatchFilter').style.display='';
+  document.getElementById('blitzLoadShopify').style.display='';
+});
+document.getElementById('blitzLoadShopify').addEventListener('click', blitzLoadShopify);
+
+async function blitzLoadShopify(){
+  const filter = document.getElementById('blitzBatchFilter').value.trim();
+  toast('Loading drafts from Shopify…');
+  try{
+    // Pull via Abribook GS proxy or direct Shopify API if available
+    // For now build from session entries as fallback
+    blitzReviewInit();
+    toast('Loaded from session — Shopify pull coming soon');
+  } catch(e){ toast('Could not load from Shopify'); }
+}
+
+function blitzReviewInit(){
+  // Build queue from session entries
+  _brQueue = dpEntries
+    .filter(e => e.code || e.websiteSku)
+    .map((e,i)=>({
+      id: e.id,
+      sku: dpEntrySkuLabel(e),
+      title: dpLineFor(e).split(' | ')[0].replace('*',''),
+      price: '',
+      qty: e.pairsOn ? (e.pairs||1) : 1,
+      metafields: {},
+      desc: dpLineFor(e),
+      flagged: false,
+      approved: false,
+    }));
+  _brIdx = 0;
+  _brFlagged = [];
+  blitzRenderReview();
+}
+
+function blitzRenderReview(){
+  const wrap = document.getElementById('blitzCardWrap');
+  const total = _brQueue.length;
+
+  if(!total){
+    wrap.innerHTML = '<div class="blitz-empty">No entries to review yet.<br>Add entries in Batch or Universal mode first.</div>';
+    document.getElementById('blitzProgressLabel').textContent = '';
+    document.getElementById('blitzProgressFill').style.width = '0%';
+    return;
+  }
+
+  const pending = _brQueue.filter(e=>!e.approved);
+  const done    = total - pending.length;
+  document.getElementById('blitzProgressLabel').textContent = done+' of '+total+' approved';
+  document.getElementById('blitzProgressFill').style.width = Math.round(done/total*100)+'%';
+
+  const flagged = _brQueue.filter(e=>e.flagged && !e.approved);
+  const fb = document.getElementById('blitzFlaggedBanner');
+  if(flagged.length){
+    fb.style.display='';
+    fb.textContent = '⚑ '+flagged.length+' flagged item'+(flagged.length>1?'s':'')+' — scroll down to review them';
+  } else { fb.style.display='none'; }
+
+  if(_brIdx >= _brQueue.length) _brIdx = _brQueue.length-1;
+  if(_brIdx < 0) _brIdx = 0;
+
+  const e = _brQueue[_brIdx];
+  if(!e){ wrap.innerHTML = '<div class="blitz-empty">All done! ✓</div>'; return; }
+
+  const mfInputs = SHOPIFY_MF_KEYS.map(k=>`
+    <div class="blitz-card-mf-item">
+      <label>${k.replace(/_/g,' ')}</label>
+      <input value="${esc(e.metafields[k]||'')}" data-mfkey="${k}" placeholder="—">
+    </div>`).join('');
+
+  wrap.innerHTML = `
+    <div class="blitz-card">
+      <div class="blitz-card-head">
+        <div class="blitz-card-title">${esc(e.title||e.sku)}</div>
+        ${e.flagged?'<span class="blitz-card-flag">⚑ Flagged</span>':''}
+      </div>
+      <div class="blitz-card-body">
+        <div class="blitz-card-meta">
+          <div class="blitz-card-field">
+            <label>Price</label>
+            <input id="brPrice" value="${esc(e.price)}" placeholder="0.00" type="text">
+          </div>
+          <div class="blitz-card-field">
+            <label>Qty</label>
+            <input id="brQty" value="${e.qty}" type="number" min="1">
+          </div>
+          <div class="blitz-card-field">
+            <label>SKU</label>
+            <input value="${esc(e.sku)}" readonly style="opacity:.6;cursor:default;">
+          </div>
+        </div>
+        <details class="blitz-card-metafields">
+          <summary>Metafields</summary>
+          <div class="blitz-card-mf-grid" id="brMfGrid">${mfInputs}</div>
+        </details>
+        <details class="blitz-card-desc">
+          <summary>Entry preview</summary>
+          <div class="blitz-card-desc-body">${esc(e.desc)}</div>
+        </details>
+      </div>
+      <div class="blitz-card-actions">
+        <button class="blitz-action approve" id="brApprove">✓ Approve</button>
+        <button class="blitz-action flag" id="brFlag">⚑ Flag</button>
+        <button class="blitz-action edit" id="brEdit">✎ Save edits</button>
+      </div>
+    </div>
+    <div class="blitz-kbd-legend">
+      <span><kbd class="blitz-kbd">A</kbd> Approve</span>
+      <span><kbd class="blitz-kbd">F</kbd> Flag</span>
+      <span><kbd class="blitz-kbd">E</kbd> Save edits</span>
+      <span><kbd class="blitz-kbd">→</kbd> Next</span>
+      <span><kbd class="blitz-kbd">←</kbd> Back</span>
+    </div>`;
+
+  // Wire actions
+  document.getElementById('brApprove').addEventListener('click', brApprove);
+  document.getElementById('brFlag').addEventListener('click', brFlag);
+  document.getElementById('brEdit').addEventListener('click', brSaveEdits);
+}
+
+function brSaveEdits(){
+  const e = _brQueue[_brIdx];
+  if(!e) return;
+  e.price = (document.getElementById('brPrice')||{}).value||e.price;
+  e.qty   = parseInt((document.getElementById('brQty')||{}).value)||e.qty;
+  document.querySelectorAll('#brMfGrid [data-mfkey]').forEach(inp=>{
+    e.metafields[inp.dataset.mfkey] = inp.value;
+  });
+  toast('Edits saved for '+e.sku);
+  blitzRenderReview();
+}
+
+function brApprove(){
+  const e = _brQueue[_brIdx];
+  if(!e) return;
+  brSaveEdits();
+  e.approved = true; e.flagged = false;
+  toast('✓ '+e.sku+' approved');
+  _brIdx++;
+  blitzRenderReview();
+}
+
+function brFlag(){
+  const e = _brQueue[_brIdx];
+  if(!e) return;
+  e.flagged = !e.flagged;
+  toast((e.flagged?'⚑ Flagged: ':'Unflagged: ')+e.sku);
+  _brIdx++;
+  blitzRenderReview();
+}
+
+// Keyboard shortcuts for Speed Review
+document.addEventListener('keydown', ev=>{
+  if(CURRENT_WORK_PAGE !== 'blitzting') return;
+  if(!document.getElementById('blitzReview')?.classList.contains('on')) return;
+  // Don't fire if focused on an input
+  if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
+  if(ev.key==='a'||ev.key==='A'){ ev.preventDefault(); brApprove(); }
+  else if(ev.key==='f'||ev.key==='F'){ ev.preventDefault(); brFlag(); }
+  else if(ev.key==='e'||ev.key==='E'){ ev.preventDefault(); brSaveEdits(); }
+  else if(ev.key==='ArrowRight'){ ev.preventDefault(); _brIdx=Math.min(_brIdx+1,_brQueue.length-1); blitzRenderReview(); }
+  else if(ev.key==='ArrowLeft'){ ev.preventDefault(); _brIdx=Math.max(_brIdx-1,0); blitzRenderReview(); }
+});
+
+// ── Welcome Screen ────────────────────────────────────────────────
+document.getElementById('welcomeWan').addEventListener('click', ()=>{
+  document.getElementById('welcomeBackdrop').classList.add('hidden');
+});
+document.getElementById('welcomeHaz').addEventListener('click', ()=>{
+  document.getElementById('welcomeBackdrop').classList.add('hidden');
+  hazOpen();
+});
+document.getElementById('hazBack').addEventListener('click', ()=>{
+  document.getElementById('hazWrap').classList.remove('show');
+  document.getElementById('welcomeBackdrop').classList.remove('hidden');
+});
+
+function hazOpen(){
+  document.getElementById('hazWrap').classList.add('show');
+  document.getElementById('hazItemInput').focus();
+}
+
+// ── Haz Logic ─────────────────────────────────────────────────────
+const HAZ_FEE_RATE  = 0.13;  // eBay fees
+const HAZ_OFFER_RATE = 0.40; // max offer = value * 0.40
+const HAZ_MIN_RESALE = 45;   // floor — don't buy if resale < $45
+
+let _hazVibe = null;
+
+// Vibe selection
+document.querySelectorAll('.haz-vibe-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.haz-vibe-btn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    _hazVibe = btn.dataset.vibe;
+    hazCheckReady();
+  });
+});
+
+document.getElementById('hazItemInput').addEventListener('input', hazCheckReady);
+
+function hazCheckReady(){
+  const hasItem = document.getElementById('hazItemInput').value.trim().length > 3;
+  const hasVibe = !!_hazVibe;
+  document.getElementById('hazAnalyzeBtn').disabled = !(hasItem && hasVibe);
+}
+
+document.getElementById('hazAnalyzeBtn').addEventListener('click', hazAnalyze);
+document.getElementById('hazReset').addEventListener('click', hazReset);
+
+function hazReset(){
+  document.getElementById('hazItemInput').value = '';
+  document.querySelectorAll('.haz-vibe-btn').forEach(b=>b.classList.remove('on'));
+  _hazVibe = null;
+  document.getElementById('hazResult').classList.remove('show');
+  document.getElementById('hazLoading').classList.remove('show');
+  document.getElementById('hazReset').style.display = 'none';
+  document.getElementById('hazAnalyzeBtn').disabled = true;
+  document.getElementById('hazItemInput').focus();
+}
+
+async function hazAnalyze(){
+  const itemText = document.getElementById('hazItemInput').value.trim();
+  if(!itemText || !_hazVibe) return;
+
+  document.getElementById('hazAnalyzeBtn').disabled = true;
+  document.getElementById('hazResult').classList.remove('show');
+  document.getElementById('hazLoading').classList.add('show');
+  document.getElementById('hazReset').style.display = 'none';
+
+  try{
+    // Step 1: Pull internal Shopify sold comps
+    const internalComps = await hazInternalComps(itemText);
+
+    // Step 2: Pull eBay sold comps via web search through Apps Script
+    const ebayComps = await hazEbayComps(itemText);
+
+    // Step 3: Build result
+    hazRenderResult(itemText, internalComps, ebayComps, _hazVibe);
+  } catch(err){
+    document.getElementById('hazLoading').classList.remove('show');
+    document.getElementById('hazAnalyzeBtn').disabled = false;
+    toast('Haz hit an error — try again');
+  }
+}
+
+async function hazInternalComps(itemText){
+  // Search Shopify orders for this item
+  try{
+    const r = await fetch(GS_URL+'?action=haz_internal&item='+encodeURIComponent(itemText)+'&t='+Date.now());
+    const j = await r.json();
+    if(j.ok && j.comps) return j.comps;
+  } catch(e){}
+  return [];
+}
+
+async function hazEbayComps(itemText){
+  // Use Apps Script to web search eBay sold listings
+  try{
+    const query = itemText.replace(/[^a-z0-9 ]/gi,' ').trim().split(/\s+/).slice(0,6).join(' ');
+    const r = await fetch(GS_URL, {
+      method:'POST',
+      body: JSON.stringify({action:'haz_ebay', query: query+' site:ebay.com sold'})
+    });
+    const j = await r.json();
+    if(j.ok && j.prices) return j.prices;
+  } catch(e){}
+  return [];
+}
+
+function hazCalcOffer(value, vibe){
+  const maxOffer = value * HAZ_OFFER_RATE;
+  // Vibe adjustments to opening offer
+  const vibeConfig = {
+    easy:      { openPct: 0.70, label: 'mid-range — likely to accept' },
+    tough:     { openPct: 0.40, label: 'start low — leave room to go up' },
+    desperate: { openPct: 0.30, label: 'open very low — they need the cash' },
+  };
+  const cfg = vibeConfig[vibe] || vibeConfig.easy;
+  const openOffer = Math.max(5, maxOffer * cfg.openPct);
+  return { maxOffer, openOffer, label: cfg.label };
+}
+
+function hazVibeScript(vibe, openOffer, maxOffer, title){
+  const open = '$'+Math.round(openOffer);
+  const max  = '$'+Math.round(maxOffer);
+  const scripts = {
+    easy: `"Hey, so I looked this up — for a <b>${title}</b> in this condition, best I can do is <b>${open}</b>. That work for you?"`,
+    tough: `"I hear you, but honestly the market on these has been soft lately. I can do <b>${open}</b> — that's where I need to be to make it work on my end. If you find better, totally understand."<br><br><b>If they push:</b> "I can stretch to ${max} but that's really my ceiling."`,
+    desperate: `"I appreciate you bringing it in. Based on what I am seeing, I can do <b>${open}</b> cash right now. I know it is not what you were hoping for but that is where I am at."`,
+  };
+  return scripts[vibe] || scripts.easy;
+}
+
+function hazRenderResult(itemText, internalComps, ebayComps, vibe){
+  document.getElementById('hazLoading').classList.remove('show');
+
+  // Determine best value estimate
+  let allPrices = [];
+  const compRowsHtml = [];
+
+  internalComps.forEach(c=>{
+    allPrices.push({price: c.price, weight: 1.4}); // internal weighted higher
+    compRowsHtml.push(`<div class="haz-comp-row">
+      <span class="haz-comp-source">${esc(c.title||'SYG sale')} <span class="haz-comp-badge internal">SYG</span></span>
+      <span class="haz-comp-price">$${c.price.toFixed(2)}</span>
+    </div>`);
+  });
+
+  ebayComps.forEach(c=>{
+    allPrices.push({price: c.price, weight: 1.0});
+    compRowsHtml.push(`<div class="haz-comp-row">
+      <span class="haz-comp-source">${esc(c.title||'eBay sold')} <span class="haz-comp-badge ebay">eBay</span></span>
+      <span class="haz-comp-price">$${c.price.toFixed(2)}</span>
+    </div>`);
+  });
+
+  // Fallback if no comps
+  if(!allPrices.length){
+    document.getElementById('hazLoading').classList.remove('show');
+    document.getElementById('hazResult').classList.add('show');
+    document.getElementById('hazResultTitle').textContent = itemText;
+    document.getElementById('hazResultCondition').textContent = 'No comp data found';
+    document.getElementById('hazCompRows').innerHTML = '<div style="font-size:12px;color:#9CA3AF;padding:4px 0;">No recent sold listings found for this item.</div>';
+    document.getElementById('hazCalcRows').innerHTML = '';
+    document.getElementById('hazVerdictCard').className = 'haz-verdict-card pass';
+    document.getElementById('hazVerdictIcon').textContent = '🔴';
+    document.getElementById('hazVerdictTitle').textContent = 'Cannot price — no comp data';
+    document.getElementById('hazOfferRange').textContent = 'Research required';
+    document.getElementById('hazScript').innerHTML = 'Tell the customer you need to look this up and will get back to them. Do not make an offer without comps.';
+    document.getElementById('hazReset').style.display = '';
+    return;
+  }
+
+  // Weighted average
+  const totalWeight = allPrices.reduce((s,x)=>s+x.weight,0);
+  const weightedAvg = allPrices.reduce((s,x)=>s+x.price*x.weight,0) / totalWeight;
+  const value = Math.round(weightedAvg * 100) / 100;
+
+  const {maxOffer, openOffer} = hazCalcOffer(value, vibe);
+  const fees = value * HAZ_FEE_RATE;
+  const net  = value - fees;
+
+  // Populate
+  document.getElementById('hazResultTitle').textContent = itemText.length > 60 ? itemText.slice(0,60)+'…' : itemText;
+  document.getElementById('hazResultCondition').textContent = allPrices.length+' comp'+(allPrices.length>1?'s':'')+' found · weighted avg $'+value.toFixed(2);
+  document.getElementById('hazCompRows').innerHTML = compRowsHtml.join('') || '<div style="font-size:12px;color:#9CA3AF">No comps</div>';
+
+  document.getElementById('hazCalcRows').innerHTML = `
+    <div class="haz-calc-row"><span>Haz estimate</span><span>$${value.toFixed(2)}</span></div>
+    <div class="haz-calc-row"><span>eBay fees (~13%)</span><span>−$${fees.toFixed(2)}</span></div>
+    <div class="haz-calc-row"><span>Net to SYG</span><span>$${net.toFixed(2)}</span></div>
+    <div class="haz-calc-row total"><span>Max offer (40%)</span><span>$${maxOffer.toFixed(2)}</span></div>`;
+
+  // Verdict
+  const belowFloor = value < HAZ_MIN_RESALE;
+  const tight = maxOffer < 20;
+  const verdictCard = document.getElementById('hazVerdictCard');
+  const vibeLabel = {easy:'Easy going',tough:'Tough',desperate:'Desperate'}[vibe];
+
+  if(belowFloor){
+    verdictCard.className = 'haz-verdict-card pass';
+    document.getElementById('hazVerdictIcon').textContent = '🔴';
+    document.getElementById('hazVerdictTitle').textContent = 'Pass — resale below $'+HAZ_MIN_RESALE+' floor';
+    document.getElementById('hazOfferRange').textContent = 'Do not buy';
+    document.getElementById('hazScript').innerHTML = '"Sorry, this one doesn\'t work for us — the market on it is too soft and we wouldn\'t be able to move it at a fair price for either of us."';
+  } else if(tight){
+    verdictCard.className = 'haz-verdict-card warn';
+    document.getElementById('hazVerdictIcon').textContent = '🟡';
+    document.getElementById('hazVerdictTitle').textContent = 'Tight — only buy if very low · Customer: '+vibeLabel;
+    document.getElementById('hazOfferRange').textContent = '$'+Math.round(openOffer)+'–$'+Math.round(maxOffer);
+    document.getElementById('hazScript').innerHTML = hazVibeScript(vibe, openOffer, maxOffer, itemText.split(' ').slice(0,4).join(' '));
+  } else {
+    verdictCard.className = 'haz-verdict-card good';
+    document.getElementById('hazVerdictIcon').textContent = '✅';
+    document.getElementById('hazVerdictTitle').textContent = 'Good buy · Customer: '+vibeLabel;
+    document.getElementById('hazOfferRange').textContent = '$'+Math.round(openOffer)+'–$'+Math.round(maxOffer);
+    document.getElementById('hazScript').innerHTML = hazVibeScript(vibe, openOffer, maxOffer, itemText.split(' ').slice(0,4).join(' '));
+  }
+
+  document.getElementById('hazResult').classList.add('show');
+  document.getElementById('hazReset').style.display = '';
+}
 
 </script>
 <!-- ── Claude Manifest Init Prompt button ── -->
