@@ -4452,39 +4452,86 @@ async function hazFillPO(card){
   });
 
   // ── Step 3: Generate Claude prompt ───────────────────────────
-  const modelLine   = sygModel ? `Model: ${sygModel}` : `Model: (pick closest match after selecting Make)`;
-  const newPONote   = poChoice === 'New PO'
-    ? `This is a NEW PO — click "Add Item" first to open the item form.`
-    : `Add to the EXISTING open PO — the item form should already be visible.`;
+  const newPONote = poChoice === 'New PO'
+    ? `NEW PO: Click the blue "+ Add Item" button (class: clickable-element bubble-element Button) to add an item row. Wait 2500ms for the item row to appear, then scroll down to y≈376 where the form fields appear.`
+    : `EXISTING PO: The item row is already in the cart. Click the blue "Edit" button on the item row (class: clickable-element bubble-element Button baUaDaEaP) to expand the form. Wait 2500ms then scroll to y≈376.`;
+
+  const modelLine = sygModel
+    ? `Model: "${sygModel}"`
+    : `Model: pick closest match — after Make is selected, click the Model slim-select (x≈959 y≈428) and wait 900ms for options to load`;
 
   const claudePrompt =
-`Fill a Purchase Order on buyer.sellyourgadgets.com.
+`Fill a Purchase Order on buyer.sellyourgadgets.com — PO page is already open with customer selected.
 
+== CONTEXT ==
+The form uses Bubble.io slim-select dropdowns (class: .ss-main). There are NO standard HTML selects.
+All item form fields appear BELOW the fold — scroll down after clicking Add Item or Edit.
+
+HOW TO OPERATE SLIM-SELECTS (use this exact pattern every time):
+1. el.click() — opens the dropdown
+2. await 800ms
+3. Find: [...document.querySelectorAll('.ss-option')].filter(o=>o.offsetParent!==null)
+4. Pick the option by exact text match, click it
+5. await 1500ms — Bubble needs time to react before next field
+
+== STEP 0: OPEN THE ITEM FORM ==
 ${newPONote}
 
-The page is already open with the customer selected. Fill the item form with these values:
+After opening, scroll window to y=300 so form fields are visible.
+Confirm slim-selects are present: [...document.querySelectorAll('.ss-main')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.y>100;})
+Expected slims at these Y positions (sorted): ~376 (Category), ~428 left (Make), ~428 right (Model), ~480 (Condition), ~532 (Color)
 
-Category: ${sygCategory}
-Make: ${sygMake || '(identify from item name)'}
+== STEP 1: CATEGORY (y≈376, width≈807px — full width) ==
+Target: const catSlim = [...document.querySelectorAll('.ss-main')].find(el=>{const r=el.getBoundingClientRect();return r.width>400&&r.y>350&&r.y<450;});
+Select: "${sygCategory}"
+
+After selecting category — check for a dialog with text "Changing the category will reset current item's fields"
+If found: click the "Proceed" button (find by textContent === 'Proceed', children.length === 0), await 1500ms
+
+== STEP 2: MAKE (y≈428, x≈549, width≈398px — LEFT dropdown) ==
+Target: const makeSlim = [...document.querySelectorAll('.ss-main')].find(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.y>410&&r.y<460&&r.x<700;});
+Select: "${sygMake || '(identify correct make from item name)'}"
+
+== STEP 3: MODEL (y≈428, x≈959, width≈398px — RIGHT dropdown, appears AFTER Make is selected) ==
+Target: const modelSlim = [...document.querySelectorAll('.ss-main')].find(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.y>410&&r.y<460&&r.x>800;});
 ${modelLine}
+Note: Model options load dynamically after Make — if no options appear on first click, click the slim again and wait 1500ms.
+
+== STEP 4: CONDITION (y≈480, full width) ==
+Target: const condSlim = [...document.querySelectorAll('.ss-main')].find(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.y>465&&r.y<500;});
+Select: "${sygCondition}"
+
+== STEP 5: COLOR (y≈532, full width) ==
+Target: const colorSlim = [...document.querySelectorAll('.ss-main')].find(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.y>515&&r.y<555;});
+Select: "${sygColor}"
+
+== STEP 6: EST + OFFER (plain text inputs, appear BELOW slims around y≈584 and y≈636) ==
+Use this to fill each:
+  const inp = [...document.querySelectorAll('input')].find(el=>el.offsetParent!==null&&el.placeholder==='Est');
+  const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;
+  nativeSetter.call(inp, '${estAmt}');
+  inp.dispatchEvent(new Event('input',{bubbles:true}));
+  inp.dispatchEvent(new Event('change',{bubbles:true}));
+
+Do the same for placeholder 'Offer' with value '${offerAmt}'.
+
+== STEP 7: SAVE ==
+Find: [...document.querySelectorAll('*')].find(el=>el.offsetParent!==null&&el.textContent?.trim()==='Save Changes'&&el.children.length===0)
+Click it. Await 2000ms. Confirm success by checking body text for "Edited item" or the item title appearing in the cart.
+
+== SUMMARY OF VALUES ==
+Category:  ${sygCategory}
+Make:      ${sygMake || '(identify from item)'}
+Model:     ${sygModel || '(pick closest after selecting make)'}
 Condition: ${sygCondition}
-Color: ${sygColor}
-Est value: $${estAmt}
-Offer: $${offerAmt}
+Color:     ${sygColor}
+Est:       $${estAmt}
+Offer:     $${offerAmt}
 
-IMPORTANT STEPS:
-1. ${poChoice === 'New PO' ? 'Click "Add Item" to open the item entry form' : 'The item form should be visible — proceed to fill it'}
-2. Click the Category slim-select (full-width dropdown at the top of the form) and select "${sygCategory}"
-3. If a dialog appears saying "Changing the category will reset current item's fields" — click the "Proceed" button
-4. Click the Make slim-select (left dropdown on the same row) and select "${sygMake||'the correct make'}"
-5. Click the Model slim-select (right dropdown on the same row) — wait for options to load — select "${sygModel||'the closest matching model'}"
-6. Set Condition to "${sygCondition}"
-7. Set Color to "${sygColor}"
-8. Find the Est input (placeholder "Est") and type ${estAmt}
-9. Find the Offer input (placeholder "Offer") and type ${offerAmt}
-10. Click "Save Changes"
-
-Slim-selects are custom dropdowns with class .ss-main. To pick an option: click the .ss-main element, wait 600ms for options to appear, then find the .ss-option element with matching text and click it, wait 1500ms for Bubble to react.`;
+== IMPORTANT NOTES ==
+- Do NOT use document.querySelector — always use querySelectorAll + filter by getBoundingClientRect position
+- After Save, there may be a second blank item row in the cart if Add Item was clicked multiple times — delete it
+- The Attributes / Functionalities / Cosmetics sections below Save are for staff to fill manually in the browser`;
 
   // ── Step 4: Show copy prompt ──────────────────────────────────
   const bubbleId = 'hazPoBubble_' + Date.now();
