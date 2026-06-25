@@ -839,6 +839,27 @@
   .haz-tut-next{padding:8px 20px;background:#16A34A;border:none;border-radius:var(--r-md);font:700 12px/1 var(--sans);color:#fff;cursor:pointer;margin-left:auto;}
   .haz-tut-next:hover{background:#15803D;}
   .haz-tut-counter{font-size:11px;color:#9CA3AF;font-family:var(--mono);}
+  /* Batch intake */
+  .haz-batch-wrap{display:flex;flex-direction:column;gap:0;}
+  .haz-batch-header{font-size:11px;font-weight:700;color:#4ADE80;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+  .haz-batch-list{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .haz-batch-row{background:rgba(0,0,0,.15);border-radius:8px;overflow:hidden;}
+  .haz-batch-row.pass{opacity:.6;}
+  .haz-batch-row.unknown{opacity:.7;}
+  .haz-batch-row-main{display:flex;align-items:center;gap:8px;padding:9px 11px;cursor:default;}
+  .haz-batch-row-name{font-size:12px;font-weight:600;color:#D1FAE5;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .haz-batch-row-range{font:700 12px/1 var(--mono);color:#4ADE80;white-space:nowrap;}
+  .haz-batch-expand{background:none;border:none;color:#4ADE80;font-size:11px;cursor:pointer;padding:2px 4px;flex:none;opacity:.7;}
+  .haz-batch-expand:hover{opacity:1;}
+  .haz-batch-row-tag{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:var(--r-pill);white-space:nowrap;}
+  .haz-batch-row-tag.red{background:#3A1A1A;color:#FCA5A5;}
+  .haz-batch-row-tag.yellow{background:#3A3010;color:#FCD34D;}
+  .haz-batch-detail{padding:8px 11px 10px;border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.1);}
+  .haz-batch-detail.hidden{display:none;}
+  .haz-batch-detail-row{display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);color:#9CA3AF;}
+  .haz-batch-detail-row:last-child{border:none;}
+  .haz-batch-totals{background:rgba(0,0,0,.2);border-radius:10px;padding:12px 13px;margin-top:4px;}
+  .haz-batch-total-label{font-size:10px;font-weight:700;color:#4ADE80;text-transform:uppercase;letter-spacing:.1em;}
   /* Quick reply chips */
   .haz-quick-replies{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px 4px;}
   .haz-qr{padding:7px 14px;border:1.5px solid #2D4A2D;border-radius:var(--r-pill);background:#1E2A1E;
@@ -4282,6 +4303,202 @@ function hazOpen(){
   // board always visible
 }
 
+// ── PO Automation — Fill company website via Claude API ──────────
+// Maps Haz card data to buyer.sellyourgadgets.com PO form fields
+
+// ── SYG Make/Model mapping from live form data ───────────────────
+const HAZ_SYG_MAKE_MODEL = {
+  'Video Game System': {
+    'Sony':      ['PlayStation 1 (PS1)','PlayStation 2 Fat (SCPH-30001)','PlayStation 2 Slim (SCPH-70001)','PlayStation 3 Slim (CECH-3001A)','PlayStation 3 Slim (CECH-3001B)','PlayStation 4 (CUH-1001A)','PlayStation 4 Slim (CUH-2015A)','PlayStation 4 Slim (CUH-2115A)','PlayStation 4 Slim (CUH-2115B)','PlayStation 4 Pro (CUH-7015B)','PlayStation 5 (CFI-1015A)','PlayStation 5 Digital (CFI-1015B)','PlayStation 5 Slim (CFI-2015)','PlayStation 5 Slim Digital (CFI-2015B)','PlayStation Portable PSP (1001)','PlayStation Portable PSP (2001)','PlayStation Portable PSP (3001)','PlayStation VR (CUH-ZVR1)','PlayStation VR (CUH-ZVR2)'],
+    'Microsoft': ['Xbox (2001)','Xbox One (1540) 2013','Xbox One S (1681) 2016','Xbox One S All-Digital Edition (1681) 2019','Xbox One X (1787) 2017','Xbox Series S (1883) 2020','Xbox Series X (1882) 2020'],
+    'Nintendo':  ['Nintendo 3DS (CTR-001) 2011','Nintendo 3DS XL (SPR-001)','Nintendo DS Lite (USG-001)','Nintendo DSi (TWL-001)','Nintendo Game Boy Advance SP','Nintendo Switch (HAC-001) 2017','Nintendo Switch (HAC-001-01) 2019','Nintendo Switch Lite (HDH-001) 2019','Nintendo Switch OLED (HEG-001) 2021','Nintendo Wii (RVL-001) 2006','Nintendo Wii U (WUP-101)'],
+    'Meta':      ['Meta Quest 2 (128GB)','Meta Quest 2 (256GB)','Meta Quest 3 (128GB)','Meta Quest 3 (512GB)','Meta Quest 3S (128GB)','Meta Quest Pro'],
+  },
+  'Cell Phone': {
+    'Apple':     ['iPhone 8','iPhone 8 Plus','iPhone X','iPhone XR','iPhone XS','iPhone XS Max','iPhone 11','iPhone 11 Pro','iPhone 11 Pro Max','iPhone 12','iPhone 12 Mini','iPhone 12 Pro','iPhone 12 Pro Max','iPhone 13','iPhone 13 Mini','iPhone 13 Pro','iPhone 13 Pro Max','iPhone 14','iPhone 14 Plus','iPhone 14 Pro','iPhone 14 Pro Max','iPhone 15','iPhone 15 Plus','iPhone 15 Pro','iPhone 15 Pro Max','iPhone 16','iPhone 16 Plus','iPhone 16 Pro','iPhone 16 Pro Max','iPhone SE 2nd Gen','iPhone SE 3rd Gen'],
+    'Samsung':   ['Galaxy A14 5G','Galaxy A15 5G','Galaxy A23 5G','Galaxy A35 5G','Galaxy A36 5G','Galaxy A37 5G','Galaxy A53 5G','Galaxy A54 5G','Galaxy S20','Galaxy S20 FE','Galaxy S20 Plus','Galaxy S20 Ultra','Galaxy S21','Galaxy S21 FE','Galaxy S21 Plus','Galaxy S21 Ultra','Galaxy S22','Galaxy S22 Plus','Galaxy S22 Ultra','Galaxy S23','Galaxy S23 Plus','Galaxy S23 Ultra','Galaxy S24','Galaxy S24 Plus','Galaxy S24 Ultra','Galaxy S25','Galaxy S26'],
+    'Google':    ['Pixel 6','Pixel 6 Pro','Pixel 7','Pixel 7 Pro','Pixel 7a','Pixel 8','Pixel 8 Pro','Pixel 8a','Pixel 9','Pixel 9 Pro'],
+    'Motorola':  ['Moto G Pure','Moto G Stylus','Moto G Power','Motorola Razr (2023)','Motorola Razr (2024)','Motorola Razr (2025)','Motorola Edge 50'],
+    'OnePlus':   ['OnePlus 12','OnePlus 13','OnePlus 13R'],
+  },
+  'Tablet': {
+    'Apple':     ['iPad (9th Gen)','iPad (10th Gen)','iPad Air 4th Gen','iPad Air 5th Gen','iPad Air 11-inch M2','iPad mini 5th Gen','iPad mini 6th Gen','iPad Pro 11-inch M1','iPad Pro 11-inch M2','iPad Pro 12.9-inch 3rd Gen','iPad Pro 12.9-inch 4th Gen','iPad Pro 12.9-inch 5th Gen','iPad Pro 12.9-inch 6th Gen'],
+    'Samsung':   ['Galaxy Tab A7 Lite','Galaxy Tab A8','Galaxy Tab A9','Galaxy Tab S6 Lite','Galaxy Tab S7','Galaxy Tab S8','Galaxy Tab S9'],
+  },
+  'Laptop': {
+    'Apple':     ['MacBook Air (M1) 2020','MacBook Air (M2) 2022','MacBook Air 11" 2015','MacBook Air 13" 2019','MacBook Air 13" 2020 (Intel)','MacBook Pro 13" 2016','MacBook Pro 13" 2017','MacBook Pro 13" 2018','MacBook Pro 13" 2019','MacBook Pro 13" 2020 (Intel)','MacBook Pro 13" 2020 (M1)','MacBook Pro 14" M1 Pro 2021','MacBook Pro 14" M2 Pro 2023','MacBook Pro 15" 2018','MacBook Pro 16" M1 Max 2021','MacBook Pro 16" M1 Pro 2021','MacBook Pro 16" M2 Max 2023'],
+    'Dell':      ['Inspiron 15 3000','Latitude 3420','Latitude 3550','Latitude 5480','Latitude 5490','Latitude 5540','Latitude 5550','Latitude E5550','Precision 5570','Precision M4600','XPS 13 9310','XPS 15 9500'],
+    'Lenovo':    ['IdeaPad 3','Legion 5i','Legion 7i','ThinkBook 14','ThinkPad E14','ThinkPad T14 Gen 3','ThinkPad T14s','ThinkPad X1 2-in-1 Gen 9','ThinkPad X1 Carbon Gen 9','ThinkPad X1 Carbon Gen 10','ThinkPad X1 Extreme'],
+    'HP':        ['15-fd Series','ENVY 13','ENVY x360','HP 15 (Intel N200)','Pavilion 15','ProBook 450 G9','ProBook x360 435 G7','Spectre x360 13','Spectre x360 14'],
+    'Acer':      ['Aspire 5','Nitro 5','Predator Helios Neo 14','Swift 3'],
+    'Asus':      ['ROG Zephyrus G14','ROG Zephyrus G16','TUF Gaming A15','TUF Gaming F16','VivoBook 15'],
+    'Microsoft': ['Surface Laptop 4','Surface Laptop 5','Surface Laptop Go 2','Surface Pro 8','Surface Pro 9'],
+  },
+};
+
+// Fuzzy match item title to a SYG make/model pair
+function hazItemToMakeModel(item, category) {
+  const lo = item.toLowerCase();
+  const catMap = HAZ_SYG_MAKE_MODEL[category];
+  if(!catMap) return {make:'', model:''};
+
+  // Try each make
+  for(const [make, models] of Object.entries(catMap)) {
+    const makeLo = make.toLowerCase();
+    if(!lo.includes(makeLo) && !(makeLo==='apple' && /macbook|iphone|ipad/.test(lo)) &&
+       !(makeLo==='microsoft' && /xbox/.test(lo)) &&
+       !(makeLo==='sony' && /playstation|ps[3-5]/.test(lo)) &&
+       !(makeLo==='nintendo' && /switch|3ds|wii/.test(lo)) &&
+       !(makeLo==='meta' && /quest/.test(lo)) &&
+       !(makeLo==='samsung' && /galaxy/.test(lo))) continue;
+
+    // Try to match a model
+    let bestModel = '';
+    let bestScore = 0;
+    for(const model of models) {
+      const mlo = model.toLowerCase();
+      // Score by how many words of the model appear in the item title
+      const words = mlo.split(/[\s\(\)]+/).filter(w=>w.length>2);
+      const score = words.filter(w=>lo.includes(w)).length;
+      if(score > bestScore) { bestScore = score; bestModel = model; }
+    }
+    if(bestScore > 0) return {make, model: bestModel};
+    return {make, model: ''};
+  }
+  return {make:'', model:''};
+}
+
+function hazCategoryToSYG(category, itemText){
+  const lo = (itemText||'').toLowerCase();
+  if(/ps5|ps4|ps3|xbox|nintendo|switch|console|quest|psp/.test(lo)) return 'Video Game System';
+  if(/iphone|galaxy s\d|pixel \d|smartphone|cell.?phone/.test(lo)) return 'Cell Phone';
+  if(/ipad|galaxy tab|tablet/.test(lo)) return 'Tablet';
+  if(/macbook|laptop|thinkpad|notebook|chromebook/.test(lo)) return 'Laptop';
+  if(/desktop|optiplex|prodesk|gaming.?pc|tower/.test(lo)) return 'Desktop Computer';
+  if(/rtx|gtx|gpu|graphics.?card|geforce|radeon/.test(lo)) return 'Graphics Card';
+  if(/ssd|nvme|hard.?drive|hdd/.test(lo)) return 'Computer Parts';
+  if(/ram|ddr|memory|sodimm/.test(lo)) return 'Computer Parts';
+  if(/airpods|headphones|beats|earbuds/.test(lo)) return 'Headphones';
+  if(/smartwatch|watch|garmin|apple.?watch/.test(lo)) return 'Smart Watch';
+  if(/camera|camcorder/.test(lo)) return 'Camcorders';
+  if(/controller|gamepad/.test(lo)) return 'Video Game Controller';
+  if(/motherboard/.test(lo)) return 'Computer Parts';
+  return 'Accessory';
+}
+
+function hazConditionToSYG(condition){
+  const lo = (condition||'').toLowerCase();
+  if(/like.?new|mint|sealed|brand.?new/.test(lo)) return 'Like New';
+  if(/for.?parts|parts.?only|broken|not.?work/.test(lo)) return 'Broken';
+  if(/heavy.?wear|poor/.test(lo)) return 'Used - C';
+  if(/good|minor|light/.test(lo)) return 'Used - A';
+  if(/used/.test(lo)) return 'Used - B';
+  return 'Used - A';
+}
+
+function hazDetectColor(itemText){
+  const lo = (itemText||'').toLowerCase();
+  if(/space.?gray|space.?grey/.test(lo)) return 'Space Gray';
+  if(/silver/.test(lo)) return 'Silver';
+  if(/black|midnight/.test(lo)) return 'Black';
+  if(/white|starlight/.test(lo)) return 'White';
+  if(/blue/.test(lo)) return 'Blue';
+  if(/red/.test(lo)) return 'Red';
+  if(/purple/.test(lo)) return 'Purple';
+  if(/gold/.test(lo)) return 'Gold';
+  if(/pink/.test(lo)) return 'Pink';
+  if(/green/.test(lo)) return 'Green';
+  if(/yellow/.test(lo)) return 'Yellow';
+  return 'Black';
+}
+
+async function hazFillPO(card){
+  const sygCategory  = hazCategoryToSYG(card.category||'', card.item||'');
+  const sygCondition = hazConditionToSYG(card.condition||'');
+  const sygColor     = hazDetectColor(card.item||'');
+  const {make: sygMake, model: sygModel} = hazItemToMakeModel(card.item||'', sygCategory);
+  const offerAmt = String(card.acceptedPrice||'').replace(/[^0-9.]/g,'') || String(card.openOff||'');
+  const estAmt   = String(card.value||'');
+
+  // ── Step 1: Customer warning ──────────────────────────────────
+  const ready = await new Promise(resolve => {
+    hazAddBubble('haz',
+      `<div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12.5px;color:#92400E;margin-bottom:6px;">`
+      +`⚠️ <b>Customer must be selected first.</b><br>`
+      +`Before Claude can fill the PO, make sure you've already:<br>`
+      +`<ol style="margin:6px 0 0 16px;padding:0;line-height:1.9;">`
+      +`<li>Opened <b>buyer.sellyourgadgets.com → New Order</b></li>`
+      +`<li>Selected or registered the customer</li>`
+      +`<li>Left that page open on the <b>Shopping Cart</b> tab</li>`
+      +`</ol></div>`
+      +`Is the customer already selected and the page ready?`,
+      true
+    );
+    hazShowQuickReplies(['Yes, page is ready', 'Not yet'], resolve);
+  });
+
+  if(ready === 'Not yet'){
+    hazAddBubble('haz',
+      `No problem — go to <b>buyer.sellyourgadgets.com → New Order</b>, select the customer, then come back and tap Fill PO again.`,
+      true
+    );
+    return;
+  }
+
+  // ── Step 2: New PO vs existing ────────────────────────────────
+  const poChoice = await new Promise(resolve => {
+    hazAddBubble('haz', `Is this a new PO or should I add to the one already open?`, true);
+    hazShowQuickReplies(['New PO', 'Add to existing'], resolve);
+  });
+
+  // ── Step 3: Generate Claude prompt ───────────────────────────
+  const modelLine   = sygModel ? `Model: ${sygModel}` : `Model: (pick closest match after selecting Make)`;
+  const newPONote   = poChoice === 'New PO'
+    ? `This is a NEW PO — click "Add Item" first to open the item form.`
+    : `Add to the EXISTING open PO — the item form should already be visible.`;
+
+  const claudePrompt =
+`Fill a Purchase Order on buyer.sellyourgadgets.com.
+
+${newPONote}
+
+The page is already open with the customer selected. Fill the item form with these values:
+
+Category: ${sygCategory}
+Make: ${sygMake || '(identify from item name)'}
+${modelLine}
+Condition: ${sygCondition}
+Color: ${sygColor}
+Est value: $${estAmt}
+Offer: $${offerAmt}
+
+IMPORTANT STEPS:
+1. ${poChoice === 'New PO' ? 'Click "Add Item" to open the item entry form' : 'The item form should be visible — proceed to fill it'}
+2. Click the Category slim-select (full-width dropdown at the top of the form) and select "${sygCategory}"
+3. If a dialog appears saying "Changing the category will reset current item's fields" — click the "Proceed" button
+4. Click the Make slim-select (left dropdown on the same row) and select "${sygMake||'the correct make'}"
+5. Click the Model slim-select (right dropdown on the same row) — wait for options to load — select "${sygModel||'the closest matching model'}"
+6. Set Condition to "${sygCondition}"
+7. Set Color to "${sygColor}"
+8. Find the Est input (placeholder "Est") and type ${estAmt}
+9. Find the Offer input (placeholder "Offer") and type ${offerAmt}
+10. Click "Save Changes"
+
+Slim-selects are custom dropdowns with class .ss-main. To pick an option: click the .ss-main element, wait 600ms for options to appear, then find the .ss-option element with matching text and click it, wait 1500ms for Bubble to react.`;
+
+  // ── Step 4: Show copy prompt ──────────────────────────────────
+  hazAddBubble('haz',
+    `<div style="font-size:12px;line-height:1.7;">`
+    +`<b style="color:#4ADE80;">✅ Ready.</b> Copy the prompt below and paste it into Claude chat (this window or a new one). Claude in Chrome will take over from there.<br><br>`
+    +`<div style="background:#0a1208;border:1px solid #2D4A2D;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:10.5px;color:#86EFAC;white-space:pre-wrap;max-height:200px;overflow-y:auto;line-height:1.6;">${esc(claudePrompt)}</div>`
+    +`<button onclick="navigator.clipboard.writeText(${JSON.stringify(claudePrompt)}).then(()=>{this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Copy prompt',2000)})" `
+    +`style="margin-top:8px;width:100%;padding:9px;background:#16A34A;border:none;border-radius:8px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;">📋 Copy prompt</button>`
+    +`<div style="margin-top:8px;font-size:11px;color:#6B7280;">Paste into Claude → Claude in Chrome will navigate to the PO page and fill every field automatically.</div>`
+    +`</div>`,
+    true
+  );
+}
+
 // ── Haz Tutorial ──────────────────────────────────────────────────
 (function(){
   const SLIDES = 8;
@@ -4616,145 +4833,240 @@ function hazHelperFinish(){
 }
 
 // ── Haz Logic ─────────────────────────────────────────────────────
-// ── Haz Store Price Database (SYG sold orders + active listings) ──────
-// Sources: sold = confirmed sell-through price, active = current asking price
-// Sold prices are weighted higher in matching — they reflect real market value
+// ── Haz Store Price Database — SYG Elmwood Park ─────────────────
+// All prices from actual confirmed sales + active listings
+// Last updated: June 25 2026 · 130+ entries
+// Run "update Haz pricing" to refresh from Shopify
+const HAZ_STORE_PRICES = [
+  // ── CONSOLES ─────────────────────────────────────────────────
+  {title:"Sony PS5 Slim Disc Edition 1TB",        keywords:["ps5 slim disc","ps5 slim standard","cfi-2015 disc","playstation 5 slim disc"], price:449.97, source:"sold"},
+  {title:"Sony PS5 Slim Digital Edition 1TB",     keywords:["ps5 slim digital","ps5 digital","cfi-2015","ps5 slim"], price:300.00, source:"sold"},
+  {title:"Sony PlayStation 5",                    keywords:["ps5","playstation 5","sony ps5"], price:350.00, source:"active"},
+  {title:"Sony PS4 Slim 1TB w/ Controller",       keywords:["ps4 slim 1tb","playstation 4 slim","cuh-2115b"], price:119.99, source:"sold"},
+  {title:"Sony PlayStation 4 Grade C",            keywords:["ps4 grade c","ps4 console only","ps4 no controller"], price:91.95, source:"active"},
+  {title:"Sony PlayStation 4",                    keywords:["ps4","playstation 4"], price:100.00, source:"active"},
+  {title:"Sony PlayStation 3 Slim 320GB",         keywords:["ps3 slim","ps3 320gb","cech-3001b","playstation 3 slim"], price:79.99, source:"sold"},
+  {title:"Sony PlayStation VR Bundle",            keywords:["playstation vr","psvr","cuh-zvr2","ps vr bundle"], price:110.00, source:"sold"},
+  {title:"Sony PSP Slim For Parts",               keywords:["psp for parts","psp-2001","playstation portable parts"], price:29.99, source:"active"},
+  {title:"Microsoft Xbox Series X 1TB",           keywords:["xbox series x","series x 1tb","xbox 1880"], price:439.99, source:"sold"},
+  {title:"Microsoft Xbox Series S 512GB",         keywords:["xbox series s","series s","xbox s 512gb","xbox 1883"], price:239.99, source:"sold"},
+  {title:"Microsoft Xbox One S 500GB Bundle",     keywords:["xbox one s 500gb bundle","xbox one s 1681 bundle","xbox 1681 bundle"], price:159.97, source:"sold"},
+  {title:"Microsoft Xbox One S 500GB",            keywords:["xbox one s","xbox one s 500gb","xbox 1681"], price:99.99, source:"active"},
+  {title:"Microsoft Xbox One 512GB",              keywords:["xbox one 512gb","xbox one 1540 512","xbox one black"], price:67.89, source:"sold"},
+  {title:"Microsoft Xbox One 500GB",              keywords:["xbox one 500gb","xbox one 1540","original xbox one"], price:64.99, source:"sold"},
+  {title:"Nintendo Switch OLED Zelda Edition",    keywords:["switch oled zelda","switch oled tears of kingdom","heg-001 zelda"], price:179.99, source:"active"},
+  {title:"Nintendo Switch OLED",                  keywords:["switch oled","nintendo switch oled","heg-001"], price:200.00, source:"active"},
+  {title:"Nintendo Switch",                       keywords:["nintendo switch","switch console","switch v2","hac-001-01"], price:160.00, source:"active"},
+  {title:"Nintendo Switch Lite For Parts",        keywords:["switch lite for parts","switch lite parts","hdh-001 parts"], price:49.99, source:"sold"},
+  {title:"Nintendo Switch For Parts",             keywords:["switch for parts","nintendo switch parts","hac-001 parts"], price:74.99, source:"sold"},
+  {title:"Meta Quest 3S 128GB VR",               keywords:["meta quest 3s","quest 3s","meta quest vr","quest vr"], price:199.99, source:"sold"},
+  // ── PHONES ───────────────────────────────────────────────────
+  {title:"Apple iPhone 13 Pro Max 256GB BH100%",  keywords:["iphone 13 pro max 256gb","iphone 13 pro max bh100","a2484 256gb"], price:349.99, source:"sold"},
+  {title:"Apple iPhone 13 Mini 256GB BH100%",     keywords:["iphone 13 mini 256gb","iphone 13 mini bh100","a2481"], price:209.99, source:"sold"},
+  {title:"Apple iPhone 13 256GB For Parts",       keywords:["iphone 13 256gb parts","iphone 13 pink parts","a2482 256"], price:159.54, source:"sold"},
+  {title:"Apple iPhone 13 128GB For Parts",       keywords:["iphone 13 for parts","iphone 13 parts","iphone 13 128gb parts"], price:139.99, source:"sold"},
+  {title:"Apple iPhone 14 Pro Max 256GB For Parts",keywords:["iphone 14 pro max parts","14 pro max for parts"], price:349.99, source:"sold"},
+  {title:"Apple iPhone 14 Pro Max 256GB For Parts BH100%",keywords:["iphone 14 pro max bh100 parts","iphone 14 pro max space black parts"], price:379.99, source:"active"},
+  {title:"Apple iPhone 14 Pro Max 256GB Active",  keywords:["iphone 14 pro max 256 active","iphone 14 pro max verizon parts"], price:179.99, source:"active"},
+  {title:"Apple iPhone 14 256GB BH76% For Parts", keywords:["iphone 14 256gb bh76","iphone 14 blue parts","a2649 bh76"], price:214.99, source:"sold"},
+  {title:"Samsung Galaxy S26 256GB",              keywords:["galaxy s26","samsung s26","sm-s942u"], price:529.99, source:"sold"},
+  {title:"Samsung Galaxy S24 128GB Unlocked",     keywords:["galaxy s24","samsung s24 128gb","sm-s921u"], price:279.99, source:"sold"},
+  {title:"Samsung Galaxy S23 Ultra 512GB",        keywords:["galaxy s23 ultra 512gb","sm-s918u 512gb","s23 ultra verizon"], price:364.99, source:"active"},
+  {title:"Samsung Galaxy S20 FE Cracked Screen",  keywords:["galaxy s20 fe cracked","s20 fe parts","sm-g781v cracked"], price:54.99, source:"sold"},
+  {title:"Samsung Galaxy A37 5G 128GB",           keywords:["galaxy a37","samsung a37","sm-s376v"], price:99.99, source:"sold"},
+  {title:"Motorola Razr 2025 256GB Unlocked",     keywords:["motorola razr 2025","razr xt2553","motorola razr"], price:246.97, source:"sold"},
+  {title:"OnePlus 13R 256GB Unlocked",            keywords:["oneplus 13r","one plus 13r","13r nebula noir"], price:419.99, source:"sold"},
+  // ── TABLETS ──────────────────────────────────────────────────
+  {title:"Apple iPad 10th Gen 64GB WiFi",         keywords:["ipad 10th gen","ipad 10 64gb","a2696 ipad"], price:229.99, source:"sold"},
+  {title:"Apple iPad mini 5 64GB WiFi",           keywords:["ipad mini 5","ipad mini 5th gen","a2133 mini"], price:129.99, source:"active"},
+  {title:"Apple iPad Pro 11 M1 128GB WiFi+Cellular",keywords:["ipad pro 11 m1","ipad pro 11 cellular","a2301"], price:374.99, source:"sold"},
+  {title:"Apple iPad Pro 12.9 3rd Gen 64GB",      keywords:["ipad pro 12.9 3rd","ipad pro 12.9 64gb","a1876"], price:252.97, source:"sold"},
+  {title:"Samsung Galaxy Tab A7 Lite 32GB",       keywords:["galaxy tab a7 lite","samsung tab a7","sm-t220"], price:39.99, source:"sold"},
+  {title:"Acer Iconia One 7 8GB",                 keywords:["acer iconia tab","iconia one 7","b1-730 tablet"], price:19.99, source:"active"},
+  // ── LAPTOPS ──────────────────────────────────────────────────
+  {title:"Asus Zephyrus G16 Ultra 9 RTX 5070 Ti 32GB", keywords:["asus zephyrus g16","zephyrus g16 rtx 5070 ti","asus ultra 9 5070ti"], price:2090.00, source:"sold"},
+  {title:"Acer Predator Helios Neo 14 RTX 5070 32GB",keywords:["acer predator helios","predator helios neo","rtx 5070 laptop"], price:1249.99, source:"sold"},
+  {title:"Apple MacBook Pro 16 M1 Max 64GB 1TB",  keywords:["macbook pro 16 m1 max","macbook m1 max 64gb","a2485 m1 max"], price:1249.99, source:"sold"},
+  {title:"Apple MacBook Pro 14 M2 Pro 16GB 1TB",  keywords:["macbook pro 14 m2 pro","macbook m2 pro 14","a2279 m2 pro"], price:949.99, source:"active"},
+  {title:"Apple MacBook Pro 16 M1 Pro 16GB 512GB",keywords:["macbook pro 16 m1 pro","macbook m1 pro 512gb","a2485 m1 pro"], price:699.99, source:"active"},
+  {title:"Lenovo Legion 7i Core i9 RTX 4070 32GB",keywords:["lenovo legion 7i","legion 7i rtx 4070","legion i9 14900hx"], price:1399.99, source:"sold"},
+  {title:"ASUS TUF Gaming F16 i5 RTX 5050",      keywords:["asus tuf f16","tuf gaming f16","asus rtx 5050"], price:999.99, source:"active"},
+  {title:"Lenovo ThinkPad X1 2-in-1 Gen 9 Core Ultra 5",keywords:["thinkpad x1 2-in-1","x1 2in1 gen 9","thinkpad 2 in 1"], price:825.97, source:"sold"},
+  {title:"Dell Precision 5570 i7-12800H RTX A2000", keywords:["dell precision 5570","precision 5570 rtx","precision 5570 i7"], price:699.99, source:"sold"},
+  {title:"Lenovo T14 Gen 3 i7 16GB 512GB",        keywords:["lenovo t14 gen 3","t14 g3","lenovo t14 i7"], price:359.99, source:"sold"},
+  {title:"Lenovo ThinkPad X1 Carbon Gen 9 i7",    keywords:["thinkpad x1 carbon gen 9","x1 carbon g9","thinkpad x1 carbon i7"], price:349.99, source:"sold"},
+  {title:"Apple MacBook Air 2020 13 i5 8GB",      keywords:["macbook air 2020","macbook a2289","macbook air i5 2020"], price:244.99, source:"sold"},
+  {title:"Dell Latitude 5450 Core Ultra 5 16GB",  keywords:["dell latitude 5450","latitude 5450 ultra 5","latitude 5450"], price:219.99, source:"sold"},
+  {title:"HP ProBook x360 435 G7 Ryzen 5 16GB",   keywords:["hp probook x360","probook 435 g7"], price:154.99, source:"sold"},
+  {title:"Apple MacBook Pro 13 2016 TouchBar i5", keywords:["macbook pro touchbar 2016","a1706 2016"], price:159.99, source:"sold"},
+  {title:"Apple MacBook Pro 13 2016 i5 8GB",      keywords:["macbook pro 13 2016","a1708 2016"], price:154.99, source:"sold"},
+  {title:"Apple MacBook Air 2019 13 i5 8GB",      keywords:["macbook air 2019","macbook a1932"], price:170.00, source:"sold"},
+  {title:"Apple MacBook Pro 13 2020 For Parts",   keywords:["macbook pro 13 2020 parts","a2289 parts","macbook pro 2020 for parts"], price:84.99, source:"active"},
+  {title:"HP ProDesk 4 Mini G1i Core Ultra 5 16GB",keywords:["hp prodesk mini","prodesk g1i","hp mini desktop ultra"], price:509.99, source:"sold"},
+  {title:"Dell Latitude 3550 i3 8GB 256GB",       keywords:["dell latitude 3550","latitude 3550 i3"], price:129.99, source:"sold"},
+  {title:"HP Spectre 13 i7 8GB 256GB",            keywords:["hp spectre 13","spectre 13-4101","hp spectre i7 5500u"], price:100.99, source:"sold"},
+  {title:"HP 15 Intel N200 4GB 128GB",            keywords:["hp 15 n200","hp laptop n200","hp 15-fd"], price:99.99, source:"sold"},
+  {title:"HP 15 Celeron 4GB 128GB",               keywords:["hp 15 celeron","hp 15 n4020","hp chromebook 11 parts"], price:35.99, source:"active"},
+  {title:"Dell Precision M4600 i7 16GB",          keywords:["dell precision m4600","precision m4600"], price:82.97, source:"sold"},
+  {title:"Samsung NP470R5E i7 8GB HDD",           keywords:["samsung np470r5e","samsung laptop i7 3537u"], price:69.99, source:"sold"},
+  {title:"Dell Latitude E5550 i5 12GB For Parts", keywords:["latitude e5550","dell e5550","latitude 5550 parts"], price:71.97, source:"sold"},
+  {title:"Dell Latitude 5480 For Parts",          keywords:["dell latitude 5480","latitude 5480 parts"], price:44.99, source:"sold"},
+  {title:"Dell Inspiron 15 3000 i3 For Parts",    keywords:["dell inspiron 15 parts","inspiron 3000 parts","dell i3 parts"], price:39.99, source:"active"},
+  {title:"HP 15 For Parts No Power",              keywords:["hp 15 no power","hp laptop for parts","hp 15-dy for parts"], price:64.99, source:"sold"},
+  {title:"Apple MacBook Pro 15 2018 Logic Board", keywords:["macbook pro 15 logic board","a1990 logic board","820-01041"], price:117.97, source:"sold"},
+  {title:"Lot 9 Mixed Chromebooks For Parts",     keywords:["chromebook lot","chromebook bulk","mixed chromebooks"], price:139.00, source:"sold"},
+  // ── DESKTOPS ─────────────────────────────────────────────────
+  {title:"Custom Gaming Desktop i7-12700K RTX 3070 Ti", keywords:["gaming desktop 3070ti","gaming pc 12700k","custom gaming rtx 3070 ti"], price:775.00, source:"sold"},
+  {title:"Custom Desktop Ryzen 7 2700X RX 6800 XT",keywords:["custom desktop ryzen 7","ryzen 7 2700x desktop","rx 6800xt desktop"], price:550.00, source:"sold"},
+  {title:"Acer N50-640 Desktop i5 RTX 3050 16GB", keywords:["acer n50 desktop","acer desktop i5 rtx 3050","acer n50-640"], price:585.97, source:"sold"},
+  {title:"Dell Inspiron 3030s SFF i5-14400 8GB",  keywords:["dell inspiron 3030s","dell sff i5 14400","inspiron 3030"], price:379.99, source:"active"},
+  {title:"Dell OptiPlex 5080 Micro i7 16GB",      keywords:["dell optiplex 5080","optiplex 5080 i7"], price:189.99, source:"sold"},
+  {title:"Dell OptiPlex 3050 Micro i5 8GB",       keywords:["dell optiplex 3050","optiplex 3050 micro","optiplex 3050 i5"], price:66.66, source:"sold"},
+  {title:"Dell OptiPlex 3070 Micro Untested",     keywords:["dell optiplex 3070","optiplex 3070 untested","optiplex 3070 no power"], price:54.97, source:"sold"},
+  // ── GPUs ─────────────────────────────────────────────────────
+  {title:"MSI RTX 4090 SUPRIM Liquid X 24GB",     keywords:["rtx 4090","msi rtx 4090","rtx 4090 suprim"], price:2499.99, source:"sold"},
+  {title:"ASRock RX 7900 XTX 24GB Damaged PCB",   keywords:["rx 7900 xtx damaged","7900 xtx pcb damage","asrock 7900 xtx"], price:559.99, source:"active"},
+  {title:"EVGA RTX 2070 XC Ultra 8GB",            keywords:["rtx 2070","evga 2070","geforce rtx 2070"], price:159.99, source:"sold"},
+  {title:"Gigabyte GTX 1070 8GB For Parts",       keywords:["gtx 1070 parts","1070 for parts"], price:49.99, source:"sold"},
+  {title:"NVIDIA Quadro M5000 8GB",               keywords:["quadro m5000","nvidia quadro m5000"], price:74.99, source:"sold"},
+  {title:"Intel Core i7-8700K Desktop Processor", keywords:["i7-8700k","intel i7 8700k","core i7 8700k"], price:69.99, source:"sold"},
+  // ── STORAGE — Samsung ────────────────────────────────────────
+  {title:"Samsung 870 EVO 2TB SATA 32% Health",   keywords:["870 evo 2tb low","samsung 870 evo 2tb 32%","mz-77e2t0 low"], price:129.99, source:"sold"},
+  {title:"Samsung 870 EVO 1TB SATA 94% Health",   keywords:["870 evo 1tb","samsung 870 evo","mz-77e1t0"], price:129.99, source:"sold"},
+  {title:"Samsung 870 EVO 1TB SATA 47% Health",   keywords:["870 evo 1tb 47%","samsung 870 evo 47","mz-77e1t0 47"], price:64.99, source:"sold"},
+  {title:"Samsung 870 QVO 1TB SATA 80%+",         keywords:["870 qvo 1tb","samsung 870 qvo","mz-77q1t0"], price:109.99, source:"sold"},
+  {title:"Samsung 860 EVO 1TB SATA 100%",         keywords:["860 evo 1tb","samsung 860 evo","mz-76e1t0"], price:109.99, source:"sold"},
+  {title:"Samsung 850 EVO 2TB For Parts",         keywords:["850 evo 2tb parts","samsung 850 evo 2tb","mz-75e2t0"], price:59.99, source:"sold"},
+  {title:"Samsung 990 Pro 2TB NVMe 47% Health",   keywords:["990 pro 2tb 47%","990 pro 47 health","mz-v9p2t0 47"], price:199.99, source:"sold"},
+  {title:"Samsung 990 Pro 2TB NVMe For Parts",    keywords:["990 pro 2tb parts","990 pro for parts","990 pro low health"], price:59.99, source:"sold"},
+  {title:"Samsung 990 EVO Plus 4TB NVMe 100%",    keywords:["990 evo plus 4tb","mz-v9s4t0"], price:439.99, source:"sold"},
+  {title:"Samsung 980 Pro 2TB NVMe w/ Heatsink",  keywords:["980 pro 2tb heatsink","980 pro heatsink","mz-v8p2t0"], price:99.99, source:"sold"},
+  {title:"Samsung 970 EVO Plus 1TB NVMe 99%",     keywords:["970 evo plus 1tb","samsung 970 evo plus 1tb","mz-v7s1t0"], price:134.99, source:"sold"},
+  {title:"Samsung 970 EVO Plus 2TB NVMe 81%",     keywords:["970 evo plus 2tb","mz-v7s2t0"], price:84.99, source:"sold"},
+  {title:"Samsung PM883 1.92TB SATA 94%",         keywords:["pm883 1.92tb","mz-7lh1t90"], price:189.99, source:"sold"},
+  {title:"Samsung 16GB DDR5 5600MHz Lot of 13",   keywords:["samsung ddr5 5600 lot 13","samsung 16gb ddr5 lot","samsung ddr5 5600"], price:1249.97, source:"sold"},
+  // ── STORAGE — Kingston ───────────────────────────────────────
+  {title:"Kingston KC3000 1TB NVMe 100%",         keywords:["kc3000 1tb","skc3000s/1024g"], price:119.99, source:"sold"},
+  {title:"Kingston KC3000 1TB NVMe 89%",          keywords:["kc3000 1tb 89%","kc3000 89"], price:114.99, source:"sold"},
+  {title:"Kingston KC3000 4TB NVMe 100%",         keywords:["kc3000 4tb","skc3000d/4096g"], price:399.99, source:"sold"},
+  {title:"Kingston KC2500 1TB NVMe 100%",         keywords:["kc2500 1tb","skc2500m8/1000g"], price:109.99, source:"sold"},
+  {title:"Kingston DC500R 480GB SATA 58% Health", keywords:["dc500r 480gb 58%","sedc500r/480g 58"], price:27.99, source:"active"},
+  {title:"Kingston DC500R 480GB SATA 86-100%",    keywords:["dc500r 480gb","sedc500r/480g"], price:39.99, source:"sold"},
+  {title:"Kingston DC500R 960GB SATA 98%",        keywords:["dc500r 960gb","sedc500r/960g"], price:109.99, source:"active"},
+  {title:"Kingston DC500R 3.84TB SATA 96-99%",    keywords:["dc500r 3.84tb","sedc500r/3840g","dc500r 3840gb"], price:419.99, source:"active"},
+  {title:"Kingston DC500R 960GB SATA 77%",        keywords:["dc500r 960gb 77%","sedc500r/960g 77"], price:49.99, source:"sold"},
+  {title:"Kingston DC500R 1.92TB SATA 97%",       keywords:["dc500r 1.92tb","sedc500r/1920g"], price:189.99, source:"sold"},
+  {title:"Kingston DC600M 480GB SATA 100%",       keywords:["dc600m 480gb","sedc600m/480g"], price:79.99, source:"active"},
+  {title:"Kingston DC600M 960GB SATA 100%",       keywords:["dc600m 960gb","sedc600m/960g"], price:109.99, source:"sold"},
+  {title:"Kingston DC400 480GB SATA 85%",         keywords:["dc400 480gb","sedc400s37/480g"], price:26.99, source:"sold"},
+  {title:"Kingston 120GB SATA SSD 72%",           keywords:["kingston 120gb ssd","sv300s37a"], price:19.99, source:"sold"},
+  // ── STORAGE — Crucial ────────────────────────────────────────
+  {title:"Crucial MX500 2TB SATA 96-99% Health",  keywords:["crucial mx500 2tb","ct2000mx500ssd1","mx500 2tb good"], price:159.99, source:"sold"},
+  {title:"Crucial MX500 2TB SATA For Parts",      keywords:["crucial mx500 2tb parts","mx500 2tb for parts","ct2000mx500 parts"], price:59.99, source:"sold"},
+  {title:"Crucial MX500 4TB SATA For Parts",      keywords:["crucial mx500 4tb parts","ct4000mx500 parts","mx500 4tb parts"], price:109.99, source:"sold"},
+  {title:"Crucial MX200 1TB SATA Bad Health",     keywords:["crucial mx200 1tb","ct1000mx200ssd1","mx200 bad health"], price:59.99, source:"sold"},
+  {title:"Crucial P3 Plus 4TB NVMe 97%",          keywords:["crucial p3 plus 4tb","ct4000p3pssd8","p3 plus 4tb"], price:399.99, source:"sold"},
+  // ── STORAGE — Other ──────────────────────────────────────────
+  {title:"WD Blue SN550 1TB NVMe 99%",            keywords:["wd blue sn550 1tb","wds100t2b0c","sn550 1tb"], price:44.99, source:"sold"},
+  {title:"WD Blue SA510 4TB SATA 100%",           keywords:["wd blue sa510 4tb","sa510 4tb"], price:289.99, source:"sold"},
+  {title:"Intel 660p 1TB NVMe 53-54%",            keywords:["intel 660p 1tb","ssdpeknw010t8"], price:86.99, source:"sold"},
+  {title:"Micron 7450 3.84TB NVMe Enterprise",    keywords:["micron 7450 3.84tb","mtfdkbg3t8tfr"], price:699.99, source:"sold"},
+  {title:"Micron 7450 1.92TB NVMe Enterprise",    keywords:["micron 7450 1.92tb","mtfdkbg1t9tfr"], price:419.99, source:"sold"},
+  {title:"Seagate Barracuda 1TB 2.5 HDD New",     keywords:["barracuda 1tb","st1000lm049","seagate barracuda laptop"], price:59.99, source:"sold"},
+  {title:"Thinksystem 900GB 15K SAS HDD",         keywords:["thinksystem 900gb","al14sxb90ee","15k sas drive"], price:59.99, source:"sold"},
+  {title:"Lot of 29 Mixed 2TB NVMe For Parts",    keywords:["nvme lot 29","mixed nvme lot","2tb nvme lot"], price:2610.00, source:"sold"},
+  // ── RAM ──────────────────────────────────────────────────────
+  {title:"SK Hynix 21x 16GB DDR5 4800MHz SODIMM Lot", keywords:["sk hynix ddr5 lot","hynix ddr5 21","hmcg78mebsa092n"], price:2449.99, source:"sold"},
+  {title:"Samsung 7x 16GB DDR5 4800MHz SODIMM Lot",keywords:["samsung ddr5 lot 7","samsung ddr5 16gb lot","m425r2ga3bb0"], price:799.99, source:"sold"},
+  {title:"TeamGroup 16GB DDR4 3200MHz 2x8GB Kit", keywords:["teamgroup 16gb ddr4","team group ddr4 3200","teamgroup ddr4 kit"], price:60.00, source:"sold"},
+  {title:"Micron 64GB (2x32GB) DDR4 PC4-3200AA",  keywords:["micron 64gb ddr4","pc4-3200aa 64gb"], price:59.99, source:"sold"},
+  {title:"Corsair Vengeance DDR5 Light Kit",       keywords:["corsair ddr5 light kit","cmhlekit-d5"], price:9.99, source:"sold"},
+  // ── AUDIO / HEADPHONES ───────────────────────────────────────
+  {title:"Apple AirPods Max USB-C Midnight",      keywords:["airpods max usb-c","airpods max usbc","airpods max midnight"], price:239.99, source:"sold"},
+  {title:"Beats Solo 4 Wireless Headphones",      keywords:["beats solo 4","beats solo 4 wireless"], price:69.99, source:"sold"},
+  {title:"Crown DSi 6000 2-Channel Power Amp",    keywords:["crown dsi 6000","crown power amp","crown dsi6000"], price:699.99, source:"active"},
+  // ── WEARABLES ────────────────────────────────────────────────
+  {title:"Garmin Forerunner 970 47mm AMOLED GPS", keywords:["garmin forerunner 970","forerunner 970","garmin gps watch"], price:609.99, source:"sold"},
+  {title:"Garmin Fenix 8 Pro 51mm New",           keywords:["garmin fenix 8 pro","fenix 8 pro 51mm","garmin fenix 8"], price:899.99, source:"active"},
+  {title:"Garmin Fenix 8 47mm AMOLED New",        keywords:["garmin fenix 8 47mm","fenix 8 47","garmin fenix 8 amoled"], price:749.99, source:"active"},
+  {title:"Ray-Ban Meta Wayfarer Smart Glasses",   keywords:["ray-ban meta wayfarer","ray ban meta smart glasses","rw4006"], price:189.99, source:"sold"},
+  {title:"Samsung Galaxy S23 Ultra Smartwatch",   keywords:["galaxy watch fe","samsung watch fe","galaxy watch"], price:54.97, source:"active"},
+  // ── GAMING ACCESSORIES ───────────────────────────────────────
+  {title:"Microsoft Xbox Series Wireless Controller Shock Blue", keywords:["xbox series controller blue","xbox wireless controller shock blue","1914 controller"], price:35.00, source:"sold"},
+  {title:"Sony PlayStation Portal PS5",           keywords:["playstation portal","ps portal","cfi-y1001","ps5 remote player"], price:134.99, source:"sold"},
+  {title:"Nintendo Switch Sports + Ring Fit Strap",keywords:["switch sports ring fit","nintendo switch sports game","ring fit strap"], price:29.99, source:"sold"},
+  // ── CAMERAS / AV ─────────────────────────────────────────────
+  {title:"Sony Handycam FDR-AX33 4K Camcorder",  keywords:["sony handycam fdr-ax33","sony 4k camcorder","fdr-ax33"], price:489.99, source:"sold"},
+  {title:"DJI Pocket 2 Creator Combo 4K",         keywords:["dji pocket 2","pocket 2 creator"], price:244.99, source:"sold"},
+  {title:"AXIS P1265 Network Security Camera",    keywords:["axis p1265","axis camera","axis network camera"], price:209.00, source:"sold"},
+  // ── APPLE ACCESSORIES ────────────────────────────────────────
+  {title:"Apple Pencil USB-C White",              keywords:["apple pencil usb-c","apple pencil usbc","a3085"], price:39.99, source:"sold"},
+  {title:"Apple Pencil 1st Gen White",            keywords:["apple pencil 1st gen","apple pencil a1603","mk0c2am"], price:29.99, source:"sold"},
+  // ── COMPUTER ACCESSORIES / NETWORKING ────────────────────────
+  {title:"HP USB-C G5 Essential Dock",            keywords:["hp usb-c dock","hp g5 dock"], price:46.00, source:"sold"},
+  {title:"TP-Link 16-Port Gigabit Switch",        keywords:["tp-link switch","tl-sg1016gd","gigabit switch 16 port"], price:29.99, source:"active"},
+  {title:"Google Nest Thermostat 4th Gen",        keywords:["google nest thermostat","nest thermostat 4th","g4cvz thermostat"], price:29.99, source:"active"},
+  // ── MOTHERBOARDS / COMPONENTS ────────────────────────────────
+  {title:"ASRock B460M PRO4 + i5-10400",         keywords:["asrock b460m","b460m pro4 i5"], price:179.99, source:"sold"},
+  {title:"ASUS Prime Z370-A Motherboard",         keywords:["asus prime z370","z370-a motherboard"], price:63.99, source:"sold"},
+  // ── POWER TOOLS ──────────────────────────────────────────────
+  {title:"Milwaukee M18 FUEL Impact Wrench",      keywords:["milwaukee m18 impact wrench","milwaukee 2767","m18 fuel 1/2 impact"], price:174.99, source:"sold"},
+  {title:"Milwaukee M18 Impact Driver",           keywords:["milwaukee m18 impact driver","milwaukee 2656","m18 impact driver"], price:80.00, source:"sold"},
+  {title:"Ryobi P519 18V Reciprocating Saw",      keywords:["ryobi reciprocating saw","ryobi p519","ryobi 18v saw"], price:39.99, source:"sold"},
+  {title:"DeWalt DCS355 20V Oscillating Tool",    keywords:["dewalt oscillating","dewalt dcs355","dewalt multi tool"], price:49.99, source:"sold"},
+  // ── HOME / OTHER ─────────────────────────────────────────────
+  {title:"Ninja BN751 1400W Blender New",         keywords:["ninja blender","ninja bn751","ninja 1400w blender"], price:120.00, source:"sold"},
+  {title:"Chamberlain myQ Garage Keypad",         keywords:["chamberlain myq","myq garage keypad","ch348"], price:33.87, source:"sold"},
+  {title:"dbx 263A De-Esser Studio Processor",    keywords:["dbx 263a","de-esser dbx"], price:69.99, source:"sold"},
+  {title:"LEGO Set Lot (5-13 sets)",              keywords:["lego lot","lego sets lot","lego bundle"], price:54.99, source:"active"},
+  // ── VIDEO GAMES ──────────────────────────────────────────────
+  {title:"PS4 Game",    keywords:["ps4 game","playstation 4 game","ps4 disc game"], price:10.00, source:"active"},
+  {title:"PS5 Game",    keywords:["ps5 game","playstation 5 game","ps5 disc"], price:25.00, source:"active"},
+  {title:"Switch Game", keywords:["switch game","nintendo switch game","switch cartridge"], price:25.00, source:"active"},
+  {title:"PS2 Game",    keywords:["ps2 game","playstation 2 game","ps2 disc"], price:8.00, source:"active"},
+  {title:"3DS Game",    keywords:["3ds game","nintendo 3ds game","3ds cartridge"], price:20.00, source:"active"},
+];
+
 // ── Haz Inventory Velocity (days-to-sell from SYG order history) ──
 // Source: Shopify sold orders — product.createdAt → order.createdAt
 // Pulled June 25 2026. Green <14d, Yellow 14-45d, Red >45d
 const HAZ_VELOCITY = {
-  // By keyword match — avg days to sell, sample size, risk level
-  'storage drives':     {avg:10,  max:61,  n:19, label:'Computer Parts',        risk:'green',  note:'Sells in ~10 days on avg'},
-  'ssds':               {avg:10,  max:61,  n:19, label:'SSDs',                  risk:'green',  note:'Sells in ~10 days on avg'},
-  'ram memory':         {avg:6,   max:6,   n:1,  label:'RAM',                   risk:'green',  note:'Sells fast ~6 days'},
-  'graphics card gpu':  {avg:14,  max:14,  n:1,  label:'GPU',                   risk:'yellow', note:'~2 weeks to sell'},
-  'cell phone':         {avg:4,   max:6,   n:2,  label:'Phones',                risk:'green',  note:'Phones move fast ~4 days'},
-  'laptop':             {avg:16,  max:82,  n:7,  label:'Laptops',               risk:'yellow', note:'Avg 2-3 weeks, some sit 2+ months'},
-  'desktop computer':   {avg:7,   max:7,   n:1,  label:'Desktop',               risk:'green',  note:'~1 week to sell'},
-  'tablet ipad':        {avg:48,  max:95,  n:2,  label:'Tablets',               risk:'red',    note:'Slow mover — avg 7 weeks'},
-  'console':            {avg:12,  max:12,  n:1,  label:'Consoles',              risk:'green',  note:'~12 days to sell'},
-  'smart watch':        {avg:1,   max:1,   n:1,  label:'Smartwatches',          risk:'green',  note:'Sells same day'},
-  'accessory':          {avg:97,  max:420, n:5,  label:'Accessories',           risk:'red',    note:'Very slow — can sit 3-14 months'},
-  'charger cable':      {avg:420, max:420, n:1,  label:'Cables/Chargers',       risk:'red',    note:'Can sit for over a year — avoid'},
-  'camera':             {avg:55,  max:55,  n:1,  label:'Cameras/AV',            risk:'red',    note:'Niche item — slow to move'},
-  'logic board parts':  {avg:244, max:244, n:1,  label:'Repair Parts',          risk:'red',    note:'Very niche — can sit 8+ months'},
+  'storage drives':    {avg:10,  max:61,  n:19, label:'Storage Drives',       risk:'green',  note:'Sells in ~10 days on avg'},
+  'ssds':              {avg:10,  max:61,  n:19, label:'SSDs',                  risk:'green',  note:'Sells in ~10 days on avg'},
+  'ram memory':        {avg:6,   max:6,   n:1,  label:'RAM',                   risk:'green',  note:'Sells fast ~6 days'},
+  'graphics card gpu': {avg:14,  max:14,  n:1,  label:'GPU',                   risk:'yellow', note:'~2 weeks to sell'},
+  'cell phone':        {avg:4,   max:6,   n:2,  label:'Phones',                risk:'green',  note:'Phones move fast ~4 days'},
+  'laptop':            {avg:16,  max:82,  n:7,  label:'Laptops',               risk:'yellow', note:'Avg 2-3 weeks, some sit 2+ months'},
+  'desktop computer':  {avg:7,   max:7,   n:1,  label:'Desktop',               risk:'green',  note:'~1 week to sell'},
+  'tablet ipad':       {avg:48,  max:95,  n:2,  label:'Tablets',               risk:'red',    note:'Slow mover — avg 7 weeks'},
+  'console':           {avg:12,  max:12,  n:1,  label:'Consoles',              risk:'green',  note:'~12 days to sell'},
+  'smart watch':       {avg:1,   max:1,   n:1,  label:'Smartwatches',          risk:'green',  note:'Sells same day'},
+  'accessory':         {avg:97,  max:420, n:5,  label:'Accessories',           risk:'red',    note:'Very slow — can sit 3-14 months'},
+  'charger cable':     {avg:420, max:420, n:1,  label:'Cables/Chargers',       risk:'red',    note:'Can sit for over a year — avoid'},
+  'camera':            {avg:55,  max:55,  n:1,  label:'Cameras/AV',            risk:'red',    note:'Niche item — slow to move'},
+  'logic board parts': {avg:244, max:244, n:1,  label:'Repair Parts',          risk:'red',    note:'Very niche — can sit 8+ months'},
 };
 
-// Match velocity entry from item text
 function hazVelocityMatch(text, category){
   const lo = text.toLowerCase();
   if(/charger|cable|usb|power.?adapter/.test(lo))      return HAZ_VELOCITY['charger cable'];
   if(/logic.?board|repair.?part|board.?820/.test(lo))  return HAZ_VELOCITY['logic board parts'];
   if(/camera|webcam|network.?cam/.test(lo))            return HAZ_VELOCITY['camera'];
   if(/ipad|galaxy.?tab|tablet/.test(lo))               return HAZ_VELOCITY['tablet ipad'];
-  if(/smartwatch|galaxy.?watch|apple.?watch/.test(lo)) return HAZ_VELOCITY['smart watch'];
+  if(/smartwatch|galaxy.?watch|apple.?watch|garmin/.test(lo)) return HAZ_VELOCITY['smart watch'];
   if(/phone|iphone|galaxy.?s|pixel/.test(lo))          return HAZ_VELOCITY['cell phone'];
-  if(/macbook|laptop|thinkpad|probook|precision|latitude|optiplex/.test(lo)){
+  if(/macbook|laptop|thinkpad|probook|latitude|precision|notebook/.test(lo)){
     if(/desktop|optiplex|nuc|mini.?pc/.test(lo)) return HAZ_VELOCITY['desktop computer'];
     return HAZ_VELOCITY['laptop'];
   }
   if(/rtx|gtx|gpu|graphics.?card|radeon|geforce|quadro/.test(lo)) return HAZ_VELOCITY['graphics card gpu'];
-  if(/ps5|ps4|xbox|nintendo|console|switch/.test(lo)) return HAZ_VELOCITY['console'];
-  if(/ram|ddr|sodimm|dimm|memory/.test(lo))           return HAZ_VELOCITY['ram memory'];
+  if(/ps5|ps4|ps3|xbox|nintendo|switch|console/.test(lo)) return HAZ_VELOCITY['console'];
+  if(/ram|ddr|sodimm|dimm|memory/.test(lo))            return HAZ_VELOCITY['ram memory'];
   if(category === 'accessory' || /speaker|headphone|receiver|projector|drone/.test(lo)) return HAZ_VELOCITY['accessory'];
   if(category === 'storage' || /ssd|hdd|nvme|sata|hard.?drive/.test(lo)) return HAZ_VELOCITY['ssds'];
   return null;
 }
 
-const HAZ_STORE_PRICES = [
-  // Storage Drives (sold)
-  {title:"Samsung 860 EVO 1TB SSD", keywords:["860 evo 1tb","samsung 860 evo","mz-76e1t0"], price:109.99, source:"sold"},
-  {title:"Kingston KC2500 1TB NVMe", keywords:["kc2500 1tb","skc2500m8/1000g","kc2500 1000g","kc2500 1t"], price:109.99, source:"sold"},
-  {title:"Kingston KC2500 2TB NVMe", keywords:["kc2500 2tb","skc2500m8/2000g","kc2500 2000g","kc2500 2t"], price:109.99, source:"sold"},
-  {title:"Kingston KC3000 1TB NVMe", keywords:["kc3000 1tb","skc3000s/1024g","kc3000 1024","kc3000 1t"], price:119.99, source:"sold"},
-  {title:"Kingston KC3000 4TB NVMe", keywords:["kc3000 4tb","skc3000d/4096g","kc3000 4096","kc3000 4t"], price:399.99, source:"sold"},
-  {title:"Kingston DC400 480GB SATA", keywords:["dc400 480","sedc400s37/480g","kingston dc400"], price:26.99, source:"sold"},
-  {title:"Kingston DC500R 480GB SATA", keywords:["dc500r 480","sedc500r/480g","kingston dc500r 480"], price:39.99, source:"sold"},
-  {title:"Kingston DC500R 1.92TB SATA", keywords:["dc500r 1.92","sedc500r/1920g","dc500r 1920"], price:189.99, source:"sold"},
-  {title:"Kingston DC600M 960GB SATA", keywords:["dc600m 960","sedc600m/960g","kingston dc600m 960"], price:109.99, source:"sold"},
-  {title:"Intel 660p 1TB NVMe", keywords:["intel 660p 1tb","ssdpeknw010t8","intel ssd 660p","intel 660p"], price:86.99, source:"sold"},
-  {title:"Micron 7450 3.84TB NVMe Enterprise", keywords:["micron 7450 3.84","mtfdkbg3t8tfr","7450 3840","micron 7450 3tb"], price:699.99, source:"sold"},
-  {title:"Micron 7450 1.92TB NVMe Enterprise", keywords:["micron 7450 1.92","mtfdkbg1t9tfr","7450 1920","micron 7450 1tb"], price:419.99, source:"sold"},
-  {title:"Samsung 990 Pro 2TB NVMe", keywords:["990 pro 2tb","mz-v9p2t0","samsung 990 pro"], price:109.99, source:"sold"},
-  {title:"Samsung 990 EVO Plus 4TB NVMe", keywords:["990 evo plus 4tb","mz-v9s4t0","990 evo 4tb"], price:439.99, source:"sold"},
-  {title:"Samsung PM883 1.92TB SATA", keywords:["pm883 1.92","mz-7lh1t90","pm883 1920","samsung pm883"], price:189.99, source:"sold"},
-  {title:"Seagate Barracuda 1TB 2.5 HDD", keywords:["barracuda 1tb","st1000lm049","seagate barracuda laptop"], price:59.99, source:"sold"},
-  // RAM (sold)
-  {title:"SK Hynix DDR5 16GB 4800MHz SODIMM", keywords:["sk hynix ddr5","hynix ddr5 16gb","hmcg78mebsa092n","hynix ddr5 sodimm"], price:116.67, source:"sold"},
-  {title:"Micron 32GB DDR4 PC4-3200AA Kit", keywords:["micron 32gb ddr4","pc4-3200aa 32gb","micron ddr4 32gb"], price:59.99, source:"sold"},
-  {title:"Corsair Vengeance DDR5 Light Kit", keywords:["corsair vengeance ddr5","cmhlekit-d5","ddr5 light kit","corsair light kit"], price:9.99, source:"sold"},
-  // Laptops (sold)
-  {title:"Apple MacBook Air 2019 13 i5 8GB 256GB", keywords:["macbook air 2019","macbook a1932","macbook 2019"], price:170.00, source:"sold"},
-  {title:"Apple MacBook Air 2020 13 i5 8GB 256GB", keywords:["macbook air 2020","macbook a2289","macbook 2020"], price:244.99, source:"sold"},
-  {title:"Apple MacBook Pro 13 2016 i5 8GB 256GB", keywords:["macbook pro 13 2016","a1708 2016","macbook pro 2016 13"], price:154.99, source:"sold"},
-  {title:"Apple MacBook Pro 13 2016 TouchBar", keywords:["macbook pro touchbar 2016","a1706 2016","macbook touchbar 2016"], price:159.99, source:"sold"},
-  {title:"Apple MacBook Pro 16 2021 M1 Max", keywords:["macbook pro 16 2021","a2485 m1 max","macbook m1 max","macbook pro m1 max"], price:1249.99, source:"sold"},
-  {title:"Apple MacBook Pro 13 2017 i5 16GB 512GB", keywords:["macbook pro 13 2017","macbook pro 2017","a1706 2017"], price:140.00, source:"active"},
-  {title:"Dell OptiPlex 5080 i7 16GB", keywords:["dell optiplex 5080","optiplex 5080","dell optiplex i7"], price:189.99, source:"sold"},
-  {title:"Dell Precision M4600 i7", keywords:["dell precision m4600","precision m4600","dell precision laptop"], price:82.97, source:"sold"},
-  {title:"Dell Latitude 5480 For Parts", keywords:["dell latitude 5480","latitude 5480 parts"], price:44.99, source:"sold"},
-  {title:"HP ProBook x360 435 G7", keywords:["hp probook x360","probook 435","hp probook ryzen"], price:154.99, source:"sold"},
-  {title:"ASRock B460M Motherboard Bundle", keywords:["asrock b460m","b460m pro4","asrock i5 10400"], price:179.99, source:"sold"},
-  // GPUs (sold)
-  {title:"Gigabyte GTX 1070 8GB For Parts", keywords:["gtx 1070 parts","1070 for parts","geforce gtx 1070 parts"], price:49.99, source:"sold"},
-  {title:"EVGA RTX 2070 XC Ultra 8GB", keywords:["rtx 2070","evga 2070","geforce rtx 2070"], price:159.99, source:"sold"},
-  {title:"NVIDIA Quadro M5000 8GB", keywords:["quadro m5000","nvidia quadro m5000","m5000 gpu"], price:74.99, source:"sold"},
-  // Consoles (sold + active)
-  {title:"Microsoft Xbox One 500GB", keywords:["xbox one 500gb","xbox one 1540","xbox one original"], price:64.99, source:"sold"},
-  {title:"Microsoft Xbox One S 500GB", keywords:["xbox one s","xbox one s 500gb","xbox 1681"], price:159.97, source:"sold"},
-  {title:"Microsoft Xbox Series S 512GB", keywords:["xbox series s","xbox series s 512gb","microsoft xbox series s"], price:210.00, source:"active"},
-  {title:"Microsoft Xbox Series X", keywords:["xbox series x","xbox series x 1tb","microsoft xbox series x"], price:350.00, source:"active"},
-  {title:"Sony PlayStation 5 Slim", keywords:["ps5 slim","playstation 5 slim","sony ps5 slim","ps5 slim console"], price:349.99, source:"active"},
-  {title:"Sony PlayStation 5", keywords:["ps5","playstation 5","sony ps5","ps5 console","ps5 digital"], price:350.00, source:"active"},
-  {title:"Sony PlayStation 4 Slim", keywords:["ps4 slim","playstation 4 slim","sony ps4 slim"], price:120.00, source:"active"},
-  {title:"Sony PlayStation 4", keywords:["ps4","playstation 4","sony ps4","ps4 console"], price:100.00, source:"active"},
-  {title:"Nintendo Switch OLED", keywords:["switch oled","nintendo switch oled"], price:230.00, source:"active"},
-  {title:"Nintendo Switch", keywords:["nintendo switch","switch console","switch v2"], price:180.00, source:"active"},
-  {title:"Nintendo Switch Lite", keywords:["switch lite","nintendo switch lite"], price:120.00, source:"active"},
-  {title:"Nintendo 3DS", keywords:["nintendo 3ds","3ds console","ctr-001","2ds","nintendo 2ds"], price:180.00, source:"active"},
-  // Phones (sold + active)
-  {title:"Samsung Galaxy S26 256GB", keywords:["galaxy s26","samsung s26","sm-s942u"], price:529.99, source:"sold"},
-  {title:"Samsung Galaxy A37 5G 128GB", keywords:["galaxy a37","samsung a37 5g","sm-s376v"], price:99.99, source:"sold"},
-  {title:"Samsung Galaxy S21 FE 128GB", keywords:["galaxy s21 fe","s21 fe","samsung s21 fe"], price:119.99, source:"active"},
-  {title:"Apple iPhone SE 3rd Gen 64GB", keywords:["iphone se 3rd","iphone se 2022","se 3rd gen","iphone se"], price:120.00, source:"active"},
-  {title:"Apple iPhone 15 Pro 256GB", keywords:["iphone 15 pro","15 pro iphone"], price:350.00, source:"active"},
-  // Tablets (sold + active)
-  {title:"Apple iPad Pro 12.9 3rd Gen 64GB", keywords:["ipad pro 12.9","ipad pro 3rd","a1876 ipad","ipad pro 64gb"], price:252.97, source:"sold"},
-  {title:"Samsung Galaxy Tab A7 Lite 32GB", keywords:["galaxy tab a7 lite","samsung tab a7","sm-t220"], price:39.99, source:"sold"},
-  // Other Electronics (sold + active)
-  {title:"Sony PlayStation Portal", keywords:["playstation portal","ps portal","cfi-y1001","ps5 remote player"], price:134.99, source:"sold"},
-  {title:"DJI Pocket 2 Creator Combo", keywords:["dji pocket 2","pocket 2 creator","dji pocket"], price:244.99, source:"sold"},
-  {title:"Samsung Galaxy Watch FE 40mm", keywords:["galaxy watch fe","samsung watch fe","sm-r866u"], price:54.97, source:"active"},
-  {title:"Apple TV 3rd Gen", keywords:["apple tv 3rd","apple tv a1469","apple tv 3"], price:24.00, source:"active"},
-  {title:"Apple TV 1st Gen", keywords:["apple tv 1st","apple tv vintage","apple tv a1218","apple tv 1"], price:48.97, source:"active"},
-  {title:"Marantz SR6006 7.1 Receiver", keywords:["marantz sr6006","marantz receiver","marantz surround"], price:150.00, source:"active"},
-  {title:"Sony STR-DE485 Receiver", keywords:["sony str-de485","sony receiver str","str-de485"], price:39.99, source:"active"},
-  {title:"Bravius TK-1000 Projector", keywords:["bravius projector","tk-1000 projector","bravius tk1000"], price:199.99, source:"active"},
-  {title:"Ryobi P271 Power Drill", keywords:["ryobi p271","ryobi drill","ryobi power drill"], price:34.99, source:"active"},
-  {title:"dbx 263A De-Esser", keywords:["dbx 263a","de-esser","dbx deesser"], price:69.99, source:"sold"},
-  {title:"AXIS P1265 Network Camera", keywords:["axis p1265","axis camera","axis network camera"], price:209.00, source:"sold"},
-  // Video Games - specific high value (sold)
-  {title:"Mario Party 8 Wii", keywords:["mario party 8","mario party wii"], price:35.00, source:"sold"},
-  {title:"Guitar Hero Metallica Wii", keywords:["guitar hero metallica"], price:39.99, source:"sold"},
-  {title:"Tatsunoko vs Capcom Wii", keywords:["tatsunoko vs capcom","tvc wii"], price:39.99, source:"sold"},
-  {title:"Jurassic Park Operation Genesis Xbox", keywords:["jurassic park operation genesis","operation genesis"], price:60.00, source:"sold"},
-  {title:"Super Smash Bros Brawl Wii", keywords:["smash bros brawl","smash bros wii","ssbb"], price:12.99, source:"sold"},
-  {title:"Pokemon Battle Revolution Wii", keywords:["pokemon battle revolution","battle revolution wii"], price:18.00, source:"sold"},
-  {title:"Michael Jackson Experience Wii", keywords:["michael jackson experience","mj experience wii"], price:21.00, source:"sold"},
-  {title:"Grand Theft Auto Trilogy PS2", keywords:["gta trilogy ps2","grand theft auto trilogy"], price:20.00, source:"sold"},
-  {title:"Plants vs Zombies PS3", keywords:["plants vs zombies ps3","pvz ps3"], price:20.00, source:"sold"},
-  {title:"Midnight Club LA Remix PSP", keywords:["midnight club la psp","midnight club la remix"], price:31.00, source:"sold"},
-  // Video Games - category averages (from sold history)
-  {title:"PS4 Game", keywords:["ps4 game","playstation 4 game","ps4 disc"], price:10.00, source:"active"},
-  {title:"PS5 Game", keywords:["ps5 game","playstation 5 game","ps5 disc"], price:25.00, source:"active"},
-  {title:"Wii Game", keywords:["wii game","nintendo wii game","wii disc"], price:10.00, source:"active"},
-  {title:"Nintendo Switch Game", keywords:["switch game","nintendo switch game","switch cartridge"], price:25.00, source:"active"},
-  {title:"Nintendo 3DS Game", keywords:["3ds game","nintendo 3ds game","3ds cartridge"], price:20.00, source:"active"},
-  {title:"Xbox 360 Game", keywords:["xbox 360 game","360 game","xbox 360 disc"], price:7.00, source:"active"},
-  {title:"PS3 Game", keywords:["ps3 game","playstation 3 game","ps3 disc"], price:6.00, source:"active"},
-  {title:"PS2 Game", keywords:["ps2 game","playstation 2 game","ps2 disc"], price:8.00, source:"active"},
-  {title:"PSP Game", keywords:["psp game","psp umd","playstation portable game"], price:12.00, source:"active"},
-];
 // Local fuzzy matching — returns {title, price, source} or null
 // Sold listings weighted 1.5x. Requires meaningful keyword overlap to match.
 function hazLocalMatch(text){
@@ -5422,7 +5734,13 @@ function hazChatSend(){
     } else if(HAZ_MODE === 'helper' && _helperState){
       // already in helper flow, ignore stray text
     } else {
-      hazProcessMessage(text);
+      // Batch detection — multiple items in one message
+      const batchItems = hazDetectBatch(text);
+      if(batchItems && batchItems.length > 1){
+        hazProcessBatch(batchItems);
+      } else {
+        hazProcessMessage(text);
+      }
     }
   }, 900);
 }
@@ -5431,6 +5749,154 @@ document.getElementById('hazChatSend').addEventListener('click', hazChatSend);
 document.getElementById('hazChatInput').addEventListener('keydown', ev=>{
   if(ev.key==='Enter' && !ev.shiftKey){ ev.preventDefault(); hazChatSend(); }
 });
+
+// ── Batch Intake Engine ───────────────────────────────────────────
+
+// Detect if message contains multiple items
+function hazDetectBatch(text){
+  // Split by: comma, newline, semicolon, "and", numbered lists
+  const separators = /\n|,\s*(?=[a-zA-Z])|;\s*|\s+and\s+(?=[a-zA-Z])|\d+[.)]\s+/;
+  const parts = text.split(separators)
+    .map(p => p.trim())
+    .filter(p => p.length > 2);
+
+  // Only treat as batch if each part looks like a product description
+  // (has at least one recognizable keyword or is reasonably long)
+  const isProductLike = p => {
+    const lo = p.toLowerCase();
+    return /\b(ps[45]|xbox|switch|iphone|galaxy|macbook|laptop|ipad|gpu|rtx|gtx|ssd|ram|tablet|phone|console|watch|airpod|charger)\b/.test(lo)
+      || p.split(' ').length >= 2;
+  };
+
+  const items = parts.filter(isProductLike);
+  return items.length >= 2 ? items : null;
+}
+
+// Process multiple items and render batch result
+async function hazProcessBatch(items){
+  hazAddBubble('haz', `Got it — running numbers on <b>${items.length} items</b>. Give me a second…`, true);
+
+  const results = [];
+  const vo = {easy:{maxPct:0.40,open:0.72,mid:0.86}, tough:{maxPct:0.55,open:0.45,mid:0.70}, desperate:{maxPct:0.30,open:0.30,mid:0.50}}[_hazVibe||'easy'];
+
+  for(const itemText of items){
+    const normalized = hazApplyAliases(itemText);
+    const flag = hazRedFlags(normalized);
+    if(flag && flag.pass){
+      results.push({text: itemText, pass:true, passReason: flag.flag, openOff:0, midOff:0, maxOff:0, value:0});
+      continue;
+    }
+    const localMatch = hazLocalMatch(normalized);
+    if(localMatch){
+      const category = hazDetectCategory(normalized);
+      const {adj, condSummary} = hazQuickConditionAdjust(normalized, category, localMatch.price);
+      const value = Math.max(HAZ_MIN_RESALE, Math.round(localMatch.price + adj));
+      const maxOff = Math.round(value * vo.maxPct);
+      const openOff = Math.max(5, Math.round(maxOff * vo.open));
+      const midOff  = Math.max(openOff+5, Math.round(maxOff * vo.mid));
+      results.push({
+        text: itemText,
+        item: localMatch.title,
+        condition: condSummary || 'As described',
+        value, openOff, midOff, maxOff,
+        source: localMatch.source==='sold'?'SYG Sold':'SYG Active',
+        pass: false
+      });
+    } else {
+      results.push({text: itemText, item: itemText, unknown:true, openOff:0, midOff:0, maxOff:0, value:0, pass:false});
+    }
+  }
+
+  // Totals — exclude passes and unknowns
+  const priced = results.filter(r=>!r.pass && !r.unknown && r.value>0);
+  const totalOpen = priced.reduce((s,r)=>s+r.openOff,0);
+  const totalMid  = priced.reduce((s,r)=>s+r.midOff,0);
+  const totalMax  = priced.reduce((s,r)=>s+r.maxOff,0);
+  const totalVal  = priced.reduce((s,r)=>s+r.value,0);
+  const unknowns  = results.filter(r=>r.unknown);
+  const passes    = results.filter(r=>r.pass);
+
+  // Build HTML
+  const rows = results.map((r,i)=>{
+    if(r.pass) return `
+      <div class="haz-batch-row pass" data-batchidx="${i}">
+        <div class="haz-batch-row-main">
+          <span class="haz-batch-row-name">🔴 ${esc(r.text.length>35?r.text.slice(0,35)+'…':r.text)}</span>
+          <span class="haz-batch-row-tag red">Pass — ${esc(r.passReason)}</span>
+        </div>
+      </div>`;
+    if(r.unknown) return `
+      <div class="haz-batch-row unknown" data-batchidx="${i}">
+        <div class="haz-batch-row-main">
+          <span class="haz-batch-row-name">❓ ${esc(r.text.length>35?r.text.slice(0,35)+'…':r.text)}</span>
+          <span class="haz-batch-row-tag yellow">No price data</span>
+        </div>
+      </div>`;
+    return `
+      <div class="haz-batch-row" data-batchidx="${i}">
+        <div class="haz-batch-row-main">
+          <span class="haz-batch-row-name">📦 ${esc((r.item||r.text).length>32?(r.item||r.text).slice(0,32)+'…':(r.item||r.text))}</span>
+          <span class="haz-batch-row-range">$${r.openOff}–$${r.maxOff}</span>
+          <button class="haz-batch-expand" data-idx="${i}">▼</button>
+        </div>
+        <div class="haz-batch-detail hidden" id="haz-batch-detail-${i}">
+          <div class="haz-batch-detail-row"><span>Est. resale</span><span>$${r.value} <span style="font-size:9px;background:#DCFCE7;color:#166534;padding:1px 5px;border-radius:4px;">${esc(r.source||'')}</span></span></div>
+          <div class="haz-batch-detail-row"><span>Open at</span><span style="color:#16A34A;font-weight:700;">$${r.openOff}</span></div>
+          <div class="haz-batch-detail-row"><span>If they push</span><span style="color:#D97706;font-weight:700;">$${r.midOff}</span></div>
+          <div class="haz-batch-detail-row"><span>Walk away at</span><span style="color:#DC2626;font-weight:700;">$${r.maxOff}</span></div>
+          <div class="haz-batch-detail-row" style="font-size:10.5px;color:#6B7280;border:none;padding-top:2px;">${esc(r.condition)}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const unknownNote = unknowns.length
+    ? `<div style="font-size:11px;color:#92400E;background:#FFFBEB;border-radius:6px;padding:6px 10px;margin-top:8px;">⚠️ ${unknowns.length} item${unknowns.length>1?'s':''} could not be priced — look these up separately.</div>`
+    : '';
+
+  const html = `
+<div class="haz-batch-wrap">
+  <div class="haz-batch-header">📦 Batch — ${results.length} items · ${priced.length} priced</div>
+  <div class="haz-batch-list">${rows}</div>
+  ${unknownNote}
+  ${priced.length > 0 ? `
+  <div class="haz-batch-totals">
+    <div class="haz-batch-total-label">Total offer for the lot</div>
+    <div class="haz-offer-cards" style="margin-top:8px;">
+      <div class="haz-offer-card best"><span class="haz-offer-card-label">🟢 Open at</span><span class="haz-offer-card-amount">$${totalOpen}</span><span class="haz-offer-card-hint">Start here</span></div>
+      <div class="haz-offer-card mid"><span class="haz-offer-card-label">🟡 If they push</span><span class="haz-offer-card-amount">$${totalMid}</span><span class="haz-offer-card-hint">Use once</span></div>
+      <div class="haz-offer-card max"><span class="haz-offer-card-label">🔴 Walk away</span><span class="haz-offer-card-amount">$${totalMax}</span><span class="haz-offer-card-hint">Do not exceed</span></div>
+    </div>
+    <div style="font-size:11px;color:#6B7280;margin-top:8px;text-align:center;">Combined est. resale value: $${totalVal}</div>
+  </div>` : ''}
+</div>`;
+
+  hazAddBubble('haz', html, true);
+
+  // Wire expand buttons
+  setTimeout(()=>{
+    document.querySelectorAll('.haz-batch-expand').forEach(btn=>{
+      btn.addEventListener('click', ev=>{
+        ev.stopPropagation();
+        const idx = btn.dataset.idx;
+        const detail = document.getElementById('haz-batch-detail-'+idx);
+        if(!detail) return;
+        const open = !detail.classList.contains('hidden');
+        detail.classList.toggle('hidden', open);
+        btn.textContent = open ? '▼' : '▲';
+      });
+    });
+  }, 50);
+
+  // Pin each priced item to board
+  priced.forEach(r=>{
+    hazBoardAddCard({item:r.item||r.text, condition:r.condition||'As described',
+      value:r.value, fees:r.value*HAZ_FEE_RATE, net:r.value*(1-HAZ_FEE_RATE),
+      openOff:r.openOff, midOff:r.midOff, maxOff:r.maxOff, vibe:_hazVibe||'easy',
+      category:hazDetectCategory(r.item||r.text)});
+  });
+
+  document.getElementById('hazReset').style.display='';
+}
 
 function hazRenderChatResult(data, vibe){
   const value   = data.estimate || 0;
@@ -5815,6 +6281,9 @@ function hazBoardRender(){
           <div class="haz-receipt-note">
             ${hazPosFields(card)}
           </div>
+          <button class="haz-fill-po-btn" data-cardid="${card.id}" style="margin-top:10px;width:100%;padding:9px;background:#16A34A;border:none;border-radius:8px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;letter-spacing:.02em;">
+            🖥️ Fill PO on Company Website
+          </button>
         </div>
         <div class="haz-receipt-timestamp">${timeStr}</div>
       </div>`;
@@ -5828,6 +6297,13 @@ function hazBoardRender(){
     const inp = el.querySelector('.haz-receipt-accepted-input');
     if(inp) inp.addEventListener('input', ev=>{
       card.acceptedPrice = ev.target.value;
+
+    // Wire Fill PO button
+    const fillBtn = el.querySelector('.haz-fill-po-btn');
+    if(fillBtn) fillBtn.addEventListener('click', ev=>{
+      ev.stopPropagation();
+      hazFillPO(card);
+    });
     });
   });
   hazBoardApplyTransform();
