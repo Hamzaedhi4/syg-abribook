@@ -777,7 +777,20 @@
   .haz-customer-offer-note{font-size:11.5px;color:#166534;margin-top:6px;line-height:1.5;}
   .haz-customer-disclaimer{font-size:10.5px;color:#9CA3AF;text-align:center;margin-top:14px;line-height:1.5;}
   .haz-customer-footer{padding:14px 16px;border-top:1px solid #F3F4F6;flex:none;}
-  .haz-customer-back{width:100%;padding:10px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);font:600 12px/1 var(--sans);color:#6B7280;cursor:pointer;}
+  .haz-mode-toggle{display:flex;border:1px solid rgba(74,222,128,.25);border-radius:var(--r-pill);overflow:hidden;margin-right:4px;}
+  .haz-mode-btn{padding:5px 11px;font:600 11px/1 var(--sans);border:none;cursor:pointer;background:transparent;color:#6B7280;transition:all .15s;}
+  .haz-mode-btn.on{background:#166534;color:#4ADE80;}
+  .haz-mode-btn:hover:not(.on){color:#9CA3AF;}
+  /* Quick reply chips */
+  .haz-quick-replies{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px 4px;}
+  .haz-qr{padding:7px 14px;border:1.5px solid #2D4A2D;border-radius:var(--r-pill);background:#1E2A1E;
+    color:#D1FAE5;font:600 12px/1 var(--sans);cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .haz-qr:hover{background:#166534;border-color:#4ADE80;color:#fff;}
+  /* Helper progress bar */
+  .haz-helper-progress{padding:6px 14px 0;display:flex;align-items:center;gap:8px;}
+  .haz-helper-progress-bar{flex:1;height:3px;background:rgba(74,222,128,.15);border-radius:2px;overflow:hidden;}
+  .haz-helper-progress-fill{height:100%;background:#22C55E;border-radius:2px;transition:width .3s;}
+  .haz-helper-step-label{font-size:10px;font-weight:700;color:#4ADE80;font-family:var(--mono);white-space:nowrap;}
 
   /* ── Haz Board ── */
   .haz-board-btn{padding:5px 12px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:var(--r-pill);
@@ -858,6 +871,10 @@
   <div class="haz-header">
     <span class="haz-header-icon">🔍</span>
     <h2>Haz — Buying Intake</h2>
+    <div class="haz-mode-toggle">
+      <button class="haz-mode-btn on" id="hazModeQuick" title="Quick mode — describe item freely">⚡ Quick</button>
+      <button class="haz-mode-btn" id="hazModeHelper" title="Helper mode — guided intake questions">🤝 Helper</button>
+    </div>
     <button class="haz-board-btn" id="hazBoardBtn" title="Intake Board">📋 Board</button>
     <button class="haz-back" id="hazBack">← Back</button>
   </div>
@@ -888,12 +905,17 @@
 
     <!-- Chat window -->
     <div class="haz-chat-wrap" id="hazChatWrap">
+      <div class="haz-helper-progress" id="hazHelperProgress" style="display:none">
+        <div class="haz-helper-progress-bar"><div class="haz-helper-progress-fill" id="hazHelperFill" style="width:0%"></div></div>
+        <span class="haz-helper-step-label" id="hazHelperStepLabel">Step 1</span>
+      </div>
       <div class="haz-chat-messages" id="hazChatMessages">
         <div class="haz-chat-bubble haz">
           <div class="haz-chat-avatar">H</div>
           <div class="haz-chat-text">Hey, what is the customer bringing in? Tell me what it is, condition, and what they want for it. I will run the numbers.</div>
         </div>
       </div>
+      <div class="haz-quick-replies" id="hazQuickReplies" style="display:none"></div>
       <div class="haz-chat-input-wrap">
         <textarea class="haz-chat-input" id="hazChatInput" placeholder="e.g. PS5 slim, works fine, small scratch on top, they want $250..." rows="2"></textarea>
         <button class="haz-chat-send" id="hazChatSend">↑</button>
@@ -4056,6 +4078,270 @@ function hazOpen(){
   if(_boardCards.length) document.getElementById('hazBoardBtn').style.background='rgba(74,222,128,.28)';
 }
 
+// ── Haz Mode Toggle ───────────────────────────────────────────────
+let HAZ_MODE = 'quick'; // 'quick' | 'helper'
+
+document.getElementById('hazModeQuick').addEventListener('click',()=>{
+  HAZ_MODE = 'quick';
+  document.getElementById('hazModeQuick').classList.add('on');
+  document.getElementById('hazModeHelper').classList.remove('on');
+  hazReset();
+});
+document.getElementById('hazModeHelper').addEventListener('click',()=>{
+  HAZ_MODE = 'helper';
+  document.getElementById('hazModeHelper').classList.add('on');
+  document.getElementById('hazModeQuick').classList.remove('on');
+  hazReset();
+});
+
+// ── Helper Mode Engine ────────────────────────────────────────────
+// Question definitions per item category
+const HAZ_QUESTIONS = {
+  console: [
+    {id:'power',    text:'Does it power on?',                     type:'choice', opts:['Yes','No — does not turn on']},
+    {id:'model',    text:'Which model exactly?',                  type:'choice', opts:['Standard','Slim','Pro / Digital Edition','Not sure']},
+    {id:'storage',  text:'Storage size?',                         type:'choice', opts:['256GB','512GB','1TB','Not sure']},
+    {id:'ctrl',     text:'Controllers included?',                 type:'choice', opts:['0 controllers','1 controller','2 controllers']},
+    {id:'cables',   text:'Cables included?',                      type:'choice', opts:['All cables (HDMI + power)','Power cable only','No cables']},
+    {id:'damage',   text:'Any visible damage?',                   type:'choice', opts:['None — looks good','Minor scratches','Heavy scratches/scuffs','Cracked housing','Disc tray broken']},
+  ],
+  phone: [
+    {id:'power',    text:'Does it power on and function?',        type:'choice', opts:['Yes — fully working','Screen issues','Powers on but has issues','Does not turn on']},
+    {id:'screen',   text:'Screen condition?',                     type:'choice', opts:['Perfect','Minor scratches','Cracked — still works','Cracked — unusable']},
+    {id:'lock',     text:'Account locked?',                       type:'choice', opts:['Clean — no lock','iCloud locked','Google account locked']},
+    {id:'carrier',  text:'Carrier status?',                       type:'choice', opts:['Unlocked','AT&T','Verizon','T-Mobile','Other carrier']},
+    {id:'battery',  text:'Battery health? (if known)',            type:'choice', opts:['80%+ / Unknown','50–79%','Below 50%']},
+    {id:'storage',  text:'Storage size?',                         type:'choice', opts:['64GB','128GB','256GB','512GB','1TB','Not sure']},
+    {id:'damage',   text:'Any other damage?',                     type:'choice', opts:['None','Back glass cracked','Bent frame','Water damage']},
+  ],
+  laptop: [
+    {id:'power',    text:'Does it power on?',                     type:'choice', opts:['Yes — works normally','Powers on but has issues','Does not turn on']},
+    {id:'cpu',      text:'Processor?',                            type:'choice', opts:['Intel i3','Intel i5','Intel i7','Intel i9','Apple M1','Apple M2','Apple M3','AMD Ryzen 5','AMD Ryzen 7','Not sure']},
+    {id:'ram',      text:'RAM?',                                  type:'choice', opts:['4GB','8GB','16GB','32GB','64GB','Not sure']},
+    {id:'storage',  text:'Storage size?',                         type:'choice', opts:['128GB','256GB','512GB','1TB','2TB','Not sure']},
+    {id:'screen',   text:'Screen condition?',                     type:'choice', opts:['Perfect','Minor scratches','Dead pixels','Cracked']},
+    {id:'battery',  text:'Battery health?',                       type:'choice', opts:['80%+ / Unknown','50–79%','Below 50%','Swollen/dead']},
+    {id:'charger',  text:'Charger included?',                     type:'choice', opts:['Yes','No']},
+    {id:'damage',   text:'Any keyboard/trackpad issues?',         type:'choice', opts:['All working','Some keys missing/broken','Trackpad issues','Both issues']},
+  ],
+  gpu: [
+    {id:'power',    text:'Tested working?',                       type:'choice', opts:['Yes — tested and working','Untested','Does not work — for parts']},
+    {id:'vram',     text:'VRAM?',                                 type:'choice', opts:['4GB','6GB','8GB','10GB','12GB','16GB+','Not sure']},
+    {id:'fans',     text:'Fans spinning?',                        type:'choice', opts:['All fans spin','One fan dead','All fans dead','Untested']},
+    {id:'damage',   text:'Any physical damage?',                  type:'choice', opts:['None','Minor dust','Bent bracket','PCB damage']},
+  ],
+  tablet: [
+    {id:'power',    text:'Powers on?',                            type:'choice', opts:['Yes — fully working','Powers on with issues','Does not turn on']},
+    {id:'screen',   text:'Screen condition?',                     type:'choice', opts:['Perfect','Minor scratches','Cracked — still works','Cracked — unusable']},
+    {id:'lock',     text:'Account locked?',                       type:'choice', opts:['Clean — no lock','iCloud locked','Google locked']},
+    {id:'storage',  text:'Storage?',                              type:'choice', opts:['32GB','64GB','128GB','256GB','512GB','Not sure']},
+    {id:'damage',   text:'Physical damage?',                      type:'choice', opts:['None','Light scratches','Heavy wear','Bent/cracked body']},
+  ],
+  general: [
+    {id:'power',    text:'Does it power on / function?',          type:'choice', opts:['Yes — working','Partially working','Does not work — for parts']},
+    {id:'damage',   text:'Physical condition?',                   type:'choice', opts:['Excellent — like new','Good — minor wear','Fair — visible wear','Poor — heavy damage']},
+    {id:'complete', text:'All accessories included?',             type:'choice', opts:['Yes — complete','Missing some accessories','No accessories']},
+  ],
+};
+
+// Price adjustment factors
+function hazHelperAdjust(category, answers, basePrice){
+  let adj = 0;
+  let passReason = '';
+
+  if(category === 'console'){
+    if(answers.power === 'No — does not turn on'){ passReason = 'Does not power on'; return {adj:0, pass:true, passReason}; }
+    if(answers.ctrl === '0 controllers')  adj -= 20;
+    if(answers.ctrl === '1 controller')   adj -= 10;
+    if(answers.cables === 'Power cable only') adj -= 8;
+    if(answers.cables === 'No cables')    adj -= 15;
+    if(answers.damage === 'Minor scratches') adj -= Math.round(basePrice * 0.05);
+    if(answers.damage === 'Heavy scratches/scuffs') adj -= Math.round(basePrice * 0.12);
+    if(answers.damage === 'Cracked housing') adj -= Math.round(basePrice * 0.25);
+    if(answers.damage === 'Disc tray broken'){ adj -= Math.round(basePrice * 0.25); }
+  }
+  else if(category === 'phone'){
+    if(answers.power === 'Does not turn on'){ passReason = 'Does not power on'; return {adj:0, pass:true, passReason}; }
+    if(answers.lock === 'iCloud locked'){ passReason = 'iCloud locked — cannot be activated'; return {adj:0, pass:true, passReason}; }
+    if(answers.lock === 'Google account locked'){ passReason = 'Google locked — cannot be activated'; return {adj:0, pass:true, passReason}; }
+    if(answers.screen === 'Cracked — unusable'){ adj -= Math.round(basePrice * 0.45); }
+    else if(answers.screen === 'Cracked — still works'){ adj -= Math.round(basePrice * 0.30); }
+    else if(answers.screen === 'Minor scratches'){ adj -= Math.round(basePrice * 0.05); }
+    if(answers.carrier !== 'Unlocked' && answers.carrier) adj -= Math.round(basePrice * 0.12);
+    if(answers.battery === '50–79%') adj -= 15;
+    if(answers.battery === 'Below 50%') adj -= 30;
+    if(answers.power === 'Screen issues') adj -= Math.round(basePrice * 0.15);
+    if(answers.damage === 'Back glass cracked') adj -= Math.round(basePrice * 0.08);
+    if(answers.damage === 'Water damage'){ adj -= Math.round(basePrice * 0.40); }
+  }
+  else if(category === 'laptop'){
+    if(answers.power === 'Does not turn on'){ passReason = 'Does not power on'; return {adj:0, pass:true, passReason}; }
+    if(answers.screen === 'Cracked') adj -= Math.round(basePrice * 0.30);
+    else if(answers.screen === 'Dead pixels') adj -= Math.round(basePrice * 0.15);
+    if(answers.battery === '50–79%') adj -= 15;
+    if(answers.battery === 'Below 50%') adj -= 30;
+    if(answers.battery === 'Swollen/dead') adj -= 40;
+    if(answers.charger === 'No') adj -= 20;
+    if(answers.damage === 'Some keys missing/broken') adj -= Math.round(basePrice * 0.10);
+    if(answers.damage === 'Both issues') adj -= Math.round(basePrice * 0.20);
+    // CPU multiplier — adjust base price up/down by processor tier
+    const cpuMult = {'Intel i3':0.75,'Intel i5':1.0,'Intel i7':1.2,'Intel i9':1.4,
+      'Apple M1':1.15,'Apple M2':1.3,'Apple M3':1.5,'AMD Ryzen 5':1.0,'AMD Ryzen 7':1.2};
+    if(answers.cpu && cpuMult[answers.cpu]) adj += Math.round(basePrice * (cpuMult[answers.cpu]-1.0));
+  }
+  else if(category === 'gpu'){
+    if(answers.power === 'Does not work — for parts') adj -= Math.round(basePrice * 0.45);
+    if(answers.power === 'Untested') adj -= Math.round(basePrice * 0.15);
+    if(answers.fans === 'One fan dead') adj -= Math.round(basePrice * 0.15);
+    if(answers.fans === 'All fans dead') adj -= Math.round(basePrice * 0.30);
+    if(answers.damage === 'PCB damage') adj -= Math.round(basePrice * 0.40);
+  }
+  else { // general
+    if(answers.power === 'Does not work — for parts') adj -= Math.round(basePrice * 0.50);
+    if(answers.power === 'Partially working') adj -= Math.round(basePrice * 0.25);
+    if(answers.damage === 'Fair — visible wear') adj -= Math.round(basePrice * 0.10);
+    if(answers.damage === 'Poor — heavy damage') adj -= Math.round(basePrice * 0.30);
+    if(answers.complete === 'Missing some accessories') adj -= Math.round(basePrice * 0.08);
+    if(answers.complete === 'No accessories') adj -= Math.round(basePrice * 0.15);
+  }
+
+  return {adj, pass:false, passReason:''};
+}
+
+function hazDetectCategory(text){
+  const lo = text.toLowerCase();
+  if(/ps5|ps4|playstation|xbox|nintendo switch|game.?boy|wii\b|3ds|switch\b/.test(lo)) return 'console';
+  if(/iphone|galaxy s|pixel|phone|android|smartphone/.test(lo)) return 'phone';
+  if(/macbook|laptop|thinkpad|dell xps|hp spectre|surface pro|notebook/.test(lo)) return 'laptop';
+  if(/gpu|graphics card|rtx|gtx|radeon|geforce|quadro|video card/.test(lo)) return 'gpu';
+  if(/ipad|galaxy tab|tablet/.test(lo)) return 'tablet';
+  return 'general';
+}
+
+// Helper session state
+let _helperState = null; // {category, match, questions, step, answers, askingPrice}
+
+function hazHelperStart(itemText){
+  const match = hazLocalMatch(itemText);
+  const category = hazDetectCategory(itemText);
+  const questions = HAZ_QUESTIONS[category] || HAZ_QUESTIONS.general;
+
+  // Extract asking price if mentioned
+  const askMatch = itemText.match(/\$?\s*(\d+(?:\.\d+)?)/gi);
+  let askingPrice = 0;
+  if(askMatch){
+    const nums = askMatch.map(m=>parseFloat(m.replace(/[^0-9.]/g,''))).filter(n=>n>10&&n<5000);
+    if(nums.length) askingPrice = nums[nums.length-1];
+  }
+
+  _helperState = {category, match, questions, step:0, answers:{}, askingPrice};
+  hazHelperNextQuestion();
+}
+
+function hazHelperNextQuestion(){
+  if(!_helperState) return;
+  const {questions, step} = _helperState;
+
+  // Update progress bar
+  const pct = Math.round(step/questions.length*100);
+  const fill = document.getElementById('hazHelperFill');
+  const label = document.getElementById('hazHelperStepLabel');
+  const prog = document.getElementById('hazHelperProgress');
+  if(fill) fill.style.width = pct+'%';
+  if(label) label.textContent = 'Step '+(step+1)+' of '+questions.length;
+  if(prog) prog.style.display = '';
+
+  if(step >= questions.length){
+    hazHelperFinish();
+    return;
+  }
+
+  const q = questions[step];
+  hazAddBubble('haz', q.text, false);
+  hazShowQuickReplies(q.opts, (val)=>{
+    _helperState.answers[q.id] = val;
+    hazAddBubble('staff', val, false);
+    _helperState.step++;
+    setTimeout(hazHelperNextQuestion, 300);
+  });
+}
+
+function hazShowQuickReplies(opts, cb){
+  const wrap = document.getElementById('hazQuickReplies');
+  if(!wrap) return;
+  wrap.style.display = 'flex';
+  wrap.innerHTML = opts.map((o,i)=>
+    `<button class="haz-qr" data-idx="${i}">${esc(o)}</button>`
+  ).join('');
+  wrap.querySelectorAll('.haz-qr').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const val = opts[parseInt(btn.dataset.idx)];
+      wrap.style.display = 'none';
+      wrap.innerHTML = '';
+      cb(val);
+    });
+  });
+}
+
+function hazHelperFinish(){
+  if(!_helperState) return;
+  const {category, match, answers, askingPrice} = _helperState;
+
+  // Hide progress
+  const prog = document.getElementById('hazHelperProgress');
+  if(prog) prog.style.display = 'none';
+
+  const basePrice = match ? match.price : 0;
+
+  if(!basePrice){
+    // No match — ask for manual price
+    hazAddBubble('haz', 'I do not have a store price for this item. What do you think it can sell for? Give me a number and I will calculate the offer.');
+    _hazAwaitingPrice = 'helper_manual';
+    _helperState.manualMode = true;
+    return;
+  }
+
+  const {adj, pass, passReason} = hazHelperAdjust(category, answers, basePrice);
+
+  if(pass){
+    _hazLastResult = null;
+    hazAddBubble('haz',
+      '<div><b>'+esc(match ? match.title : 'Item')+'</b></div>'
+      +'<div class="haz-pass-card"><div class="haz-pass-title">🔴 Pass on this one</div>'
+      +'<div class="haz-pass-text">'+esc(passReason)+'<br><br>"Sorry, this one does not work for us based on its condition."</div></div>',
+      true);
+    document.getElementById('hazReset').style.display='';
+    _helperState = null;
+    return;
+  }
+
+  const adjustedPrice = Math.max(HAZ_MIN_RESALE, Math.round(basePrice + adj));
+
+  // Build condition summary
+  const condSummary = Object.entries(answers)
+    .filter(([,v])=>v && v !== 'Not sure')
+    .map(([k,v])=> v)
+    .join(', ');
+
+  const adjNote = adj !== 0
+    ? (adj > 0 ? ' (+$'+Math.abs(adj)+' for specs)' : ' (−$'+Math.abs(adj)+' for condition)')
+    : ' (no adjustments)';
+
+  hazRenderChatResult({
+    item: match ? match.title : 'Item',
+    condition: condSummary,
+    estimate: adjustedPrice,
+    asking_price: askingPrice,
+    confidence: match ? (match.source==='sold'?'high':'medium') : 'low',
+    pass: false,
+    pass_reason: '',
+    source: match ? (match.source==='sold'?'SYG Sold':'SYG Active') : 'Manual',
+    adjNote
+  }, _hazVibe);
+
+  _helperState = null;
+}
+
 // ── Haz Logic ─────────────────────────────────────────────────────
 // ── Haz Store Price Database (SYG sold orders + active listings) ──────
 // Sources: sold = confirmed sell-through price, active = current asking price
@@ -4101,7 +4387,15 @@ const HAZ_STORE_PRICES = [
   // Consoles (sold + active)
   {title:"Microsoft Xbox One 500GB", keywords:["xbox one 500gb","xbox one 1540","xbox one original"], price:64.99, source:"sold"},
   {title:"Microsoft Xbox One S 500GB", keywords:["xbox one s","xbox one s 500gb","xbox 1681"], price:159.97, source:"sold"},
-  {title:"Microsoft Xbox Series S 512GB", keywords:["xbox series s","series s console","xbox s 512gb","series s"], price:210.00, source:"active"},
+  {title:"Microsoft Xbox Series S 512GB", keywords:["xbox series s","xbox series s 512gb","microsoft xbox series s"], price:210.00, source:"active"},
+  {title:"Microsoft Xbox Series X", keywords:["xbox series x","xbox series x 1tb","microsoft xbox series x"], price:350.00, source:"active"},
+  {title:"Sony PlayStation 5 Slim", keywords:["ps5 slim","playstation 5 slim","sony ps5 slim","ps5 slim console"], price:349.99, source:"active"},
+  {title:"Sony PlayStation 5", keywords:["ps5","playstation 5","sony ps5","ps5 console","ps5 digital"], price:350.00, source:"active"},
+  {title:"Sony PlayStation 4 Slim", keywords:["ps4 slim","playstation 4 slim","sony ps4 slim"], price:120.00, source:"active"},
+  {title:"Sony PlayStation 4", keywords:["ps4","playstation 4","sony ps4","ps4 console"], price:100.00, source:"active"},
+  {title:"Nintendo Switch OLED", keywords:["switch oled","nintendo switch oled"], price:230.00, source:"active"},
+  {title:"Nintendo Switch", keywords:["nintendo switch","switch console","switch v2"], price:180.00, source:"active"},
+  {title:"Nintendo Switch Lite", keywords:["switch lite","nintendo switch lite"], price:120.00, source:"active"},
   {title:"Nintendo 3DS", keywords:["nintendo 3ds","3ds console","ctr-001","2ds","nintendo 2ds"], price:180.00, source:"active"},
   // Phones (sold + active)
   {title:"Samsung Galaxy S26 256GB", keywords:["galaxy s26","samsung s26","sm-s942u"], price:529.99, source:"sold"},
@@ -4147,7 +4441,7 @@ const HAZ_STORE_PRICES = [
   {title:"PSP Game", keywords:["psp game","psp umd","playstation portable game"], price:12.00, source:"active"},
 ];
 // Local fuzzy matching — returns {title, price, source} or null
-// Sold listings are weighted 2x over active listings
+// Sold listings weighted 1.5x. Requires meaningful keyword overlap to match.
 function hazLocalMatch(text){
   const lo = text.toLowerCase().replace(/[^a-z0-9 .\/]/g,' ');
   const words = lo.split(/\s+/).filter(w=>w.length>1);
@@ -4156,17 +4450,22 @@ function hazLocalMatch(text){
     let score = 0;
     const sourceBonus = entry.source==='sold' ? 1.5 : 1.0;
     for(const kw of entry.keywords){
+      // Full keyword phrase match — strongest signal
       if(lo.includes(kw)){
-        score += kw.split(' ').length * 2 * sourceBonus;
+        score += kw.split(' ').length * 3 * sourceBonus;
         break;
       }
-      const kwWords = kw.split(' ');
-      const matched = kwWords.filter(k => words.some(w => w.includes(k) || k.includes(w)));
-      score += matched.length * sourceBonus;
+      // Partial: all words in keyword must appear in text
+      const kwWords = kw.split(' ').filter(w=>w.length>1);
+      if(kwWords.length >= 2){
+        const allMatch = kwWords.every(k => words.some(w => w===k || w.includes(k)));
+        if(allMatch) score += kwWords.length * 2 * sourceBonus;
+      }
     }
     if(score > bestScore){ bestScore = score; best = entry; }
   }
-  return bestScore >= 1.5 ? best : null;
+  // Require a score of at least 3 to avoid garbage matches
+  return bestScore >= 3 ? best : null;
 }
 
 const HAZ_FEE_RATE   = 0.13;
@@ -4199,7 +4498,14 @@ function hazChatSend(){
   input.value = '';
   hazAddBubble('staff', text);
   hazAddTyping();
-  setTimeout(()=> hazProcessMessage(text), 900);
+  setTimeout(()=>{
+    hazRemoveTyping();
+    if(HAZ_MODE === 'helper'){
+      hazHelperStart(text);
+    } else {
+      hazProcessMessage(text);
+    }
+  }, 900);
 }
 
 function hazAddBubble(who, html, isHtml){
@@ -4312,7 +4618,16 @@ function hazChatSend(){
   }
 
   hazAddTyping();
-  setTimeout(()=> hazProcessMessage(text), 900);
+  setTimeout(()=>{
+    hazRemoveTyping();
+    if(HAZ_MODE === 'helper' && !_helperState){
+      hazHelperStart(text);
+    } else if(HAZ_MODE === 'helper' && _helperState){
+      // already in helper flow — ignore extra text
+    } else {
+      hazProcessMessage(text);
+    }
+  }, 900);
 }
 
 document.getElementById('hazChatSend').addEventListener('click', hazChatSend);
@@ -4372,8 +4687,9 @@ function hazRenderChatResult(data, vibe){
       + data.source+'</span>'
     : '';
 
+  const adjNote = data.adjNote || '';
   const html = '<div><b>'+esc(item)+'</b>'+confBadge+sourceBadge+'<br><span style="font-size:11.5px;opacity:.8;">'+esc(condition)+'</span></div>'
-    +'<div style="margin-top:10px;font-size:11px;color:#166534;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Market est: <span style="font-family:var(--mono);font-size:13px;">$'+value+'</span> &nbsp;·&nbsp; Net after fees: <span style="font-family:var(--mono);">$'+Math.round(net)+'</span></div>'
+    +'<div style="margin-top:10px;font-size:11px;color:#166534;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Market est: <span style="font-family:var(--mono);font-size:13px;">$'+value+'</span>'+esc(adjNote)+' &nbsp;·&nbsp; Net after fees: <span style="font-family:var(--mono);">$'+Math.round(net)+'</span></div>'
     +(data.asking_price && data.asking_price > 0 ? '<div style="margin-top:8px;padding:7px 10px;background:#FEF9C3;border:1px solid #FDE047;border-radius:8px;font-size:12px;color:#78350F;">'
       + '⚠️ Customer asking <b>$'+data.asking_price+'</b> '
       + (data.asking_price > maxOff ? '— above your max offer of $'+maxOff+'. Expect negotiation.' : data.asking_price > midOff ? '— above mid point. Open low and work up.' : '— within range. Open at $'+openOff+'.')
@@ -4425,13 +4741,23 @@ function hazShowCustomer(){
 function hazReset(){
   document.getElementById('hazChatMessages').innerHTML =
     '<div class="haz-chat-bubble haz"><div class="haz-chat-avatar">H</div>'
-    +'<div class="haz-chat-text">Hey, what is the customer bringing in? Tell me what it is, condition, and what they want for it. I will run the numbers.</div></div>';
+    +'<div class="haz-chat-text">'+(HAZ_MODE==='helper'
+      ? 'Helper mode on. Tell me what the customer is bringing in and I will walk through the intake questions.'
+      : 'Hey, what is the customer bringing in? Tell me what it is, condition, and what they want for it. I will run the numbers.')
+    +'</div></div>';
+  const qr = document.getElementById('hazQuickReplies');
+  if(qr){ qr.style.display='none'; qr.innerHTML=''; }
+  const prog = document.getElementById('hazHelperProgress');
+  if(prog) prog.style.display='none';
   document.querySelectorAll('.haz-vibe-btn').forEach(b=>b.classList.remove('on'));
   _hazVibe = null;
   _hazLastResult = null;
+  _helperState = null;
+  _hazAwaitingPrice = null;
   document.getElementById('hazReset').style.display='none';
   document.getElementById('hazChatInput').value='';
-  document.getElementById('hazChatInput').focus();
+  const inp = document.getElementById('hazChatInput');
+  if(inp) setTimeout(()=>inp.focus(),50);
 }
 
 // ── Haz Intake Board ──────────────────────────────────────────────
