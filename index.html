@@ -4487,16 +4487,34 @@ IMPORTANT STEPS:
 Slim-selects are custom dropdowns with class .ss-main. To pick an option: click the .ss-main element, wait 600ms for options to appear, then find the .ss-option element with matching text and click it, wait 1500ms for Bubble to react.`;
 
   // ── Step 4: Show copy prompt ──────────────────────────────────
+  const bubbleId = 'hazPoBubble_' + Date.now();
   hazAddBubble('haz',
-    `<div style="font-size:12px;line-height:1.7;">`
+    `<div id="${bubbleId}" style="font-size:12px;line-height:1.7;">`
     +`<b style="color:#4ADE80;">✅ Ready.</b> Copy the prompt below and paste it into Claude chat (this window or a new one). Claude in Chrome will take over from there.<br><br>`
-    +`<div style="background:#0a1208;border:1px solid #2D4A2D;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:10.5px;color:#86EFAC;white-space:pre-wrap;max-height:200px;overflow-y:auto;line-height:1.6;">${esc(claudePrompt)}</div>`
-    +`<button onclick="navigator.clipboard.writeText(${JSON.stringify(claudePrompt)}).then(()=>{this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Copy prompt',2000)})" `
-    +`style="margin-top:8px;width:100%;padding:9px;background:#16A34A;border:none;border-radius:8px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;">📋 Copy prompt</button>`
+    +`<div style="background:#0a1208;border:1px solid #2D4A2D;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:10.5px;color:#86EFAC;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;max-height:200px;overflow-y:auto;overflow-x:hidden;line-height:1.6;">${esc(claudePrompt)}</div>`
+    +`<button id="${bubbleId}_btn" style="margin-top:8px;width:100%;padding:9px;background:#16A34A;border:none;border-radius:8px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;">📋 Copy prompt</button>`
     +`<div style="margin-top:8px;font-size:11px;color:#6B7280;">Paste into Claude → Claude in Chrome will navigate to the PO page and fill every field automatically.</div>`
     +`</div>`,
     true
   );
+  // Wire copy button safely — no inline onclick with JSON
+  setTimeout(()=>{
+    const btn = document.getElementById(bubbleId+'_btn');
+    if(btn) btn.addEventListener('click', ()=>{
+      navigator.clipboard.writeText(claudePrompt).then(()=>{
+        btn.textContent = '✅ Copied!';
+        setTimeout(()=>{ btn.textContent = '📋 Copy prompt'; }, 2000);
+      }).catch(()=>{
+        // Fallback for file:// context
+        const ta = document.createElement('textarea');
+        ta.value = claudePrompt;
+        ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); btn.textContent='✅ Copied!'; setTimeout(()=>{ btn.textContent='📋 Copy prompt'; },2000); }catch(e){}
+        document.body.removeChild(ta);
+      });
+    });
+  }, 50);
 }
 
 // ── Haz Tutorial ──────────────────────────────────────────────────
