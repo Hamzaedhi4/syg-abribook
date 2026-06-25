@@ -6273,6 +6273,9 @@ function hazBoardRender(){
             <div class="haz-receipt-offer-chip mid">🟡 $${card.midOff}</div>
             <div class="haz-receipt-offer-chip max">🔴 $${card.maxOff}</div>
           </div>
+          <button class="haz-fill-po-btn" data-cardid="${card.id}" style="margin-top:8px;width:100%;padding:9px;background:#16A34A;border:none;border-radius:8px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;letter-spacing:.02em;">
+            🖥️ Fill PO on Company Website
+          </button>
           <div class="haz-receipt-accepted" style="margin-top:10px;">
             <span class="haz-receipt-accepted-label">Accepted at:</span>
             <input class="haz-receipt-accepted-input" type="text" placeholder="$" value="${esc(card.acceptedPrice||'')}" data-id="${card.id}">
@@ -6281,9 +6284,6 @@ function hazBoardRender(){
           <div class="haz-receipt-note">
             ${hazPosFields(card)}
           </div>
-          <button class="haz-fill-po-btn" data-cardid="${card.id}" style="margin-top:10px;width:100%;padding:9px;background:#16A34A;border:none;border-radius:8px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;letter-spacing:.02em;">
-            🖥️ Fill PO on Company Website
-          </button>
         </div>
         <div class="haz-receipt-timestamp">${timeStr}</div>
       </div>`;
@@ -6297,13 +6297,12 @@ function hazBoardRender(){
     const inp = el.querySelector('.haz-receipt-accepted-input');
     if(inp) inp.addEventListener('input', ev=>{
       card.acceptedPrice = ev.target.value;
-
+    });
     // Wire Fill PO button
     const fillBtn = el.querySelector('.haz-fill-po-btn');
     if(fillBtn) fillBtn.addEventListener('click', ev=>{
       ev.stopPropagation();
       hazFillPO(card);
-    });
     });
   });
   hazBoardApplyTransform();
