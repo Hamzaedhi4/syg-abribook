@@ -620,8 +620,8 @@
   .welcome-card-desc{font-size:11.5px;color:var(--on-dark-soft);line-height:1.5;}
 
   /* ── Haz ── */
-  .haz-wrap{position:fixed;inset:0;background:#F4F4F2;z-index:200;overflow-y:auto;display:none;}
-  .haz-wrap.show{display:block;}
+  .haz-wrap{position:fixed;inset:0;background:#F0F4F0;z-index:200;display:none;flex-direction:column;}
+  .haz-wrap.show{display:flex;}
   .haz-header{background:#0D1A12;border-bottom:3px solid #22C55E;padding:15px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
   .haz-header-icon{font-size:20px;}
   .haz-header h2{margin:0;font-size:14px;font-weight:800;color:#4ADE80;letter-spacing:-.02em;flex:1;}
@@ -693,6 +693,91 @@
   .haz-reset{width:100%;padding:10px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);
     font:600 12px/1 var(--sans);color:#6B7280;cursor:pointer;margin-top:2px;transition:all .15s;}
   .haz-reset:hover{border-color:#9CA3AF;color:var(--ink);}
+
+  /* Haz chat styles */
+  .haz-header{background:#0D1A12;border-bottom:3px solid #22C55E;padding:14px 18px;display:flex;align-items:center;gap:12px;flex:none;}
+  .haz-header h2{margin:0;font-size:14px;font-weight:800;color:#4ADE80;letter-spacing:-.02em;flex:1;}
+  .haz-back{padding:6px 14px;background:transparent;border:1px solid rgba(74,222,128,.35);border-radius:var(--r-pill);color:#4ADE80;font:700 11px/1 var(--sans);cursor:pointer;}
+  .haz-back:hover{background:rgba(74,222,128,.12);}
+  .haz-body{display:flex;flex-direction:column;gap:10px;padding:14px 16px;max-width:560px;width:100%;margin:0 auto;flex:1;min-height:0;}
+  .haz-vibe-section{background:#fff;border:1px solid #E5E7EB;border-radius:var(--r-lg);padding:12px 14px;flex:none;}
+  .haz-vibe-label{font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+  .haz-vibe-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+  .haz-vibe-btn{padding:9px 6px;border:2px solid #E5E7EB;border-radius:var(--r-md);background:#fff;cursor:pointer;text-align:center;transition:all .15s;font-family:var(--sans);}
+  .haz-vibe-btn.on.easy{border-color:#22C55E;background:#F0FDF4;}
+  .haz-vibe-btn.on.tough{border-color:#EF4444;background:#FEF2F2;}
+  .haz-vibe-btn.on.desperate{border-color:#F59E0B;background:#FFFBEB;}
+  .haz-vibe-emoji{font-size:18px;display:block;margin-bottom:3px;}
+  .haz-vibe-name{font-size:11px;font-weight:700;color:var(--ink);display:block;}
+  .haz-vibe-hint{font-size:9px;color:#9CA3AF;display:block;margin-top:1px;line-height:1.3;}
+  .haz-chat-wrap{display:flex;flex-direction:column;flex:1;background:#fff;border:1px solid #E5E7EB;border-radius:var(--r-lg);overflow:hidden;min-height:300px;}
+  .haz-chat-messages{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:12px;}
+  .haz-chat-bubble{display:flex;gap:9px;align-items:flex-start;}
+  .haz-chat-bubble.staff{flex-direction:row-reverse;}
+  .haz-chat-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 11px/1 var(--sans);flex:none;margin-top:2px;}
+  .haz-chat-bubble.haz .haz-chat-avatar{background:#166534;color:#4ADE80;}
+  .haz-chat-bubble.staff .haz-chat-avatar{background:#1F2937;color:#9CA3AF;}
+  .haz-chat-text{padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.55;max-width:85%;}
+  .haz-chat-bubble.haz .haz-chat-text{background:#F0FDF4;color:#14532D;border-bottom-left-radius:4px;}
+  .haz-chat-bubble.staff .haz-chat-text{background:#1F2937;color:#F9FAFB;border-bottom-right-radius:4px;}
+  .haz-offer-cards{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+  .haz-offer-card{border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:10px;}
+  .haz-offer-card.best{background:#DCFCE7;border:1.5px solid #86EFAC;}
+  .haz-offer-card.mid{background:#FEF9C3;border:1.5px solid #FDE047;}
+  .haz-offer-card.max{background:#FEE2E2;border:1.5px solid #FCA5A5;}
+  .haz-offer-card-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;flex:none;width:86px;}
+  .haz-offer-card.best .haz-offer-card-label{color:#166534;}
+  .haz-offer-card.mid .haz-offer-card-label{color:#854D0E;}
+  .haz-offer-card.max .haz-offer-card-label{color:#991B1B;}
+  .haz-offer-card-amount{font:800 20px/1 var(--mono);flex:none;width:70px;}
+  .haz-offer-card.best .haz-offer-card-amount{color:#15803D;}
+  .haz-offer-card.mid .haz-offer-card-amount{color:#A16207;}
+  .haz-offer-card.max .haz-offer-card-amount{color:#B91C1C;}
+  .haz-offer-card-hint{font-size:10.5px;color:#6B7280;flex:1;}
+  .haz-script-block{margin-top:10px;border-top:1px solid rgba(0,0,0,.07);padding-top:9px;}
+  .haz-script-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#166534;margin-bottom:5px;}
+  .haz-script-line{padding:8px 10px;border-radius:0 6px 6px 0;font-size:12.5px;line-height:1.55;font-style:italic;margin-bottom:5px;}
+  .haz-script-line.easy{background:#DCFCE7;border-left:3px solid #22C55E;color:#14532D;}
+  .haz-script-line.tough{background:#FEE2E2;border-left:3px solid #EF4444;color:#7F1D1D;}
+  .haz-script-line.desperate{background:#FEF9C3;border-left:3px solid #F59E0B;color:#78350F;}
+  .haz-script-line b{font-style:normal;font-weight:800;}
+  .haz-show-customer{margin-top:10px;padding:9px 14px;background:#0D1A12;color:#4ADE80;border:none;border-radius:var(--r-md);font:700 12px/1 var(--sans);cursor:pointer;width:100%;transition:background .15s;}
+  .haz-show-customer:hover{background:#166534;}
+  .haz-pass-card{background:#FEF2F2;border:1.5px solid #FECACA;border-radius:10px;padding:12px 14px;margin-top:8px;}
+  .haz-pass-title{font-size:13px;font-weight:800;color:#B91C1C;margin-bottom:4px;}
+  .haz-pass-text{font-size:12px;color:#7F1D1D;line-height:1.5;font-style:italic;}
+  .haz-chat-input-wrap{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #F3F4F6;background:#FAFAFA;flex:none;}
+  .haz-chat-input{flex:1;border:1px solid #E5E7EB;border-radius:10px;padding:9px 12px;font:500 13px/1.4 var(--sans);color:var(--ink);resize:none;outline:none;background:#fff;transition:border-color .15s;}
+  .haz-chat-input:focus{border-color:#22C55E;}
+  .haz-chat-send{width:36px;height:36px;border-radius:50%;background:#16A34A;color:#fff;border:none;font-size:16px;cursor:pointer;flex:none;align-self:flex-end;}
+  .haz-chat-send:hover{background:#15803D;}
+  .haz-chat-typing{display:flex;gap:4px;align-items:center;padding:10px 13px;background:#F0FDF4;border-radius:14px;border-bottom-left-radius:4px;width:56px;}
+  .haz-chat-typing span{width:6px;height:6px;border-radius:50%;background:#22C55E;animation:hazTyping 1.1s infinite;}
+  .haz-chat-typing span:nth-child(2){animation-delay:.18s;}
+  .haz-chat-typing span:nth-child(3){animation-delay:.36s;}
+  @keyframes hazTyping{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+  .haz-reset{width:100%;padding:9px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);font:600 12px/1 var(--sans);color:#6B7280;cursor:pointer;flex:none;}
+  .haz-reset:hover{border-color:#9CA3AF;color:var(--ink);}
+  .haz-customer-view{position:absolute;inset:0;background:#fff;z-index:10;display:flex;flex-direction:column;}
+  .haz-customer-view.hidden{display:none;}
+  .haz-customer-head{background:#0D1A12;padding:24px 20px 20px;text-align:center;flex:none;}
+  .haz-customer-logo{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.03em;}
+  .haz-customer-logo span{color:#4ADE80;}
+  .haz-customer-sub{font-size:11px;color:#6B7280;margin-top:4px;}
+  .haz-customer-body{flex:1;padding:20px;overflow-y:auto;}
+  .haz-customer-item{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+  .haz-customer-condition{font-size:12.5px;color:#6B7280;margin-bottom:16px;}
+  .haz-customer-section{margin-bottom:16px;}
+  .haz-customer-section-label{font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+  .haz-customer-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #F3F4F6;color:#374151;}
+  .haz-customer-row:last-child{border:none;}
+  .haz-customer-offer{background:#F0FDF4;border:2px solid #86EFAC;border-radius:12px;padding:18px 16px;text-align:center;margin-top:16px;}
+  .haz-customer-offer-label{font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+  .haz-customer-offer-amount{font-size:36px;font-weight:900;color:#15803D;font-family:var(--mono);}
+  .haz-customer-offer-note{font-size:11.5px;color:#166534;margin-top:6px;line-height:1.5;}
+  .haz-customer-disclaimer{font-size:10.5px;color:#9CA3AF;text-align:center;margin-top:14px;line-height:1.5;}
+  .haz-customer-footer{padding:14px 16px;border-top:1px solid #F3F4F6;flex:none;}
+  .haz-customer-back{width:100%;padding:10px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);font:600 12px/1 var(--sans);color:#6B7280;cursor:pointer;}
 </style>
 <body>
 
@@ -724,12 +809,9 @@
     <h2>Haz — Buying Intake</h2>
     <button class="haz-back" id="hazBack">← Back</button>
   </div>
-  <div class="haz-body">
 
-    <div class="haz-search-box">
-      <div class="haz-search-label">What is the customer selling?</div>
-      <textarea class="haz-search-input" id="hazItemInput" placeholder="e.g. Samsung 980 Pro 2TB, works fine, some scratches on top&#10;or: PS4 slim 500GB, no controller, turns on" rows="3"></textarea>
-    </div>
+  <!-- Internal staff view -->
+  <div class="haz-body" id="hazStaffView">
 
     <div class="haz-vibe-section">
       <div class="haz-vibe-label">How does the customer seem?</div>
@@ -737,54 +819,50 @@
         <button class="haz-vibe-btn easy" data-vibe="easy">
           <span class="haz-vibe-emoji">😊</span>
           <span class="haz-vibe-name">Easy going</span>
-          <span class="haz-vibe-hint">Relaxed, not pushy, will likely accept</span>
+          <span class="haz-vibe-hint">Relaxed, likely to accept</span>
         </button>
         <button class="haz-vibe-btn tough" data-vibe="tough">
           <span class="haz-vibe-emoji">😤</span>
           <span class="haz-vibe-name">Tough</span>
-          <span class="haz-vibe-hint">Knows the value, will push back hard</span>
+          <span class="haz-vibe-hint">Knows the value, will push</span>
         </button>
         <button class="haz-vibe-btn desperate" data-vibe="desperate">
           <span class="haz-vibe-emoji">😰</span>
           <span class="haz-vibe-name">Desperate</span>
-          <span class="haz-vibe-hint">Needs cash now, urgent, flexible</span>
+          <span class="haz-vibe-hint">Needs cash now, flexible</span>
         </button>
       </div>
     </div>
 
-    <button class="haz-analyze-btn" id="hazAnalyzeBtn" disabled>🔍 Analyze &amp; Calculate Offer</button>
-
-    <div class="haz-loading" id="hazLoading">
-      <span class="haz-spinner"></span> Haz is pulling comps and running the numbers…
-    </div>
-
-    <div class="haz-result" id="hazResult">
-      <div class="haz-result-head">
-        <div class="haz-result-title" id="hazResultTitle">—</div>
-        <div class="haz-result-condition" id="hazResultCondition">—</div>
-      </div>
-      <div class="haz-comps">
-        <div class="haz-comps-label">Comp Data</div>
-        <div id="hazCompRows"></div>
-      </div>
-      <div class="haz-calc">
-        <div class="haz-calc-label">Offer Calculation</div>
-        <div id="hazCalcRows"></div>
-      </div>
-      <div class="haz-verdict">
-        <div class="haz-verdict-card" id="hazVerdictCard">
-          <div class="haz-verdict-icon" id="hazVerdictIcon"></div>
-          <div class="haz-verdict-title" id="hazVerdictTitle"></div>
-          <div class="haz-offer-range" id="hazOfferRange"></div>
-          <div class="haz-script-label" style="margin-top:10px;">What to say</div>
-          <div class="haz-script" id="hazScript"></div>
+    <!-- Chat window -->
+    <div class="haz-chat-wrap" id="hazChatWrap">
+      <div class="haz-chat-messages" id="hazChatMessages">
+        <div class="haz-chat-bubble haz">
+          <div class="haz-chat-avatar">H</div>
+          <div class="haz-chat-text">Hey, what is the customer bringing in? Tell me what it is, condition, and what they want for it. I will run the numbers.</div>
         </div>
+      </div>
+      <div class="haz-chat-input-wrap">
+        <textarea class="haz-chat-input" id="hazChatInput" placeholder="e.g. PS5 slim, works fine, small scratch on top, they want $250..." rows="2"></textarea>
+        <button class="haz-chat-send" id="hazChatSend">↑</button>
       </div>
     </div>
 
     <button class="haz-reset" id="hazReset" style="display:none">↩ New intake</button>
-
   </div>
+
+  <!-- Customer-facing view (clean, no internal info) -->
+  <div class="haz-customer-view hidden" id="hazCustomerView">
+    <div class="haz-customer-head">
+      <div class="haz-customer-logo">SYG <span>Elmwood Park</span></div>
+      <div class="haz-customer-sub">Item Evaluation Summary</div>
+    </div>
+    <div class="haz-customer-body" id="hazCustomerBody"></div>
+    <div class="haz-customer-footer">
+      <button class="haz-customer-back" id="hazCustomerBack">← Back to staff view</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- ── Tutorial Modal ── -->
@@ -3870,205 +3948,200 @@ function hazOpen(){
 }
 
 // ── Haz Logic ─────────────────────────────────────────────────────
-const HAZ_FEE_RATE  = 0.13;  // eBay fees
-const HAZ_OFFER_RATE = 0.40; // max offer = value * 0.40
-const HAZ_MIN_RESALE = 45;   // floor — don't buy if resale < $45
-
+const HAZ_FEE_RATE   = 0.13;
+const HAZ_OFFER_RATE = 0.40;
+const HAZ_MIN_RESALE = 45;
 let _hazVibe = null;
+let _hazLastResult = null;
 
-// Vibe selection
 document.querySelectorAll('.haz-vibe-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
+  btn.addEventListener('click',()=>{
     document.querySelectorAll('.haz-vibe-btn').forEach(b=>b.classList.remove('on'));
     btn.classList.add('on');
     _hazVibe = btn.dataset.vibe;
-    hazCheckReady();
   });
 });
 
-document.getElementById('hazItemInput').addEventListener('input', hazCheckReady);
-
-function hazCheckReady(){
-  const hasItem = document.getElementById('hazItemInput').value.trim().length > 3;
-  const hasVibe = !!_hazVibe;
-  document.getElementById('hazAnalyzeBtn').disabled = !(hasItem && hasVibe);
-}
-
-document.getElementById('hazAnalyzeBtn').addEventListener('click', hazAnalyze);
+document.getElementById('hazChatSend').addEventListener('click', hazChatSend);
+document.getElementById('hazChatInput').addEventListener('keydown', ev=>{
+  if(ev.key==='Enter' && !ev.shiftKey){ ev.preventDefault(); hazChatSend(); }
+});
 document.getElementById('hazReset').addEventListener('click', hazReset);
+document.getElementById('hazCustomerBack').addEventListener('click',()=>{
+  document.getElementById('hazCustomerView').classList.add('hidden');
+});
 
-function hazReset(){
-  document.getElementById('hazItemInput').value = '';
-  document.querySelectorAll('.haz-vibe-btn').forEach(b=>b.classList.remove('on'));
-  _hazVibe = null;
-  document.getElementById('hazResult').classList.remove('show');
-  document.getElementById('hazLoading').classList.remove('show');
-  document.getElementById('hazReset').style.display = 'none';
-  document.getElementById('hazAnalyzeBtn').disabled = true;
-  document.getElementById('hazItemInput').focus();
+function hazChatSend(){
+  const input = document.getElementById('hazChatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  if(!_hazVibe){
+    hazAddBubble('haz','Pick a customer vibe first (Easy / Tough / Desperate) so I can calibrate the offer.');
+    return;
+  }
+  input.value = '';
+  hazAddBubble('staff', text);
+  hazAddTyping();
+  setTimeout(()=> hazProcessMessage(text), 900);
 }
 
-async function hazAnalyze(){
-  const itemText = document.getElementById('hazItemInput').value.trim();
-  if(!itemText || !_hazVibe) return;
+function hazAddBubble(who, html, isHtml){
+  const msgs = document.getElementById('hazChatMessages');
+  const div = document.createElement('div');
+  div.className = 'haz-chat-bubble ' + who;
+  const initial = who==='haz' ? 'H' : (LISTER_INITIAL||'S');
+  div.innerHTML = '<div class="haz-chat-avatar">'+initial+'</div>'
+    + '<div class="haz-chat-text">' + (isHtml ? html : esc(html)) + '</div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
 
-  document.getElementById('hazAnalyzeBtn').disabled = true;
-  document.getElementById('hazResult').classList.remove('show');
-  document.getElementById('hazLoading').classList.add('show');
-  document.getElementById('hazReset').style.display = 'none';
+function hazAddTyping(){
+  const msgs = document.getElementById('hazChatMessages');
+  const div = document.createElement('div');
+  div.className = 'haz-chat-bubble haz';
+  div.id = 'hazTypingBubble';
+  div.innerHTML = '<div class="haz-chat-avatar">H</div><div class="haz-chat-typing"><span></span><span></span><span></span></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
 
+function hazRemoveTyping(){
+  const t = document.getElementById('hazTypingBubble');
+  if(t) t.remove();
+}
+
+async function hazProcessMessage(text){
+  const lo = text.toLowerCase();
+  if(!_hazVibe){
+    if(lo.includes('easy')||lo.includes('chill')) _hazVibe='easy';
+    else if(lo.includes('tough')||lo.includes('pushy')) _hazVibe='tough';
+    else if(lo.includes('desperate')||lo.includes('urgent')) _hazVibe='desperate';
+  }
   try{
-    // Step 1: Pull internal Shopify sold comps
-    const internalComps = await hazInternalComps(itemText);
-
-    // Step 2: Pull eBay sold comps via web search through Apps Script
-    const ebayComps = await hazEbayComps(itemText);
-
-    // Step 3: Build result
-    hazRenderResult(itemText, internalComps, ebayComps, _hazVibe);
+    const systemPrompt = 'You are Haz, a buying assistant for SYG Elmwood Park, a used electronics reseller. Staff describe an item a customer wants to sell. Return ONLY a JSON object with these fields: {"item":"clean item name","condition":"brief condition summary","estimate":350,"confidence":"high|medium|low","pass":false,"pass_reason":""}. estimate is the realistic eBay sold price in USD as a number. pass is true if resale under $45 or item is a TV/appliance/oversized. Return ONLY the JSON, no other text.';
+    const r = await fetch(GS_URL, {
+      method:'POST',
+      body: JSON.stringify({action:'haz_claude', system: systemPrompt, userText: text})
+    });
+    const j = await r.json();
+    hazRemoveTyping();
+    let parsed;
+    try{ parsed = JSON.parse((j.result||j.response||'{}').trim()); }
+    catch(e){ parsed = {}; }
+    if(!parsed.estimate && !parsed.pass){
+      hazAddBubble('haz','I could not identify that item. Can you describe it more — brand, model, size if applicable?');
+      return;
+    }
+    hazRenderChatResult(parsed, _hazVibe);
   } catch(err){
-    document.getElementById('hazLoading').classList.remove('show');
-    document.getElementById('hazAnalyzeBtn').disabled = false;
-    toast('Haz hit an error — try again');
+    hazRemoveTyping();
+    hazAddBubble('haz','I am having trouble reaching my pricing engine right now. What is the customer asking for it? Give me the price and I will do the math.');
   }
 }
 
-async function hazInternalComps(itemText){
-  // Search Shopify orders for this item
-  try{
-    const r = await fetch(GS_URL+'?action=haz_internal&item='+encodeURIComponent(itemText)+'&t='+Date.now());
-    const j = await r.json();
-    if(j.ok && j.comps) return j.comps;
-  } catch(e){}
-  return [];
-}
+function hazRenderChatResult(data, vibe){
+  const value   = data.estimate || 0;
+  const item     = data.item || 'Unknown item';
+  const condition= data.condition || '';
 
-async function hazEbayComps(itemText){
-  // Use Apps Script to web search eBay sold listings
-  try{
-    const query = itemText.replace(/[^a-z0-9 ]/gi,' ').trim().split(/\s+/).slice(0,6).join(' ');
-    const r = await fetch(GS_URL, {
-      method:'POST',
-      body: JSON.stringify({action:'haz_ebay', query: query+' site:ebay.com sold'})
-    });
-    const j = await r.json();
-    if(j.ok && j.prices) return j.prices;
-  } catch(e){}
-  return [];
-}
-
-function hazCalcOffer(value, vibe){
-  const maxOffer = value * HAZ_OFFER_RATE;
-  // Vibe adjustments to opening offer
-  const vibeConfig = {
-    easy:      { openPct: 0.70, label: 'mid-range — likely to accept' },
-    tough:     { openPct: 0.40, label: 'start low — leave room to go up' },
-    desperate: { openPct: 0.30, label: 'open very low — they need the cash' },
-  };
-  const cfg = vibeConfig[vibe] || vibeConfig.easy;
-  const openOffer = Math.max(5, maxOffer * cfg.openPct);
-  return { maxOffer, openOffer, label: cfg.label };
-}
-
-function hazVibeScript(vibe, openOffer, maxOffer, title){
-  const open = '$'+Math.round(openOffer);
-  const max  = '$'+Math.round(maxOffer);
-  const scripts = {
-    easy: `"Hey, so I looked this up — for a <b>${title}</b> in this condition, best I can do is <b>${open}</b>. That work for you?"`,
-    tough: `"I hear you, but honestly the market on these has been soft lately. I can do <b>${open}</b> — that's where I need to be to make it work on my end. If you find better, totally understand."<br><br><b>If they push:</b> "I can stretch to ${max} but that's really my ceiling."`,
-    desperate: `"I appreciate you bringing it in. Based on what I am seeing, I can do <b>${open}</b> cash right now. I know it is not what you were hoping for but that is where I am at."`,
-  };
-  return scripts[vibe] || scripts.easy;
-}
-
-function hazRenderResult(itemText, internalComps, ebayComps, vibe){
-  document.getElementById('hazLoading').classList.remove('show');
-
-  // Determine best value estimate
-  let allPrices = [];
-  const compRowsHtml = [];
-
-  internalComps.forEach(c=>{
-    allPrices.push({price: c.price, weight: 1.4}); // internal weighted higher
-    compRowsHtml.push(`<div class="haz-comp-row">
-      <span class="haz-comp-source">${esc(c.title||'SYG sale')} <span class="haz-comp-badge internal">SYG</span></span>
-      <span class="haz-comp-price">$${c.price.toFixed(2)}</span>
-    </div>`);
-  });
-
-  ebayComps.forEach(c=>{
-    allPrices.push({price: c.price, weight: 1.0});
-    compRowsHtml.push(`<div class="haz-comp-row">
-      <span class="haz-comp-source">${esc(c.title||'eBay sold')} <span class="haz-comp-badge ebay">eBay</span></span>
-      <span class="haz-comp-price">$${c.price.toFixed(2)}</span>
-    </div>`);
-  });
-
-  // Fallback if no comps
-  if(!allPrices.length){
-    document.getElementById('hazLoading').classList.remove('show');
-    document.getElementById('hazResult').classList.add('show');
-    document.getElementById('hazResultTitle').textContent = itemText;
-    document.getElementById('hazResultCondition').textContent = 'No comp data found';
-    document.getElementById('hazCompRows').innerHTML = '<div style="font-size:12px;color:#9CA3AF;padding:4px 0;">No recent sold listings found for this item.</div>';
-    document.getElementById('hazCalcRows').innerHTML = '';
-    document.getElementById('hazVerdictCard').className = 'haz-verdict-card pass';
-    document.getElementById('hazVerdictIcon').textContent = '🔴';
-    document.getElementById('hazVerdictTitle').textContent = 'Cannot price — no comp data';
-    document.getElementById('hazOfferRange').textContent = 'Research required';
-    document.getElementById('hazScript').innerHTML = 'Tell the customer you need to look this up and will get back to them. Do not make an offer without comps.';
-    document.getElementById('hazReset').style.display = '';
+  if(data.pass || value < HAZ_MIN_RESALE){
+    _hazLastResult = null;
+    const reason = data.pass_reason || ('Estimated resale $'+value+' is below the $'+HAZ_MIN_RESALE+' minimum');
+    hazAddBubble('haz',
+      '<div><b>'+esc(item)+'</b><br><span style="font-size:11.5px;opacity:.8;">'+esc(condition)+'</span></div>'
+      +'<div class="haz-pass-card"><div class="haz-pass-title">🔴 Pass on this one</div>'
+      +'<div class="haz-pass-text">'+esc(reason)+'<br><br>"Sorry, this one does not work for us — the market on it is too soft to give you a fair number."</div></div>',
+      true);
+    document.getElementById('hazReset').style.display='';
     return;
   }
 
-  // Weighted average
-  const totalWeight = allPrices.reduce((s,x)=>s+x.weight,0);
-  const weightedAvg = allPrices.reduce((s,x)=>s+x.price*x.weight,0) / totalWeight;
-  const value = Math.round(weightedAvg * 100) / 100;
+  const fees   = value * HAZ_FEE_RATE;
+  const net    = value - fees;
+  const maxOff = Math.round(value * HAZ_OFFER_RATE);
 
-  const {maxOffer, openOffer} = hazCalcOffer(value, vibe);
-  const fees = value * HAZ_FEE_RATE;
-  const net  = value - fees;
+  const vibeOffers = {
+    easy:      { open: Math.round(maxOff*0.72), mid: Math.round(maxOff*0.86) },
+    tough:     { open: Math.round(maxOff*0.45), mid: Math.round(maxOff*0.70) },
+    desperate: { open: Math.round(maxOff*0.30), mid: Math.round(maxOff*0.55) },
+  };
+  const o = vibeOffers[vibe] || vibeOffers.easy;
+  const openOff = Math.max(5, o.open);
+  const midOff  = Math.max(openOff+5, o.mid);
 
-  // Populate
-  document.getElementById('hazResultTitle').textContent = itemText.length > 60 ? itemText.slice(0,60)+'…' : itemText;
-  document.getElementById('hazResultCondition').textContent = allPrices.length+' comp'+(allPrices.length>1?'s':'')+' found · weighted avg $'+value.toFixed(2);
-  document.getElementById('hazCompRows').innerHTML = compRowsHtml.join('') || '<div style="font-size:12px;color:#9CA3AF">No comps</div>';
+  const vibeClass = vibe || 'easy';
+  const scripts = {
+    easy: '"Hey, so I looked this up — best I can do for a <b>'+esc(item)+'</b> in this condition is <b>$'+openOff+'</b>. Does that work for you?"',
+    tough: '"I hear you, but the market on these has been slow. I can do <b>$'+openOff+'</b> — that is where I need to be to make it work." <br>If they push once: <b>$'+midOff+'</b> max.',
+    desperate: '"I appreciate you bringing it in. I can do <b>$'+openOff+'</b> cash right now — I know it is not what you were hoping for but that is where I am at."',
+  };
+  const pushScript = {
+    easy: 'If they hesitate: "I can stretch to <b>$'+midOff+'</b> but that is really as far as I go."',
+    tough: 'If they keep pushing hard: "Absolute ceiling is <b>$'+maxOff+'</b> — take it or leave it."',
+    desperate: 'If they need more: "Best I can do is <b>$'+midOff+'</b>, genuinely cannot go higher."',
+  };
 
-  document.getElementById('hazCalcRows').innerHTML = `
-    <div class="haz-calc-row"><span>Haz estimate</span><span>$${value.toFixed(2)}</span></div>
-    <div class="haz-calc-row"><span>eBay fees (~13%)</span><span>−$${fees.toFixed(2)}</span></div>
-    <div class="haz-calc-row"><span>Net to SYG</span><span>$${net.toFixed(2)}</span></div>
-    <div class="haz-calc-row total"><span>Max offer (40%)</span><span>$${maxOffer.toFixed(2)}</span></div>`;
+  _hazLastResult = {item, condition, value, fees, net, openOff, midOff, maxOff, vibe};
 
-  // Verdict
-  const belowFloor = value < HAZ_MIN_RESALE;
-  const tight = maxOffer < 20;
-  const verdictCard = document.getElementById('hazVerdictCard');
-  const vibeLabel = {easy:'Easy going',tough:'Tough',desperate:'Desperate'}[vibe];
+  const confBadge = data.confidence==='high' ? ''
+    : ' <span style="font-size:9px;background:#FEF9C3;color:#92400E;padding:1px 5px;border-radius:4px;font-style:normal;">'+(data.confidence||'medium')+' confidence</span>';
 
-  if(belowFloor){
-    verdictCard.className = 'haz-verdict-card pass';
-    document.getElementById('hazVerdictIcon').textContent = '🔴';
-    document.getElementById('hazVerdictTitle').textContent = 'Pass — resale below $'+HAZ_MIN_RESALE+' floor';
-    document.getElementById('hazOfferRange').textContent = 'Do not buy';
-    document.getElementById('hazScript').innerHTML = '"Sorry, this one doesn\'t work for us — the market on it is too soft and we wouldn\'t be able to move it at a fair price for either of us."';
-  } else if(tight){
-    verdictCard.className = 'haz-verdict-card warn';
-    document.getElementById('hazVerdictIcon').textContent = '🟡';
-    document.getElementById('hazVerdictTitle').textContent = 'Tight — only buy if very low · Customer: '+vibeLabel;
-    document.getElementById('hazOfferRange').textContent = '$'+Math.round(openOffer)+'–$'+Math.round(maxOffer);
-    document.getElementById('hazScript').innerHTML = hazVibeScript(vibe, openOffer, maxOffer, itemText.split(' ').slice(0,4).join(' '));
-  } else {
-    verdictCard.className = 'haz-verdict-card good';
-    document.getElementById('hazVerdictIcon').textContent = '✅';
-    document.getElementById('hazVerdictTitle').textContent = 'Good buy · Customer: '+vibeLabel;
-    document.getElementById('hazOfferRange').textContent = '$'+Math.round(openOffer)+'–$'+Math.round(maxOffer);
-    document.getElementById('hazScript').innerHTML = hazVibeScript(vibe, openOffer, maxOffer, itemText.split(' ').slice(0,4).join(' '));
-  }
+  const html = '<div><b>'+esc(item)+'</b>'+confBadge+'<br><span style="font-size:11.5px;opacity:.8;">'+esc(condition)+'</span></div>'
+    +'<div style="margin-top:10px;font-size:11px;color:#166534;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Market est: <span style="font-family:var(--mono);font-size:13px;">$'+value+'</span> &nbsp;·&nbsp; Net after fees: <span style="font-family:var(--mono);">$'+Math.round(net)+'</span></div>'
+    +'<div class="haz-offer-cards">'
+    +'<div class="haz-offer-card best"><span class="haz-offer-card-label">🟢 Open at</span><span class="haz-offer-card-amount">$'+openOff+'</span><span class="haz-offer-card-hint">Start here — room to move up</span></div>'
+    +'<div class="haz-offer-card mid"><span class="haz-offer-card-label">🟡 If they push</span><span class="haz-offer-card-amount">$'+midOff+'</span><span class="haz-offer-card-hint">Use once — mid point</span></div>'
+    +'<div class="haz-offer-card max"><span class="haz-offer-card-label">🔴 Walk away at</span><span class="haz-offer-card-amount">$'+maxOff+'</span><span class="haz-offer-card-hint">Absolute max — do not exceed</span></div>'
+    +'</div>'
+    +'<div class="haz-script-block">'
+    +'<div class="haz-script-lbl">What to say</div>'
+    +'<div class="haz-script-line '+vibeClass+'">'+((scripts[vibe]||scripts.easy))+'</div>'
+    +'<div class="haz-script-line '+vibeClass+'" style="margin-top:4px;font-size:11.5px;">'+(pushScript[vibe]||pushScript.easy)+'</div>'
+    +'</div>'
+    +'<button class="haz-show-customer" id="hazShowCustomerBtn">📋 Show to customer</button>';
 
-  document.getElementById('hazResult').classList.add('show');
-  document.getElementById('hazReset').style.display = '';
+  hazAddBubble('haz', html, true);
+  setTimeout(()=>{
+    const btn = document.getElementById('hazShowCustomerBtn');
+    if(btn) btn.addEventListener('click', hazShowCustomer);
+  }, 50);
+  document.getElementById('hazReset').style.display='';
+}
+
+function hazShowCustomer(){
+  if(!_hazLastResult) return;
+  const d = _hazLastResult;
+  document.getElementById('hazCustomerBody').innerHTML =
+    '<div class="haz-customer-item">'+esc(d.item)+'</div>'
+    +'<div class="haz-customer-condition">'+esc(d.condition)+'</div>'
+    +'<div class="haz-customer-section">'
+    +'<div class="haz-customer-section-label">How we price items</div>'
+    +'<div class="haz-customer-row"><span>Current market value</span><span>$'+d.value+'</span></div>'
+    +'<div class="haz-customer-row"><span>Platform selling fees</span><span>&minus;$'+Math.round(d.fees)+'</span></div>'
+    +'<div class="haz-customer-row"><span>Shipping &amp; handling</span><span>&minus;$'+Math.round(d.value*0.05)+'</span></div>'
+    +'<div class="haz-customer-row"><span>Processing &amp; reconditioning</span><span>&minus;$'+Math.round(d.value*0.08)+'</span></div>'
+    +'</div>'
+    +'<div class="haz-customer-offer">'
+    +'<div class="haz-customer-offer-label">Our offer</div>'
+    +'<div class="haz-customer-offer-amount">$'+d.openOff+'</div>'
+    +'<div class="haz-customer-offer-note">Cash offer &middot; Based on current resale market data</div>'
+    +'</div>'
+    +'<div class="haz-customer-disclaimer">Prices are based on recent sold listings and account for all costs associated with reselling your item. This offer is valid today only.</div>';
+  document.getElementById('hazCustomerView').classList.remove('hidden');
+}
+
+function hazReset(){
+  document.getElementById('hazChatMessages').innerHTML =
+    '<div class="haz-chat-bubble haz"><div class="haz-chat-avatar">H</div>'
+    +'<div class="haz-chat-text">Hey, what is the customer bringing in? Tell me what it is, condition, and what they want for it. I will run the numbers.</div></div>';
+  document.querySelectorAll('.haz-vibe-btn').forEach(b=>b.classList.remove('on'));
+  _hazVibe = null;
+  _hazLastResult = null;
+  document.getElementById('hazReset').style.display='none';
+  document.getElementById('hazChatInput').value='';
+  document.getElementById('hazChatInput').focus();
 }
 
 </script>
