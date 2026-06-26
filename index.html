@@ -269,7 +269,7 @@
   .tut-btn.pri{background:var(--accent);border:1px solid transparent;color:#fff;}
   .tut-btn.pri:hover{background:var(--accent-press);}
   /* ── Prompt modal ── */
-  .prompt-btn{position:fixed;bottom:18px;left:18px;z-index:50;padding:9px 14px;border:none;border-radius:var(--r-pill);
+  .prompt-btn{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:250;padding:9px 18px;border:none;border-radius:var(--r-pill);
     background:#1a1c23;color:#C9CCFF;font:600 11.5px/1 var(--sans);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);
     border:1px solid rgba(99,108,255,.35);transition:all .15s;letter-spacing:.01em;white-space:nowrap;}
   .prompt-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
@@ -921,6 +921,1331 @@
     padding:5px 8px;font:700 12px/1 var(--mono);color:#4ADE80;outline:none;width:100%;}
   .haz-receipt-accepted-input:focus{border-color:#4ADE80;}
   .haz-receipt-accepted-label{font-size:9.5px;color:#6B7280;white-space:nowrap;}
+
+  /* ══════════════════════════════════════════════
+     WAN DARK MODE — overrides for .outer context
+     ══════════════════════════════════════════════ */
+  .outer {
+    --wan-bg:      #080A0F;
+    --wan-surface: #0E1018;
+    --wan-card:    #13161F;
+    --wan-border:  rgba(255,255,255,.07);
+    --wan-border2: rgba(255,255,255,.12);
+    --wan-ink:     #E8EAF0;
+    --wan-soft:    rgba(255,255,255,.45);
+    --wan-faint:   rgba(255,255,255,.22);
+    --wan-accent:  #6366F1;
+    --wan-accent2: #818CF8;
+    --wan-green:   #22C55E;
+    background: var(--wan-bg);
+  }
+  .wrap {
+    background: var(--wan-bg) !important;
+    border-right: 1px solid var(--wan-border);
+  }
+  /* Hide the clutter */
+  .guide,
+  #logPanel,
+  .hint {
+    display: none !important;
+  }
+  /* Mode toggle — slim pill in searchbar */
+  .mode-toggle {
+    padding: 0 18px 8px;
+    background: transparent;
+    border: none;
+    gap: 8px;
+  }
+  .mode-toggle-label { color: var(--wan-faint); font-size: 10.5px; }
+  .mode-switch { border-color: var(--wan-border2); }
+  .mode-btn { color: var(--wan-faint); }
+  .mode-btn.active-helper { background: rgba(99,102,241,.2); color: #a5b4fc; }
+  .mode-btn.active-berserk { background: rgba(239,68,68,.15); color: #fca5a5; }
+  /* Search bar — dark */
+  .searchbar { background: var(--wan-bg) !important; padding-top: 12px; }
+  .searchbar input {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-ink) !important;
+    font-size: 14px;
+  }
+  .searchbar input:focus {
+    border-color: var(--wan-accent) !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.18) !important;
+  }
+  .searchbar input::placeholder { color: var(--wan-faint) !important; }
+  /* Code list rows */
+  .row {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border) !important;
+    color: var(--wan-ink) !important;
+  }
+  .row:hover { background: #1a1e2e !important; border-color: var(--wan-accent) !important; }
+  .code { color: var(--wan-accent2) !important; }
+  .desc { color: var(--wan-soft) !important; }
+  .copy-hint { color: var(--wan-faint) !important; }
+  /* Add / details panels */
+  .add {
+    background: var(--wan-surface) !important;
+    border-color: var(--wan-border) !important;
+  }
+  .add summary { color: var(--wan-soft) !important; }
+  .add summary:hover { color: var(--wan-ink) !important; }
+  .addgrid input, .logwrap input, .logwrap .loginput {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-ink) !important;
+  }
+  .recipe { color: var(--wan-soft) !important; }
+  .addbtn {
+    background: var(--wan-accent) !important;
+    border: none !important;
+    color: #fff !important;
+  }
+  /* Segment toggle */
+  .seg button {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-soft) !important;
+  }
+  .seg button.on {
+    background: var(--wan-accent) !important;
+    border-color: var(--wan-accent) !important;
+    color: #fff !important;
+  }
+  /* Lister bar */
+  .lister-bar {
+    background: #0B0D14 !important;
+    border-color: var(--wan-border) !important;
+  }
+  .lister-label { color: var(--wan-faint) !important; }
+  .lister-select, .lister-batch, .work-select {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-ink) !important;
+  }
+  .goal-input {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-ink) !important;
+  }
+  .goal-pill {
+    background: rgba(99,102,241,.18) !important;
+    color: #a5b4fc !important;
+  }
+  .goal-pill.goal-hit {
+    background: rgba(34,197,94,.18) !important;
+    color: #86efac !important;
+  }
+  /* ── DRAFT PANEL dark ── */
+  .draft-panel {
+    background: var(--wan-surface) !important;
+    border-color: var(--wan-border) !important;
+  }
+  .dp-header {
+    background: #0B0D14 !important;
+    border-color: var(--wan-border) !important;
+  }
+  .dp-header h2 { color: var(--wan-ink) !important; }
+  .dp-header p { display: none; } /* remove explanation paragraph */
+  .dp-body { background: transparent !important; }
+  .dp-tab { background: var(--wan-card) !important; border-color: var(--wan-border) !important; color: var(--wan-faint) !important; }
+  .dp-tab.on { background: var(--wan-accent) !important; border-color: var(--wan-accent) !important; color: #fff !important; }
+  .manifest-warning { color: rgba(251,191,36,.6) !important; }
+  .dp-add-entry {
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-soft) !important;
+    background: transparent !important;
+  }
+  .dp-add-entry:hover {
+    border-color: var(--wan-accent) !important;
+    color: var(--wan-accent2) !important;
+    background: rgba(99,102,241,.08) !important;
+  }
+  /* Queue entry cards */
+  .dp-entry {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border) !important;
+    color: var(--wan-ink) !important;
+  }
+  .dp-entry:hover { border-color: var(--wan-border2) !important; }
+  .dp-entry .dp-input {
+    background: transparent !important;
+    border-color: var(--wan-border) !important;
+    color: var(--wan-ink) !important;
+  }
+  .dp-entry .dp-label { color: var(--wan-faint) !important; }
+  .dp-sku { color: var(--wan-accent2) !important; }
+  .dp-preview { color: var(--wan-soft) !important; font-size: 10.5px !important; }
+  .dp-sku-resolved { color: var(--wan-green) !important; }
+  /* Footer */
+  .dp-footer {
+    background: #0B0D14 !important;
+    border-color: var(--wan-border) !important;
+  }
+  .dp-label { color: var(--wan-faint) !important; }
+  /* Hide preview-all by default */
+  .dp-preview-all { display: none !important; }
+  /* Copy button — glowing CTA */
+  .dp-copy-all {
+    background: linear-gradient(135deg, #6366F1, #818CF8) !important;
+    border: none !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: .02em !important;
+    box-shadow: 0 4px 20px rgba(99,102,241,.35) !important;
+    transition: all .2s !important;
+  }
+  .dp-copy-all:hover {
+    box-shadow: 0 6px 28px rgba(99,102,241,.55) !important;
+    transform: translateY(-1px) !important;
+  }
+  /* Sync button */
+  .dp-sync-all {
+    background: transparent !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-soft) !important;
+    margin-top: 6px;
+  }
+  .dp-sync-all:hover { border-color: var(--wan-green) !important; color: var(--wan-green) !important; }
+  /* Clear button */
+  .dp-clear {
+    background: transparent !important;
+    border-color: var(--wan-border) !important;
+    color: var(--wan-faint) !important;
+    margin-top: 4px;
+  }
+  .dp-clear:hover { border-color: rgba(239,68,68,.4) !important; color: #fca5a5 !important; }
+  /* Blitzting dark */
+  .blitz-mode-bar { background: var(--wan-surface) !important; border-color: var(--wan-border) !important; }
+  .blitz-mode-bar h2 { color: var(--wan-ink) !important; }
+  .blitz-tab { background: var(--wan-card) !important; border-color: var(--wan-border2) !important; color: var(--wan-soft) !important; }
+  .blitz-tab.on { background: var(--wan-accent) !important; border-color: var(--wan-accent) !important; color: #fff !important; }
+  .blitz-clone-master, .blitz-section { background: var(--wan-surface) !important; }
+  .blitz-clone-label { color: var(--wan-faint) !important; }
+  .blitz-clone-input {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-ink) !important;
+  }
+  .blitz-gen-btn { background: var(--wan-accent) !important; border-color: var(--wan-accent) !important; color: #fff !important; }
+  .blitz-copy-all { background: linear-gradient(135deg,#6366F1,#818CF8) !important; font-weight:700 !important; }
+  .blitz-slot { background: var(--wan-card) !important; border-color: var(--wan-border) !important; }
+  .blitz-slot-num { color: var(--wan-accent2) !important; }
+  .blitz-kbd { background: var(--wan-card) !important; border-color: var(--wan-border2) !important; color: var(--wan-soft) !important; }
+  /* Universal page dark */
+  .universal-card { background: var(--wan-surface) !important; border-color: var(--wan-border) !important; }
+  .universal-card-head { border-color: var(--wan-border) !important; }
+  .universal-card-title-row h2 { color: var(--wan-ink) !important; }
+  .universal-card-title-row p { color: var(--wan-soft) !important; }
+  .dp-input, .uni-textarea, .uni-select {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-ink) !important;
+  }
+  .dp-input::placeholder, .uni-textarea::placeholder { color: var(--wan-faint) !important; }
+  .dp-input:focus, .uni-textarea:focus, .uni-select:focus {
+    border-color: var(--wan-accent) !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.15) !important;
+  }
+  .uni-qc-card { background: var(--wan-card) !important; border-color: var(--wan-border) !important; }
+  .conf-label { color: var(--wan-faint) !important; }
+  .conf-score { color: var(--wan-accent2) !important; }
+  .conf-bar { background: var(--wan-border) !important; }
+  .conf-note { color: var(--wan-soft) !important; }
+  .req-list { color: var(--wan-soft) !important; }
+  .needs-research-box { background: var(--wan-card) !important; border-color: var(--wan-border) !important; color: var(--wan-soft) !important; }
+  .uni-policy-card { background: var(--wan-card) !important; border-color: var(--wan-border) !important; }
+  .uni-mini-note { color: var(--wan-faint) !important; }
+  .uni-preview-shell { background: var(--wan-card) !important; border-color: var(--wan-border) !important; }
+  .uni-preview-head { border-color: var(--wan-border) !important; color: var(--wan-soft) !important; }
+  /* Wan motivational session strip */
+  #wanSessionStrip {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 18px;
+    background: linear-gradient(90deg,rgba(99,102,241,.12),rgba(99,102,241,.04));
+    border-bottom: 1px solid rgba(99,102,241,.18);
+    font-size: 11.5px;
+    color: rgba(165,180,252,.7);
+  }
+  #wanSessionStrip .strip-stat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+  }
+  #wanSessionStrip .strip-stat-num {
+    font-family: var(--mono);
+    color: #818CF8;
+    font-size: 13px;
+  }
+  #wanSessionStrip .strip-divider {
+    width: 1px;
+    height: 14px;
+    background: rgba(99,102,241,.25);
+  }
+
+  /* ═══════════════════════════════════════════
+     WAN DARK REDESIGN — scoped to .outer
+     ═══════════════════════════════════════════ */
+  .outer {
+    --wd-bg:      #07090F;
+    --wd-surface: #0D0F18;
+    --wd-card:    #12151F;
+    --wd-card2:   #181B28;
+    --wd-border:  rgba(255,255,255,.07);
+    --wd-border2: rgba(255,255,255,.13);
+    --wd-ink:     #E4E6F0;
+    --wd-soft:    rgba(255,255,255,.45);
+    --wd-faint:   rgba(255,255,255,.22);
+    --wd-accent:  #6366F1;
+    --wd-accent2: #818CF8;
+    --wd-green:   #22C55E;
+    background: var(--wd-bg);
+  }
+
+  /* ── Main column ── */
+  .outer .wrap {
+    background: var(--wd-bg) !important;
+    border-right: 1px solid var(--wd-border);
+  }
+
+  /* ── Header ── */
+  .outer header {
+    background: #080A12 !important;
+    border-bottom: 1px solid var(--wd-border) !important;
+    box-shadow: inset 0 -2px 0 var(--wd-accent) !important;
+  }
+  .outer .count { background: rgba(99,102,241,.18) !important; color: #a5b4fc !important; }
+  .outer .export { color: rgba(255,255,255,.5) !important; border-color: rgba(255,255,255,.15) !important; }
+  .outer .export:hover { background: var(--wd-accent) !important; border-color: var(--wd-accent) !important; color:#fff !important; }
+
+  /* ── Lister bar ── */
+  .outer .lister-bar {
+    background: #0A0C15 !important;
+    border-color: var(--wd-border) !important;
+    gap: 8px;
+  }
+  .outer .lister-label { color: var(--wd-faint) !important; font-size: 10px !important; letter-spacing: .1em !important; }
+  .outer .lister-select,
+  .outer .lister-batch,
+  .outer .work-select {
+    background: var(--wd-card2) !important;
+    border: 1px solid var(--wd-border2) !important;
+    color: var(--wd-ink) !important;
+    border-radius: 8px !important;
+  }
+  .outer .goal-input {
+    background: var(--wd-card2) !important;
+    border: 1px solid var(--wd-border2) !important;
+    color: var(--wd-ink) !important;
+  }
+  .outer .goal-pill {
+    background: rgba(99,102,241,.15) !important;
+    color: #a5b4fc !important;
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+  }
+  .outer .goal-pill.goal-hit {
+    background: rgba(34,197,94,.15) !important;
+    color: #86efac !important;
+  }
+
+  /* ── Hide clutter ── */
+  .outer .guide,
+  .outer #logPanel,
+  .outer .hint { display: none !important; }
+
+  /* ── Mode toggle — slim ── */
+  .outer .mode-toggle {
+    background: transparent !important;
+    border: none !important;
+    padding: 6px 18px 4px !important;
+  }
+  .outer .mode-toggle-label { color: var(--wd-faint) !important; }
+  .outer .mode-switch { border-color: var(--wd-border2) !important; border-radius: 8px !important; overflow:hidden; }
+  .outer .mode-btn { color: var(--wd-faint) !important; background: transparent !important; padding: 5px 12px !important; font-size:11px !important; }
+  .outer .mode-btn.active-helper { background: rgba(99,102,241,.2) !important; color: #a5b4fc !important; }
+  .outer .mode-btn.active-berserk { background: rgba(239,68,68,.15) !important; color: #fca5a5 !important; }
+  .outer .mode-hint { color: var(--wd-faint) !important; font-size: 10.5px !important; }
+
+  /* ── Seg toggle ── */
+  .outer .seg button {
+    background: var(--wd-card2) !important;
+    border-color: var(--wd-border2) !important;
+    color: var(--wd-soft) !important;
+    border-radius: 8px !important;
+    font-size: 11.5px !important;
+    padding: 5px 14px !important;
+  }
+  .outer .seg button.on {
+    background: var(--wd-accent) !important;
+    border-color: var(--wd-accent) !important;
+    color: #fff !important;
+  }
+
+  /* ── Search bar ── */
+  .outer .searchbar { background: var(--wd-bg) !important; padding-top: 10px !important; }
+  .outer .searchbar input {
+    background: var(--wd-card) !important;
+    border: 1.5px solid var(--wd-border2) !important;
+    color: var(--wd-ink) !important;
+    border-radius: 12px !important;
+    font-size: 14px !important;
+    box-shadow: none !important;
+  }
+  .outer .searchbar input:focus {
+    border-color: var(--wd-accent) !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.15) !important;
+  }
+  .outer .searchbar input::placeholder { color: var(--wd-faint) !important; }
+
+  /* ── Add a new code ── */
+  .outer .add {
+    background: var(--wd-surface) !important;
+    border-color: var(--wd-border) !important;
+  }
+  .outer .add summary { color: var(--wd-soft) !important; }
+  .outer .add summary:hover { color: var(--wd-ink) !important; }
+  .outer .addgrid input {
+    background: var(--wd-card) !important;
+    border-color: var(--wd-border2) !important;
+    color: var(--wd-ink) !important;
+  }
+  .outer .addbtn { background: var(--wd-accent) !important; color: #fff !important; border: none !important; }
+  .outer .recipe { color: var(--wd-soft) !important; }
+
+  /* ── Code list ── */
+  .outer .list { background: var(--wd-bg) !important; }
+  .outer .row {
+    background: var(--wd-card) !important;
+    border: 1px solid var(--wd-border) !important;
+    color: var(--wd-ink) !important;
+    border-radius: 10px !important;
+    margin: 0 18px 6px !important;
+    transition: border-color .15s, background .15s !important;
+  }
+  .outer .row:hover {
+    background: var(--wd-card2) !important;
+    border-color: var(--wd-accent) !important;
+  }
+  .outer .code { color: var(--wd-accent2) !important; font-weight: 700 !important; }
+  .outer .desc { color: var(--wd-soft) !important; }
+  .outer .copy-hint { color: var(--wd-faint) !important; }
+  .outer .tag { background: rgba(99,102,241,.15) !important; color: #a5b4fc !important; border-color: transparent !important; }
+
+  /* ── Draft panel ── */
+  .outer .draft-panel {
+    background: #0A0C15 !important;
+    border-left: 1px solid var(--wd-border) !important;
+  }
+  .outer .dp-header {
+    background: #080A12 !important;
+    border-color: var(--wd-border) !important;
+    padding: 14px 18px !important;
+  }
+  .outer .dp-header h2 { color: var(--wd-ink) !important; font-size: 13px !important; }
+  .outer .dp-header p { display: none !important; }
+  .outer .dp-tabs { background: #0A0C15 !important; border-color: var(--wd-border) !important; }
+  .outer .dp-tab {
+    background: var(--wd-card) !important;
+    border-color: var(--wd-border) !important;
+    color: var(--wd-faint) !important;
+    font-size: 11px !important;
+  }
+  .outer .dp-tab.on {
+    background: var(--wd-accent) !important;
+    border-color: var(--wd-accent) !important;
+    color: #fff !important;
+  }
+  .outer .dp-body { padding-top: 10px !important; }
+  .outer .manifest-warning { color: rgba(251,191,36,.55) !important; font-size: 10.5px !important; }
+
+  /* ── Queue entry cards ── */
+  .outer .dp-entry {
+    background: var(--wd-card) !important;
+    border: 1px solid var(--wd-border) !important;
+    border-radius: 10px !important;
+    color: var(--wd-ink) !important;
+    margin-bottom: 8px !important;
+  }
+  .outer .dp-entry:hover { border-color: var(--wd-border2) !important; }
+  .outer .dp-entry-head { border-color: var(--wd-border) !important; }
+  .outer .dp-sku { color: var(--wd-accent2) !important; font-weight: 700 !important; }
+  .outer .dp-sku-resolved { color: var(--wd-green) !important; }
+  .outer .dp-input {
+    background: transparent !important;
+    border-color: var(--wd-border) !important;
+    color: var(--wd-ink) !important;
+  }
+  .outer .dp-input:focus { border-color: var(--wd-accent) !important; }
+  .outer .dp-label { color: var(--wd-faint) !important; font-size: 10px !important; }
+  .outer .dp-preview { color: var(--wd-soft) !important; font-size: 10.5px !important; font-family: var(--mono) !important; }
+  .outer .dp-drag-handle { color: var(--wd-faint) !important; }
+  .outer .dp-remove { color: var(--wd-faint) !important; }
+  .outer .dp-remove:hover { color: #fca5a5 !important; }
+
+  /* ── Add entry button ── */
+  .outer .dp-add-entry {
+    background: transparent !important;
+    border: 1px dashed var(--wd-border2) !important;
+    color: var(--wd-faint) !important;
+    border-radius: 10px !important;
+  }
+  .outer .dp-add-entry:hover {
+    border-color: var(--wd-accent) !important;
+    color: var(--wd-accent2) !important;
+    background: rgba(99,102,241,.07) !important;
+  }
+
+  /* ── Footer ── */
+  .outer .dp-footer {
+    background: #080A12 !important;
+    border-top: 1px solid var(--wd-border) !important;
+    padding: 12px 14px 16px !important;
+  }
+  .outer .dp-label { color: var(--wd-faint) !important; }
+  .outer .dp-preview-all { display: none !important; }
+
+  /* ── Copy button — glowing CTA ── */
+  .outer .dp-copy-all {
+    background: linear-gradient(135deg, #5B5EE8 0%, #818CF8 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: .02em !important;
+    box-shadow: 0 4px 20px rgba(99,102,241,.4), inset 0 1px 0 rgba(255,255,255,.1) !important;
+    transition: all .2s !important;
+    padding: 13px !important;
+  }
+  .outer .dp-copy-all:hover {
+    box-shadow: 0 6px 28px rgba(99,102,241,.6), inset 0 1px 0 rgba(255,255,255,.15) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* ── Sync + Clear buttons ── */
+  .outer .dp-sync-all {
+    background: transparent !important;
+    border: 1px solid var(--wd-border2) !important;
+    color: var(--wd-soft) !important;
+    border-radius: 8px !important;
+    margin-top: 6px !important;
+  }
+  .outer .dp-sync-all:hover { border-color: rgba(34,197,94,.4) !important; color: #86efac !important; }
+  .outer .dp-clear {
+    background: transparent !important;
+    border: 1px solid var(--wd-border) !important;
+    color: var(--wd-faint) !important;
+    border-radius: 8px !important;
+    margin-top: 4px !important;
+  }
+  .outer .dp-clear:hover { border-color: rgba(239,68,68,.35) !important; color: #fca5a5 !important; }
+
+  /* ── Session strip ── */
+  #wanSessionStrip {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 18px;
+    background: linear-gradient(90deg, rgba(99,102,241,.10), rgba(99,102,241,.03));
+    border-bottom: 1px solid rgba(99,102,241,.14);
+    font-size: 11px;
+    color: rgba(165,180,252,.6);
+  }
+  #wanSessionStrip .strip-stat {
+    display: flex; align-items: center; gap: 5px; font-weight: 600;
+  }
+  #wanSessionStrip .strip-stat-num {
+    font-family: var(--mono); color: #818CF8; font-size: 13px; font-weight: 700;
+  }
+  #wanSessionStrip .strip-divider {
+    width: 1px; height: 12px; background: rgba(99,102,241,.2);
+  }
+
+  /* ── Blitzting dark ── */
+  .outer .blitz-mode-bar { background: var(--wd-surface) !important; border-color: var(--wd-border) !important; }
+  .outer .blitz-mode-bar h2 { color: var(--wd-ink) !important; }
+  .outer .blitz-tab { background: var(--wd-card) !important; border-color: var(--wd-border2) !important; color: var(--wd-soft) !important; }
+  .outer .blitz-tab.on { background: var(--wd-accent) !important; border-color: var(--wd-accent) !important; color: #fff !important; }
+  .outer .blitz-clone-input {
+    background: var(--wd-card) !important; border-color: var(--wd-border2) !important; color: var(--wd-ink) !important;
+  }
+  .outer .blitz-gen-btn { background: var(--wd-accent) !important; color: #fff !important; }
+  .outer .blitz-copy-all {
+    background: linear-gradient(135deg,#5B5EE8,#818CF8) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 16px rgba(99,102,241,.35) !important;
+  }
+  .outer .blitz-slot { background: var(--wd-card) !important; border-color: var(--wd-border) !important; }
+  .outer .blitz-slot-num { color: var(--wd-accent2) !important; }
+  .outer .blitz-clone-label { color: var(--wd-faint) !important; }
+  .outer .blitz-kbd { background: var(--wd-card) !important; border-color: var(--wd-border2) !important; color: var(--wd-soft) !important; }
+  .outer .blitz-section { background: var(--wd-surface) !important; }
+  .outer .blitz-flagged-banner { background: rgba(239,68,68,.08) !important; border-color: rgba(239,68,68,.2) !important; }
+  .outer .blitz-card { background: var(--wd-card2) !important; border-color: var(--wd-border2) !important; }
+  .outer .blitz-card-title { color: var(--wd-ink) !important; }
+  .outer .blitz-card-field label { color: var(--wd-faint) !important; }
+  .outer .blitz-card-field input { background: var(--wd-card) !important; border-color: var(--wd-border) !important; color: var(--wd-ink) !important; }
+  .outer .blitz-action.approve { background: rgba(34,197,94,.15) !important; border-color: rgba(34,197,94,.3) !important; color: #86efac !important; }
+  .outer .blitz-action.flag { background: rgba(251,191,36,.1) !important; border-color: rgba(251,191,36,.25) !important; color: #fbbf24 !important; }
+  .outer .blitz-action.edit { background: var(--wd-card) !important; border-color: var(--wd-border2) !important; color: var(--wd-soft) !important; }
+  .outer .blitz-card-metafields summary { color: var(--wd-soft) !important; }
+  .outer .blitz-card-desc summary { color: var(--wd-soft) !important; }
+  .outer .blitz-card-desc-body { color: var(--wd-faint) !important; font-size: 11px !important; }
+
+  /* ── Universal page dark ── */
+  .outer .universal-card { background: var(--wd-surface) !important; border: none !important; }
+  .outer .universal-card-head { border-color: var(--wd-border) !important; background: #080A12 !important; }
+  .outer .universal-card-title-row h2 { color: var(--wd-ink) !important; }
+  .outer .universal-card-title-row p { color: var(--wd-soft) !important; }
+  .outer .dp-input, .outer .uni-textarea, .outer .uni-select {
+    background: var(--wd-card) !important;
+    border-color: var(--wd-border2) !important;
+    color: var(--wd-ink) !important;
+  }
+  .outer .dp-input::placeholder, .outer .uni-textarea::placeholder { color: var(--wd-faint) !important; }
+  .outer .dp-input:focus, .outer .uni-textarea:focus, .outer .uni-select:focus {
+    border-color: var(--wd-accent) !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.12) !important;
+  }
+  .outer .uni-qc-card { background: var(--wd-card) !important; border-color: var(--wd-border) !important; }
+  .outer .conf-label { color: var(--wd-faint) !important; }
+  .outer .conf-score { color: var(--wd-accent2) !important; }
+  .outer .conf-bar { background: var(--wd-border) !important; }
+  .outer .conf-note { color: var(--wd-soft) !important; }
+  .outer .req-list { color: var(--wd-soft) !important; }
+  .outer .needs-research-box { background: var(--wd-card) !important; border-color: var(--wd-border) !important; color: var(--wd-soft) !important; }
+  .outer .uni-policy-card { background: var(--wd-card) !important; border-color: var(--wd-border) !important; }
+  .outer .uni-mini-note { color: var(--wd-faint) !important; }
+  .outer .uni-preview-shell { background: var(--wd-card) !important; border-color: var(--wd-border) !important; }
+  .outer .uni-preview-head { border-color: var(--wd-border) !important; color: var(--wd-soft) !important; }
+  .outer .uni-html-preview { color: var(--wd-ink) !important; }
+  .outer .photo-reminder { background: var(--wd-card) !important; border-color: var(--wd-border) !important; color: var(--wd-soft) !important; }
+
+  /* ═══════════════════════════════════════════════
+     WAN CANVAS LAYOUT — full-page dark workspace
+     ═══════════════════════════════════════════════ */
+
+  /* Reset outer to full-page canvas */
+  .outer {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    max-width: none !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+    background: #06080E !important;
+    display: block !important;
+  }
+
+  /* Hide original wrap and draft-panel from normal flow */
+  .outer > .wrap,
+  .outer > .draft-panel {
+    display: none !important;
+  }
+
+  /* ── Canvas layer ── */
+  #wanCanvas {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    cursor: default;
+    user-select: none;
+  }
+  #wanCanvasInner {
+    position: absolute;
+    top: 0; left: 0;
+    width: 4000px; height: 4000px;
+    transform-origin: 0 0;
+  }
+
+  /* ── Floating toolbar ── */
+  #wanToolbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    background: rgba(8,10,18,.96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    z-index: 200;
+    box-shadow: 0 2px 20px rgba(0,0,0,.4);
+  }
+  #wanToolbar .tb-logo {
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -.02em;
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+  #wanToolbar .tb-logo span { color: #818CF8; }
+  #wanToolbar .tb-sep {
+    width: 1px; height: 20px;
+    background: rgba(255,255,255,.1);
+    flex: none;
+  }
+  #wanToolbar select,
+  #wanToolbar input[type="text"],
+  #wanToolbar input[type="number"] {
+    background: rgba(255,255,255,.06) !important;
+    border: 1px solid rgba(255,255,255,.1) !important;
+    color: #E4E6F0 !important;
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+    font-size: 12px !important;
+    height: 30px !important;
+    outline: none !important;
+  }
+  #wanToolbar select:focus,
+  #wanToolbar input:focus {
+    border-color: #6366F1 !important;
+  }
+  #wanToolbar .tb-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,.3);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    white-space: nowrap;
+  }
+  #wanToolbar .tb-goal-pill {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: #818CF8;
+    background: rgba(99,102,241,.15);
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    min-width: 56px;
+    text-align: center;
+  }
+  #wanToolbar .tb-goal-pill.goal-hit {
+    color: #86efac;
+    background: rgba(34,197,94,.15);
+  }
+  #wanToolbar .tb-spacer { flex: 1; }
+  #wanToolbar .tb-btn {
+    padding: 5px 12px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px;
+    font: 600 11px/1 var(--sans);
+    color: rgba(255,255,255,.5);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  #wanToolbar .tb-btn:hover {
+    background: rgba(255,255,255,.12);
+    color: #fff;
+  }
+  #wanToolbar .tb-btn.tb-lock {
+    background: #6366F1;
+    border-color: #6366F1;
+    color: #fff;
+  }
+  #wanToolbar .tb-btn.tb-lock:hover { background: #4F52D0; }
+  #wanToolbar .tb-page-select {
+    background: rgba(99,102,241,.12) !important;
+    border-color: rgba(99,102,241,.3) !important;
+    color: #a5b4fc !important;
+    font-weight: 600 !important;
+    min-width: 160px !important;
+  }
+  #wanToolbar .tb-zoom-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 8px;
+    padding: 2px 6px;
+  }
+  #wanToolbar .tb-zoom-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,.45);
+    font-size: 14px;
+    cursor: pointer;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all .12s;
+    font-weight: 700;
+  }
+  #wanToolbar .tb-zoom-btn:hover { color: #fff; background: rgba(255,255,255,.1); }
+  #wanToolbar .tb-zoom-label {
+    font: 600 10px/1 var(--mono);
+    color: rgba(255,255,255,.35);
+    min-width: 34px;
+    text-align: center;
+  }
+
+  /* ── Floating panels ── */
+  .wan-panel {
+    position: absolute;
+    background: #1A1D2E;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.4), 0 1px 0 rgba(255,255,255,.1) inset;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .wan-panel:hover {
+    box-shadow: 0 12px 50px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.08) inset;
+  }
+  .wan-panel.dragging {
+    box-shadow: 0 24px 70px rgba(0,0,0,.7), 0 0 0 2px #6366F1;
+    cursor: grabbing !important;
+  }
+  .wan-panel-handle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 9px;
+    background: rgba(255,255,255,.06);
+    border-bottom: 1px solid rgba(255,255,255,.12);
+    cursor: grab;
+    flex: none;
+    user-select: none;
+  }
+  .wan-panel-handle:active { cursor: grabbing; }
+  .wan-panel-dots {
+    display: flex; gap: 5px;
+  }
+  .wan-panel-dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,.12);
+  }
+  .wan-panel-dots span:nth-child(1) { background: rgba(239,68,68,.5); }
+  .wan-panel-dots span:nth-child(2) { background: rgba(251,191,36,.4); }
+  .wan-panel-dots span:nth-child(3) { background: rgba(34,197,94,.4); }
+  .wan-panel-title {
+    font: 600 11px/1 var(--sans);
+    color: rgba(255,255,255,.4);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+  .wan-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .wan-panel-body::-webkit-scrollbar { width: 4px; }
+  .wan-panel-body::-webkit-scrollbar-track { background: transparent; }
+  .wan-panel-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+  /* ── Resize handle ── */
+  .wan-panel-resize {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 18px; height: 18px;
+    cursor: se-resize;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 4px;
+  }
+  .wan-panel-resize::after {
+    content: '';
+    display: block;
+    width: 8px; height: 8px;
+    border-right: 2px solid rgba(255,255,255,.2);
+    border-bottom: 2px solid rgba(255,255,255,.2);
+    border-radius: 0 0 3px 0;
+  }
+
+  /* ── Session HUD bottom left ── */
+  #wanHUD {
+    position: fixed;
+    bottom: 16px; left: 16px;
+    display: flex;
+    gap: 8px;
+    z-index: 200;
+  }
+  .hud-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(8,10,18,.9);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 20px;
+    font-size: 11px;
+    color: rgba(255,255,255,.4);
+    backdrop-filter: blur(8px);
+  }
+  .hud-chip-num {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 13px;
+    color: #818CF8;
+  }
+  .hud-chip-num.green { color: #86efac; }
+
+  /* ── Canvas grid ── */
+  #wanCanvasInner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,.07) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+
+  /* ── Inside panel: dark overrides for existing elements ── */
+  .wan-panel select,
+  .wan-panel input:not([type=checkbox]),
+  .wan-panel textarea {
+    background: #1A1D2E !important;
+    border: 1px solid rgba(255,255,255,.16) !important;
+    color: #E4E6F0 !important;
+    border-radius: 8px !important;
+  }
+  .wan-panel select:focus,
+  .wan-panel input:focus,
+  .wan-panel textarea:focus {
+    border-color: #6366F1 !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.12) !important;
+  }
+  .wan-panel .dp-label,
+  .wan-panel .manifest-warning,
+  .wan-panel label { color: rgba(255,255,255,.35) !important; }
+  .wan-panel .manifest-warning { color: rgba(251,191,36,.5) !important; }
+  .wan-panel .dp-entry {
+    background: #1E2236 !important;
+    border: 1px solid rgba(255,255,255,.15) !important;
+    border-radius: 10px !important;
+    color: #E4E6F0 !important;
+    margin-bottom: 8px !important;
+  }
+  .wan-panel .dp-sku { color: #818CF8 !important; font-weight: 700 !important; }
+  .wan-panel .dp-sku-resolved { color: #4ade80 !important; }
+  .wan-panel .dp-preview { color: rgba(255,255,255,.35) !important; font-size: 10px !important; }
+  .wan-panel .dp-add-entry {
+    background: transparent !important;
+    border: 1px dashed rgba(255,255,255,.12) !important;
+    color: rgba(255,255,255,.3) !important;
+    border-radius: 10px !important;
+  }
+  .wan-panel .dp-add-entry:hover {
+    border-color: #6366F1 !important;
+    color: #a5b4fc !important;
+    background: rgba(99,102,241,.07) !important;
+  }
+  .wan-panel .dp-copy-all {
+    background: linear-gradient(135deg, #5558E3, #818CF8) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    box-shadow: 0 4px 18px rgba(99,102,241,.4) !important;
+    transition: all .2s !important;
+  }
+  .wan-panel .dp-copy-all:hover {
+    box-shadow: 0 6px 28px rgba(99,102,241,.6) !important;
+    transform: translateY(-1px) !important;
+  }
+  .wan-panel .dp-sync-all {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,.1) !important;
+    color: rgba(255,255,255,.4) !important;
+    border-radius: 8px !important;
+    margin-top: 6px !important;
+  }
+  .wan-panel .dp-sync-all:hover { border-color: #4ade80 !important; color: #86efac !important; }
+  .wan-panel .dp-clear {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,.07) !important;
+    color: rgba(255,255,255,.2) !important;
+    border-radius: 8px !important;
+    margin-top: 4px !important;
+  }
+  .wan-panel .dp-clear:hover { border-color: rgba(239,68,68,.3) !important; color: #fca5a5 !important; }
+  .wan-panel .dp-footer {
+    background: rgba(18,22,38,.95) !important;
+    border-top: 1px solid rgba(255,255,255,.07) !important;
+    backdrop-filter: blur(8px);
+  }
+  .wan-panel .dp-preview-all { display: none !important; }
+  .wan-panel .dp-header { display: none !important; }
+  .wan-panel .dp-tabs { background: transparent !important; border-color: rgba(255,255,255,.07) !important; }
+  .wan-panel .dp-tab {
+    background: rgba(255,255,255,.08) !important;
+    border-color: rgba(255,255,255,.14) !important;
+    color: rgba(255,255,255,.35) !important;
+    font-size: 11px !important;
+  }
+  .wan-panel .dp-tab.on {
+    background: #6366F1 !important;
+    border-color: #6366F1 !important;
+    color: #fff !important;
+  }
+  /* Search panel */
+  .wan-panel .searchbar { background: transparent !important; padding: 12px 14px 8px !important; }
+  .wan-panel .searchbar input {
+    background: #1A1D2E !important;
+    border: 1.5px solid rgba(255,255,255,.1) !important;
+    color: #E4E6F0 !important;
+    border-radius: 10px !important;
+  }
+  .wan-panel .searchbar input:focus { border-color: #6366F1 !important; }
+  .wan-panel .searchbar input::placeholder { color: rgba(255,255,255,.2) !important; }
+  .wan-panel .hint { display: none !important; }
+  .wan-panel .list { padding: 0 14px 14px !important; }
+  .wan-panel .row {
+    background: #1E2236 !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    border-radius: 10px !important;
+    margin-bottom: 6px !important;
+    transition: border-color .15s !important;
+  }
+  .wan-panel .row:hover { border-color: #6366F1 !important; background: #242840 !important; }
+  .wan-panel .code { color: #818CF8 !important; font-weight: 700 !important; }
+  .wan-panel .desc { color: rgba(255,255,255,.45) !important; }
+  .wan-panel .copy-hint { color: rgba(255,255,255,.2) !important; }
+  .wan-panel .tag { background: rgba(99,102,241,.15) !important; color: #a5b4fc !important; border: none !important; }
+  .wan-panel .add {
+    background: rgba(255,255,255,.05) !important;
+    border-color: rgba(255,255,255,.12) !important;
+  }
+  .wan-panel .add summary { color: rgba(255,255,255,.4) !important; }
+  .wan-panel .addbtn { background: #6366F1 !important; color: #fff !important; border: none !important; }
+  .wan-panel .seg button {
+    background: #0A0C15 !important;
+    border-color: rgba(255,255,255,.1) !important;
+    color: rgba(255,255,255,.4) !important;
+    border-radius: 8px !important;
+    font-size: 11.5px !important;
+    padding: 5px 14px !important;
+  }
+  .wan-panel .seg button.on {
+    background: #6366F1 !important;
+    border-color: #6366F1 !important;
+    color: #fff !important;
+  }
+  .wan-panel .mode-toggle {
+    padding: 6px 14px 4px !important;
+    background: transparent !important;
+    border: none !important;
+  }
+  .wan-panel .mode-toggle-label { color: rgba(255,255,255,.25) !important; }
+  .wan-panel .mode-switch { border-color: rgba(255,255,255,.1) !important; }
+  .wan-panel .mode-btn { color: rgba(255,255,255,.3) !important; }
+  .wan-panel .mode-btn.active-helper { background: rgba(99,102,241,.2) !important; color: #a5b4fc !important; }
+  .wan-panel .mode-btn.active-berserk { background: rgba(239,68,68,.15) !important; color: #fca5a5 !important; }
+  .wan-panel .mode-hint { display: none !important; }
+  .wan-panel .guide, .wan-panel .hint, .wan-panel #logPanel,
+  .wan-panel header, .wan-panel .lister-bar, .wan-panel #wanSessionStrip { display: none !important; }
+  .wan-panel .work-page { display: none !important; }
+  .wan-panel .work-page.on { display: block !important; }
+
+  /* Blitzting inside panel */
+  .wan-panel .blitz-mode-bar { background: rgba(255,255,255,.02) !important; border-color: rgba(255,255,255,.07) !important; }
+  .wan-panel .blitz-mode-bar h2 { color: #E4E6F0 !important; font-size: 14px !important; }
+  .wan-panel .blitz-tab { background: #0A0C15 !important; border-color: rgba(255,255,255,.1) !important; color: rgba(255,255,255,.4) !important; }
+  .wan-panel .blitz-tab.on { background: #6366F1 !important; border-color: #6366F1 !important; color: #fff !important; }
+  .wan-panel .blitz-clone-input { background: #1A1D2E !important; border-color: rgba(255,255,255,.15) !important; color: #E4E6F0 !important; }
+  .wan-panel .blitz-gen-btn { background: #6366F1 !important; color: #fff !important; }
+  .wan-panel .blitz-copy-all { background: linear-gradient(135deg,#5558E3,#818CF8) !important; font-weight:700 !important; }
+  .wan-panel .blitz-slot { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; }
+  .wan-panel .blitz-slot-num { color: #818CF8 !important; }
+  .wan-panel .blitz-clone-label { color: rgba(255,255,255,.3) !important; }
+  .wan-panel .blitz-card { background: #1E2236 !important; border-color: rgba(255,255,255,.15) !important; }
+  .wan-panel .blitz-card-title { color: #E4E6F0 !important; }
+  .wan-panel .blitz-card-field label { color: rgba(255,255,255,.3) !important; }
+  .wan-panel .blitz-card-field input { background: #1A1D2E !important; border-color: rgba(255,255,255,.15) !important; color: #E4E6F0 !important; }
+  .wan-panel .blitz-action.approve { background: rgba(34,197,94,.12) !important; border-color: rgba(34,197,94,.25) !important; color: #86efac !important; }
+  .wan-panel .blitz-action.flag { background: rgba(251,191,36,.08) !important; border-color: rgba(251,191,36,.2) !important; color: #fbbf24 !important; }
+  .wan-panel .blitz-action.edit { background: #0A0C15 !important; border-color: rgba(255,255,255,.1) !important; color: rgba(255,255,255,.4) !important; }
+  .wan-panel .blitz-kbd { background: #0A0C15 !important; border-color: rgba(255,255,255,.1) !important; color: rgba(255,255,255,.3) !important; }
+  .wan-panel .blitz-section { background: rgba(255,255,255,.02) !important; }
+  .wan-panel .blitz-progress-bar { background: rgba(255,255,255,.07) !important; }
+  .wan-panel .blitz-progress-fill { background: #6366F1 !important; }
+
+  /* Universal inside panel */
+  .wan-panel .universal-card { background: transparent !important; border: none !important; box-shadow: none !important; }
+  .wan-panel .universal-card-head { background: rgba(255,255,255,.02) !important; border-color: rgba(255,255,255,.07) !important; }
+  .wan-panel .universal-card-title-row h2 { color: #E4E6F0 !important; }
+  .wan-panel .universal-card-title-row p { color: rgba(255,255,255,.4) !important; }
+  .wan-panel .uni-qc-card { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; }
+  .wan-panel .conf-label { color: rgba(255,255,255,.3) !important; }
+  .wan-panel .conf-score { color: #818CF8 !important; }
+  .wan-panel .conf-bar { background: rgba(255,255,255,.08) !important; }
+  .wan-panel .conf-note { color: rgba(255,255,255,.35) !important; }
+  .wan-panel .needs-research-box { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; color: rgba(255,255,255,.4) !important; }
+  .wan-panel .uni-policy-card { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; }
+  .wan-panel .uni-mini-note { color: rgba(255,255,255,.25) !important; }
+  .wan-panel .uni-preview-shell { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; }
+  .wan-panel .uni-preview-head { border-color: rgba(255,255,255,.07) !important; color: rgba(255,255,255,.35) !important; }
+  .wan-panel .photo-reminder { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; }
+  .wan-panel .req-list { color: rgba(255,255,255,.4) !important; }
+
+  /* ═══════════════════════════════════════════════
+     WAN CANVAS — SCROLL, TEXT & SCROLLBAR FIXES
+     ═══════════════════════════════════════════════ */
+
+  /* Panel body: allow scroll, block canvas wheel propagation */
+  .wan-panel-body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    pointer-events: all !important;
+    flex: 1;
+    isolation: isolate;
+  }
+
+  /* ── Beautiful custom scrollbar ── */
+  .wan-panel-body::-webkit-scrollbar {
+    width: 5px;
+  }
+  .wan-panel-body::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 6px 0;
+  }
+  .wan-panel-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #6366F1, #818CF8);
+    border-radius: 10px;
+    transition: all .2s;
+  }
+  .wan-panel-body::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #818CF8, #A5B4FC);
+  }
+
+  /* Also style list scroll inside panels */
+  .wan-panel .list::-webkit-scrollbar,
+  .wan-panel .dp-body::-webkit-scrollbar {
+    width: 5px;
+  }
+  .wan-panel .list::-webkit-scrollbar-thumb,
+  .wan-panel .dp-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #6366F1, #818CF8);
+    border-radius: 10px;
+  }
+  .wan-panel .list::-webkit-scrollbar-track,
+  .wan-panel .dp-body::-webkit-scrollbar-track { background: transparent; }
+
+  /* ── Text readability — all panel text brighter ── */
+  .wan-panel {
+    color: #D4D8F0 !important;
+  }
+  /* Labels */
+  .wan-panel .dp-label,
+  .wan-panel label,
+  .wan-panel .loglabel,
+  .wan-panel .blitz-clone-label {
+    color: rgba(255,255,255,.55) !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    letter-spacing: .04em !important;
+    text-transform: uppercase !important;
+  }
+  /* Warning / info text */
+  .wan-panel .manifest-warning {
+    color: rgba(251,191,36,.75) !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+  }
+  /* Inputs — bright text, visible placeholder */
+  .wan-panel input:not([type=checkbox]),
+  .wan-panel select,
+  .wan-panel textarea {
+    color: #E8EBF8 !important;
+    font-size: 13px !important;
+  }
+  .wan-panel input::placeholder,
+  .wan-panel textarea::placeholder {
+    color: rgba(255,255,255,.3) !important;
+  }
+  /* Code list items */
+  .wan-panel .code {
+    color: #A5B4FC !important;
+    font-weight: 800 !important;
+    font-size: 12px !important;
+  }
+  .wan-panel .desc {
+    color: rgba(255,255,255,.65) !important;
+    font-size: 12px !important;
+  }
+  .wan-panel .copy-hint {
+    color: rgba(255,255,255,.35) !important;
+    font-size: 11px !important;
+  }
+  /* Tags */
+  .wan-panel .tag {
+    background: rgba(99,102,241,.2) !important;
+    color: #c7caff !important;
+    font-weight: 700 !important;
+    font-size: 10px !important;
+  }
+  /* Queue entry cards */
+  .wan-panel .dp-sku {
+    color: #A5B4FC !important;
+    font-weight: 800 !important;
+    font-size: 12px !important;
+  }
+  .wan-panel .dp-sku-resolved {
+    color: #6EE7B7 !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+  }
+  .wan-panel .dp-preview {
+    color: rgba(255,255,255,.45) !important;
+    font-size: 10.5px !important;
+    line-height: 1.4 !important;
+  }
+  /* Entry card inputs */
+  .wan-panel .dp-entry input {
+    color: #E8EBF8 !important;
+    font-size: 12.5px !important;
+  }
+  .wan-panel .dp-entry input::placeholder {
+    color: rgba(255,255,255,.25) !important;
+  }
+  /* Remove button */
+  .wan-panel .dp-remove {
+    color: rgba(255,255,255,.3) !important;
+  }
+  .wan-panel .dp-remove:hover {
+    color: #FCA5A5 !important;
+  }
+  /* Drag handle */
+  .wan-panel .dp-drag-handle {
+    color: rgba(255,255,255,.3) !important;
+    font-size: 16px !important;
+  }
+  /* Add code panel */
+  .wan-panel .add summary {
+    color: rgba(255,255,255,.65) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+  }
+  .wan-panel .recipe {
+    color: rgba(255,255,255,.45) !important;
+    font-size: 11.5px !important;
+  }
+  .wan-panel .addbtn {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: .02em !important;
+  }
+  /* Format assist */
+  .wan-panel .mode-toggle-label {
+    color: rgba(255,255,255,.4) !important;
+    font-size: 10.5px !important;
+  }
+  .wan-panel .mode-btn {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+  }
+  /* Seg toggle text */
+  .wan-panel .seg button {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+  }
+  /* Blitzting text */
+  .wan-panel .blitz-mode-bar h2 {
+    color: #E8EBF8 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+  }
+  .wan-panel .blitz-slot-num {
+    color: #A5B4FC !important;
+    font-weight: 700 !important;
+  }
+  .wan-panel .blitz-card-title {
+    color: #E8EBF8 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+  }
+  .wan-panel .blitz-card-field label {
+    color: rgba(255,255,255,.5) !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: .04em !important;
+    text-transform: uppercase !important;
+  }
+  .wan-panel .blitz-card-field input {
+    color: #E8EBF8 !important;
+    font-size: 12.5px !important;
+  }
+  /* Blitz kbd legend */
+  .wan-panel .blitz-kbd-legend {
+    color: rgba(255,255,255,.35) !important;
+    font-size: 11px !important;
+  }
+  .wan-panel .blitz-kbd {
+    color: rgba(255,255,255,.55) !important;
+    font-weight: 700 !important;
+  }
+  /* Universal page text */
+  .wan-panel .universal-card-title-row h2 {
+    color: #E8EBF8 !important;
+    font-weight: 700 !important;
+  }
+  .wan-panel .universal-card-title-row p {
+    color: rgba(255,255,255,.5) !important;
+    font-size: 12px !important;
+  }
+  .wan-panel .conf-label {
+    color: rgba(255,255,255,.5) !important;
+    font-weight: 600 !important;
+  }
+  .wan-panel .conf-score {
+    color: #A5B4FC !important;
+    font-weight: 800 !important;
+    font-size: 15px !important;
+  }
+  .wan-panel .conf-note {
+    color: rgba(255,255,255,.5) !important;
+    font-size: 11.5px !important;
+    line-height: 1.5 !important;
+  }
+  .wan-panel .req-list {
+    color: rgba(255,255,255,.55) !important;
+    font-size: 11.5px !important;
+    line-height: 1.6 !important;
+  }
+  .wan-panel .needs-research-box {
+    color: rgba(255,255,255,.55) !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+  .wan-panel .uni-mini-note {
+    color: rgba(255,255,255,.35) !important;
+    font-size: 11px !important;
+  }
+  .wan-panel .uni-preview-head {
+    color: rgba(255,255,255,.55) !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+  }
+  /* Footer buttons text */
+  .wan-panel .dp-sync-all,
+  .wan-panel .dp-clear {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+  /* Panel handle title brighter */
+  .wan-panel-title {
+    color: rgba(255,255,255,.6) !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: .08em !important;
+  }
 </style>
 <body>
 
@@ -1312,28 +2637,22 @@
     </div>
     <span class="lister-hint" id="listerHint" style="display:none">Your initial appears in every SKU — e.g. <b id="skuExample">NJ02-J-RTL0623-1</b></span>
   </div>
+  <!-- ── Wan Session Strip ── -->
+  <div id="wanSessionStrip">
+    <div class="strip-stat">📋 Batch queue <span class="strip-stat-num" id="stripBatch">0</span></div>
+    <div class="strip-divider"></div>
+    <div class="strip-stat">📱 Universal <span class="strip-stat-num" id="stripUni">0</span></div>
+    <div class="strip-divider"></div>
+    <div class="strip-stat">🎯 Goal <span class="strip-stat-num" id="stripGoal">—</span></div>
+    <div style="margin-left:auto;font-size:10.5px;opacity:.5;">session only · resets on close</div>
+  </div>
 
   <div class="work-page on" id="batchPage">
-  <div class="guide">
-    <div class="step">
-      <span class="stepn">1</span>
-      <span class="steptxt">Set your name &amp; batch</span>
+  <div style="display:flex;align-items:center;gap:10px;padding:12px 18px 0;background:var(--wan-bg);">
+    <div class="seg" style="display:flex;">
+      <button id="segStorage" class="on" type="button">Storage</button>
+      <button id="segRam" type="button">RAM</button>
     </div>
-    <span class="arrow">→</span>
-    <div class="step">
-      <span class="stepn">2</span>
-      <span class="steptxt">Pick category</span>
-      <div class="seg">
-        <button id="segStorage" class="on" type="button">Storage</button>
-        <button id="segRam" type="button">RAM</button>
-      </div>
-    </div>
-    <span class="arrow">→</span>
-    <div class="step"><span class="stepn">3</span><span class="steptxt">Find your code</span></div>
-    <span class="arrow">→</span>
-    <div class="step"><span class="stepn">4</span><span class="steptxt">Fill entry details</span></div>
-    <span class="arrow">→</span>
-    <div class="step"><span class="stepn">5</span><span class="steptxt">Copy All → paste to Claude</span></div>
   </div>
 
   <div class="mode-toggle">
@@ -1342,7 +2661,7 @@
       <button class="mode-btn active-helper" id="modeHelper">🤝 Helper</button>
       <button class="mode-btn" id="modeBerserk">⚡ Berserk</button>
     </div>
-    <span class="mode-hint" id="modeHint">Wan suggests — you confirm</span>
+    <span class="mode-hint" id="modeHint" style="display:none"></span>
   </div>
 
   <details class="add">
@@ -1394,7 +2713,7 @@
     <input id="q" type="text" autocomplete="off" spellcheck="false"
            placeholder="Type a code or drive name…  e.g. C500 or samsung" aria-label="Search abribook">
   </div>
-  <div class="hint">Search by code (e.g. <b>S2990P</b>) or drive name (e.g. <b>970 EVO</b>). Tap a code to copy it — double-tap for the full template line.</div>
+
 
   <div class="list" id="list"></div>
   </div><!-- /#batchPage -->
@@ -1681,7 +3000,7 @@
 <div class="draft-panel" id="draftPanel">
   <div class="dp-header">
     <h2>📋 <span style="font-size:11px;font-weight:600;background:rgba(99,108,255,.25);color:#C9CCFF;border-radius:var(--r-pill);padding:2px 8px;vertical-align:middle;margin-right:4px;">Manifest</span> Batch Queue</h2>
-    <p>Store the data first. Review the full batch at the end, then copy the Claude manifest-prep prompt or sync to the Universal Sheet.</p>
+
   </div>
   <div class="dp-body">
     <div class="dp-tab-panel on" id="dpPanelBatch">
@@ -1689,10 +3008,7 @@
       <div class="dp-entries" id="dpEntries"></div>
       <button class="dp-add-entry" id="dpAddEntry">+ Add batch entry</button>
     </div>
-    <div class="dp-tab-panel" id="dpPanelUniversal">
-      <div class="manifest-warning">Universal intake now lives on the main page. Use the Work Page dropdown beside Who's listing to switch pages.</div>
-            <div class="dp-entries" id="uniEntries"></div>
-    </div>
+
   </div>
   <div class="dp-footer">
     <div class="dp-label" style="margin-bottom:6px">All manifest entries</div>
@@ -3723,6 +5039,13 @@ function updateGoalCounter(){
     smokeCelebrate(total, goal);
   }
   if(goal && total < goal) goalCelebrated = false;
+  // Update session strip
+  const sb = document.getElementById('stripBatch');
+  const su = document.getElementById('stripUni');
+  const sg = document.getElementById('stripGoal');
+  if(sb) sb.textContent = dpEntries.length;
+  if(su) su.textContent = (uniEntriesData||[]).length;
+  if(sg) sg.textContent = goal ? `${total} / ${goal}` : '—';
 }
 function smokeCelebrate(total, goal){
   const old = document.querySelector('.smoke-celebration');
@@ -7792,31 +9115,47 @@ document.getElementById('promptCopyBtn').addEventListener('click', ()=>{
 </div>
 
 <!-- ── G-Mode Know It All Modal ── -->
-<div id="gModeKIA" style="display:none;position:fixed;inset:0;background:rgba(10,11,16,.92);z-index:450;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;">
-  <div style="background:#0F1117;border:1px solid rgba(251,191,36,.25);border-radius:20px;box-shadow:0 32px 80px rgba(0,0,0,.6);width:100%;max-width:560px;margin:auto;overflow:hidden;">
-
-    <!-- KIA Header -->
-    <div style="padding:20px 22px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.07);">
-      <span style="font-size:20px;">🧠</span>
-      <div style="flex:1;">
-        <div style="font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em;">Know It All</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">Tap anything you want to understand. No steps — just the real explanation.</div>
-      </div>
-      <button id="gModeKIAClose" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:20px;cursor:pointer;line-height:1;">×</button>
+<!-- ── KIA Topic Picker ── -->
+<div id="gModeKIA" style="display:none;position:fixed;inset:0;background:rgba(5,6,12,.96);z-index:450;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+  <div style="width:100%;max-width:520px;margin:auto;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:32px;margin-bottom:10px;">🧠</div>
+      <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:6px;">Know It All</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);">Pick a situation. We will walk you through it.</div>
     </div>
-
-    <!-- KIA Topic List -->
-    <div id="gModeKIAList" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+    <div id="gModeKIAList" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <div style="margin-top:16px;text-align:center;">
+      <button id="gModeKIAClose" style="padding:10px 24px;background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:20px;font:600 12px/1 var(--sans);color:rgba(255,255,255,.3);cursor:pointer;">Close</button>
     </div>
+  </div>
+</div>
 
-    <!-- KIA Detail Panel -->
-    <div id="gModeKIADetail" style="display:none;border-top:1px solid rgba(255,255,255,.07);">
-      <div style="padding:18px 20px;">
-        <button id="gModeKIABack" style="font:600 12px/1 var(--sans);color:rgba(251,191,36,.7);background:none;border:none;cursor:pointer;margin-bottom:14px;padding:0;">← Back to topics</button>
-        <div id="gModeKIADetailTitle" style="font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3;"></div>
-        <div id="gModeKIADetailBody" style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.75;"></div>
-      </div>
-    </div>
+<!-- ── KIA Scenario Player (fullscreen) ── -->
+<div id="gModeKIAPlayer" style="display:none;position:fixed;inset:0;background:#080A0F;z-index:460;flex-direction:column;">
+  <!-- Progress bar -->
+  <div style="position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.08);z-index:1;">
+    <div id="kiaProgress" style="height:100%;background:#fbbf24;transition:width .35s ease;width:0%;"></div>
+  </div>
+  <!-- Header -->
+  <div style="padding:18px 22px 0;display:flex;align-items:center;justify-content:space-between;flex:none;">
+    <button id="kiaPlayerBack" style="font:600 12px/1 var(--sans);color:rgba(251,191,36,.6);background:none;border:none;cursor:pointer;padding:0;">← Topics</button>
+    <span id="kiaPlayerCounter" style="font:700 11px/1 var(--mono);color:rgba(255,255,255,.25);letter-spacing:.06em;"></span>
+    <button id="kiaPlayerClose" style="background:none;border:none;color:rgba(255,255,255,.25);font-size:20px;cursor:pointer;line-height:1;">×</button>
+  </div>
+  <!-- Scene -->
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+    <div id="kiaSceneEmoji" style="font-size:56px;margin-bottom:20px;line-height:1;transition:opacity .25s;"></div>
+    <div id="kiaSceneLabel" style="font:700 10px/1 var(--sans);color:#fbbf24;text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;opacity:.8;"></div>
+    <div id="kiaSceneTitle" style="font-size:22px;font-weight:800;color:#fff;line-height:1.25;max-width:400px;margin:0 auto 16px;letter-spacing:-.02em;"></div>
+    <div id="kiaSceneBody" style="font-size:15px;color:rgba(255,255,255,.55);line-height:1.7;max-width:420px;margin:0 auto;"></div>
+  </div>
+  <!-- Footer -->
+  <div style="padding:0 24px 32px;display:flex;align-items:center;justify-content:space-between;flex:none;max-width:520px;margin:0 auto;width:100%;">
+    <button id="kiaNavPrev" style="padding:12px 22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;font:700 13px/1 var(--sans);color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s;">← Back</button>
+    <div id="kiaDots" style="display:flex;gap:6px;align-items:center;"></div>
+    <button id="kiaNavNext" style="padding:12px 28px;background:#fbbf24;border:none;border-radius:12px;font:700 13px/1 var(--sans);color:#1a1200;cursor:pointer;transition:all .15s;min-width:100px;">Next →</button>
+  </div>
+</div>
 
   </div>
 </div>
@@ -8052,198 +9391,203 @@ function endTour() {
 }
 
 // ── Know It All topics ───────────────────────────────────────────
-const KIA_TOPICS = [
+const KIA_SCENARIOS = [
   {
-    icon: '🔍',
+    icon: "🔍",
     label: "How Haz looks up prices",
-    sublabel: "Where the numbers come from and why it matters",
-    title: "How Haz Looks Up Prices",
-    body: `When you type a device name into Haz, it searches a database of over 970 items that covers real things we have actually sold here, what is currently listed in the store, and general used market prices pulled from sources like eBay.
-
-Every result comes with a colored badge so you know exactly what you are looking at:
-
-🟢 SYG Sold — This is the gold standard. It means we sold that exact item at that price at this store. If Haz shows you a green badge, that number is as real as it gets.
-
-🔵 SYG Listed — This item is currently in our store with that price tag. Good reference point, but it has not sold yet.
-
-⚫ Market Est — A general estimate based on what similar items go for online. Useful as a ceiling, but do not treat it like a guaranteed sell price.
-
-The reason the badges exist is because not all prices are equal. A buyer who offers based on a market estimate without checking our own sold history might overpay. Haz shows you the source so you can make a smarter call on the spot.`
+    sub: "What the badges mean and why they matter",
+    beats: [
+      { emoji: "🧍", tag: "The situation", title: "A customer walks in with an iPhone 13 Pro Max.", body: "You need to know what to offer them. Right now. You have no time to look things up manually — the customer is standing right there." },
+      { emoji: "⌨️", tag: "What you do", title: "You type it into Haz.", body: "Just type the name of the device. Haz searches over 970 items — things we have actually sold here, what is in our store right now, and general market rates." },
+      { emoji: "🟢", tag: "SYG Sold badge", title: "Green badge means: we sold this at that price.", body: "This is the most reliable number you will see. It means a unit of this exact device sold at this store at that price. Not estimated. Not listed. Sold." },
+      { emoji: "🔵", tag: "SYG Listed badge", title: "Blue badge means: it is priced in our store right now.", body: "This is our current asking price. It has not sold yet, but it tells you where we are positioning it. A good directional reference, not a guarantee." },
+      { emoji: "⚫", tag: "Market Est badge", title: "Gray badge means: general market estimate.", body: "This comes from outside SYG. Useful as a ceiling to know what buyers might compare us to, but do not rely on it as your main number." },
+      { emoji: "💡", tag: "Why it matters", title: "Not all prices are equal.", body: "A buyer who offers based on a market estimate without checking our own sales could easily overpay. The badge tells you exactly what you are looking at so you can make the right call." }
+    ]
   },
   {
-    icon: '💵',
+    icon: "💵",
     label: "What the offer chips mean",
-    sublabel: "Good, Fair, Low — how they are calculated",
-    title: "What the Offer Chips Mean",
-    body: `Once Haz finds a price match, it shows you three offer options — Good, Fair, and Low. These are not random — they are calculated from the matched price with SYG buy margins applied.
-
-🟢 Good — A safe buy at a solid margin. If the item is in good shape and you feel confident about it, this is your go-to.
-
-🟡 Fair — Middle ground. Works for items where you are a little unsure — maybe the condition is not perfect, or you want to leave a bit more buffer.
-
-🔴 Low — Tight offer. Use this when the item has issues, you are not sure how fast it will move, or the market price feels shaky.
-
-Tapping a chip fills the Accepted At field automatically — you do not have to type anything. From there you just log it on the intake board and move on to the next item.
-
-The whole point is to take the math off your plate. You focus on the customer and the condition of the item — Haz handles the numbers.`
+    sub: "Good, Fair, Low — and when to use each",
+    beats: [
+      { emoji: "📱", tag: "The situation", title: "Haz found a match. Now what do you offer?", body: "The result shows a price. But you still need to decide what to actually offer the customer. That is where the chips come in." },
+      { emoji: "🟢", tag: "Green — Good offer", title: "This is a safe buy with solid margin.", body: "The item is in good shape, you are confident about it, and the price gives SYG room to make money. Tap this when everything checks out." },
+      { emoji: "🟡", tag: "Yellow — Fair offer", title: "A middle-ground buy when you are not totally sure.", body: "Maybe the condition is not perfect. Maybe you are not sure how fast it will move. Fair still works — it just leaves a bit more buffer so SYG is not stuck with a unit that cost too much." },
+      { emoji: "🔴", tag: "Red — Low offer", title: "Tight margin. Use this when something feels off.", body: "The item has visible damage. The market looks slow. You just want to be cautious. Low keeps SYG protected even if the unit takes a while to sell or needs more work." },
+      { emoji: "✅", tag: "What happens next", title: "Tap a chip and the Accepted At field fills in automatically.", body: "You do not have to type the number. Haz does it for you. From there, log the item on the intake board and move on to the next one." },
+      { emoji: "🎯", tag: "The point", title: "You focus on the customer and the condition. Haz handles the math.", body: "The whole system exists so you do not have to do mental math on the floor while someone is standing in front of you waiting for an answer." }
+    ]
   },
   {
-    icon: '📋',
+    icon: "📋",
     label: "What Abribook codes are",
-    sublabel: "Why we use short codes instead of typing everything out",
-    title: "What Abribook Codes Are",
-    body: `An Abribook code is a short identifier for a specific storage drive or RAM module — something like S2990P or K1KC3000.
-
-Instead of typing out "Samsung 990 Pro 2TB NVMe M.2 2280" every single time you log a drive, you type the code and Wan knows exactly what item that is. It fills in the full name, form factor, and interface for you.
-
-The codes follow a pattern: the first letter is the brand (S = Samsung, K = Kingston, W = Western Digital, etc.), followed by the capacity, then a shorthand for the model. Once you have used the system for a few days you will start to remember the ones you see the most.
-
-If you get an item that is not in the code list, there is an "Add a new code" option. You fill in the specs once, give it a code, and it is in the system for everyone from then on.
-
-The reason we use codes instead of typing full names is consistency. If five different people type the same drive five different ways, the listings come out five different ways. With a code, everyone gets the exact same description every time.`
+    sub: "Why we use short codes instead of typing everything out",
+    beats: [
+      { emoji: "💿", tag: "The situation", title: "You just tested a Samsung 990 Pro 2TB drive.", body: "Now you need to log it. You could type out the full name every single time — or you could use a code." },
+      { emoji: "🔑", tag: "What a code looks like", title: "S2990P. That is all you type.", body: "Wan looks up that code and already knows it means: Samsung 990 Pro 2TB NVMe M.2 2280. The full name, form factor, and interface are already in the system." },
+      { emoji: "🔤", tag: "How to read a code", title: "The code follows a pattern you will start to recognize.", body: "First letter is the brand. S = Samsung, K = Kingston, W = Western Digital. Then the capacity. Then a shorthand for the model. After a few sessions you will know the common ones by memory." },
+      { emoji: "➕", tag: "What if it is not in the list?", title: "Use Add a new code.", body: "Fill in the specs once, give it a code that follows the pattern, and it is in the system permanently. Everyone on staff gets it from that point forward." },
+      { emoji: "🤝", tag: "Why it matters", title: "Consistency. Every time. No exceptions.", body: "If five different people type the same drive five different ways, the listings come out five different ways. A code makes sure everyone always gets the exact same description." }
+    ]
   },
   {
-    icon: '❤️',
-    label: "What drive health means and why it matters",
-    sublabel: "The health % and what it tells you about the drive",
-    title: "What Drive Health Means",
-    body: `When you plug a drive into the test rig and open CrystalDiskInfo, it gives you a health percentage. That number is telling you how much life the drive has used up.
-
-100% means the drive is essentially brand new — barely been written to. 80% means it has had some use but still has plenty of life left. Below 50% and you are getting into territory where the drive has been used heavily and may be approaching the end of its lifespan.
-
-For listing purposes, health matters because buyers need to know what they are getting. A 95% health drive and a 40% health drive are not the same product — pricing them the same would be misleading and potentially cause returns.
-
-Here is a rough way to think about it:
-— 80% and above: Healthy. List normally.
-— 50 to 79%: Medium health. Disclose it, price it accordingly.
-— Below 50%: Low health. Always flag this clearly in the listing — buyers who want cheap storage for backups will still buy it, but they need to know upfront.
-— 0% or undetectable: The drive may be failing or already failed. These go out as For Parts.
-
-The health number you enter in Wan shows up directly in the listing so there is no disconnect between what you tested and what gets posted.`
+    icon: "❤️",
+    label: "What drive health means",
+    sub: "The % and what it tells you about the drive",
+    beats: [
+      { emoji: "🔌", tag: "The situation", title: "You plug a drive into the test rig. It reads 73% health.", body: "What does that actually mean and what do you do with it?" },
+      { emoji: "📊", tag: "What the number is", title: "It tells you how much life the drive has already used up.", body: "100% means it is basically brand new. The lower the number, the more the drive has been used over its lifetime." },
+      { emoji: "🟢", tag: "80% and above", title: "Healthy. List it normally.", body: "This drive has plenty of life left. Price it at the standard used rate for that model. No extra callouts needed beyond the number in the listing." },
+      { emoji: "🟡", tag: "50 to 79%", title: "Medium health. Disclose it and price it accordingly.", body: "Still functional but clearly used. Make sure the health percentage shows in the listing and price it a bit lower than a healthy unit." },
+      { emoji: "🔴", tag: "Below 50%", title: "Low health. Flag it clearly.", body: "The drive has been used heavily. Some buyers specifically want cheap storage for backups — they will buy it, but they need to know upfront. Never hide this." },
+      { emoji: "💀", tag: "0% or undetectable", title: "For Parts. Full stop.", body: "The drive may be failing or already dead. It goes out as For Parts with the exact issue described. Never list this as a working drive." }
+    ]
   },
   {
-    icon: '⚡',
-    label: "How Blitzting saves time on big batches",
-    sublabel: "Template Clone and Speed Review explained",
-    title: "How Blitzting Saves Time on Big Batches",
-    body: `Blitzting is for situations where you have a pile of the same item to log — same model, same batch, just different health percentages and serial numbers.
-
-Without Blitzting, you would add an entry card for each one, type the same code every time, and fill in the health and serial individually. That is fine for two or three drives. For ten or fifteen it gets tedious fast.
-
-Template Clone fixes that. You fill in the code and shared notes once in the Master Entry, check which fields differ per unit (usually just health % and serial), set the quantity, and hit Generate. Slots appear — one per unit — and you just fill in the unique values. Hit Add all to queue and every single one lands in the queue as its own proper entry card, exactly like you logged each one by hand.
-
-Speed Review is the other half. Once you are done logging a session, you flip through every entry in the queue one by one and confirm the price and cost before export. You approve what is right, flag what needs a second look, and skip past anything already reviewed. When you are done, the whole session is ready to hand off to Claude with every price confirmed — no guessing, no fixing it later.`
+    icon: "⚡",
+    label: "How Blitzting saves time",
+    sub: "Template Clone and Speed Review explained",
+    beats: [
+      { emoji: "📦", tag: "The situation", title: "You just received 12 Kingston KC3000 drives from the same batch.", body: "Same model. Same notes. The only differences are the health percentage and serial number on each one." },
+      { emoji: "😩", tag: "Without Blitzting", title: "You would add a card for each one. Twelve times.", body: "Same code. Same notes. Over and over. By drive five you are making typos. By twelve you want to quit." },
+      { emoji: "⚡", tag: "With Template Clone", title: "Fill in the shared info once. Generate slots for the rest.", body: "Enter the code, base health, and notes in the Master Entry. Check what differs per unit. Set quantity to 12. Hit Generate." },
+      { emoji: "🎰", tag: "Fill the slots", title: "Each slot only asks for what is different.", body: "Twelve small boxes appear. Each one just needs the health % and serial. Wan even suggests the next serial if it detects a pattern from what you typed before." },
+      { emoji: "✅", tag: "Add all to queue", title: "All 12 land in the queue as proper entry cards.", body: "One tap. Every unit appears exactly as if you had logged each one manually. Done in under a minute." },
+      { emoji: "🔎", tag: "Speed Review", title: "Flip through every entry and confirm prices before you export.", body: "Speed Review shows you one card at a time. Set the price. Set your cost. Approve. What you confirm here is exactly what goes into the listing." }
+    ]
   },
   {
-    icon: '📤',
-    label: "What happens when you export to Claude",
-    sublabel: "What Copy Claude manifest-prep prompt actually does",
-    title: "What Happens When You Export to Claude",
-    body: `When you have logged everything for a session and hit "Copy Claude manifest-prep prompt," Wan builds two things into that copied text:
-
-For RAM and storage entries (Batch mode), it formats them as manifest lines and tells Claude to use the listing generator — a system that knows the SYG format, how to write drive listings, what health language to use, and which Shopify fields to fill in.
-
-For everything else — phones, laptops, consoles, GPUs (Universal mode) — it sends a structured breakdown of each item and tells Claude to rewrite the default listing from the SYG platform into a proper, complete version with the right title, the right HTML table, and all the product fields filled in.
-
-You paste that into Claude and Claude does the rest. The listings come back ready to push to Shopify.
-
-The reason it works this way — one button, two different instructions — is that drives and RAM have a very specific format that needs very specific rules. Phones and laptops need more detailed, custom work. Mixing them into one instruction would confuse Claude and produce worse output for both. Wan keeps them separate so you never have to think about which Claude instruction to use.`
+    icon: "📤",
+    label: "What exporting to Claude does",
+    sub: "What happens when you hit Copy Claude manifest-prep prompt",
+    beats: [
+      { emoji: "✍️", tag: "The situation", title: "You just logged a full session. Drives, a laptop, two phones.", body: "The queue has everything. You hit Copy Claude manifest-prep prompt and paste it into Claude. But what did you actually just copy?" },
+      { emoji: "✂️", tag: "It splits automatically", title: "Abribook builds two separate instructions in one paste.", body: "It checks every entry and sorts them by type. Drives and RAM go one way. Phones, laptops, and consoles go another. You do not have to do anything." },
+      { emoji: "💿", tag: "For drives and RAM", title: "Claude uses the SYG listing generator.", body: "A purpose-built listing system that already knows how to write storage listings. It produces a complete, ready-to-post listing with the right format every time." },
+      { emoji: "📱", tag: "For everything else", title: "Claude rewrites the default SYG platform listing.", body: "The company platform auto-generates bare-bones descriptions. Claude takes your notes and overwrites that with a proper title, HTML table, and all the product fields filled in correctly." },
+      { emoji: "🛍️", tag: "After Claude is done", title: "The listings go straight into Shopify as drafts.", body: "Claude talks directly to the store. It creates the product, sets the SKU, writes the description, fills in the metafields. No copy-pasting into Shopify manually." },
+      { emoji: "👁️", tag: "Always a draft", title: "Nothing goes live without a human approving it.", body: "Every product lands as a draft. Someone still has to review and publish. The automation handles the setup — the final call is always yours." }
+    ]
   },
   {
-    icon: '📦',
+    icon: "📦",
     label: "How Fill PO works",
-    sublabel: "What it does and why the customer has to be selected first",
-    title: "How Fill PO Works",
-    body: `Every time you buy something from a customer, it needs a purchase order logged on the SYG company website. That is a multi-field form — you pick the category, make, model, condition, color, your estimated value, and your offer price. Doing that manually for every item in a session adds up.
-
-Fill PO is a button on the intake board that handles that for you. When you tap it for an item, Haz builds a detailed prompt that you paste into Claude in Chrome. Claude then opens the company website form and fills every field out automatically based on what you entered during intake — category, make, model, condition, all of it.
-
-One important thing: the customer has to already be selected on the purchase order page before you run it. That step is the one thing Claude cannot do on its own — it needs to know which customer the order is for, and that selection requires the buyer to log in and make the choice manually. Once the customer is selected, everything else is automated.`
+    sub: "What it automates and why the customer must be selected first",
+    beats: [
+      { emoji: "🤝", tag: "The situation", title: "You just bought a MacBook from a customer.", body: "Now you need to log a purchase order on the SYG company website. Category. Make. Model. Condition. Color. Estimated value. Offer price." },
+      { emoji: "🕐", tag: "The problem", title: "Doing that manually for every item in a session adds up fast.", body: "If you bought five items today, that is five times through the same form. Each one takes a few minutes. That is time you could be spending on the floor." },
+      { emoji: "🖥️", tag: "What Fill PO does", title: "It generates a prompt. You paste it into Claude in Chrome.", body: "From the intake board, you tap Fill PO on the item. Haz builds a detailed prompt with all the information about that item. You copy it and paste it into Claude in Chrome." },
+      { emoji: "🤖", tag: "Claude fills the form", title: "Claude opens the PO form and fills every field automatically.", body: "Category, make, model, condition, color, estimated value, offer — all filled out based on what you logged during intake. You just watch it happen." },
+      { emoji: "⚠️", tag: "One thing you must do first", title: "The customer has to already be selected on the PO page.", body: "That is the one step Claude cannot do for you. Once the customer is selected on the purchase order page, run Fill PO and everything else is automatic." }
+    ]
   },
   {
-    icon: '🏷️',
-    label: "How SKUs work and what each part means",
-    sublabel: "Reading a SKU like NJ02-J-RTL0626-3",
-    title: "How SKUs Work",
-    body: `Every item logged through this system gets a SKU that looks like this: NJ02-J-RTL0626-3
-
-Here is what each part means:
-
-NJ02 — That is this store. Elmwood Park, NJ. Every SYG location has a code, and this one keeps our listings separate from other stores in the system.
-
-J — The initial of whoever logged the item. If it is Juan, it is J. Ibrahim is IS. Paul is P. This means every item can be traced back to the person who logged it — useful if something needs to be checked later.
-
-RTL0626 — The batch ID. This is usually tied to the date or the retail run the items came from. Everything logged in the same session shares the same batch ID, so you can always find all the items from a particular buy.
-
-3 — The item number within the batch. The first item you log is 1, the second is 2, and so on. It resets each session.
-
-The whole point of the SKU format is accountability and traceability. You can look at any listing on Shopify and know immediately where it came from, when it was logged, and who did it.`
-  },
-  {
-    icon: '🛍️',
-    label: "How listings end up on Shopify",
-    sublabel: "From Claude output to a draft product in the store",
-    title: "How Listings End Up on Shopify",
-    body: `After you export to Claude and Claude writes the listings, the next step is getting them into Shopify. This happens automatically — Claude talks directly to the Shopify store and creates or updates the product for you.
-
-It sets the title, writes the full HTML description in the SYG table format, fills in the product metafields (the behind-the-scenes fields Shopify uses for filtering and search), assigns the SKU, and sets the item as tracked inventory.
-
-Everything goes in as a draft. That means it does not show up to customers on the website until someone manually reviews it and hits publish. This is intentional — the automation handles the tedious setup work, but a real person always makes the final call before anything goes live.
-
-The cost you set during Speed Review also gets saved to Shopify's internal cost field. That is the number Shopify uses to track your profit margin on each item — only visible inside the admin, customers never see it. Setting it at intake means your numbers are always up to date without having to go back and add it later.`
+    icon: "🏷️",
+    label: "How SKUs work",
+    sub: "Reading a SKU like NJ02-J-RTL0626-3",
+    beats: [
+      { emoji: "🔎", tag: "The situation", title: "You see a listing in Shopify: NJ02-J-RTL0626-3.", body: "Someone on the team asks where this item came from and who logged it. You can answer that just from reading the SKU." },
+      { emoji: "🏬", tag: "NJ02", title: "That is this store.", body: "Elmwood Park, New Jersey. Every SYG location has its own store code. This keeps our inventory separate from other stores in the system." },
+      { emoji: "👤", tag: "J", title: "That is the lister initial.", body: "J is Juan. IS is Ibrahim. P is Paul. Every item is traceable back to the person who logged it. If something needs to be checked later, you know exactly who to ask." },
+      { emoji: "📅", tag: "RTL0626", title: "That is the batch ID.", body: "Usually tied to the date or the retail run the items came from. Everything logged in the same session shares the same batch ID." },
+      { emoji: "🔢", tag: "3", title: "That is the item number within the batch.", body: "First item logged is 1, second is 2, and so on. It resets at the start of each session." },
+      { emoji: "✅", tag: "Why it matters", title: "Any listing can be traced back to a specific person, day, and batch.", body: "Accountability is built into the SKU. You never have to wonder where something came from or who is responsible for it." }
+    ]
   }
 ];
 
-// ── KIA Modal ──────────────────────────────────────────────────────
+// ── KIA Player state ───────────────────────────────────────────────
+let kiaScenario = null;
+let kiaBeat = 0;
+
+function openKIAPlayer(idx) {
+  kiaScenario = KIA_SCENARIOS[idx];
+  kiaBeat = 0;
+  document.getElementById('gModeKIA').style.display = 'none';
+  document.getElementById('gModeKIAPlayer').style.display = 'flex';
+  renderKIABeat();
+}
+
+function closeKIAPlayer() {
+  document.getElementById('gModeKIAPlayer').style.display = 'none';
+  kiaScenario = null;
+  kiaBeat = 0;
+}
+
+function renderKIABeat() {
+  if (!kiaScenario) return;
+  const beat = kiaScenario.beats[kiaBeat];
+  const total = kiaScenario.beats.length;
+
+  document.getElementById('kiaSceneEmoji').textContent  = beat.emoji;
+  document.getElementById('kiaSceneLabel').textContent  = beat.tag;
+  document.getElementById('kiaSceneTitle').textContent  = beat.title;
+  document.getElementById('kiaSceneBody').textContent   = beat.body;
+  document.getElementById('kiaPlayerCounter').textContent = (kiaBeat + 1) + ' / ' + total;
+  document.getElementById('kiaProgress').style.width = ((kiaBeat + 1) / total * 100) + '%';
+
+  const dots = document.getElementById('kiaDots');
+  dots.innerHTML = Array.from({length: total}, (_, i) =>
+    '<div style="width:' + (i===kiaBeat?18:6) + 'px;height:6px;border-radius:3px;background:' + (i===kiaBeat?'#fbbf24':'rgba(255,255,255,.2)') + ';transition:all .25s;"></div>'
+  ).join('');
+
+  document.getElementById('kiaNavPrev').style.opacity = kiaBeat === 0 ? '0.3' : '1';
+  document.getElementById('kiaNavPrev').style.pointerEvents = kiaBeat === 0 ? 'none' : 'auto';
+  document.getElementById('kiaNavNext').textContent = kiaBeat === total - 1 ? 'Done ✓' : 'Next →';
+  document.getElementById('kiaNavNext').style.background = kiaBeat === total - 1 ? '#22c55e' : '#fbbf24';
+  document.getElementById('kiaNavNext').style.color = '#1a1200';
+}
+
 function openKIA() {
   closePicker();
   const list = document.getElementById('gModeKIAList');
-  const detail = document.getElementById('gModeKIADetail');
-  detail.style.display = 'none';
-  list.style.display = 'flex';
+  list.innerHTML = KIA_SCENARIOS.map((s, i) =>
+    '<button class="kia-topic-btn" data-kia="' + i + '" style="padding:14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;transition:all .15s;width:100%;">' +
+    '<span style="font-size:24px;flex:none;">' + s.icon + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="font:600 14px/1.2 var(--sans);color:rgba(255,255,255,.88);margin-bottom:3px;">' + s.label + '</div>' +
+    '<div style="font-size:11.5px;color:rgba(255,255,255,.32);">' + s.sub + '</div></div>' +
+    '<div style="flex:none;display:flex;align-items:center;gap:4px;">' +
+    Array.from({length: s.beats.length}, () => '<div style="width:4px;height:4px;border-radius:50%;background:rgba(251,191,36,.35);"></div>').join('') +
+    '<span style="margin-left:6px;color:rgba(255,255,255,.2);font-size:18px;">›</span></div>' +
+    '</button>'
+  ).join('');
 
-  // Render topic buttons
-  list.innerHTML = KIA_TOPICS.map((t, i) => `
-    <button class="kia-topic-btn" data-kia="${i}" style="padding:13px 15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:12px;">
-      <span style="font-size:20px;flex:none;">${t.icon}</span>
-      <div>
-        <div style="font:600 13px/1.2 var(--sans);color:rgba(255,255,255,.85);margin-bottom:3px;">${t.label}</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,.35);">${t.sublabel}</div>
-      </div>
-      <span style="margin-left:auto;color:rgba(255,255,255,.2);font-size:16px;flex:none;">›</span>
-    </button>
-  `).join('');
-
-  // Wire topic buttons
   list.querySelectorAll('.kia-topic-btn').forEach(btn => {
-    btn.addEventListener('mouseenter', ()=>{ btn.style.background='rgba(251,191,36,.08)'; btn.style.borderColor='rgba(251,191,36,.2)'; });
-    btn.addEventListener('mouseleave', ()=>{ btn.style.background='rgba(255,255,255,.04)'; btn.style.borderColor='rgba(255,255,255,.09)'; });
-    btn.addEventListener('click', ()=>{
-      const t = KIA_TOPICS[parseInt(btn.dataset.kia)];
-      document.getElementById('gModeKIADetailTitle').textContent = t.title;
-      // Format body with paragraph breaks
-      document.getElementById('gModeKIADetailBody').innerHTML = t.body
-        .split('\n\n').map(p => `<p style="margin:0 0 12px;">${p.replace(/\n/g,'<br>')}</p>`).join('');
-      list.style.display = 'none';
-      detail.style.display = 'block';
-    });
+    btn.addEventListener('mouseenter', () => { btn.style.background='rgba(251,191,36,.07)'; btn.style.borderColor='rgba(251,191,36,.2)'; });
+    btn.addEventListener('mouseleave', () => { btn.style.background='rgba(255,255,255,.04)'; btn.style.borderColor='rgba(255,255,255,.09)'; });
+    btn.addEventListener('click', () => openKIAPlayer(parseInt(btn.dataset.kia)));
   });
 
   document.getElementById('gModeKIA').style.display = 'flex';
-  document.getElementById('gModeKIA').scrollTop = 0;
 }
 
 function closeKIA() {
   document.getElementById('gModeKIA').style.display = 'none';
 }
 
+// Player navigation
+document.getElementById('kiaNavNext').addEventListener('click', () => {
+  if (!kiaScenario) return;
+  if (kiaBeat >= kiaScenario.beats.length - 1) { closeKIAPlayer(); openKIA(); }
+  else { kiaBeat++; renderKIABeat(); }
+});
+document.getElementById('kiaNavPrev').addEventListener('click', () => {
+  if (!kiaScenario || kiaBeat === 0) return;
+  kiaBeat--; renderKIABeat();
+});
+document.getElementById('kiaPlayerBack').addEventListener('click', () => { closeKIAPlayer(); openKIA(); });
+document.getElementById('kiaPlayerClose').addEventListener('click', () => { closeKIAPlayer(); });
+
+document.addEventListener('keydown', ev => {
+  if (document.getElementById('gModeKIAPlayer').style.display !== 'flex') return;
+  if (ev.key === 'ArrowRight' || ev.key === ' ') { ev.preventDefault(); document.getElementById('kiaNavNext').click(); }
+  if (ev.key === 'ArrowLeft') { ev.preventDefault(); document.getElementById('kiaNavPrev').click(); }
+  if (ev.key === 'Escape') closeKIAPlayer();
+});
+
 document.getElementById('gModePickKIA').addEventListener('click', openKIA);
 document.getElementById('gModeKIAClose').addEventListener('click', closeKIA);
-document.getElementById('gModeKIABack').addEventListener('click', ()=>{
-  document.getElementById('gModeKIADetail').style.display = 'none';
-  document.getElementById('gModeKIAList').style.display = 'flex';
-});
-document.getElementById('gModeKIA').addEventListener('click', e=>{
+document.getElementById('gModeKIA').addEventListener('click', e => {
   if (e.target === document.getElementById('gModeKIA')) closeKIA();
 });
 
@@ -8283,21 +9627,28 @@ document.getElementById('gModeFloatHaz').addEventListener('click', ()=> startTou
 
 // Show/hide floating buttons based on current tool
 function syncFloatButtons() {
-  const page = window.CURRENT_WORK_PAGE || '';
-  const onHaz = !!document.getElementById('hazWrap') &&
-                document.getElementById('hazWrap').style.display !== 'none' &&
-                !document.getElementById('welcomeBackdrop')?.classList.contains('hidden') === false &&
-                document.getElementById('welcomeBackdrop')?.style.display === 'none';
+  const welcomeHidden = document.getElementById('welcomeBackdrop')?.classList.contains('hidden');
+  const hazVisible    = document.getElementById('hazWrap')?.classList.contains('show');
+  const wanVisible    = welcomeHidden && !hazVisible;
+  // On canvas, show in bottom-right above the HUD area; on Haz, normal position
+  const onCanvas = document.getElementById('wanCanvas')?.style.display === 'block';
 
-  // Simpler: just watch which wrap is visible
-  const hazVisible = document.getElementById('hazWrap') &&
-                     !document.getElementById('hazWrap').classList.contains('hidden') &&
-                     document.getElementById('hazWrap').style.display !== 'none';
-  const wanVisible = !hazVisible && document.getElementById('welcomeBackdrop') &&
-                     document.getElementById('welcomeBackdrop').style.display === 'none';
+  const wanBtn = document.getElementById('gModeFloatWan');
+  const hazBtn = document.getElementById('gModeFloatHaz');
 
-  document.getElementById('gModeFloatWan').style.display = (wanVisible && !gActive) ? 'block' : 'none';
-  document.getElementById('gModeFloatHaz').style.display = (hazVisible && !gActive) ? 'block' : 'none';
+  if (wanBtn) {
+    wanBtn.style.display = (wanVisible && !gActive) ? 'block' : 'none';
+    // On canvas keep it top-right of canvas so it doesn't overlap bottom-center prompt
+    wanBtn.style.bottom = onCanvas ? '20px' : '20px';
+    wanBtn.style.right  = '20px';
+    wanBtn.style.left   = 'auto';
+  }
+  if (hazBtn) {
+    hazBtn.style.display = (hazVisible && !gActive) ? 'block' : 'none';
+    hazBtn.style.bottom  = '20px';
+    hazBtn.style.right   = '20px';
+    hazBtn.style.left    = 'auto';
+  }
 }
 
 // Poll every second (lightweight)
@@ -8318,6 +9669,361 @@ document.getElementById('gModeSkip').addEventListener('click', endTour);
 
 // Re-render on resize
 window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
+
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════
+     WAN CANVAS WORKSPACE
+     ═══════════════════════════════════════════ -->
+
+<!-- Floating toolbar -->
+<div id="wanToolbar" style="display:none;">
+  <div class="tb-logo">SYG <span>Wan</span></div>
+  <div class="tb-sep"></div>
+
+  <span class="tb-label">Who</span>
+  <select id="tbListerSelect" style="min-width:120px;">
+    <option value="">— Select —</option>
+    <option value="J">Juan (J)</option>
+    <option value="IS">Ibrahim (IS)</option>
+    <option value="P">Paul (P)</option>
+  </select>
+
+  <input id="tbListerBatch" type="text" value="RTL" placeholder="Batch" style="width:90px;" maxlength="12" autocomplete="off" spellcheck="false">
+
+  <div class="tb-sep"></div>
+
+  <span class="tb-label">Page</span>
+  <select id="tbWorkPage" class="tb-page-select">
+    <option value="batch">📋 Batch — RAM/Storage</option>
+    <option value="universal">📱 Universal</option>
+    <option value="blitzting">⚡ Blitzting</option>
+  </select>
+
+  <div class="tb-sep"></div>
+
+  <span class="tb-label">Goal</span>
+  <input id="tbGoalInput" type="number" min="1" max="999" placeholder="—" style="width:52px;">
+  <div class="tb-goal-pill" id="tbGoalPill">0 / —</div>
+
+  <div class="tb-spacer"></div>
+
+  <button class="tb-btn" id="tbLockBtn">Lock in</button>
+  <div class="tb-sep"></div>
+
+  <!-- Zoom -->
+  <div class="tb-zoom-group">
+    <button class="tb-zoom-btn" id="tbZoomOut">−</button>
+    <span class="tb-zoom-label" id="tbZoomLabel">100%</span>
+    <button class="tb-zoom-btn" id="tbZoomIn">+</button>
+    <button class="tb-zoom-btn" id="tbZoomReset" title="Reset view" style="font-size:11px;color:rgba(255,255,255,.3);">⊙</button>
+  </div>
+
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="tbWelcomeBtn">← Exit</button>
+</div>
+
+<!-- Canvas -->
+<div id="wanCanvas" style="display:none;">
+  <div id="wanCanvasInner" id="wanCanvasInner">
+    <!-- panels injected by JS -->
+  </div>
+</div>
+
+<!-- Session HUD -->
+<div id="wanHUD" style="display:none;">
+  <div class="hud-chip">📋 <span class="hud-chip-num" id="hudBatch">0</span></div>
+  <div class="hud-chip">📱 <span class="hud-chip-num" id="hudUni">0</span></div>
+  <div class="hud-chip">🎯 <span class="hud-chip-num green" id="hudGoal">—</span></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────────
+let canvasScale = 1;
+let canvasX = 60, canvasY = 72;
+let isPanning = false, panStartX = 0, panStartY = 0;
+const MIN_SCALE = 0.3, MAX_SCALE = 2;
+const panels = {};
+
+// ── Init ───────────────────────────────────────────────────────────
+function initCanvas() {
+  const toolbar = document.getElementById('wanToolbar');
+  const canvas  = document.getElementById('wanCanvas');
+  const hud     = document.getElementById('wanHUD');
+  if (!toolbar || !canvas) return;
+
+  toolbar.style.display = 'flex';
+  canvas.style.display  = 'block';
+  hud.style.display     = 'flex';
+  canvas.style.top      = '52px';
+  canvas.style.bottom   = '0';
+  canvas.style.position = 'fixed';
+  canvas.style.left     = '0';
+  canvas.style.right    = '0';
+
+  // Create panels
+  createPanel('search', '🔍 Code Lookup', document.querySelector('.wrap'), { x: 60, y: 20, w: 540, h: 600 });
+  createPanel('queue',  '📋 Manifest Queue', document.getElementById('draftPanel'), { x: 630, y: 20, w: 400, h: 580 });
+
+  applyTransform();
+  syncToolbarToOriginal();
+}
+
+// ── Create panel ──────────────────────────────────────────────────
+function createPanel(id, title, sourceEl, pos) {
+  if (!sourceEl) return;
+
+  const panel = document.createElement('div');
+  panel.className = 'wan-panel';
+  panel.id = 'wp-' + id;
+  panel.style.cssText = `left:${pos.x}px; top:${pos.y}px; width:${pos.w}px; height:${pos.h}px;`;
+
+  const handle = document.createElement('div');
+  handle.className = 'wan-panel-handle';
+  handle.innerHTML = `
+    <div class="wan-panel-dots"><span></span><span></span><span></span></div>
+    <span class="wan-panel-title">${title}</span>
+  `;
+
+  const body = document.createElement('div');
+  body.className = 'wan-panel-body';
+  body.appendChild(sourceEl);
+
+  const resize = document.createElement('div');
+  resize.className = 'wan-panel-resize';
+
+  panel.appendChild(handle);
+  panel.appendChild(body);
+  panel.appendChild(resize);
+
+  document.getElementById('wanCanvasInner').appendChild(panel);
+  panels[id] = { el: panel, x: pos.x, y: pos.y, w: pos.w, h: pos.h };
+
+  makeDraggable(panel, handle);
+  makeResizable(panel, resize, id);
+}
+
+// ── Draggable ─────────────────────────────────────────────────────
+function makeDraggable(panel, handle) {
+  let dragging = false, ox = 0, oy = 0, startX = 0, startY = 0;
+
+  handle.addEventListener('mousedown', e => {
+    if (e.target.tagName === 'BUTTON') return;
+    dragging = true;
+    const r = panel.getBoundingClientRect();
+    ox = r.left;
+    oy = r.top - 52; // toolbar height
+    startX = e.clientX;
+    startY = e.clientY;
+    panel.classList.add('dragging');
+    panel.style.zIndex = 10;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = (e.clientX - startX) / canvasScale;
+    const dy = (e.clientY - startY) / canvasScale;
+    const nx = (ox - canvasX) / canvasScale + dx;
+    const ny = (oy - canvasY) / canvasScale + dy;
+    panel.style.left = Math.max(0, nx) + 'px';
+    panel.style.top  = Math.max(0, ny) + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    panel.classList.remove('dragging');
+    panel.style.zIndex = '';
+  });
+}
+
+// ── Resizable ─────────────────────────────────────────────────────
+function makeResizable(panel, resizeHandle, id) {
+  let resizing = false, startX = 0, startY = 0, startW = 0, startH = 0;
+
+  resizeHandle.addEventListener('mousedown', e => {
+    resizing = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startW = panel.offsetWidth;
+    startH = panel.offsetHeight;
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!resizing) return;
+    const dx = (e.clientX - startX) / canvasScale;
+    const dy = (e.clientY - startY) / canvasScale;
+    panel.style.width  = Math.max(300, startW + dx) + 'px';
+    panel.style.height = Math.max(200, startH + dy) + 'px';
+  });
+
+  document.addEventListener('mouseup', () => { resizing = false; });
+}
+
+// ── Canvas pan ────────────────────────────────────────────────────
+const canvas = document.getElementById('wanCanvas');
+if (canvas) {
+  canvas.addEventListener('mousedown', e => {
+    if (e.target !== canvas && e.target !== document.getElementById('wanCanvasInner') &&
+        !e.target.id.startsWith('wanCanvas')) return;
+    isPanning = true;
+    panStartX = e.clientX - canvasX;
+    panStartY = e.clientY - canvasY;
+    canvas.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isPanning) return;
+    canvasX = e.clientX - panStartX;
+    canvasY = e.clientY - panStartY;
+    applyTransform();
+  });
+
+  document.addEventListener('mouseup', () => {
+    isPanning = false;
+    if (canvas) canvas.style.cursor = 'default';
+  });
+
+  // Scroll to zoom — but NOT when hovering inside a panel body
+  canvas.addEventListener('wheel', e => {
+    // If the scroll target is inside a panel body, let it scroll naturally
+    if (e.target.closest && e.target.closest('.wan-panel-body')) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, canvasScale * delta));
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    canvasX = mx - (mx - canvasX) * (newScale / canvasScale);
+    canvasY = my - (my - canvasY) * (newScale / canvasScale);
+    canvasScale = newScale;
+    applyTransform();
+  }, { passive: false });
+}
+
+function applyTransform() {
+  const inner = document.getElementById('wanCanvasInner');
+  if (inner) inner.style.transform = `translate(${canvasX}px, ${canvasY}px) scale(${canvasScale})`;
+  const label = document.getElementById('tbZoomLabel');
+  if (label) label.textContent = Math.round(canvasScale * 100) + '%';
+}
+
+// ── Zoom buttons ──────────────────────────────────────────────────
+document.getElementById('tbZoomIn')?.addEventListener('click', () => {
+  canvasScale = Math.min(MAX_SCALE, canvasScale * 1.15);
+  applyTransform();
+});
+document.getElementById('tbZoomOut')?.addEventListener('click', () => {
+  canvasScale = Math.max(MIN_SCALE, canvasScale / 1.15);
+  applyTransform();
+});
+document.getElementById('tbZoomReset')?.addEventListener('click', () => {
+  canvasScale = 1; canvasX = 60; canvasY = 20;
+  applyTransform();
+});
+
+// ── Toolbar syncs to original inputs ──────────────────────────────
+function syncToolbarToOriginal() {
+  const tbName  = document.getElementById('tbListerSelect');
+  const tbBatch = document.getElementById('tbListerBatch');
+  const tbPage  = document.getElementById('tbWorkPage');
+  const tbGoal  = document.getElementById('tbGoalInput');
+  const origName  = document.getElementById('listerSelect');
+  const origBatch = document.getElementById('listerBatch');
+  const origPage  = document.getElementById('workPageSelect');
+  const origGoal  = document.getElementById('dailyGoalInput');
+
+  function mirrorToOrig() {
+    if (origName  && tbName)  origName.value  = tbName.value;
+    if (origBatch && tbBatch) origBatch.value = tbBatch.value;
+    if (origGoal  && tbGoal)  { origGoal.value = tbGoal.value; origGoal.dispatchEvent(new Event('input')); }
+    if (origPage  && tbPage) {
+      origPage.value = tbPage.value;
+      origPage.dispatchEvent(new Event('change'));
+    }
+    updateHUD();
+  }
+
+  [tbName, tbBatch, tbPage, tbGoal].forEach(el => {
+    if (el) {
+      el.addEventListener('input',  mirrorToOrig);
+      el.addEventListener('change', mirrorToOrig);
+    }
+  });
+
+  // Sync initial values
+  if (origName  && tbName)  tbName.value  = origName.value;
+  if (origBatch && tbBatch) tbBatch.value = origBatch.value;
+  if (origPage  && tbPage)  tbPage.value  = origPage.value;
+  if (origGoal  && tbGoal)  tbGoal.value  = origGoal.value;
+}
+
+// ── Lock in button ────────────────────────────────────────────────
+document.getElementById('tbLockBtn')?.addEventListener('click', () => {
+  document.getElementById('listerLockBtn')?.click();
+});
+
+// ── Exit to welcome ───────────────────────────────────────────────
+document.getElementById('tbWelcomeBtn')?.addEventListener('click', () => {
+  document.getElementById('wanToolbar').style.display = 'none';
+  document.getElementById('wanCanvas').style.display  = 'none';
+  document.getElementById('wanHUD').style.display     = 'none';
+  // restore original elements
+  const wrap  = document.querySelector('.wrap');
+  const draft = document.getElementById('draftPanel');
+  if (wrap)  { wrap.style.display  = ''; document.querySelector('.outer')?.appendChild(wrap); }
+  if (draft) { draft.style.display = ''; document.querySelector('.outer')?.appendChild(draft); }
+  document.getElementById('welcomeBackdrop').classList.remove('hidden');
+});
+
+// ── HUD update ────────────────────────────────────────────────────
+function updateHUD() {
+  const b = (typeof dpEntries !== 'undefined') ? dpEntries.length : 0;
+  const u = (typeof uniEntriesData !== 'undefined') ? uniEntriesData.length : 0;
+  const g = parseInt(document.getElementById('tbGoalInput')?.value || '0');
+  const t = b + u;
+
+  const hb = document.getElementById('hudBatch'); if (hb) hb.textContent = b;
+  const hu = document.getElementById('hudUni');   if (hu) hu.textContent = u;
+  const hg = document.getElementById('hudGoal');  if (hg) hg.textContent = g ? `${t}/${g}` : t;
+
+  const pill = document.getElementById('tbGoalPill');
+  if (pill) {
+    pill.textContent = g ? `${t} / ${g}` : `${t} logged`;
+    pill.classList.toggle('goal-hit', !!g && t >= g);
+  }
+  // Also update strip
+  const sb = document.getElementById('stripBatch'); if(sb) sb.textContent = b;
+  const su = document.getElementById('stripUni');   if(su) su.textContent = u;
+  const sg = document.getElementById('stripGoal');  if(sg) sg.textContent = g ? `${t}/${g}` : '—';
+}
+setInterval(updateHUD, 800);
+
+// ── Hook into welcome screen Wan click ────────────────────────────
+const origWanClick = document.getElementById('welcomeWan');
+if (origWanClick) {
+  origWanClick.addEventListener('click', () => {
+    setTimeout(initCanvas, 50);
+  });
+}
+
+// ── Hook into wanBackBtn (within canvas — exit already handled) ───
+const wbb = document.getElementById('wanBackBtn');
+if (wbb) {
+  wbb.addEventListener('click', () => {
+    document.getElementById('wanToolbar').style.display = 'none';
+    document.getElementById('wanCanvas').style.display  = 'none';
+    document.getElementById('wanHUD').style.display     = 'none';
+  }, true);
+}
 
 })();
 </script>
