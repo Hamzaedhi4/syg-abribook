@@ -12686,16 +12686,6 @@ async function fetchUrlsForSKU(sku) {
 // ═══════════════════════════════════════════════════════════════════
 const isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-function smoInit() {
-  if (!isMobile) return;
-  // Wait for dpEntries to be ready (may take a tick)
-  setTimeout(() => {
-    const overlay = document.getElementById('syg-mobile-overlay');
-    overlay.classList.add('visible');
-    smoRender();
-  }, 400);
-}
-
 function smoGetItems() {
   const store = pmGetStore();
   return getSKUList().map(item => ({
@@ -12944,23 +12934,40 @@ window.pmCopyReady = function() {
 };
 
 // ─── Boot ─────────────────────────────────────────────────────────
-if (isMobile) {
-  // On mobile: show overlay once page is ready
-  document.addEventListener('DOMContentLoaded', smoInit);
-  if (document.readyState !== 'loading') smoInit();
-} else {
-  // On desktop: mirror panel boots when initCanvas calls pmStartPolling
-  // Also re-render whenever dpEntries changes (hook into dpUpdatePreviewAll)
-  const _origUpdate = window.dpUpdatePreviewAll;
-  document.addEventListener('DOMContentLoaded', () => {
-    const orig = window.dpUpdatePreviewAll;
-    if (typeof orig === 'function') {
+
+// Hook dpUpdatePreviewAll on BOTH mobile and desktop so re-renders
+// fire whenever entries are added/removed/edited
+function hookDpUpdate(cb) {
+  const tryHook = () => {
+    if (typeof window.dpUpdatePreviewAll === 'function') {
+      const orig = window.dpUpdatePreviewAll;
       window.dpUpdatePreviewAll = function() {
         orig.apply(this, arguments);
-        pmRenderCards();
+        cb();
       };
     }
-  });
+  };
+  if (document.readyState !== 'loading') tryHook();
+  else document.addEventListener('DOMContentLoaded', tryHook);
+}
+
+if (isMobile) {
+  // Show overlay immediately, then keep re-rendering as entries arrive
+  const showOverlay = () => {
+    document.getElementById('syg-mobile-overlay').classList.add('visible');
+    smoRender();
+  };
+  if (document.readyState !== 'loading') showOverlay();
+  else document.addEventListener('DOMContentLoaded', showOverlay);
+
+  // Re-render every time an entry is added/edited/removed
+  hookDpUpdate(smoRender);
+
+  // Also poll every 3s as a safety net (handles cases where hook misses)
+  setInterval(smoRender, 3000);
+} else {
+  // Desktop: mirror panel boots when initCanvas calls pmStartPolling
+  hookDpUpdate(pmRenderCards);
 }
 
 })();
