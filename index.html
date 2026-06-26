@@ -2246,6 +2246,192 @@
     font-weight: 700 !important;
     letter-spacing: .08em !important;
   }
+
+  /* ═══════════════════════════════════════════════
+     FIXES: PREVIEW BOX + CART PANEL + SMOKE BREAK
+     ═══════════════════════════════════════════════ */
+
+  /* Fix preview box — was light bg with light text in dark panel */
+  .wan-panel .dp-preview {
+    background: rgba(99,102,241,.1) !important;
+    border: 1px solid rgba(99,102,241,.2) !important;
+    color: #a5b4fc !important;
+    font: 600 11px/1.5 var(--mono) !important;
+    border-radius: 6px !important;
+    padding: 6px 8px !important;
+    min-height: 28px !important;
+    word-break: break-all !important;
+  }
+  .wan-panel .dp-preview:empty::before {
+    content: '—';
+    color: rgba(255,255,255,.2) !important;
+    font-weight: 400 !important;
+  }
+
+  /* ── Session Cart Panel ── */
+  #wp-cart .wan-panel-body {
+    background: transparent;
+  }
+  .cart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 140px;
+    gap: 8px;
+    color: rgba(255,255,255,.2);
+    font-size: 12px;
+  }
+  .cart-empty-icon { font-size: 28px; opacity: .4; }
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    transition: background .12s;
+  }
+  .cart-item:first-child { border-top: none; }
+  .cart-item:hover { background: rgba(255,255,255,.03); }
+  .cart-item-num {
+    font: 700 10px/1 var(--mono);
+    color: rgba(255,255,255,.2);
+    min-width: 18px;
+    text-align: right;
+    flex: none;
+  }
+  .cart-item-sku {
+    font: 700 11.5px/1 var(--mono);
+    color: #a5b4fc;
+    flex: none;
+    min-width: 130px;
+  }
+  .cart-item-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,.5);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cart-item-sn {
+    font: 500 10.5px/1 var(--mono);
+    color: rgba(255,255,255,.35);
+    flex: none;
+    text-align: right;
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cart-item-health {
+    font: 600 10px/1 var(--mono);
+    padding: 2px 7px;
+    border-radius: 20px;
+    flex: none;
+  }
+  .cart-item-health.good { background: rgba(34,197,94,.15); color: #86efac; }
+  .cart-item-health.mid  { background: rgba(251,191,36,.12); color: #fbbf24; }
+  .cart-item-health.low  { background: rgba(239,68,68,.12);  color: #fca5a5; }
+  .cart-footer {
+    padding: 10px 14px;
+    border-top: 1px solid rgba(255,255,255,.07);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(8,10,18,.5);
+  }
+  .cart-total {
+    font: 700 11px/1 var(--mono);
+    color: rgba(255,255,255,.4);
+  }
+  .cart-total span { color: #a5b4fc; }
+
+  /* ── Smoke Break ── */
+  #smokeBreakBtn {
+    padding: 6px 14px;
+    background: rgba(100,116,139,.12);
+    border: 1px solid rgba(100,116,139,.25);
+    border-radius: 8px;
+    font: 600 11px/1 var(--sans);
+    color: rgba(148,163,184,.7);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+    letter-spacing: .02em;
+  }
+  #smokeBreakBtn:hover {
+    background: rgba(100,116,139,.22);
+    border-color: rgba(148,163,184,.4);
+    color: rgba(203,213,225,.9);
+  }
+
+  /* Smoke overlay */
+  #smokeOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    pointer-events: none;
+    display: none;
+    overflow: hidden;
+  }
+  #smokeOverlay.active { display: block; }
+  .smoke-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: all;
+    z-index: 2;
+  }
+  .smoke-message-inner {
+    background: rgba(8,10,18,.85);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px;
+    padding: 22px 32px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  }
+  .smoke-message h2 {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    letter-spacing: -.02em;
+  }
+  .smoke-message p {
+    color: rgba(255,255,255,.45);
+    font-size: 13px;
+    margin: 0 0 16px;
+  }
+  .smoke-message button {
+    padding: 10px 24px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 10px;
+    font: 600 13px/1 var(--sans);
+    color: rgba(255,255,255,.6);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .smoke-message button:hover {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+  }
+  .smoke-particle {
+    position: absolute;
+    bottom: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(180,180,200,.18) 0%, transparent 70%);
+    animation: smokeRise linear forwards;
+    pointer-events: none;
+  }
+  @keyframes smokeRise {
+    0%   { transform: translateY(0) translateX(0) scale(0.6); opacity: .6; }
+    40%  { opacity: .4; }
+    100% { transform: translateY(-110vh) translateX(var(--drift)) scale(3.5); opacity: 0; }
+  }
 </style>
 <body>
 
@@ -9187,7 +9373,32 @@ document.getElementById('promptCopyBtn').addEventListener('click', ()=>{
   </div>
 </div>
 
-<!-- ── G-Mode Floating Buttons (inside each tool) ── -->
+<!-- ── Smoke Overlay ── -->
+<div id="smokeOverlay">
+  <canvas id="smokeCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+  <div class="smoke-message">
+    <div class="smoke-message-inner">
+      <h2>🚬 Smoke Break</h2>
+      <p>Step away. You earned it, Juan.</p>
+      <button id="smokeBackBtn">I'm back 👊</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Session Cart Panel content (gets moved to canvas panel) ── -->
+<div id="cartPanelContent" style="height:100%;display:flex;flex-direction:column;">
+  <div id="cartList" style="flex:1;overflow-y:auto;">
+    <div class="cart-empty" id="cartEmpty">
+      <span class="cart-empty-icon">🛒</span>
+      <span>Nothing in the queue yet</span>
+    </div>
+  </div>
+  <div class="cart-footer">
+    <span class="cart-total">Total: <span id="cartCount">0</span> item<span id="cartCountS">s</span></span>
+  </div>
+</div>
+
+
 <button id="gModeFloatWan" style="display:none;position:fixed;bottom:20px;right:20px;z-index:450;padding:10px 16px;background:#6366F1;border:none;border-radius:999px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;box-shadow:0 4px 18px rgba(99,102,241,.5);letter-spacing:.03em;transition:all .2s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">⚡ G-Mode</button>
 <button id="gModeFloatHaz" style="display:none;position:fixed;bottom:20px;right:20px;z-index:450;padding:10px 16px;background:#16A34A;border:none;border-radius:999px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;box-shadow:0 4px 18px rgba(22,163,74,.45);letter-spacing:.03em;transition:all .2s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">⚡ G-Mode</button>
 
@@ -9392,110 +9603,151 @@ function endTour() {
 
 // ── Know It All topics ───────────────────────────────────────────
 const KIA_SCENARIOS = [
+
+  // ── 1. HOW HAZ LOOKS UP PRICES ──────────────────────────────────
   {
     icon: "🔍",
     label: "How Haz looks up prices",
-    sub: "What the badges mean and why they matter",
+    sub: "A customer walks in. What do you offer?",
     beats: [
-      { emoji: "🧍", tag: "The situation", title: "A customer walks in with an iPhone 13 Pro Max.", body: "You need to know what to offer them. Right now. You have no time to look things up manually — the customer is standing right there." },
-      { emoji: "⌨️", tag: "What you do", title: "You type it into Haz.", body: "Just type the name of the device. Haz searches over 970 items — things we have actually sold here, what is in our store right now, and general market rates." },
-      { emoji: "🟢", tag: "SYG Sold badge", title: "Green badge means: we sold this at that price.", body: "This is the most reliable number you will see. It means a unit of this exact device sold at this store at that price. Not estimated. Not listed. Sold." },
-      { emoji: "🔵", tag: "SYG Listed badge", title: "Blue badge means: it is priced in our store right now.", body: "This is our current asking price. It has not sold yet, but it tells you where we are positioning it. A good directional reference, not a guarantee." },
-      { emoji: "⚫", tag: "Market Est badge", title: "Gray badge means: general market estimate.", body: "This comes from outside SYG. Useful as a ceiling to know what buyers might compare us to, but do not rely on it as your main number." },
-      { emoji: "💡", tag: "Why it matters", title: "Not all prices are equal.", body: "A buyer who offers based on a market estimate without checking our own sales could easily overpay. The badge tells you exactly what you are looking at so you can make the right call." }
+      { emoji: "🚪", tag: "It's 11am", title: "A man walks in holding an iPhone 13 Pro Max.", body: "He says he wants to sell it. Screen is clean, no cracks. You have about thirty seconds before he expects an answer. You do not have a spreadsheet. You do not have time to Google it." },
+      { emoji: "⚡", tag: "You open Haz", title: "You type: iPhone 13 Pro Max.", body: "Haz searches over 970 prices pulled from real SYG sales history, current store listings, and general market data. The result appears in under a second." },
+      { emoji: "🟢", tag: "Green badge appears", title: "SYG Sold — $380.", body: "That green badge means we actually sold an iPhone 13 Pro Max at this store for $380. Not an estimate. Not what someone is asking for it. A real completed sale. This is your most reliable number." },
+      { emoji: "🔵", tag: "You also see a blue badge", title: "SYG Listed — $399.", body: "That means we currently have one priced at $399 in the store. It has not sold yet, but it tells you where we positioned it. Useful context — but it is not proof of sale." },
+      { emoji: "⚫", tag: "And a gray badge below that", title: "Market Est — $420.", body: "This is a general used market estimate — think eBay averages. Treat it as a ceiling. Buyers will compare us to this. You do not want to pay based on this number though — it is not what we sell for." },
+      { emoji: "💡", tag: "Why the badges exist", title: "Not every price is the same kind of truth.", body: "A buyer who makes an offer based only on a market estimate could easily overpay by $40 or more. The badges tell you exactly what you are looking at so you never confuse an estimate for a proven sale price." },
+      { emoji: "✅", tag: "You have your answer", title: "You know what this phone is worth at this store.", body: "Now you move to the offer chips. Haz already did the math." }
     ]
   },
+
+  // ── 2. OFFER CHIPS ───────────────────────────────────────────────
   {
     icon: "💵",
     label: "What the offer chips mean",
-    sub: "Good, Fair, Low — and when to use each",
+    sub: "Good, Fair, Low — making the right call fast",
     beats: [
-      { emoji: "📱", tag: "The situation", title: "Haz found a match. Now what do you offer?", body: "The result shows a price. But you still need to decide what to actually offer the customer. That is where the chips come in." },
-      { emoji: "🟢", tag: "Green — Good offer", title: "This is a safe buy with solid margin.", body: "The item is in good shape, you are confident about it, and the price gives SYG room to make money. Tap this when everything checks out." },
-      { emoji: "🟡", tag: "Yellow — Fair offer", title: "A middle-ground buy when you are not totally sure.", body: "Maybe the condition is not perfect. Maybe you are not sure how fast it will move. Fair still works — it just leaves a bit more buffer so SYG is not stuck with a unit that cost too much." },
-      { emoji: "🔴", tag: "Red — Low offer", title: "Tight margin. Use this when something feels off.", body: "The item has visible damage. The market looks slow. You just want to be cautious. Low keeps SYG protected even if the unit takes a while to sell or needs more work." },
-      { emoji: "✅", tag: "What happens next", title: "Tap a chip and the Accepted At field fills in automatically.", body: "You do not have to type the number. Haz does it for you. From there, log the item on the intake board and move on to the next one." },
-      { emoji: "🎯", tag: "The point", title: "You focus on the customer and the condition. Haz handles the math.", body: "The whole system exists so you do not have to do mental math on the floor while someone is standing in front of you waiting for an answer." }
+      { emoji: "🧍", tag: "Same customer, same phone", title: "Haz shows $380 — SYG Sold. Now what do you offer him?", body: "You still have to make a judgment call. The phone is in your hands. You can see the condition. You know the customer. Three chips appear at the bottom." },
+      { emoji: "🟢", tag: "Good — tap this when confident", title: "Screen is perfect. No scratches. Original charger included.", body: "Good condition, proven sale price, item we know moves fast. This is a solid buy. You tap Good. The offer fills in automatically. No mental math. No second-guessing." },
+      { emoji: "🟡", tag: "Fair — when something gives you pause", title: "Small chip on the corner. Back glass has a hairline.", body: "The phone works, but it is not perfect. Listing it will require honest condition notes. You want a little more buffer in case it sits longer or needs reconditioning. You tap Fair." },
+      { emoji: "🔴", tag: "Low — when you need to protect SYG", title: "Screen has a faint burn-in. Home button feels loose.", body: "This phone needs work before it can sell. The market for units in this condition is thin. You are not sure how fast it will move. You tap Low to protect the margin in case things do not go smoothly." },
+      { emoji: "✅", tag: "The field fills itself", title: "Tap any chip and the Accepted At field fills automatically.", body: "You do not type a number. You do not negotiate with a calculator in your head. You make the human judgment — is this item in good, fair, or rough shape — and the system handles the number." },
+      { emoji: "🎯", tag: "The whole point", title: "A customer should never see you fumble a price.", body: "The chips exist so you can stand at the counter, look a customer in the eye, and give them a confident number in under ten seconds. The tool does the math. You do the job." }
     ]
   },
+
+  // ── 3. ABRIBOOK CODES ────────────────────────────────────────────
   {
     icon: "📋",
     label: "What Abribook codes are",
-    sub: "Why we use short codes instead of typing everything out",
+    sub: "The shorthand system that keeps every listing consistent",
     beats: [
-      { emoji: "💿", tag: "The situation", title: "You just tested a Samsung 990 Pro 2TB drive.", body: "Now you need to log it. You could type out the full name every single time — or you could use a code." },
-      { emoji: "🔑", tag: "What a code looks like", title: "S2990P. That is all you type.", body: "Wan looks up that code and already knows it means: Samsung 990 Pro 2TB NVMe M.2 2280. The full name, form factor, and interface are already in the system." },
-      { emoji: "🔤", tag: "How to read a code", title: "The code follows a pattern you will start to recognize.", body: "First letter is the brand. S = Samsung, K = Kingston, W = Western Digital. Then the capacity. Then a shorthand for the model. After a few sessions you will know the common ones by memory." },
-      { emoji: "➕", tag: "What if it is not in the list?", title: "Use Add a new code.", body: "Fill in the specs once, give it a code that follows the pattern, and it is in the system permanently. Everyone on staff gets it from that point forward." },
-      { emoji: "🤝", tag: "Why it matters", title: "Consistency. Every time. No exceptions.", body: "If five different people type the same drive five different ways, the listings come out five different ways. A code makes sure everyone always gets the exact same description." }
+      { emoji: "🖥️", tag: "End of the day, batch of drives", title: "You tested 8 drives today. Now you have to log them all.", body: "Third drive on the pile: Samsung 990 Pro, 2TB, NVMe M.2 2280, MZ-V9P2T0. You could type that out. But you have 5 more after this one." },
+      { emoji: "💡", tag: "There is a code for that", title: "S2990P. Five characters. Done.", body: "You type S2990P into the code field. Wan already knows this means: Samsung 990 Pro 2TB NVMe M.2 2280. The full description, form factor, and interface fill in automatically." },
+      { emoji: "🔤", tag: "Reading the code", title: "Every code follows the same recipe.", body: "First letter = brand. S is Samsung. K is Kingston. W is WD. C is Crucial. Then the capacity (2 = 2TB). Then a shorthand for the model (990P = 990 Pro). Once you have seen it a few times, it clicks." },
+      { emoji: "🤔", tag: "What if the code does not exist?", title: "You are holding a drive that is not in the list.", body: "Open Add a new code. Enter a code that follows the same pattern. Paste the full drive description from the label. Hit Add code. It saves permanently — every lister from that point forward can use it." },
+      { emoji: "🤝", tag: "Why this matters for the team", title: "Five people logging the same drive five different ways.", body: "One writes Samsung 990 Pro. Another writes Samsung MZ-V9P2T0. Another writes 990 Pro 2TB. Three different descriptions, three different listings, three different buyer experiences. The code fixes all of that." },
+      { emoji: "✅", tag: "One code, one standard", title: "S2990P always produces the exact same description.", body: "No matter who logs it, no matter what day, no matter how tired they are. The code is the standard. That is the whole point." }
     ]
   },
+
+  // ── 4. DRIVE HEALTH ──────────────────────────────────────────────
   {
     icon: "❤️",
     label: "What drive health means",
-    sub: "The % and what it tells you about the drive",
+    sub: "Reading CrystalDiskInfo and knowing what to do with it",
     beats: [
-      { emoji: "🔌", tag: "The situation", title: "You plug a drive into the test rig. It reads 73% health.", body: "What does that actually mean and what do you do with it?" },
-      { emoji: "📊", tag: "What the number is", title: "It tells you how much life the drive has already used up.", body: "100% means it is basically brand new. The lower the number, the more the drive has been used over its lifetime." },
-      { emoji: "🟢", tag: "80% and above", title: "Healthy. List it normally.", body: "This drive has plenty of life left. Price it at the standard used rate for that model. No extra callouts needed beyond the number in the listing." },
-      { emoji: "🟡", tag: "50 to 79%", title: "Medium health. Disclose it and price it accordingly.", body: "Still functional but clearly used. Make sure the health percentage shows in the listing and price it a bit lower than a healthy unit." },
-      { emoji: "🔴", tag: "Below 50%", title: "Low health. Flag it clearly.", body: "The drive has been used heavily. Some buyers specifically want cheap storage for backups — they will buy it, but they need to know upfront. Never hide this." },
-      { emoji: "💀", tag: "0% or undetectable", title: "For Parts. Full stop.", body: "The drive may be failing or already dead. It goes out as For Parts with the exact issue described. Never list this as a working drive." }
+      { emoji: "🔌", tag: "Drive is in the test rig", title: "CrystalDiskInfo opens. It says 73%. Health: Caution.", body: "What do you do with that? Is this drive sellable? How do you list it? Does the health number even matter? Walk through it." },
+      { emoji: "📊", tag: "What the number actually is", title: "It measures how much write life the drive has used.", body: "100% means the drive is practically new — barely any data has been written to it. 73% means it has seen real use. It still works, but it is not fresh. The lower the number, the more used up the drive is." },
+      { emoji: "🟢", tag: "80% and above — list normally", title: "Drive reads 94%. You log it and move on.", body: "Plenty of life left. No special treatment needed. Price it at the standard used rate for that model. The health shows in the listing so buyers can see it, but there is nothing alarming to flag." },
+      { emoji: "🟡", tag: "50 to 79% — disclose and adjust price", title: "Drive reads 67%. That 73% drive from earlier falls here too.", body: "Still fully functional. Still sellable. But buyers deserve to know it has seen more use. Make sure the health % is visible in the listing and price it a step below a healthy unit of the same model." },
+      { emoji: "🔴", tag: "Below 50% — flag it clearly", title: "Drive reads 38%. This is a low-health drive.", body: "It still works, and there is a real market for it — buyers who want cheap bulk storage for backups do not care. But they need to know what they are getting. Never hide a number like this. It leads to returns and bad reviews." },
+      { emoji: "💀", tag: "0% or undetectable — For Parts", title: "CrystalDiskInfo cannot read the drive. Or it shows 0%.", body: "Do not list this as working. Do not guess. It goes out as For Parts with the exact issue described. A buyer who needs parts will still want it — but only if they know what it actually is." },
+      { emoji: "✅", tag: "The number goes straight into the listing", title: "What you type in Wan is what buyers see.", body: "No translation layer. No interpretation. If you log 73% Health, that is what ends up in the listing. Accurate health logging protects SYG and gives buyers exactly what they need to make a decision." }
     ]
   },
+
+  // ── 5. BLITZTING ─────────────────────────────────────────────────
   {
     icon: "⚡",
-    label: "How Blitzting saves time",
-    sub: "Template Clone and Speed Review explained",
+    label: "How Blitzting saves time on big batches",
+    sub: "12 drives. 3 minutes. No typos.",
     beats: [
-      { emoji: "📦", tag: "The situation", title: "You just received 12 Kingston KC3000 drives from the same batch.", body: "Same model. Same notes. The only differences are the health percentage and serial number on each one." },
-      { emoji: "😩", tag: "Without Blitzting", title: "You would add a card for each one. Twelve times.", body: "Same code. Same notes. Over and over. By drive five you are making typos. By twelve you want to quit." },
-      { emoji: "⚡", tag: "With Template Clone", title: "Fill in the shared info once. Generate slots for the rest.", body: "Enter the code, base health, and notes in the Master Entry. Check what differs per unit. Set quantity to 12. Hit Generate." },
-      { emoji: "🎰", tag: "Fill the slots", title: "Each slot only asks for what is different.", body: "Twelve small boxes appear. Each one just needs the health % and serial. Wan even suggests the next serial if it detects a pattern from what you typed before." },
-      { emoji: "✅", tag: "Add all to queue", title: "All 12 land in the queue as proper entry cards.", body: "One tap. Every unit appears exactly as if you had logged each one manually. Done in under a minute." },
-      { emoji: "🔎", tag: "Speed Review", title: "Flip through every entry and confirm prices before you export.", body: "Speed Review shows you one card at a time. Set the price. Set your cost. Approve. What you confirm here is exactly what goes into the listing." }
+      { emoji: "📦", tag: "A box arrives", title: "12 Kingston KC3000 1TB drives. Same model, same batch.", body: "You test each one. They all pass. Serials are sequential. Healths vary between 88% and 97%. You need to log all 12. Without Blitzting this is going to take a while." },
+      { emoji: "😩", tag: "The slow way", title: "Card 1: KC3000, 88%, serial, notes. Card 2: KC3000, 91%, serial, notes.", body: "Same code. Same notes. Over and over. By card 5 you are copying and pasting wrong serials. By card 9 you stopped double-checking. By card 12 you have no idea if anything is right." },
+      { emoji: "⚡", tag: "Switch to Blitzting", title: "Master Entry: KC3000 code. Base health: 90%. Notes: new pull, tested.", body: "You fill the shared info once. Then you check the boxes for what differs per unit — Health % and Serial # are the only two things that change. Set quantity to 12. Hit Generate." },
+      { emoji: "🎰", tag: "12 slots appear", title: "Each slot just needs the two things that are different.", body: "Slot 1: 88%, serial. Slot 2: 91%, serial. If Wan detects your serials follow a pattern — like hex sequences — it suggests the next one before you even type it. Twelve slots filled in about 90 seconds." },
+      { emoji: "✅", tag: "Add all to queue", title: "One tap. All 12 land as proper entry cards.", body: "Every card has its own code, health, serial, and SKU. They look exactly like cards you would have logged by hand. Nothing missing. Nothing duplicated. Queue is full and accurate." },
+      { emoji: "🔎", tag: "Speed Review — the final check", title: "Before you export, flip through every entry and confirm prices.", body: "Speed Review shows you one card at a time. You set the price and cost. Hit Approve. What you confirm here is exactly what goes into the manifest and eventually into Shopify. No surprises." },
+      { emoji: "🏁", tag: "12 drives logged", title: "From box to queue in under 3 minutes.", body: "Without Blitzting this would have taken 15-20 minutes and had at least a few errors. With it, you are done and accurate before the next customer walks in." }
     ]
   },
+
+  // ── 6. EXPORT TO CLAUDE ──────────────────────────────────────────
   {
     icon: "📤",
-    label: "What exporting to Claude does",
-    sub: "What happens when you hit Copy Claude manifest-prep prompt",
+    label: "What happens when you export to Claude",
+    sub: "One button. Two instructions. Listings appear in Shopify.",
     beats: [
-      { emoji: "✍️", tag: "The situation", title: "You just logged a full session. Drives, a laptop, two phones.", body: "The queue has everything. You hit Copy Claude manifest-prep prompt and paste it into Claude. But what did you actually just copy?" },
-      { emoji: "✂️", tag: "It splits automatically", title: "Abribook builds two separate instructions in one paste.", body: "It checks every entry and sorts them by type. Drives and RAM go one way. Phones, laptops, and consoles go another. You do not have to do anything." },
-      { emoji: "💿", tag: "For drives and RAM", title: "Claude uses the SYG listing generator.", body: "A purpose-built listing system that already knows how to write storage listings. It produces a complete, ready-to-post listing with the right format every time." },
-      { emoji: "📱", tag: "For everything else", title: "Claude rewrites the default SYG platform listing.", body: "The company platform auto-generates bare-bones descriptions. Claude takes your notes and overwrites that with a proper title, HTML table, and all the product fields filled in correctly." },
-      { emoji: "🛍️", tag: "After Claude is done", title: "The listings go straight into Shopify as drafts.", body: "Claude talks directly to the store. It creates the product, sets the SKU, writes the description, fills in the metafields. No copy-pasting into Shopify manually." },
-      { emoji: "👁️", tag: "Always a draft", title: "Nothing goes live without a human approving it.", body: "Every product lands as a draft. Someone still has to review and publish. The automation handles the setup — the final call is always yours." }
+      { emoji: "🗂️", tag: "End of session", title: "Queue has 8 drives, a PS5, and two phones. You hit Copy Claude manifest-prep prompt.", body: "What exactly did you just copy? And what happens when you paste it into Claude?" },
+      { emoji: "✂️", tag: "Abribook splits it automatically", title: "It sorted your 11 items into two separate groups.", body: "Drives and RAM go to the top with one set of instructions. Phones, laptops, and consoles go below with a completely different set. You did not have to do anything — the system read the item types and routed them." },
+      { emoji: "💿", tag: "Group 1: drives and RAM", title: "Claude loads the SYG listing generator skill.", body: "This skill already knows the SYG listing format — how to describe health tiers, what metafields storage listings need, which conditions to call out. It takes your Abribook manifest lines and produces complete, ready-to-post listings." },
+      { emoji: "📱", tag: "Group 2: everything else", title: "Claude rewrites the default SYG platform descriptions.", body: "The company platform makes a bare-bones auto-generated listing when a product is created. Claude takes your Universal notes — specs, condition, testing — and replaces that default with a proper title, a formatted HTML table, and all the Shopify product fields filled in." },
+      { emoji: "🛍️", tag: "Then it goes straight to Shopify", title: "Claude calls the Shopify API directly.", body: "It creates or updates the product, sets the SKU, writes the description, fills in the metafields, and turns on inventory tracking. You do not copy-paste anything into Shopify. The push is automatic." },
+      { emoji: "👁️", tag: "But nothing goes live on its own", title: "Every product lands as a draft.", body: "A draft is invisible to customers. Someone still reviews each listing and hits publish. The automation handles the tedious build — the human makes the final call on what goes live." },
+      { emoji: "✅", tag: "The full chain", title: "Log → Export → Claude → Shopify draft → Human review → Live.", body: "That is the whole flow. Every step is handled. Your job is to log the items accurately and approve the drafts. The rest is automated." }
     ]
   },
+
+  // ── 7. FILL PO ───────────────────────────────────────────────────
   {
     icon: "📦",
     label: "How Fill PO works",
-    sub: "What it automates and why the customer must be selected first",
+    sub: "Stop filling out the same form by hand every time",
     beats: [
-      { emoji: "🤝", tag: "The situation", title: "You just bought a MacBook from a customer.", body: "Now you need to log a purchase order on the SYG company website. Category. Make. Model. Condition. Color. Estimated value. Offer price." },
-      { emoji: "🕐", tag: "The problem", title: "Doing that manually for every item in a session adds up fast.", body: "If you bought five items today, that is five times through the same form. Each one takes a few minutes. That is time you could be spending on the floor." },
-      { emoji: "🖥️", tag: "What Fill PO does", title: "It generates a prompt. You paste it into Claude in Chrome.", body: "From the intake board, you tap Fill PO on the item. Haz builds a detailed prompt with all the information about that item. You copy it and paste it into Claude in Chrome." },
-      { emoji: "🤖", tag: "Claude fills the form", title: "Claude opens the PO form and fills every field automatically.", body: "Category, make, model, condition, color, estimated value, offer — all filled out based on what you logged during intake. You just watch it happen." },
-      { emoji: "⚠️", tag: "One thing you must do first", title: "The customer has to already be selected on the PO page.", body: "That is the one step Claude cannot do for you. Once the customer is selected on the purchase order page, run Fill PO and everything else is automatic." }
+      { emoji: "🤝", tag: "You just made a deal", title: "A customer sold you a MacBook Pro M1. You agreed on $480.", body: "Now you need to log a purchase order on buyer.sellyourgadgets.com before she leaves. That form has 8 fields. And you have 4 more items to buy from the next customer." },
+      { emoji: "😤", tag: "The problem with doing it manually", title: "Category. Make. Model. Condition. Color. Estimated value. Offer. Repeat.", body: "Every single buy requires the same form. If you have 6 customers today that is 6 full form fills. That is 15-20 minutes of clicking through the same fields over and over." },
+      { emoji: "🖥️", tag: "Fill PO on the intake board", title: "You tap Fill PO on the MacBook card in Haz.", body: "Haz builds a detailed prompt — every field already populated from what you logged during intake. Category is Electronics. Make is Apple. Model is MacBook Pro M1. Condition is Used Good. Offer is $480." },
+      { emoji: "📋", tag: "You paste it into Claude in Chrome", title: "Claude sees the form. Starts filling it in automatically.", body: "Field by field. Category selected. Make entered. Model typed. Condition chosen. Color picked. Estimated value set. Offer amount locked in. You watch it happen. It takes about 15 seconds." },
+      { emoji: "⚠️", tag: "The one thing you have to do first", title: "The customer must already be selected on the PO page.", body: "This is not optional. Claude cannot log into the SYG platform or pick the customer. That step requires you to be authenticated. Once the customer is selected in the system, then you run Fill PO — and everything else is handled." },
+      { emoji: "✅", tag: "Why this matters at scale", title: "6 buys becomes 6 pastes instead of 6 form sessions.", body: "Each Fill PO takes about 20 seconds total — copy the prompt, paste it, watch Claude fill it. Versus 2-3 minutes of manual clicking per item. Over a full buying day, you save an hour or more." }
     ]
   },
+
+  // ── 8. SKU FORMAT ────────────────────────────────────────────────
   {
     icon: "🏷️",
     label: "How SKUs work",
-    sub: "Reading a SKU like NJ02-J-RTL0626-3",
+    sub: "Every listing is traceable. Here is how to read them.",
     beats: [
-      { emoji: "🔎", tag: "The situation", title: "You see a listing in Shopify: NJ02-J-RTL0626-3.", body: "Someone on the team asks where this item came from and who logged it. You can answer that just from reading the SKU." },
-      { emoji: "🏬", tag: "NJ02", title: "That is this store.", body: "Elmwood Park, New Jersey. Every SYG location has its own store code. This keeps our inventory separate from other stores in the system." },
-      { emoji: "👤", tag: "J", title: "That is the lister initial.", body: "J is Juan. IS is Ibrahim. P is Paul. Every item is traceable back to the person who logged it. If something needs to be checked later, you know exactly who to ask." },
-      { emoji: "📅", tag: "RTL0626", title: "That is the batch ID.", body: "Usually tied to the date or the retail run the items came from. Everything logged in the same session shares the same batch ID." },
-      { emoji: "🔢", tag: "3", title: "That is the item number within the batch.", body: "First item logged is 1, second is 2, and so on. It resets at the start of each session." },
-      { emoji: "✅", tag: "Why it matters", title: "Any listing can be traced back to a specific person, day, and batch.", body: "Accountability is built into the SKU. You never have to wonder where something came from or who is responsible for it." }
+      { emoji: "🔎", tag: "A question comes in", title: "A manager looks at a Shopify listing and asks: who logged this and when?", body: "The listing SKU says NJ02-J-RTL0626-3. You do not need to look anything up. You can answer the whole question just by reading the SKU." },
+      { emoji: "🏬", tag: "NJ02 — the store", title: "Elmwood Park, New Jersey.", body: "Every SYG location has its own prefix. NJ02 is this store. It keeps our inventory completely separate from other SYG stores in the same system. If you ever see a different prefix, that item came from a different location." },
+      { emoji: "👤", tag: "J — the lister", title: "J is Juan. IS is Ibrahim. P is Paul.", body: "Your initial is stamped on every item you log. If a listing has an error, a wrong serial, or a bad condition note — the initial tells you exactly who to follow up with. Accountability is built into the SKU." },
+      { emoji: "📅", tag: "RTL0626 — the batch", title: "This is the batch ID, usually tied to the date.", body: "RTL0626 means this item came in during the RTL0626 buying run. Everything logged that session shares the same batch ID. You can pull all items from one batch with a single search — useful for audits, pricing reviews, or tracking a specific buy." },
+      { emoji: "🔢", tag: "3 — the item number", title: "Third item logged in that session.", body: "The counter starts at 1 and goes up sequentially through the session. It resets when a new session starts. If this session had 15 items, they are numbered 1 through 15." },
+      { emoji: "⚠️", tag: "When SKUs show as #1", title: "If your SKU looks like #1 instead of NJ02-J-RTL0626-1, you forgot to lock in.", body: "Go to the toolbar. Select your name. Enter the batch number. Hit Lock in. The button turns green. From that point forward, every entry gets the proper SKU format." },
+      { emoji: "✅", tag: "Every listing, fully traceable", title: "Store. Person. Date. Item. All in one code.", body: "You can look at any Shopify product months from now and know exactly where it came from, who logged it, and what batch it was part of. That is the whole point of the format." }
+    ]
+  },
+
+  // ── 9. SHOVO ─────────────────────────────────────────────────────
+  {
+    icon: "🧿",
+    label: "What Shovo is and how to use it",
+    sub: "Your built-in listing assistant. Always one shortcut away.",
+    beats: [
+      { emoji: "🤔", tag: "You are mid-session", title: "You just got a drive you have never seen before. You forget what health tier it falls into.", body: "You could dig through the tutorial. You could ask someone. Or you could press two keys and have the answer in three seconds." },
+      { emoji: "⌨️", tag: "Press backslash, then Space", title: "Shovo opens. Right in the middle of the screen.", body: "A dark spotlight appears with a search bar — same animation as macOS Spotlight. You are still on the canvas. Your panels are still there. Nothing was interrupted." },
+      { emoji: "🧿", tag: "Who is Shovo", title: "Shovo is the built-in listing assistant for this system.", body: "He knows everything about Wan — every flow, every field, every shortcut, every rule. Ask him a question in plain English and he answers with the exact steps, grading tiers, or explanation you need." },
+      { emoji: "💬", tag: "You type your question", title: "drive health 47% what do i do", body: "Shovo finds the best match in his knowledge base instantly. No loading. No internet needed. He returns the full drive health grading breakdown — 80%+, 50-79%, below 50%, For Parts — with what to do at each tier." },
+      { emoji: "🔗", tag: "Related topics appear below the answer", title: "You see chips for Drive Logging, Export to Claude, Abribook Codes.", body: "Tap any chip and Shovo switches to that topic without you having to retype anything. You can explore the whole system just by following related topics." },
+      { emoji: "💡", tag: "What you can ask Shovo", title: "Pretty much anything about this system.", body: "How do I log a drive. My SKU shows #1. What does Template Clone do. How does Fill PO work. What is the flow from intake to Shopify. How do offer chips get calculated. He covers 19 topics with full detail." },
+      { emoji: "✅", tag: "Press Escape to close", title: "You are back on the canvas exactly where you left off.", body: "Shovo does not interrupt your session. He does not navigate anywhere. He opens, answers, and closes. The whole interaction takes about 10 seconds. Then you keep working." }
     ]
   }
+
 ];
 
+// ── KIA Player state ───────────────────────────────────────────────
 // ── KIA Player state ───────────────────────────────────────────────
 let kiaScenario = null;
 let kiaBeat = 0;
@@ -9709,6 +9961,10 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
 
   <div class="tb-spacer"></div>
 
+  <button class="tb-btn" id="tbRestoreSession" style="display:none;background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);color:#fbbf24;"></button>
+  <button class="tb-btn" id="tbAddSticky" title="Add sticky note (S)">📌 Note</button>
+  <button class="tb-btn" id="tbShortcuts" title="Keyboard shortcuts">⌨️</button>
+  <button id="smokeBreakBtn" style="display:none;" title="Only Juan gets this">🚬 Smoke Break</button>
   <button class="tb-btn" id="tbLockBtn">Lock in</button>
   <div class="tb-sep"></div>
 
@@ -9724,6 +9980,22 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
   <button class="tb-btn" id="tbWelcomeBtn">← Exit</button>
 </div>
 
+<!-- Shortcut legend -->
+<div id="wanShortcutLegend" style="display:none;position:fixed;top:62px;right:16px;z-index:300;background:rgba(8,10,18,.97);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px 18px;font-size:12px;color:rgba(255,255,255,.6);min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.5);backdrop-filter:blur(12px);">
+  <div style="font-weight:700;color:#fff;margin-bottom:10px;font-size:13px;">⌨️ Shortcuts</div>
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    <div style="display:flex;justify-content:space-between;gap:16px;"><span>/</span><span>Focus search</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;"><span>N</span><span>New batch entry</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;"><span>S</span><span>Add sticky note</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;"><span>M</span><span>Minimize code panel</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;"><span>Q</span><span>Minimize queue panel</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;"><span>⌘ Enter</span><span>Copy Claude prompt</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;"><span>+ / −</span><span>Zoom in / out</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;"><span>0</span><span>Reset zoom</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;"><span>Drag canvas</span><span>Pan workspace</span></div>
+  </div>
+</div>
+
 <!-- Canvas -->
 <div id="wanCanvas" style="display:none;">
   <div id="wanCanvasInner" id="wanCanvasInner">
@@ -9733,6 +10005,7 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
 
 <!-- Session HUD -->
 <div id="wanHUD" style="display:none;">
+  <div class="hud-chip">⏱ <span class="hud-chip-num" id="hudTimer" style="color:#818CF8;font-size:12px;font-family:var(--mono);">00:00</span></div>
   <div class="hud-chip">📋 <span class="hud-chip-num" id="hudBatch">0</span></div>
   <div class="hud-chip">📱 <span class="hud-chip-num" id="hudUni">0</span></div>
   <div class="hud-chip">🎯 <span class="hud-chip-num green" id="hudGoal">—</span></div>
@@ -9742,14 +10015,33 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
 (function(){
 'use strict';
 
+// ═══════════════════════════════════════════════════════════════════
+//  WAN CANVAS  —  full feature set
+// ═══════════════════════════════════════════════════════════════════
+
 // ── State ──────────────────────────────────────────────────────────
 let canvasScale = 1;
-let canvasX = 60, canvasY = 72;
+let canvasX = 60, canvasY = 30;
 let isPanning = false, panStartX = 0, panStartY = 0;
-const MIN_SCALE = 0.3, MAX_SCALE = 2;
-const panels = {};
+const MIN_SCALE = 0.25, MAX_SCALE = 2;
+const panelState = {};   // id → { el, minimized }
 
-// ── Init ───────────────────────────────────────────────────────────
+// ── Session timer state ────────────────────────────────────────────
+let sessionStart = null;
+let sessionTimerInterval = null;
+
+// ── Sticky notes state ─────────────────────────────────────────────
+let stickyNotes = [];
+let stickyIdSeq = 0;
+
+// ── localStorage keys ──────────────────────────────────────────────
+const LS_LAYOUT   = 'wan_canvas_layout_v2';
+const LS_SESSION  = 'wan_last_session_v2';
+const LS_STICKIES = 'wan_stickies_v2';
+
+// ══════════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════════
 function initCanvas() {
   const toolbar = document.getElementById('wanToolbar');
   const canvas  = document.getElementById('wanCanvas');
@@ -9765,32 +10057,63 @@ function initCanvas() {
   canvas.style.left     = '0';
   canvas.style.right    = '0';
 
-  // Create panels
-  createPanel('search', '🔍 Code Lookup', document.querySelector('.wrap'), { x: 60, y: 20, w: 540, h: 600 });
-  createPanel('queue',  '📋 Manifest Queue', document.getElementById('draftPanel'), { x: 630, y: 20, w: 400, h: 580 });
+  // Load saved layout or use defaults
+  const saved = loadLayout();
+  const searchPos = saved.search || { x: 60,  y: 20, w: 540, h: 620 };
+  const queuePos  = saved.queue  || { x: 630, y: 20, w: 400, h: 600 };
+  const cartPos   = saved.cart   || { x: 1060, y: 20, w: 320, h: 500 };
+
+  createPanel('search', '🔍 Code Lookup',    document.querySelector('.wrap'),         searchPos);
+  createPanel('queue',  '📋 Manifest Queue', document.getElementById('draftPanel'),   queuePos);
+  createPanel('cart',   '🛒 Session Cart',   document.getElementById('cartPanelContent'), cartPos);
+
+  // Show smoke break for Juan only
+  setTimeout(() => {
+    const name = document.getElementById('tbListerSelect')?.value;
+    checkSmokeBreakAccess(name);
+    document.getElementById('tbListerSelect')?.addEventListener('change', e => checkSmokeBreakAccess(e.target.value));
+  }, 300);
+
+  if (saved.scale)    canvasScale = saved.scale;
+  if (saved.canvasX != null) canvasX = saved.canvasX;
+  if (saved.canvasY != null) canvasY = saved.canvasY;
 
   applyTransform();
   syncToolbarToOriginal();
+  startSessionTimer();
+  loadStickies();
+  setupKeyboardShortcuts();
+
+  // Auto-save layout every 5 seconds while active
+  setInterval(saveLayout, 5000);
 }
 
-// ── Create panel ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  PANEL CREATION
+// ══════════════════════════════════════════════════════════════════
 function createPanel(id, title, sourceEl, pos) {
   if (!sourceEl) return;
 
   const panel = document.createElement('div');
   panel.className = 'wan-panel';
   panel.id = 'wp-' + id;
-  panel.style.cssText = `left:${pos.x}px; top:${pos.y}px; width:${pos.w}px; height:${pos.h}px;`;
+  panel.style.cssText = `left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;`;
 
+  // Handle with minimize + count badge
   const handle = document.createElement('div');
   handle.className = 'wan-panel-handle';
   handle.innerHTML = `
     <div class="wan-panel-dots"><span></span><span></span><span></span></div>
     <span class="wan-panel-title">${title}</span>
+    <span class="wan-panel-badge" id="wp-badge-${id}" style="display:none;margin-left:6px;background:rgba(99,102,241,.25);color:#a5b4fc;font:700 10px/1 var(--mono);padding:2px 7px;border-radius:20px;"></span>
+    <div style="margin-left:auto;display:flex;gap:4px;">
+      <button class="wp-min-btn" title="Minimize" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:14px;line-height:1;padding:0 4px;transition:color .15s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.3)'">−</button>
+    </div>
   `;
 
   const body = document.createElement('div');
   body.className = 'wan-panel-body';
+  body.id = 'wp-body-' + id;
   body.appendChild(sourceEl);
 
   const resize = document.createElement('div');
@@ -9801,26 +10124,69 @@ function createPanel(id, title, sourceEl, pos) {
   panel.appendChild(resize);
 
   document.getElementById('wanCanvasInner').appendChild(panel);
-  panels[id] = { el: panel, x: pos.x, y: pos.y, w: pos.w, h: pos.h };
+  panelState[id] = { el: panel, minimized: false, savedH: pos.h };
 
   makeDraggable(panel, handle);
   makeResizable(panel, resize, id);
+
+  // Minimize button
+  handle.querySelector('.wp-min-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleMinimize(id);
+  });
+
+  // Restore on double-click handle
+  handle.addEventListener('dblclick', () => {
+    if (panelState[id]?.minimized) toggleMinimize(id);
+  });
+
+  // Bring to front on click
+  panel.addEventListener('mousedown', () => bringToFront(panel));
 }
 
-// ── Draggable ─────────────────────────────────────────────────────
+function toggleMinimize(id) {
+  const ps = panelState[id];
+  if (!ps) return;
+  const body   = document.getElementById('wp-body-' + id);
+  const resize = ps.el.querySelector('.wan-panel-resize');
+  const btn    = ps.el.querySelector('.wp-min-btn');
+  if (!ps.minimized) {
+    ps.savedH = ps.el.offsetHeight;
+    body.style.display   = 'none';
+    resize.style.display = 'none';
+    ps.el.style.height   = '42px';
+    btn.textContent      = '+';
+    ps.minimized = true;
+  } else {
+    body.style.display   = '';
+    resize.style.display = '';
+    ps.el.style.height   = ps.savedH + 'px';
+    btn.textContent      = '−';
+    ps.minimized = false;
+  }
+}
+
+function bringToFront(panel) {
+  document.querySelectorAll('.wan-panel, .wan-sticky').forEach(p => p.style.zIndex = 1);
+  panel.style.zIndex = 5;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  DRAG
+// ══════════════════════════════════════════════════════════════════
 function makeDraggable(panel, handle) {
   let dragging = false, ox = 0, oy = 0, startX = 0, startY = 0;
 
   handle.addEventListener('mousedown', e => {
-    if (e.target.tagName === 'BUTTON') return;
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
     dragging = true;
-    const r = panel.getBoundingClientRect();
+    const r  = panel.getBoundingClientRect();
     ox = r.left;
-    oy = r.top - 52; // toolbar height
+    oy = r.top - 52;
     startX = e.clientX;
     startY = e.clientY;
     panel.classList.add('dragging');
-    panel.style.zIndex = 10;
+    bringToFront(panel);
     e.preventDefault();
   });
 
@@ -9838,22 +10204,21 @@ function makeDraggable(panel, handle) {
     if (!dragging) return;
     dragging = false;
     panel.classList.remove('dragging');
-    panel.style.zIndex = '';
+    saveLayout();
   });
 }
 
-// ── Resizable ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  RESIZE
+// ══════════════════════════════════════════════════════════════════
 function makeResizable(panel, resizeHandle, id) {
   let resizing = false, startX = 0, startY = 0, startW = 0, startH = 0;
 
   resizeHandle.addEventListener('mousedown', e => {
     resizing = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    startW = panel.offsetWidth;
-    startH = panel.offsetHeight;
-    e.preventDefault();
-    e.stopPropagation();
+    startX = e.clientX; startY = e.clientY;
+    startW = panel.offsetWidth; startH = panel.offsetHeight;
+    e.preventDefault(); e.stopPropagation();
   });
 
   document.addEventListener('mousemove', e => {
@@ -9861,18 +10226,21 @@ function makeResizable(panel, resizeHandle, id) {
     const dx = (e.clientX - startX) / canvasScale;
     const dy = (e.clientY - startY) / canvasScale;
     panel.style.width  = Math.max(300, startW + dx) + 'px';
-    panel.style.height = Math.max(200, startH + dy) + 'px';
+    panel.style.height = Math.max(120, startH + dy) + 'px';
   });
 
-  document.addEventListener('mouseup', () => { resizing = false; });
+  document.addEventListener('mouseup', () => {
+    if (resizing) { resizing = false; saveLayout(); }
+  });
 }
 
-// ── Canvas pan ────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  CANVAS PAN + ZOOM
+// ══════════════════════════════════════════════════════════════════
 const canvas = document.getElementById('wanCanvas');
 if (canvas) {
   canvas.addEventListener('mousedown', e => {
-    if (e.target !== canvas && e.target !== document.getElementById('wanCanvasInner') &&
-        !e.target.id.startsWith('wanCanvas')) return;
+    if (e.target.closest('.wan-panel') || e.target.closest('.wan-sticky')) return;
     isPanning = true;
     panStartX = e.clientX - canvasX;
     panStartY = e.clientY - canvasY;
@@ -9892,14 +10260,13 @@ if (canvas) {
     if (canvas) canvas.style.cursor = 'default';
   });
 
-  // Scroll to zoom — but NOT when hovering inside a panel body
   canvas.addEventListener('wheel', e => {
-    // If the scroll target is inside a panel body, let it scroll naturally
     if (e.target.closest && e.target.closest('.wan-panel-body')) return;
+    if (e.target.closest && e.target.closest('.wan-sticky-body')) return;
     e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const delta    = e.deltaY > 0 ? 0.9 : 1.1;
     const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, canvasScale * delta));
-    const rect = canvas.getBoundingClientRect();
+    const rect     = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
     canvasX = mx - (mx - canvasX) * (newScale / canvasScale);
@@ -9911,26 +10278,369 @@ if (canvas) {
 
 function applyTransform() {
   const inner = document.getElementById('wanCanvasInner');
-  if (inner) inner.style.transform = `translate(${canvasX}px, ${canvasY}px) scale(${canvasScale})`;
+  if (inner) inner.style.transform = `translate(${canvasX}px,${canvasY}px) scale(${canvasScale})`;
   const label = document.getElementById('tbZoomLabel');
   if (label) label.textContent = Math.round(canvasScale * 100) + '%';
 }
 
-// ── Zoom buttons ──────────────────────────────────────────────────
+// ── Zoom buttons ───────────────────────────────────────────────────
 document.getElementById('tbZoomIn')?.addEventListener('click', () => {
-  canvasScale = Math.min(MAX_SCALE, canvasScale * 1.15);
-  applyTransform();
+  canvasScale = Math.min(MAX_SCALE, canvasScale * 1.15); applyTransform();
 });
 document.getElementById('tbZoomOut')?.addEventListener('click', () => {
-  canvasScale = Math.max(MIN_SCALE, canvasScale / 1.15);
-  applyTransform();
+  canvasScale = Math.max(MIN_SCALE, canvasScale / 1.15); applyTransform();
 });
 document.getElementById('tbZoomReset')?.addEventListener('click', () => {
-  canvasScale = 1; canvasX = 60; canvasY = 20;
-  applyTransform();
+  canvasScale = 1; canvasX = 60; canvasY = 30; applyTransform();
 });
 
-// ── Toolbar syncs to original inputs ──────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  STICKY NOTES
+// ══════════════════════════════════════════════════════════════════
+const STICKY_COLORS = ['#2D2A1A','#1A2D1A','#1A1A2D','#2D1A2A','#1A2A2D'];
+const STICKY_ACCENTS = ['#FDE68A','#86EFAC','#A5B4FC','#F9A8D4','#67E8F9'];
+
+function createSticky(opts = {}) {
+  const id      = opts.id || ('s' + (++stickyIdSeq));
+  const x       = opts.x  || (100 + Math.random() * 200);
+  const y       = opts.y  || (100 + Math.random() * 150);
+  const text    = opts.text || '';
+  const colorI  = opts.colorI !== undefined ? opts.colorI : Math.floor(Math.random() * STICKY_COLORS.length);
+  const bg      = STICKY_COLORS[colorI];
+  const accent  = STICKY_ACCENTS[colorI];
+
+  const el = document.createElement('div');
+  el.className = 'wan-sticky';
+  el.id = 'sticky-' + id;
+  el.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:200px;min-height:140px;background:${bg};border:1px solid ${accent}40;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden;z-index:2;transition:box-shadow .15s;`;
+
+  el.innerHTML = `
+    <div class="wan-sticky-handle" style="padding:8px 10px 6px;display:flex;align-items:center;gap:6px;cursor:grab;background:${accent}18;border-bottom:1px solid ${accent}25;flex:none;user-select:none;">
+      <span style="font-size:13px;">📌</span>
+      <span style="font-size:10px;font-weight:700;color:${accent};letter-spacing:.06em;text-transform:uppercase;flex:1;">Note</span>
+      <div style="display:flex;gap:4px;">
+        ${STICKY_COLORS.map((c,i) => `<button data-ci="${i}" style="width:10px;height:10px;border-radius:50%;background:${STICKY_ACCENTS[i]};border:none;cursor:pointer;opacity:${i===colorI?1:.4};transition:opacity .15s;" title="Change color"></button>`).join('')}
+        <button class="sticky-del" style="background:none;border:none;color:${accent}80;cursor:pointer;font-size:14px;line-height:1;margin-left:4px;transition:color .15s;" onmouseover="this.style.color='#fca5a5'" onmouseout="this.style.color='${accent}80'">×</button>
+      </div>
+    </div>
+    <div class="wan-sticky-body" style="flex:1;padding:10px;">
+      <textarea style="width:100%;height:100%;min-height:100px;background:transparent;border:none;outline:none;color:${accent}CC;font:400 12.5px/1.6 var(--sans);resize:none;caret-color:${accent};" placeholder="Type a note…" spellcheck="false">${text}</textarea>
+    </div>
+  `;
+
+  document.getElementById('wanCanvasInner').appendChild(el);
+  stickyNotes.push({ id, x, y, text, colorI });
+
+  // Drag
+  const handle = el.querySelector('.wan-sticky-handle');
+  let dragging = false, ox = 0, oy = 0, sx = 0, sy = 0;
+  handle.addEventListener('mousedown', ev => {
+    if (ev.target.tagName === 'BUTTON') return;
+    dragging = true;
+    const r = el.getBoundingClientRect();
+    ox = r.left; oy = r.top - 52;
+    sx = ev.clientX; sy = ev.clientY;
+    bringToFront(el);
+    ev.preventDefault();
+  });
+  document.addEventListener('mousemove', ev => {
+    if (!dragging) return;
+    const nx = (ox - canvasX) / canvasScale + (ev.clientX - sx) / canvasScale;
+    const ny = (oy - canvasY) / canvasScale + (ev.clientY - sy) / canvasScale;
+    el.style.left = Math.max(0, nx) + 'px';
+    el.style.top  = Math.max(0, ny) + 'px';
+    const note = stickyNotes.find(n => n.id === id);
+    if (note) { note.x = nx; note.y = ny; }
+  });
+  document.addEventListener('mouseup', () => {
+    if (dragging) { dragging = false; saveStickies(); }
+  });
+
+  // Color change
+  el.querySelectorAll('[data-ci]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ci = parseInt(btn.dataset.ci);
+      const note = stickyNotes.find(n => n.id === id);
+      if (note) { note.colorI = ci; saveStickies(); }
+      // Rebuild with new color
+      el.remove();
+      stickyNotes = stickyNotes.filter(n => n.id !== id);
+      createSticky({ id, x: parseFloat(el.style.left), y: parseFloat(el.style.top),
+                     text: el.querySelector('textarea').value, colorI: ci });
+    });
+  });
+
+  // Delete
+  el.querySelector('.sticky-del').addEventListener('click', () => {
+    el.remove();
+    stickyNotes = stickyNotes.filter(n => n.id !== id);
+    saveStickies();
+  });
+
+  // Save on text change
+  el.querySelector('textarea').addEventListener('input', ev => {
+    const note = stickyNotes.find(n => n.id === id);
+    if (note) note.text = ev.target.value;
+    saveStickies();
+  });
+
+  bringToFront(el);
+  return el;
+}
+
+function addSticky() {
+  // Place near center of current view
+  const cx = (-canvasX / canvasScale) + (window.innerWidth  / 2 / canvasScale) - 100;
+  const cy = (-canvasY / canvasScale) + (window.innerHeight / 2 / canvasScale) - 70;
+  createSticky({ x: cx, y: cy });
+  saveStickies();
+  toast('Sticky note added — drag it anywhere 📌');
+}
+
+function saveStickies() {
+  try { localStorage.setItem(LS_STICKIES, JSON.stringify(stickyNotes)); } catch(e){}
+}
+
+function loadStickies() {
+  try {
+    const data = JSON.parse(localStorage.getItem(LS_STICKIES) || '[]');
+    data.forEach(n => createSticky(n));
+  } catch(e) {}
+}
+
+// ── Sticky button in toolbar ───────────────────────────────────────
+document.getElementById('tbAddSticky')?.addEventListener('click', addSticky);
+
+// ══════════════════════════════════════════════════════════════════
+//  SESSION TIMER
+// ══════════════════════════════════════════════════════════════════
+function startSessionTimer() {
+  sessionStart = Date.now();
+  if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+  sessionTimerInterval = setInterval(tickTimer, 1000);
+  tickTimer();
+}
+
+function tickTimer() {
+  if (!sessionStart) return;
+  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+  const h = Math.floor(elapsed / 3600);
+  const m = Math.floor((elapsed % 3600) / 60);
+  const s = elapsed % 60;
+  const str = h > 0
+    ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const el = document.getElementById('hudTimer');
+  if (el) el.textContent = str;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════════════════════════
+function setupKeyboardShortcuts() {
+  document.addEventListener('keydown', e => {
+    // Don't fire when typing in inputs/textareas
+    const tag = document.activeElement?.tagName;
+    const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+    // / → focus search
+    if (e.key === '/' && !inInput) {
+      e.preventDefault();
+      const q = document.getElementById('q');
+      if (q) {
+        q.focus();
+        q.select();
+        // scroll search panel into view
+        const sp = document.getElementById('wp-search');
+        if (sp && panelState['search']?.minimized) toggleMinimize('search');
+        toast('Search focused — type to look up a code');
+      }
+      return;
+    }
+
+    // N → new batch entry
+    if (e.key === 'n' && !inInput) {
+      e.preventDefault();
+      document.getElementById('dpAddEntry')?.click();
+      toast('New entry added  (N)');
+      return;
+    }
+
+    // S → sticky note
+    if (e.key === 's' && !inInput && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      addSticky();
+      return;
+    }
+
+    // M → minimize/restore search panel
+    if (e.key === 'm' && !inInput) {
+      e.preventDefault();
+      toggleMinimize('search');
+      return;
+    }
+
+    // Q → minimize/restore queue panel
+    if (e.key === 'q' && !inInput) {
+      e.preventDefault();
+      toggleMinimize('queue');
+      return;
+    }
+
+    // Ctrl/Cmd + Enter → copy Claude prompt
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('dpCopyAll')?.click();
+      return;
+    }
+
+    // + / = → zoom in
+    if ((e.key === '+' || e.key === '=') && !inInput) {
+      canvasScale = Math.min(MAX_SCALE, canvasScale * 1.12); applyTransform();
+    }
+    // - → zoom out
+    if (e.key === '-' && !inInput) {
+      canvasScale = Math.max(MIN_SCALE, canvasScale / 1.12); applyTransform();
+    }
+    // 0 → reset zoom
+    if (e.key === '0' && !inInput) {
+      canvasScale = 1; canvasX = 60; canvasY = 30; applyTransform();
+    }
+  });
+}
+
+// Shortcut legend button
+document.getElementById('tbShortcuts')?.addEventListener('click', () => {
+  const el = document.getElementById('wanShortcutLegend');
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+});
+
+// ══════════════════════════════════════════════════════════════════
+//  ENTRY COUNT BADGE
+// ══════════════════════════════════════════════════════════════════
+function updateBadges() {
+  const b = (typeof dpEntries !== 'undefined') ? dpEntries.length : 0;
+  const u = (typeof uniEntriesData !== 'undefined') ? uniEntriesData.length : 0;
+
+  const qBadge = document.getElementById('wp-badge-queue');
+  if (qBadge) {
+    const total = b + u;
+    qBadge.textContent = total + ' entr' + (total === 1 ? 'y' : 'ies');
+    qBadge.style.display = total > 0 ? 'inline-block' : 'none';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  LAYOUT SAVE / RESTORE
+// ══════════════════════════════════════════════════════════════════
+function getPanelLayout(id) {
+  const el = document.getElementById('wp-' + id);
+  if (!el) return null;
+  return {
+    x: parseFloat(el.style.left) || 0,
+    y: parseFloat(el.style.top)  || 0,
+    w: el.offsetWidth,
+    h: el.offsetHeight
+  };
+}
+
+function saveLayout() {
+  try {
+    localStorage.setItem(LS_LAYOUT, JSON.stringify({
+      search: getPanelLayout('search'),
+      queue:  getPanelLayout('queue'),
+      scale:  canvasScale,
+      canvasX, canvasY
+    }));
+  } catch(e) {}
+}
+
+function loadLayout() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_LAYOUT) || '{}');
+  } catch(e) { return {}; }
+}
+
+// ── Save session snapshot on unload ───────────────────────────────
+window.addEventListener('beforeunload', () => {
+  const b = (typeof dpEntries !== 'undefined') ? dpEntries : [];
+  const u = (typeof uniEntriesData !== 'undefined') ? uniEntriesData : [];
+  if (b.length === 0 && u.length === 0) return;
+  try {
+    localStorage.setItem(LS_SESSION, JSON.stringify({
+      ts: Date.now(),
+      batch: b.map(e => ({ id: e.id, code: e.code, sn: e.sn, result: e.result, notes: e.notes, price: e.price })),
+      uni:   u.map(e => ({ id: e.id, itemType: e.itemType, websiteSku: e.websiteSku, desc: e.desc })),
+      listerName:  document.getElementById('tbListerSelect')?.value || '',
+      listerBatch: document.getElementById('tbListerBatch')?.value  || ''
+    }));
+  } catch(e) {}
+});
+
+// ── Restore last session button ───────────────────────────────────
+function checkLastSession() {
+  try {
+    const raw = localStorage.getItem(LS_SESSION);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || !data.ts) return;
+
+    const mins = Math.round((Date.now() - data.ts) / 60000);
+    const totalItems = (data.batch?.length || 0) + (data.uni?.length || 0);
+    if (totalItems === 0) return;
+
+    const timeStr = mins < 60 ? `${mins}m ago` : `${Math.round(mins/60)}h ago`;
+    const btn = document.getElementById('tbRestoreSession');
+    if (btn) {
+      btn.textContent = `↩ Restore session (${totalItems} items, ${timeStr})`;
+      btn.style.display = 'block';
+      btn.dataset.session = raw;
+    }
+  } catch(e) {}
+}
+
+document.getElementById('tbRestoreSession')?.addEventListener('click', function() {
+  try {
+    const data = JSON.parse(this.dataset.session || '{}');
+    // Restore lister info
+    if (data.listerName) {
+      const sel = document.getElementById('listerSelect');
+      const tb  = document.getElementById('tbListerSelect');
+      if (sel) sel.value = data.listerName;
+      if (tb)  tb.value  = data.listerName;
+    }
+    if (data.listerBatch) {
+      const bi = document.getElementById('listerBatch');
+      const tb = document.getElementById('tbListerBatch');
+      if (bi) bi.value = data.listerBatch;
+      if (tb) tb.value = data.listerBatch;
+    }
+    // Restore batch entries
+    if (data.batch?.length && typeof dpEntries !== 'undefined' && typeof dpAddEntry === 'function') {
+      data.batch.forEach(saved => {
+        dpAddEntry();
+        const e = dpEntries[dpEntries.length - 1];
+        if (e) {
+          e.code   = saved.code   || '';
+          e.sn     = saved.sn     || '';
+          e.result = saved.result || '';
+          e.notes  = saved.notes  || '';
+          e.price  = saved.price  || '';
+          dpRenderEntry && dpRenderEntry(e);
+        }
+      });
+    }
+    this.style.display = 'none';
+    toast('Session restored — ' + ((data.batch?.length||0)+(data.uni?.length||0)) + ' entries loaded');
+    localStorage.removeItem(LS_SESSION);
+  } catch(err) {
+    toast('Could not restore session');
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
+//  TOOLBAR SYNC
+// ══════════════════════════════════════════════════════════════════
 function syncToolbarToOriginal() {
   const tbName  = document.getElementById('tbListerSelect');
   const tbBatch = document.getElementById('tbListerBatch');
@@ -9945,46 +10655,49 @@ function syncToolbarToOriginal() {
     if (origName  && tbName)  origName.value  = tbName.value;
     if (origBatch && tbBatch) origBatch.value = tbBatch.value;
     if (origGoal  && tbGoal)  { origGoal.value = tbGoal.value; origGoal.dispatchEvent(new Event('input')); }
-    if (origPage  && tbPage) {
-      origPage.value = tbPage.value;
-      origPage.dispatchEvent(new Event('change'));
-    }
+    if (origPage  && tbPage)  { origPage.value = tbPage.value; origPage.dispatchEvent(new Event('change')); }
     updateHUD();
   }
 
   [tbName, tbBatch, tbPage, tbGoal].forEach(el => {
-    if (el) {
-      el.addEventListener('input',  mirrorToOrig);
-      el.addEventListener('change', mirrorToOrig);
-    }
+    if (el) { el.addEventListener('input', mirrorToOrig); el.addEventListener('change', mirrorToOrig); }
   });
 
-  // Sync initial values
   if (origName  && tbName)  tbName.value  = origName.value;
   if (origBatch && tbBatch) tbBatch.value = origBatch.value;
   if (origPage  && tbPage)  tbPage.value  = origPage.value;
   if (origGoal  && tbGoal)  tbGoal.value  = origGoal.value;
+
+  checkLastSession();
 }
 
-// ── Lock in button ────────────────────────────────────────────────
+// ── Lock in ────────────────────────────────────────────────────────
 document.getElementById('tbLockBtn')?.addEventListener('click', () => {
   document.getElementById('listerLockBtn')?.click();
+  setTimeout(() => {
+    const locked = document.getElementById('listerPillName')?.textContent;
+    const btn    = document.getElementById('tbLockBtn');
+    if (btn && locked) {
+      btn.textContent = '✓ ' + locked;
+      btn.style.background = 'rgba(34,197,94,.2)';
+      btn.style.borderColor = 'rgba(34,197,94,.4)';
+      btn.style.color = '#86efac';
+    }
+  }, 200);
 });
 
-// ── Exit to welcome ───────────────────────────────────────────────
+// ── Exit ───────────────────────────────────────────────────────────
 document.getElementById('tbWelcomeBtn')?.addEventListener('click', () => {
+  clearInterval(sessionTimerInterval);
   document.getElementById('wanToolbar').style.display = 'none';
   document.getElementById('wanCanvas').style.display  = 'none';
   document.getElementById('wanHUD').style.display     = 'none';
-  // restore original elements
-  const wrap  = document.querySelector('.wrap');
-  const draft = document.getElementById('draftPanel');
-  if (wrap)  { wrap.style.display  = ''; document.querySelector('.outer')?.appendChild(wrap); }
-  if (draft) { draft.style.display = ''; document.querySelector('.outer')?.appendChild(draft); }
   document.getElementById('welcomeBackdrop').classList.remove('hidden');
 });
 
-// ── HUD update ────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  HUD UPDATE
+// ══════════════════════════════════════════════════════════════════
 function updateHUD() {
   const b = (typeof dpEntries !== 'undefined') ? dpEntries.length : 0;
   const u = (typeof uniEntriesData !== 'undefined') ? uniEntriesData.length : 0;
@@ -10000,32 +10713,622 @@ function updateHUD() {
     pill.textContent = g ? `${t} / ${g}` : `${t} logged`;
     pill.classList.toggle('goal-hit', !!g && t >= g);
   }
-  // Also update strip
+
   const sb = document.getElementById('stripBatch'); if(sb) sb.textContent = b;
   const su = document.getElementById('stripUni');   if(su) su.textContent = u;
   const sg = document.getElementById('stripGoal');  if(sg) sg.textContent = g ? `${t}/${g}` : '—';
+
+  updateBadges();
 }
 setInterval(updateHUD, 800);
 
-// ── Hook into welcome screen Wan click ────────────────────────────
-const origWanClick = document.getElementById('welcomeWan');
-if (origWanClick) {
-  origWanClick.addEventListener('click', () => {
-    setTimeout(initCanvas, 50);
+// ══════════════════════════════════════════════════════════════════
+//  HOOKS
+// ══════════════════════════════════════════════════════════════════
+document.getElementById('welcomeWan')?.addEventListener('click', () => {
+  setTimeout(initCanvas, 50);
+});
+
+document.getElementById('wanBackBtn')?.addEventListener('click', () => {
+  clearInterval(sessionTimerInterval);
+  document.getElementById('wanToolbar').style.display = 'none';
+  document.getElementById('wanCanvas').style.display  = 'none';
+  document.getElementById('wanHUD').style.display     = 'none';
+}, true);
+
+// ══════════════════════════════════════════════════════════════════
+//  SESSION CART
+// ══════════════════════════════════════════════════════════════════
+function renderCart() {
+  const cartPanelBody = document.querySelector('#wp-cart .wan-panel-body');
+  if (!cartPanelBody) return;
+
+  // Make cart panel body flex
+  cartPanelBody.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;';
+  const cartContent = document.getElementById('cartPanelContent');
+  if (cartContent) { cartContent.style.display = 'flex'; cartContent.style.flexDirection = 'column'; cartContent.style.height = '100%'; }
+
+  const list   = document.getElementById('cartList');
+  const empty  = document.getElementById('cartEmpty');
+  const count  = document.getElementById('cartCount');
+  const countS = document.getElementById('cartCountS');
+  if (!list) return;
+
+  const entries = (typeof dpEntries !== 'undefined') ? dpEntries : [];
+  const total   = entries.length;
+
+  if (count)  count.textContent  = total;
+  if (countS) countS.textContent = total === 1 ? '' : 's';
+
+  // Remove old rows
+  list.querySelectorAll('.cart-item').forEach(el => el.remove());
+
+  if (total === 0) {
+    if (empty) empty.style.display = 'flex';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  const footer = list.querySelector('.cart-footer');
+
+  entries.forEach((e, idx) => {
+    const sku     = (typeof dpEntrySkuLabel === 'function') ? dpEntrySkuLabel(e) : ('#' + (idx + 1));
+    const code    = e.code || '—';
+    const hit     = (typeof resolveCode === 'function') ? resolveCode(code) : null;
+    const descRaw = hit ? hit.desc : code;
+    const desc    = descRaw.length > 30 ? descRaw.slice(0, 30) + '…' : descRaw;
+    const sn      = e.sn || '';
+    const health  = e.result || '';
+
+    let healthClass = 'good';
+    const pct = parseInt(health);
+    if (!isNaN(pct)) {
+      if (pct < 50) healthClass = 'low';
+      else if (pct < 80) healthClass = 'mid';
+    } else if (health.toLowerCase() === 'fail') healthClass = 'low';
+
+    const row = document.createElement('div');
+    row.className = 'cart-item';
+    row.innerHTML =
+      '<span class="cart-item-num">' + (idx+1) + '</span>' +
+      '<span class="cart-item-sku">' + sku + '</span>' +
+      '<span class="cart-item-desc" title="' + descRaw + '">' + desc + '</span>' +
+      (health ? '<span class="cart-item-health ' + healthClass + '">' + health + '</span>' : '') +
+      '<span class="cart-item-sn">' + (sn ? 'SN ' + sn : '—') + '</span>';
+
+    if (footer) list.insertBefore(row, footer);
+    else list.appendChild(row);
   });
 }
 
-// ── Hook into wanBackBtn (within canvas — exit already handled) ───
-const wbb = document.getElementById('wanBackBtn');
-if (wbb) {
-  wbb.addEventListener('click', () => {
-    document.getElementById('wanToolbar').style.display = 'none';
-    document.getElementById('wanCanvas').style.display  = 'none';
-    document.getElementById('wanHUD').style.display     = 'none';
-  }, true);
+setInterval(renderCart, 1000);
+
+// ══════════════════════════════════════════════════════════════════
+//  SMOKE BREAK (Juan only)
+// ══════════════════════════════════════════════════════════════════
+function checkSmokeBreakAccess(name) {
+  const btn = document.getElementById('smokeBreakBtn');
+  if (!btn) return;
+  btn.style.display = (name === 'J') ? 'inline-block' : 'none';
 }
+
+function launchSmoke() {
+  const overlay = document.getElementById('smokeOverlay');
+  const cvs     = document.getElementById('smokeCanvas');
+  if (!overlay || !cvs) return;
+  overlay.classList.add('active');
+  overlay.style.pointerEvents = 'all';
+  cvs.width  = window.innerWidth;
+  cvs.height = window.innerHeight;
+  const ctx = cvs.getContext('2d');
+  const particles = [];
+  const COLORS = ['rgba(180,180,200,','rgba(140,140,165,','rgba(200,200,220,','rgba(110,110,130,'];
+
+  function spawn() {
+    particles.push({
+      x: Math.random() * cvs.width,
+      y: cvs.height + 20,
+      r: 25 + Math.random() * 70,
+      vy: -(0.5 + Math.random() * 1.1),
+      vx: (Math.random() - 0.5) * 0.7,
+      alpha: 0.2 + Math.random() * 0.18,
+      grow: 0.12 + Math.random() * 0.28,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      life: 0,
+      maxLife: 200 + Math.random() * 200,
+    });
+  }
+
+  let si = setInterval(spawn, 55);
+  let af;
+
+  function draw() {
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    // Soft dark bg
+    ctx.fillStyle = 'rgba(4,5,10,0.35)';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx + Math.sin(p.life * 0.04) * 0.3;
+      p.y += p.vy;
+      p.r += p.grow;
+      p.life++;
+      p.vx += (Math.random() - 0.5) * 0.04;
+      const fadeIn  = Math.min(1, p.life / 25);
+      const fadeOut = 1 - Math.max(0, (p.life - p.maxLife * 0.55) / (p.maxLife * 0.45));
+      const a = p.alpha * fadeIn * fadeOut;
+      if (a <= 0 || p.life > p.maxLife) { particles.splice(i, 1); continue; }
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      g.addColorStop(0, p.color + a + ')');
+      g.addColorStop(1, p.color + '0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (overlay.classList.contains('active')) af = requestAnimationFrame(draw);
+  }
+  draw();
+
+  document.getElementById('smokeBackBtn').onclick = () => {
+    overlay.classList.remove('active');
+    overlay.style.pointerEvents = 'none';
+    clearInterval(si);
+    cancelAnimationFrame(af);
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    if (typeof toast === 'function') toast('Welcome back, Juan 💪');
+  };
+}
+
+document.getElementById('smokeBreakBtn')?.addEventListener('click', launchSmoke);
+
+// Reveal smoke btn when Juan selects his name
+document.getElementById('tbListerSelect')?.addEventListener('change', e => checkSmokeBreakAccess(e.target.value));
+// Also check on lock-in
+document.getElementById('tbLockBtn')?.addEventListener('click', () => {
+  setTimeout(() => checkSmokeBreakAccess(document.getElementById('tbListerSelect')?.value), 250);
+}, true);
 
 })();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SHOV  — LOCAL KNOWLEDGE ENGINE  (\ + Space)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Spotlight overlay -->
+<div id="gModeAI" style="display:none;position:fixed;inset:0;z-index:600;pointer-events:none;">
+  <div id="gModeAIBackdrop" style="position:absolute;inset:0;background:rgba(4,5,14,.65);backdrop-filter:blur(8px);pointer-events:all;"></div>
+  <div id="gModeAICard" style="position:absolute;top:38%;left:50%;transform:translate(-50%,-50%) scale(0.94);opacity:0;width:min(680px,92vw);pointer-events:all;transition:transform .22s cubic-bezier(.22,1,.36,1),opacity .18s ease;will-change:transform,opacity;">
+
+    <!-- Shovo header -->
+    <div style="text-align:center;margin-bottom:12px;">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);border-radius:20px;padding:5px 14px;">
+        <span style="font-size:13px;">🧿</span>
+        <span style="font:700 12px/1 var(--sans);color:#a5b4fc;letter-spacing:.04em;">Shovo</span>
+        <span style="width:1px;height:12px;background:rgba(99,102,241,.3);"></span>
+        <span style="font:400 11.5px/1 var(--sans);color:rgba(255,255,255,.35);letter-spacing:.01em;">Listing Assistant</span>
+      </div>
+    </div>
+
+    <!-- Search bar -->
+    <div id="gModeAIBar" style="display:flex;align-items:center;gap:12px;background:rgba(15,17,32,.97);border:1.5px solid rgba(99,102,241,.45);border-radius:16px;padding:15px 18px;box-shadow:0 0 0 5px rgba(99,102,241,.08),0 40px 90px rgba(0,0,0,.8);">
+      <span style="font-size:19px;flex:none;opacity:.85;">⚡</span>
+      <input id="gModeAIInput" type="text" placeholder="Ask Shovo anything about this system…" autocomplete="off" spellcheck="false"
+        style="flex:1;background:transparent;border:none;outline:none;font:400 15.5px/1 var(--sans);color:#E8EBF8;caret-color:#818CF8;letter-spacing:-.01em;">
+      <kbd style="font:600 10px/1 var(--mono);color:rgba(255,255,255,.22);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:3px 8px;flex:none;">ESC</kbd>
+    </div>
+
+    <!-- Result -->
+    <div id="gModeAIResult" style="display:none;margin-top:6px;background:rgba(13,15,28,.98);border:1px solid rgba(255,255,255,.09);border-radius:14px;box-shadow:0 28px 70px rgba(0,0,0,.65);overflow:hidden;">
+      <div style="padding:11px 16px 10px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;">⚡</span>
+        <span id="gModeAIResultLabel" style="font:700 10.5px/1 var(--sans);color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;">Shovo</span>
+      </div>
+      <div id="gModeAIBody" style="padding:16px 18px 18px;font-size:13.5px;color:rgba(255,255,255,.78);line-height:1.8;max-height:54vh;overflow-y:auto;"></div>
+    </div>
+
+    <!-- Suggestions -->
+    <div id="gModeAISuggestions" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;padding:0 2px;">
+      <button class="gai-chip" data-q="how do I log a drive">How do I log a drive?</button>
+      <button class="gai-chip" data-q="what is template clone blitzting">What is Template Clone?</button>
+      <button class="gai-chip" data-q="how do offer chips work haz">How do offer chips work?</button>
+      <button class="gai-chip" data-q="full flow from intake to shopify listing">Full flow → Shopify</button>
+      <button class="gai-chip" data-q="what does drive health percentage mean">Drive health grading</button>
+      <button class="gai-chip" data-q="how do I fill a purchase order fill po">How does Fill PO work?</button>
+      <button class="gai-chip" data-q="keyboard shortcuts">Keyboard shortcuts</button>
+      <button class="gai-chip" data-q="what is shovo listing assistant">What is Shovo?</button>
+      <button class="gai-chip" data-q="what is speed review">What is Speed Review?</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  #gModeAI.open { pointer-events: all; }
+  #gModeAI.open #gModeAICard {
+    transform: translate(-50%,-50%) scale(1) !important;
+    opacity: 1 !important;
+  }
+  #gModeAIBody::-webkit-scrollbar { width: 4px; }
+  #gModeAIBody::-webkit-scrollbar-thumb { background: linear-gradient(#6366F1,#818CF8); border-radius: 4px; }
+  #gModeAIBody::-webkit-scrollbar-track { background: transparent; }
+  .gai-chip {
+    padding: 6px 13px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px;
+    font: 500 11.5px/1 var(--sans);
+    color: rgba(255,255,255,.42);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .gai-chip:hover {
+    background: rgba(99,102,241,.16);
+    border-color: rgba(99,102,241,.4);
+    color: #a5b4fc;
+  }
+  #gModeAIBody strong { color: #c7caff; font-weight: 700; }
+  #gModeAIBody code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: rgba(99,102,241,.16);
+    color: #a5b4fc;
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  #gModeAIBody ol, #gModeAIBody ul {
+    margin: 6px 0 6px 18px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  #gModeAIBody li { color: rgba(255,255,255,.72); }
+  #gModeAIBody h3 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: rgba(99,102,241,.9);
+    margin: 14px 0 6px;
+  }
+  .gai-related { margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,.07); }
+  .gai-related-title { font:600 10.5px/1 var(--sans); color:rgba(255,255,255,.3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:7px; }
+  .gai-related-chips { display:flex; flex-wrap:wrap; gap:5px; }
+  .gai-related-chip {
+    padding: 4px 11px;
+    background: rgba(99,102,241,.1);
+    border: 1px solid rgba(99,102,241,.2);
+    border-radius: 20px;
+    font: 500 11px/1 var(--sans);
+    color: #818CF8;
+    cursor: pointer;
+    transition: all .13s;
+  }
+  .gai-related-chip:hover { background: rgba(99,102,241,.22); }
+</style>
+
+<script>
+(function(){
+'use strict';
+
+// ══════════════════════════════════════════════════════════════════
+//  SHOV — LOCAL KNOWLEDGE ENGINE
+// ══════════════════════════════════════════════════════════════════
+
+// Each entry: { keys: [...match terms], title, answer (HTML), related: [...topic keys] }
+const KB = [
+
+  // ── LOGGING A DRIVE ──────────────────────────────────────────────
+  { keys: ['log drive','log storage','log ssd','log nvme','log sata','batch entry','add entry','how to log','log item','log a drive','logging drives','log device','log disk','add a drive','add batch'],
+    title: 'How to log a drive (Batch mode)',
+    answer: `<h3>What you need first</h3>Lock in your name and batch in the <strong>toolbar</strong> — otherwise your SKU will show as #1 instead of the real one.<h3>Steps</h3><ol><li>Make sure the toolbar page is set to <strong>Batch — RAM/Storage</strong></li><li>Plug the drive into the test rig and open <strong>CrystalDiskInfo</strong> — note the health % and serial number</li><li>In the <strong>Code Lookup</strong> panel, search the drive by name or code (e.g. <code>970 EVO</code> or <code>S2990P</code>)</li><li>Click the code row to copy it, then click <strong>+ Add batch entry</strong> in the queue panel</li><li>Fill in: <strong>CODE</strong> (e.g. <code>S2990P</code>), <strong>HEALTH %</strong> (from CrystalDiskInfo), <strong>SERIAL #</strong> (from the label), <strong>NOTES</strong> (optional — cosmetic damage, needs reseat, etc.)</li><li>The <strong>PREVIEW</strong> line updates live — that is your manifest line</li><li>Repeat for each drive in the batch</li></ol><h3>Shortcut</h3>Press <code>N</code> anywhere on the canvas to add a new entry card instantly.`,
+    related: ['abribook codes','drive health','export claude','blitzting'] },
+
+  // ── RAM ──────────────────────────────────────────────────────────
+  { keys: ['log ram','ram entry','ram module','ram stick','memory','dimm','sodimm','rdimm','udimm','ram test','pass fail','ram result'],
+    title: 'How to log RAM',
+    answer: `<h3>RAM vs Storage</h3>RAM uses the same Batch flow but with <strong>Pass / Fail</strong> instead of a health %.<h3>Steps</h3><ol><li>Toggle to <strong>RAM</strong> using the Storage/RAM buttons in the Code Lookup panel</li><li>Seat the module in the RAM tester and observe the lights — all bright = Pass, any dim = Fail</li><li>Find the RAM code (e.g. <code>K8PC4R1X8</code>) in the search list</li><li>Click <strong>+ Add batch entry</strong>, enter the code, set result to <strong>Pass</strong> or <strong>Fail</strong>, and fill the serial</li><li>If counting pairs, check <strong>Counting pairs</strong> and enter the quantity</li></ol><h3>Note</h3>RAM codes start with the brand letter and include the spec (e.g. <code>M32PC4R2X8</code> = Micron 32GB 2RX8 PC4-3200AA Desktop).`,
+    related: ['abribook codes','log drive','export claude'] },
+
+  // ── ABRIBOOK CODES ───────────────────────────────────────────────
+  { keys: ['abribook code','what is a code','code mean','code system','code lookup','what does code','s2990p','code format','drive code','shorthand','code list','add new code','new code','code not found','cant find code','code missing'],
+    title: 'What Abribook codes are',
+    answer: `<h3>The idea</h3>A code is a short identifier for a specific drive or RAM module. Instead of typing "Samsung 990 Pro 2TB NVMe M.2 2280" every time, you type <code>S2990P</code> and the system already knows everything about that item.<h3>How to read a code</h3><ul><li><strong>First letter</strong> = brand: S = Samsung, K = Kingston, W = WD, C = Crucial, I = Intel, M = Micron</li><li><strong>Capacity digits</strong> follow (1 = 1TB, 2 = 2TB, etc.)</li><li><strong>Model shorthand</strong> at the end</li></ul>Example: <code>S2990P</code> = Samsung (S) + 2TB (2) + 990 Pro (990P)<h3>Code not in the list?</h3><ol><li>Open <strong>Add a new code</strong> in the Code Lookup panel</li><li>Enter a code that follows the pattern</li><li>Paste the full drive description</li><li>Hit <strong>Add code</strong> — it saves permanently for everyone</li></ol>`,
+    related: ['log drive','log ram','drive health'] },
+
+  // ── DRIVE HEALTH ─────────────────────────────────────────────────
+  { keys: ['drive health','health percentage','health %','health score','health mean','what is health','crystaldiskinfo','crystal disk','health grade','low health','bad health','health number','50%','80%','good health','health tier','health rating','drive condition'],
+    title: 'Drive health — what it means and how to grade it',
+    answer: `<h3>What the number means</h3>CrystalDiskInfo reads how much write life the drive has used up. 100% = barely touched. Lower = more used.<h3>Grading tiers</h3><ul><li><strong>80% and above</strong> → Healthy. List normally at full used price.</li><li><strong>50% to 79%</strong> → Medium health. Disclose it clearly, price slightly lower.</li><li><strong>Below 50%</strong> → Low health. Flag it in the listing — buyers who want cheap storage for backups will still buy it, but they need to know upfront.</li><li><strong>0% or undetectable</strong> → For Parts only. Never list this as a working drive.</li></ul><h3>In the Session Cart</h3>Health badges show as <strong style="color:#86efac">green</strong> (80%+), <strong style="color:#fbbf24">yellow</strong> (50–79%), or <strong style="color:#fca5a5">red</strong> (below 50%).`,
+    related: ['log drive','abribook codes','export claude'] },
+
+  // ── BLITZTING / TEMPLATE CLONE ───────────────────────────────────
+  { keys: ['blitzting','template clone','clone','batch of same','multiple same','10 drives','12 drives','same model','bulk log','fast log','blitz','speed log','clone template','generate slots','slots'],
+    title: 'Blitzting — logging many identical items fast',
+    answer: `<h3>When to use it</h3>When you have 5+ of the exact same drive model — same code, same notes — and only the health % and serial differ per unit.<h3>Template Clone steps</h3><ol><li>Switch the toolbar page to <strong>⚡ Blitzting</strong></li><li>Fill the <strong>Master Entry</strong> with the shared code, base health, and notes</li><li>Check which fields differ per unit (usually <strong>Health %</strong> and <strong>Serial #</strong>)</li><li>Set the quantity and hit <strong>Generate</strong></li><li>Slots appear — one per unit. Fill each slot's unique values</li><li>Hit <strong>Add all to queue</strong> — every unit lands as a proper entry card</li></ol><h3>Note</h3>Wan suggests the next serial number if it detects a hex pattern from what you typed before.`,
+    related: ['speed review','log drive','export claude'] },
+
+  // ── SPEED REVIEW ─────────────────────────────────────────────────
+  { keys: ['speed review','review entries','qc','quality check','approve entry','flag entry','set price','cost per item','review queue','before export','review before','blitz review'],
+    title: 'Speed Review — QC before you export',
+    answer: `<h3>What it is</h3>Speed Review lets you flip through every entry in the queue and confirm pricing before handing off to Claude. Approved entries write the price and cost back to the source so the exported prompt has confirmed numbers.<h3>How to use it</h3><ol><li>In Blitzting, hit <strong>Speed Review</strong></li><li>One card at a time — set <strong>Price</strong> and <strong>Cost Per Item</strong></li><li>Hit <strong>✓ Approve</strong> to lock it in, or <strong>⚑ Flag</strong> to come back to it</li><li>When all entries are approved, export</li></ol><h3>Keyboard shortcuts</h3><ul><li><code>A</code> = Approve</li><li><code>F</code> = Flag</li><li><code>→</code> = Next card</li><li><code>←</code> = Previous card</li></ul>`,
+    related: ['blitzting','export claude','cost per item'] },
+
+  // ── EXPORT / CLAUDE PROMPT ───────────────────────────────────────
+  { keys: ['export','copy prompt','claude prompt','manifest prep','copy claude','export to claude','what happens export','paste to claude','manifest prompt','copy manifest','ctrl enter','how to export','send to claude'],
+    title: 'Exporting to Claude — what the button does',
+    answer: `<h3>What it does</h3>When you hit <strong>Copy Claude manifest-prep prompt</strong> (or press <code>Ctrl + Enter</code>), Abribook builds two sets of instructions in one copied block:<ul><li><strong>Batch entries</strong> (RAM/storage) → formatted for the <code>/syg-listing-generator</code> skill — Claude generates complete titles, HTML descriptions, and Shopify metafields</li><li><strong>Universal entries</strong> (phones, laptops, etc.) → formatted as a JSON manifest — Claude rewrites the default SYG platform description with a proper one</li></ul><h3>After pasting</h3>Claude produces finished listings, then pushes them directly to Shopify as <strong>DRAFT</strong> products. Nothing goes live automatically — a person always reviews and publishes.<h3>Note</h3>If your SKU shows as #1 instead of the real format, you forgot to lock in your name and batch before logging.`,
+    related: ['lock in','universal mode','sku format','shopify push'] },
+
+  // ── UNIVERSAL MODE ───────────────────────────────────────────────
+  { keys: ['universal','phone','laptop','console','gpu','cpu','desktop','motherboard','universal mode','universal entry','website sku','not ram','not storage','universal page','universal intake'],
+    title: 'Universal mode — phones, laptops, consoles, and everything else',
+    answer: `<h3>What it is</h3>Universal is for anything that is not RAM or a storage drive — phones, laptops, desktops, GPUs, CPUs, consoles, and motherboards.<h3>Flow</h3><ol><li>Switch toolbar page to <strong>📱 Universal</strong></li><li>Enter the <strong>Website SKU</strong> from the SYG company platform — this is required, Claude uses it to match the correct listing</li><li>Select the item type (Laptop, Phone, Console, etc.)</li><li>Fill typed fields (model, specs, storage, etc.)</li><li>Describe the item in plain English in the <strong>Describe item + specs</strong> field</li><li>Fill testing notes, condition notes, and issues/missing parts</li><li>Watch the <strong>Listing Confidence</strong> score — aim for high before adding</li><li>Hit <strong>+ Add universal entry</strong></li></ol><h3>Key rule</h3>Website SKU is not optional. Without it, Claude cannot find the right listing to rewrite.`,
+    related: ['export claude','website sku','confidence score'] },
+
+  // ── HAZ PRICE LOOKUP ─────────────────────────────────────────────
+  { keys: ['haz','price lookup','look up price','what price','price check','how much','offer','buying','buy device','price database','search price','find price','haz search','price for','how do i price'],
+    title: 'Haz — looking up prices',
+    answer: `<h3>What Haz does</h3>Haz is the buying assistant. You type a device name, it searches 970+ real prices and tells you what to offer.<h3>Steps</h3><ol><li>Open Haz from the welcome screen</li><li>Type the device name (e.g. <code>iPhone 13 Pro Max 128GB</code>)</li><li>Read the result — check the <strong>source badge</strong>:<ul><li><strong style="color:#86efac">SYG Sold</strong> = actually sold at this store. Most reliable.</li><li><strong style="color:#93c5fd">SYG Listed</strong> = currently in our store.</li><li><strong style="color:rgba(255,255,255,.5)">Market Est</strong> = general market rate. Treat as a ceiling.</li></ul></li><li>Tap an offer chip: <strong>Good</strong> (solid margin), <strong>Fair</strong> (middle ground), <strong>Low</strong> (cautious)</li><li>The Accepted At field fills automatically</li></ol>`,
+    related: ['offer chips','fill po','haz badges'] },
+
+  // ── OFFER CHIPS ──────────────────────────────────────────────────
+  { keys: ['offer chip','good offer','fair offer','low offer','what is good fair low','offer amount','calculate offer','offer range','chip mean','offer tier','what does good mean','what does fair mean','what does low mean'],
+    title: 'Offer chips — Good, Fair, Low',
+    answer: `<h3>What they are</h3>After Haz finds a price, it calculates three offer tiers based on SYG margins. Tap one and the Accepted At field fills automatically.<ul><li><strong>🟢 Good</strong> — Safe buy with solid margin. Use when the item is in great shape and you are confident.</li><li><strong>🟡 Fair</strong> — Middle ground. Good when condition is not perfect or you want extra buffer.</li><li><strong>🔴 Low</strong> — Tight margin. Use when the item has damage, slow market, or you are unsure.</li></ul><h3>Why it matters</h3>You should not be doing mental math on the floor while a customer is waiting. The chips do the math for you — you just judge the item.`,
+    related: ['haz price lookup','fill po','haz badges'] },
+
+  // ── FILL PO ──────────────────────────────────────────────────────
+  { keys: ['fill po','purchase order','po form','company website','buyer.sellyourgadgets','log purchase','create po','fill purchase order','auto fill','fill out form','po automation'],
+    title: 'Fill PO — automated purchase order',
+    answer: `<h3>What it does</h3>Fill PO generates a prompt you paste into <strong>Claude in Chrome</strong>, which then fills out the SYG company platform purchase order form for you automatically — category, make, model, condition, color, estimated value, offer price.<h3>Steps</h3><ol><li>On the Haz intake board, tap <strong>🖥️ Fill PO on Company Website</strong> for the item</li><li>Copy the generated prompt</li><li>Open Claude in Chrome</li><li>Paste and run</li></ol><h3>Critical requirement</h3>The <strong>customer must already be selected</strong> on the PO page before you run Fill PO. Claude cannot select the customer for you — that step requires you to be logged in and manually pick them. Once the customer is selected, everything else is automatic.`,
+    related: ['haz price lookup','offer chips'] },
+
+  // ── SKU FORMAT ───────────────────────────────────────────────────
+  { keys: ['sku','sku format','sku mean','what is sku','nj02','sku shows #1','sku wrong','sku number','item number','sku not generating','sku incorrect','read sku','sku structure','rtl','batch id'],
+    title: 'SKU format — reading and fixing SKUs',
+    answer: `<h3>Format</h3><code>NJ02-[INITIAL]-[BATCH]-[ITEM#]</code><br>Example: <code>NJ02-J-RTL0626-3</code><ul><li><strong>NJ02</strong> = Elmwood Park store code</li><li><strong>J</strong> = your initial (Juan=J, Ibrahim=IS, Paul=P)</li><li><strong>RTL0626</strong> = batch ID — usually date-stamped</li><li><strong>3</strong> = item number in this session (resets each session)</li></ul><h3>My SKU shows #1 instead</h3>This means you have not locked in your name and batch yet. Go to the toolbar, select your name, enter the batch, and hit <strong>Lock in</strong>. The button turns green when locked. After that, SKUs generate correctly.`,
+    related: ['lock in','export claude'] },
+
+  // ── LOCK IN ──────────────────────────────────────────────────────
+  { keys: ['lock in','lock name','set name','who am i','lister name','select name','lister select','batch number','set batch','toolbar lock','lock button','green lock'],
+    title: 'Locking in your name and batch',
+    answer: `<h3>Why it matters</h3>Every SKU and manifest entry is stamped with your initial and batch number. If you skip this, SKUs show as #1 and entries are not traceable.<h3>Steps</h3><ol><li>In the <strong>toolbar</strong>, select your name from the Who dropdown</li><li>Set the batch number (e.g. <code>RTL0626</code>)</li><li>Hit <strong>Lock in</strong></li><li>The button turns green with a checkmark — you are locked in for the session</li></ol><h3>Note</h3>Lock in before logging any entries. You can still lock in after adding entries — the SKUs will update.`,
+    related: ['sku format','export claude'] },
+
+  // ── SESSION CART ─────────────────────────────────────────────────
+  { keys: ['session cart','cart panel','what is cart','cart view','listed items','queue view','items logged','what have i logged','see what i have','checkout view','cart show','cart display'],
+    title: 'Session Cart — what it shows',
+    answer: `<h3>What it is</h3>The <strong>🛒 Session Cart</strong> is a clean real-time view of everything you have logged this session. It updates every second and matches exactly what the manifest export shows.<h3>Each row shows</h3><ul><li>Item number</li><li>Full SKU (<code>NJ02-J-RTL0626-3</code>)</li><li>Drive description (truncated)</li><li>Health badge: <strong style="color:#86efac">green</strong> (80%+), <strong style="color:#fbbf24">yellow</strong> (50–79%), <strong style="color:#fca5a5">red</strong> (&lt;50%)</li><li>Serial number</li></ul><h3>Where it is</h3>Third floating panel on the canvas, to the right of the queue. Drag it anywhere. Minimize with the − button in its handle.`,
+    related: ['log drive','export claude','sku format'] },
+
+  // ── KEYBOARD SHORTCUTS ───────────────────────────────────────────
+  { keys: ['keyboard shortcut','shortcut','hotkey','key command','keys','what keys','how do i quickly','fast way','quick way','/ shortcut','n shortcut'],
+    title: 'Keyboard shortcuts',
+    answer: `<h3>Canvas shortcuts</h3><ul><li><code>/</code> → Focus the code search instantly</li><li><code>N</code> → Add a new batch entry card</li><li><code>S</code> → Drop a sticky note at center of view</li><li><code>M</code> → Minimize or restore the Code Lookup panel</li><li><code>Q</code> → Minimize or restore the Manifest Queue panel</li><li><code>Ctrl + Enter</code> → Copy Claude manifest-prep prompt</li><li><code>+ / -</code> → Zoom in / out</li><li><code>0</code> → Reset zoom and position</li><li><code>\ + Space</code> → Open Shovo (listing assistant)</li></ul><h3>Speed Review shortcuts</h3><ul><li><code>A</code> → Approve</li><li><code>F</code> → Flag</li><li><code>→</code> → Next card</li><li><code>←</code> → Previous card</li></ul>`,
+    related: ['canvas','speed review'] },
+
+  // ── CANVAS / PANELS ──────────────────────────────────────────────
+  { keys: ['canvas','drag panel','move panel','resize panel','zoom','pan canvas','how to zoom','scroll zoom','panel position','minimize panel','panel layout','floating panel','workspace','rearrange'],
+    title: 'Canvas workspace — panels, zoom, and navigation',
+    answer: `<h3>Panels</h3><ul><li><strong>Drag</strong> panels by their top handle bar</li><li><strong>Resize</strong> by dragging the bottom-right corner</li><li><strong>Minimize</strong> with the − button (collapses to just the handle)</li><li>Double-click the handle to restore a minimized panel</li></ul><h3>Canvas</h3><ul><li><strong>Pan</strong> by clicking and dragging the empty dark background</li><li><strong>Zoom</strong> with scroll wheel (zooms toward your cursor)</li><li>Or use <code>+</code> / <code>-</code> keys, or the zoom controls in the toolbar</li><li>Press <code>0</code> to reset zoom and position</li></ul><h3>Layout is saved</h3>Panel positions, sizes, and zoom save to localStorage automatically. Your layout is restored next session.`,
+    related: ['keyboard shortcuts','sticky notes','panels'] },
+
+  // ── STICKY NOTES ─────────────────────────────────────────────────
+  { keys: ['sticky note','sticky','note','pin','add note','reminder','memo','annotate','notes on canvas','pin note','floating note'],
+    title: 'Sticky notes on the canvas',
+    answer: `<h3>Adding one</h3>Press <code>S</code> or click <strong>📌 Note</strong> in the toolbar. A note drops at the center of your current view.<h3>Using it</h3><ul><li><strong>Drag</strong> the pin handle at the top to move it anywhere</li><li><strong>Type</strong> directly in the body</li><li><strong>Change color</strong> using the colored dots in the handle — 5 themes (indigo, green, purple, pink, cyan)</li><li><strong>Delete</strong> with the × button</li></ul><h3>Persistence</h3>Notes save to localStorage and come back next session. Good for batch notes, reminders, flagging items to follow up on.`,
+    related: ['canvas','keyboard shortcuts'] },
+
+  // ── RESTORE SESSION ──────────────────────────────────────────────
+  { keys: ['restore session','last session','session lost','closed tab','entries gone','lost my work','restore','bring back','recover','session button','closed by accident'],
+    title: 'Restoring a previous session',
+    answer: `<h3>What it does</h3>Wan automatically saves a snapshot of your batch entries, lister name, and batch when you close the tab or navigate away.<h3>To restore</h3><ol><li>Open Wan again</li><li>Look for the yellow <strong>↩ Restore session (N items, Xm ago)</strong> button in the toolbar</li><li>Click it — your entries reload automatically</li></ol><h3>Limitations</h3><ul><li>Only batch entries are restored (Universal entries are not currently captured)</li><li>The button disappears after you click it or start a new session</li><li>If you logged entries and then locked in a different name — restore them first, then lock in</li></ul>`,
+    related: ['log drive','export claude','lock in'] },
+
+  // ── SHOPIFY / DRAFTS ─────────────────────────────────────────────
+  { keys: ['shopify','draft','product','listing live','goes live','publish','shopify push','metafield','shopify draft','cost per item','margin','inventory cost','shopify listing'],
+    title: 'How listings get to Shopify',
+    answer: `<h3>The flow</h3>After Claude generates the listing content, Claude calls the Shopify API directly and creates or updates the product — title, HTML description, SKU, metafields, inventory tracking.<h3>Always DRAFT</h3>Every product lands as a <strong>DRAFT</strong>. It does not show to customers until someone manually reviews and publishes it. The automation handles setup — the human makes the final call.<h3>Cost Per Item</h3>The cost you set in Speed Review goes into Shopify's internal cost field. This is for margin tracking — customers never see it, only the admin. Set it during Speed Review so your numbers are always current.`,
+    related: ['export claude','speed review','universal mode'] },
+
+  // ── SHOVO ─────────────────────────────────────────────────────────
+  { keys: ['shovo','shov','listing assistant','backslash space','what is shovo','assistant','ask question','quick question','i have a question','help me','what does','how does','cant remember','forgot how','shortcut assistant','knowledge'],
+    title: 'Shovo — Listing Assistant',
+    answer: `<h3>What Shovo is</h3>Shovo is the built-in listing assistant for this system. He lives behind <strong>\ + Space</strong> — press backslash then space anywhere on the canvas (while not typing in a field) and he opens instantly as a spotlight overlay in the center of the screen.<h3>How to use him</h3><ol><li>Press <strong>\ then Space</strong> on the canvas</li><li>Type your question in plain English — no special syntax needed</li><li>Hit Enter — Shovo finds the best answer from his knowledge base instantly</li><li>Read the answer. Tap related topic chips to explore further.</li><li>Press <strong>Escape</strong> to close — you are back on the canvas where you left off</li></ol><h3>What you can ask</h3><ul><li>How do I log a drive</li><li>What does 47% health mean</li><li>How does Template Clone work</li><li>My SKU shows #1 — how do I fix it</li><li>What is the flow from intake to Shopify</li><li>How do offer chips get calculated</li><li>How does Fill PO work</li><li>What keyboard shortcuts are available</li></ul><h3>Key facts</h3><ul><li>Fully local — no internet or API needed</li><li>Never says I do not know — if it cannot pinpoint your question it shows related topics</li><li>8 quick suggestion chips appear before you type for the most common questions</li><li>Works anywhere on the canvas — does not interrupt your session</li></ul>`,
+    related: ['g-mode tours','keyboard shortcuts','export claude','log drive'] },
+
+  // ── G-MODE TOURS ─────────────────────────────────────────────────
+  { keys: ['g-mode','guided tour','tour','g mode','how to use','tutorial','training','spotlight tour','know it all','gmode','walkthrough'],
+    title: 'G-Mode and Shovo — the full assistant system',
+    answer: `<h3>G-Mode — guided training</h3>G-Mode is the built-in training system. Access it from the welcome screen or via the floating <strong>⚡ G-Mode</strong> button inside Wan or Haz.<h3>Options</h3><ul><li><strong>Tour Wan</strong> — 6-step spotlight walkthrough of the Batch logging flow. Each step highlights a real screen area.</li><li><strong>Tour Haz</strong> — 6-step spotlight walkthrough of the buying flow from customer arrival to Fill PO.</li><li><strong>Know It All</strong> — pick a topic and walk through a mock real-world scenario beat by beat. Covers: price lookup, offer chips, Abribook codes, drive health, Blitzting, exporting to Claude, Fill PO, SKUs, and Shovo himself.</li></ul><h3>Shovo — the listing assistant</h3>Shovo is separate from G-Mode. Press <strong>\ + Space</strong> anywhere on the canvas to open him — a spotlight search bar appears. Type any question about the system in plain English, hit Enter, and he answers instantly from a local knowledge base. No internet required. Press Escape to close.`,
+    related: ['keyboard shortcuts','blitzting','log drive'] },
+
+];
+
+// ── Flat keyword index for fast lookup ────────────────────────────
+const INDEX = [];
+KB.forEach((entry, i) => {
+  entry.keys.forEach(k => INDEX.push({ term: k.toLowerCase(), idx: i }));
+});
+
+// ── Score a query against all KB entries ─────────────────────────
+function findBestMatch(raw) {
+  const q = raw.toLowerCase().trim();
+  const scores = new Array(KB.length).fill(0);
+
+  INDEX.forEach(({ term, idx }) => {
+    // Exact substring match in query
+    if (q.includes(term)) scores[idx] += term.split(' ').length * 3;
+    // Query words inside term
+    q.split(/\s+/).forEach(word => {
+      if (word.length > 2 && term.includes(word)) scores[idx] += 1;
+    });
+  });
+
+  // Bonus: title word matches
+  KB.forEach((entry, i) => {
+    entry.title.toLowerCase().split(/\s+/).forEach(word => {
+      if (word.length > 3 && q.includes(word)) scores[i] += 2;
+    });
+  });
+
+  const best = scores.indexOf(Math.max(...scores));
+  return { idx: best, score: Math.max(...scores) };
+}
+
+// ── Build related chips ───────────────────────────────────────────
+function buildRelated(entry) {
+  if (!entry.related || entry.related.length === 0) return '';
+  const chips = entry.related.map(key => {
+    const match = KB.find(e => e.keys.some(k => k.includes(key)));
+    if (!match) return '';
+    return `<button class="gai-related-chip" data-q="${match.keys[0]}">${match.title}</button>`;
+  }).filter(Boolean).join('');
+  if (!chips) return '';
+  return `<div class="gai-related"><div class="gai-related-title">Related topics</div><div class="gai-related-chips">${chips}</div></div>`;
+}
+
+// ── Fallback — always useful, never empty ─────────────────────────
+function buildFallback(q) {
+  // Show top partial matches as suggestions
+  const q2 = q.toLowerCase();
+  const partial = KB.filter(e =>
+    e.keys.some(k => k.split(' ').some(w => w.length > 2 && q2.includes(w))) ||
+    e.title.toLowerCase().split(' ').some(w => w.length > 3 && q2.includes(w))
+  ).slice(0, 4);
+
+  const chips = partial.map(e =>
+    `<button class="gai-related-chip" data-q="${e.keys[0]}">${e.title}</button>`
+  ).join('');
+
+  return `<strong>I did not find an exact match for that.</strong> Here are topics that might help:\n\n` +
+    (chips
+      ? `<div class="gai-related-chips" style="margin-top:10px;">${chips}</div>`
+      : `<div style="margin-top:8px;color:rgba(255,255,255,.4);font-size:12px;">Try rephrasing — e.g. "how do I log a drive" or "what is template clone".</div>`) +
+    `<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:rgba(255,255,255,.3);">All topics: Drive logging · RAM · Abribook codes · Drive health · Blitzting · Speed Review · Export to Claude · Universal mode · Haz prices · Offer chips · Fill PO · SKU format · Canvas workspace · Sticky notes · Restore session · Shopify drafts · Shov tours</div>`;
+}
+
+// ── Render answer ─────────────────────────────────────────────────
+function renderAnswer(q) {
+  const { idx, score } = findBestMatch(q);
+  const resultEl = document.getElementById('gModeAIResult');
+  const bodyEl   = document.getElementById('gModeAIBody');
+  const labelEl  = document.getElementById('gModeAIResultLabel');
+
+  resultEl.style.display = 'block';
+  document.getElementById('gModeAISuggestions').style.display = 'none';
+
+  if (score < 2) {
+    if (labelEl) labelEl.textContent = "Shovo couldn't pinpoint that";
+    bodyEl.innerHTML = buildFallback(q);
+  } else {
+    const entry = KB[idx];
+    if (labelEl) labelEl.textContent = entry.title;
+    bodyEl.innerHTML = entry.answer + buildRelated(entry);
+  }
+
+  // Wire related chips
+  bodyEl.querySelectorAll('.gai-related-chip,[data-q]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const q2 = btn.dataset.q;
+      if (document.getElementById('gModeAIInput')) {
+        document.getElementById('gModeAIInput').value = q2;
+      }
+      renderAnswer(q2);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  UI LOGIC
+// ══════════════════════════════════════════════════════════════════
+let gAIOpen = false;
+let gAILastKey = null;
+
+// Trigger: \ then Space
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName;
+  const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+  if (e.key === '\\') { gAILastKey = 'backslash'; return; }
+
+  if (e.key === ' ' && gAILastKey === 'backslash' && !inInput) {
+    e.preventDefault();
+    gAILastKey = null;
+    gAIOpen ? closeGModeAI() : openGModeAI();
+    return;
+  }
+  if (e.key === 'Escape' && gAIOpen) {
+    e.stopPropagation();
+    closeGModeAI();
+    return;
+  }
+  gAILastKey = null;
+});
+
+function openGModeAI() {
+  gAIOpen = true;
+  const el = document.getElementById('gModeAI');
+  el.style.display = 'block';
+  // Trigger Spotlight animation next frame
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { el.classList.add('open'); });
+  });
+  setTimeout(() => {
+    const inp = document.getElementById('gModeAIInput');
+    if (inp) { inp.focus(); inp.value = ''; }
+    document.getElementById('gModeAIResult').style.display = 'none';
+    document.getElementById('gModeAISuggestions').style.display = 'flex';
+    document.getElementById('gModeAIBody').innerHTML = '';
+  }, 40);
+}
+
+function closeGModeAI() {
+  gAIOpen = false;
+  const el = document.getElementById('gModeAI');
+  el.classList.remove('open');
+  setTimeout(() => { el.style.display = 'none'; }, 220);
+}
+
+// Backdrop click
+document.getElementById('gModeAIBackdrop')?.addEventListener('click', closeGModeAI);
+
+// Input — Enter fires answer, live suggestion toggle
+const gAIInput = document.getElementById('gModeAIInput');
+if (gAIInput) {
+  gAIInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && gAIInput.value.trim()) {
+      e.preventDefault();
+      renderAnswer(gAIInput.value.trim());
+    }
+    if (e.key === 'Escape') closeGModeAI();
+    if (e.key === 'ArrowDown') {
+      // Focus first suggestion chip
+      const chip = document.querySelector('#gModeAISuggestions .gai-chip, .gai-related-chip');
+      if (chip) { chip.focus(); e.preventDefault(); }
+    }
+  });
+  gAIInput.addEventListener('input', () => {
+    const has = gAIInput.value.trim().length > 0;
+    document.getElementById('gModeAISuggestions').style.display = has ? 'none' : 'flex';
+  });
+}
+
+// Suggestion chips
+document.querySelectorAll('.gai-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const q = btn.dataset.q;
+    if (gAIInput) gAIInput.value = q;
+    renderAnswer(q);
+  });
+});
+
+})();
+</script>
+
 </body>
 </html>
