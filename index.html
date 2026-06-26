@@ -12804,6 +12804,10 @@ function smoRender() {
   const lister = smoGetLister();
   if (!lister) { smoRenderLockIn(); return; }
 
+  // Don't re-render if user is actively typing in the lock-in form
+  const focused = document.activeElement;
+  if (focused && focused.id === 'smo-batch-input') return;
+
   const bottom = document.querySelector('.smo-bottom');
   if (bottom) bottom.style.display = '';
 
@@ -13081,10 +13085,10 @@ if (isMobile) {
   else document.addEventListener('DOMContentLoaded', showOverlay);
 
   // Re-render every time an entry is added/edited/removed
-  hookDpUpdate(smoRender);
+  hookDpUpdate(() => { if (smoGetLister()) smoRender(); });
 
-  // Also poll every 3s as a safety net (handles cases where hook misses)
-  setInterval(smoRender, 3000);
+  // Poll every 3s but ONLY if lister is already locked in
+  setInterval(() => { if (smoGetLister()) smoRender(); }, 3000);
 } else {
   // Desktop: mirror panel boots when initCanvas calls pmStartPolling
   hookDpUpdate(pmRenderCards);
