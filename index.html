@@ -10681,19 +10681,6 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
   </div>
 </div>
 
-<!-- Photo Mirror Panel Content (injected into WAN board as a panel) -->
-<div id="photoMirrorContent" style="display:none;">
-  <div id="pm-inner" style="padding:12px;display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;overflow-y:auto;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <div id="pm-status-pill" style="font-size:11px;font-weight:600;font-family:var(--mono);background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.25);color:#4ADE80;padding:4px 10px;border-radius:20px;">Waiting for entries…</div>
-      <button id="pm-refresh-btn" style="font-size:11px;font-weight:600;background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);padding:4px 10px;border-radius:20px;cursor:pointer;" onclick="pmRefresh()">⟳ Refresh</button>
-      <button id="pm-ready-btn" style="display:none;font-size:11px;font-weight:700;background:#4ADE80;border:none;color:#0A1A0A;padding:5px 12px;border-radius:20px;cursor:pointer;" onclick="pmCopyReady()">✓ Photos ready — copy message</button>
-    </div>
-    <div id="pm-cards" style="display:flex;flex-direction:column;gap:8px;"></div>
-    <div id="pm-empty" style="color:rgba(255,255,255,.2);font-size:12px;text-align:center;padding:30px 10px;">No manifest entries yet.<br>Add items in the queue panel first.</div>
-  </div>
-</div>
-
 <!-- Canvas -->
 <div id="wanCanvas" style="display:none;">
   <div id="wanCanvasInner" id="wanCanvasInner">
@@ -10765,14 +10752,22 @@ function initCanvas() {
   createPanel('queue',  '📋 Manifest Queue', document.getElementById('draftPanel'),   queuePos);
   createPanel('cart',   '🛒 Session Cart',   document.getElementById('cartPanelContent'), cartPos);
 
-  // Photo Mirror panel
+  // Photo Mirror panel — build content inline, don't move a DOM node
   const photosPos = saved.photos || { x: 1400, y: 20, w: 380, h: 560 };
-  const pmEl = document.getElementById('photoMirrorContent');
-  if (pmEl) {
-    pmEl.style.display = '';
-    createPanel('photos', '📸 Photo Mirror', pmEl, photosPos);
-    pmStartPolling();
-  }
+  const pmHolder  = document.createElement('div');
+  pmHolder.id     = 'photoMirrorContent';
+  pmHolder.innerHTML = `
+    <div id="pm-inner" style="padding:12px;display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;overflow-y:auto;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div id="pm-status-pill" style="font-size:11px;font-weight:600;font-family:var(--mono);background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.25);color:#4ADE80;padding:4px 10px;border-radius:20px;">Waiting for entries…</div>
+        <button id="pm-refresh-btn" style="font-size:11px;font-weight:600;background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);padding:4px 10px;border-radius:20px;cursor:pointer;" onclick="pmRefresh()">⟳ Refresh</button>
+        <button id="pm-ready-btn" style="display:none;font-size:11px;font-weight:700;background:#4ADE80;border:none;color:#0A1A0A;padding:5px 12px;border-radius:20px;cursor:pointer;" onclick="pmCopyReady()">✓ Photos ready — copy message</button>
+      </div>
+      <div id="pm-cards" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="pm-empty" style="color:rgba(255,255,255,.2);font-size:12px;text-align:center;padding:30px 10px;">No manifest entries yet.<br>Add items in the queue panel first.</div>
+    </div>`;
+  createPanel('photos', '📸 Photo Mirror', pmHolder, photosPos);
+  pmStartPolling();
 
   // Show smoke break for Juan only
   setTimeout(() => {
@@ -12585,7 +12580,6 @@ document.querySelectorAll('.gai-chip').forEach(btn => {
 }
 
 /* Photo Mirror panel dark styles */
-#photoMirrorContent { height: 100%; }
 .pm-card {
   background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
   border-radius: 10px; padding: 10px 11px;
