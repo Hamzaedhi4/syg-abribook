@@ -942,8 +942,9 @@
         <div class="welcome-card-desc">Buying intake<br>Offer calculator</div>
       </div>
     </div>
-    <div style="margin-top:18px;text-align:center;">
+    <div style="margin-top:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;">
       <button id="openAboutWelcomeBtn" style="padding:9px 22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;font:600 12px/1 var(--sans);color:rgba(255,255,255,.45);cursor:pointer;letter-spacing:.02em;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.45)'">ℹ About this system</button>
+      <button id="gModeWelcomeBtn" style="padding:9px 22px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;font:700 12px/1 var(--sans);color:rgba(167,170,255,.85);cursor:pointer;letter-spacing:.04em;transition:all .15s;" onmouseover="this.style.background='rgba(99,102,241,.28)';this.style.color='#c7c8ff'" onmouseout="this.style.background='rgba(99,102,241,.15)';this.style.color='rgba(167,170,255,.85)'">⚡ G-Mode — Guided Tour</button>
     </div>
   </div>
 </div>
@@ -7760,6 +7761,334 @@ document.getElementById('promptCopyBtn').addEventListener('click', ()=>{
   document.getElementById('aboutClose').addEventListener('click', closeAbout);
   document.getElementById('aboutCloseBtn').addEventListener('click', closeAbout);
   document.getElementById('aboutBackdrop').addEventListener('click', function(ev){ if(ev.target===this) closeAbout(); });
+})();
+</script>
+<!-- ── G-Mode Tour Picker ── -->
+<div id="gModePicker" style="display:none;position:fixed;inset:0;background:rgba(10,11,16,.88);z-index:400;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:#0F1117;border:1px solid rgba(99,102,241,.3);border-radius:20px;box-shadow:0 0 0 1px rgba(99,102,241,.15),0 32px 80px rgba(0,0,0,.6);width:100%;max-width:420px;overflow:hidden;">
+    <div style="padding:24px 24px 20px;text-align:center;border-bottom:1px solid rgba(255,255,255,.07);">
+      <div style="font-size:26px;margin-bottom:10px;">⚡</div>
+      <div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:6px;">G-Mode — Guided Tour</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.5;">Pick the tool you want to learn.<br>G-Mode will walk you through the whole flow step by step.</div>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+      <button id="gModePickWan" style="padding:16px 18px;background:rgba(99,102,241,.1);border:1.5px solid rgba(99,102,241,.3);border-radius:14px;cursor:pointer;text-align:left;transition:all .15s;" onmouseover="this.style.background='rgba(99,102,241,.22)';this.style.borderColor='rgba(99,102,241,.6)'" onmouseout="this.style.background='rgba(99,102,241,.1)';this.style.borderColor='rgba(99,102,241,.3)'">
+        <div style="font:700 14px/1 var(--sans);color:#a5b4fc;margin-bottom:5px;">📋 Wan — Intake &amp; Listing</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);">Log RAM, storage, phones, laptops, consoles — build listings fast.</div>
+      </button>
+      <button id="gModePickHaz" style="padding:16px 18px;background:rgba(34,197,94,.07);border:1.5px solid rgba(34,197,94,.2);border-radius:14px;cursor:pointer;text-align:left;transition:all .15s;" onmouseover="this.style.background='rgba(34,197,94,.16)';this.style.borderColor='rgba(34,197,94,.5)'" onmouseout="this.style.background='rgba(34,197,94,.07)';this.style.borderColor='rgba(34,197,94,.2)'">
+        <div style="font:700 14px/1 var(--sans);color:#86efac;margin-bottom:5px;">🔍 Haz — Buying &amp; Offers</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);">Look up prices, calculate offers, and log purchase orders.</div>
+      </button>
+    </div>
+    <div style="padding:0 20px 20px;">
+      <button id="gModePickClose" style="width:100%;padding:10px;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:10px;font:600 12px/1 var(--sans);color:rgba(255,255,255,.3);cursor:pointer;">Maybe later</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── G-Mode Spotlight Overlay ── -->
+<div id="gModeOverlay" style="display:none;position:fixed;inset:0;z-index:500;pointer-events:none;">
+  <!-- Dark mask rendered via SVG cutout -->
+  <svg id="gModeMask" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <mask id="spotlight-mask">
+        <rect width="100%" height="100%" fill="white"/>
+        <rect id="gModeHole" x="0" y="0" width="0" height="0" rx="10" fill="black"/>
+      </mask>
+    </defs>
+    <rect width="100%" height="100%" fill="rgba(5,6,12,.82)" mask="url(#spotlight-mask)"/>
+  </svg>
+  <!-- Tooltip bubble -->
+  <div id="gModeBubble" style="position:absolute;background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.35);padding:16px 18px 14px;width:280px;pointer-events:all;transition:opacity .2s;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span id="gModeStepBadge" style="font:700 10px/1 var(--sans);color:#6366F1;text-transform:uppercase;letter-spacing:.08em;background:#EEF2FF;padding:2px 8px;border-radius:20px;">Step 1 of 7</span>
+      <button id="gModeSkip" style="font:600 11px/1 var(--sans);color:#9CA3AF;background:none;border:none;cursor:pointer;padding:0;">Skip tour</button>
+    </div>
+    <div id="gModeTitle" style="font:700 14px/1.3 var(--sans);color:#111;margin-bottom:6px;"></div>
+    <div id="gModeBody" style="font-size:12.5px;color:#555;line-height:1.55;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
+      <button id="gModePrev" style="padding:7px 14px;background:transparent;border:1px solid #E5E7EB;border-radius:8px;font:600 12px/1 var(--sans);color:#6B7280;cursor:pointer;">← Back</button>
+      <button id="gModeNext" style="padding:7px 18px;background:#6366F1;border:none;border-radius:8px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── G-Mode Floating Buttons (inside each tool) ── -->
+<button id="gModeFloatWan" style="display:none;position:fixed;bottom:20px;right:20px;z-index:450;padding:10px 16px;background:#6366F1;border:none;border-radius:999px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;box-shadow:0 4px 18px rgba(99,102,241,.5);letter-spacing:.03em;transition:all .2s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">⚡ G-Mode</button>
+<button id="gModeFloatHaz" style="display:none;position:fixed;bottom:20px;right:20px;z-index:450;padding:10px 16px;background:#16A34A;border:none;border-radius:999px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;box-shadow:0 4px 18px rgba(22,163,74,.45);letter-spacing:.03em;transition:all .2s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">⚡ G-Mode</button>
+
+<script>
+(function(){
+
+// ── Tour definitions ──────────────────────────────────────────────
+const WAN_TOUR = [
+  {
+    id: 'listerBar',
+    title: 'Start here — who are you?',
+    body: 'Select your name and enter your batch number before doing anything else. Your initial gets stamped on every SKU you generate, so every item is traceable back to you.',
+    pad: 8
+  },
+  {
+    id: 'workPageSelect',
+    title: 'Pick your page',
+    body: 'This dropdown switches between Batch (RAM & storage), Universal (phones, laptops, consoles, etc.), and Blitzting. Choose based on what\'s in your hand.',
+    pad: 8
+  },
+  {
+    id: 'dpPanelBatch',
+    title: 'Batch mode — RAM & storage',
+    body: 'This is where you log drives and RAM. Each card takes a short code, the health %, serial number, and any notes. The code is the shorthand — it already knows what the item is.',
+    pad: 10
+  },
+  {
+    id: 'dpAddEntry',
+    title: 'Add an entry',
+    body: 'Tap here to add a new item card. Fill in the code, run the health test, enter the serial, and add any relevant notes. Repeat for each item in the batch.',
+    pad: 8
+  },
+  {
+    id: 'dpEntries',
+    title: 'Your queue builds up here',
+    body: 'Every item you log appears as a draggable card. You can reorder them, edit them, or remove them before export. Nothing goes to Claude until you\'re ready.',
+    pad: 8
+  },
+  {
+    id: 'dpCopyAll',
+    title: 'Export to Claude',
+    body: 'When the session is done, hit this button. Abribook builds the right prompt automatically — Batch entries go to the listing generator, Universal entries go to the listing-edit prompt. Just paste and go.',
+    pad: 10
+  }
+];
+
+const HAZ_TOUR = [
+  {
+    id: 'hazWrap',
+    title: 'Welcome to Haz',
+    body: 'Haz is the buying assistant. You\'re here when a customer brings something in and you need to know what to offer — fast. Everything on this screen is focused on that one decision.',
+    pad: 0,
+    full: true
+  },
+  {
+    id: 'haz-search-region',
+    selector: '.haz-search-box',
+    title: 'Type what they brought in',
+    body: 'Type the device name here — model, brand, whatever you know. Haz searches its database of 974+ real SYG prices and market rates and returns the closest match.',
+    pad: 10
+  },
+  {
+    id: 'haz-result-region',
+    selector: '.haz-result',
+    title: 'Read the result',
+    body: 'The result shows the matched item, the price, and a badge telling you where that price came from — SYG Sold (green) means we actually sold it at that price, SYG Listed (blue) is current store price, Market Est (gray) is a general reference.',
+    pad: 10
+  },
+  {
+    id: 'haz-offers-region',
+    selector: '.haz-offer-cards',
+    title: 'Pick your offer',
+    body: 'Haz calculates three offer tiers automatically — Good (safe buy), Fair (middle ground), and Low (tight margin). Tap the one you want and it fills in the Accepted At field on the intake board.',
+    pad: 10
+  },
+  {
+    id: 'hazLeft',
+    selector: '.haz-left',
+    title: 'The intake board',
+    body: 'This is where you build the customer\'s session — what they brought in, what you offered, what was accepted. Keep this updated as you go through their items.',
+    pad: 10
+  },
+  {
+    id: 'haz-fillpo-region',
+    selector: '.haz-fill-po-btn',
+    title: 'Fill PO automatically',
+    body: 'Once you\'ve agreed on a price, hit Fill PO. Haz generates a prompt you paste into Claude in Chrome — Claude then fills out the purchase order form on the SYG platform for you. Make sure the customer is already selected first.',
+    pad: 10
+  }
+];
+
+// ── State ──────────────────────────────────────────────────────────
+let gTour = null;
+let gStep = 0;
+let gActive = false;
+
+// ── Helpers ────────────────────────────────────────────────────────
+function getEl(step) {
+  if (step.selector) return document.querySelector(step.selector);
+  return document.getElementById(step.id);
+}
+
+function getRect(el) {
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return { x: r.left, y: r.top, w: r.width, h: r.height };
+}
+
+function positionBubble(rect, pad) {
+  const bubble = document.getElementById('gModeBubble');
+  const bW = 280, bH = bubble.offsetHeight || 160;
+  const vW = window.innerWidth, vH = window.innerHeight;
+  const p = pad || 10;
+
+  // Try below, then above, then right, then left
+  let top, left;
+
+  if (rect.y + rect.h + p + bH < vH) {
+    // Below
+    top  = rect.y + rect.h + p + 8;
+    left = Math.max(12, Math.min(rect.x + rect.w/2 - bW/2, vW - bW - 12));
+  } else if (rect.y - p - bH > 0) {
+    // Above
+    top  = rect.y - p - bH - 8;
+    left = Math.max(12, Math.min(rect.x + rect.w/2 - bW/2, vW - bW - 12));
+  } else if (rect.x + rect.w + p + bW < vW) {
+    // Right
+    left = rect.x + rect.w + p + 8;
+    top  = Math.max(12, Math.min(rect.y + rect.h/2 - bH/2, vH - bH - 12));
+  } else {
+    // Left
+    left = rect.x - p - bW - 8;
+    top  = Math.max(12, Math.min(rect.y + rect.h/2 - bH/2, vH - bH - 12));
+  }
+
+  bubble.style.top  = Math.max(8, top)  + 'px';
+  bubble.style.left = Math.max(8, left) + 'px';
+}
+
+function renderStep() {
+  if (!gTour || gStep >= gTour.length) { endTour(); return; }
+  const step = gTour[gStep];
+  const el   = getEl(step);
+  const pad  = step.pad || 10;
+  const total = gTour.length;
+
+  // Update text
+  document.getElementById('gModeStepBadge').textContent = 'Step '+(gStep+1)+' of '+total;
+  document.getElementById('gModeTitle').textContent = step.title;
+  document.getElementById('gModeBody').textContent  = step.body;
+  document.getElementById('gModePrev').style.visibility = gStep === 0 ? 'hidden' : 'visible';
+  document.getElementById('gModeNext').textContent = gStep === total-1 ? 'Finish ✓' : 'Next →';
+
+  if (!el || step.full) {
+    // Full-screen dim, no cutout
+    document.getElementById('gModeHole').setAttribute('width', '0');
+    document.getElementById('gModeHole').setAttribute('height', '0');
+    const bubble = document.getElementById('gModeBubble');
+    bubble.style.top  = '50%';
+    bubble.style.left = '50%';
+    bubble.style.transform = 'translate(-50%, -40%)';
+    return;
+  }
+
+  document.getElementById('gModeBubble').style.transform = '';
+
+  // Scroll element into view
+  el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  setTimeout(()=>{
+    const r = getRect(el);
+    if (!r) return;
+
+    // Punch hole in overlay
+    const hole = document.getElementById('gModeHole');
+    hole.setAttribute('x',      r.x - pad);
+    hole.setAttribute('y',      r.y - pad);
+    hole.setAttribute('width',  r.w + pad*2);
+    hole.setAttribute('height', r.h + pad*2);
+    hole.setAttribute('rx', 10);
+
+    positionBubble({x: r.x-pad, y: r.y-pad, w: r.w+pad*2, h: r.h+pad*2}, 0);
+  }, 120);
+}
+
+function startTour(tour) {
+  gTour  = tour;
+  gStep  = 0;
+  gActive = true;
+  document.getElementById('gModeOverlay').style.display = 'block';
+  renderStep();
+}
+
+function endTour() {
+  gActive = false;
+  gTour   = null;
+  gStep   = 0;
+  document.getElementById('gModeOverlay').style.display = 'none';
+  document.getElementById('gModeHole').setAttribute('width','0');
+  document.getElementById('gModeHole').setAttribute('height','0');
+}
+
+// ── Picker ─────────────────────────────────────────────────────────
+function openPicker() {
+  document.getElementById('gModePicker').style.display = 'flex';
+}
+function closePicker() {
+  document.getElementById('gModePicker').style.display = 'none';
+}
+
+// Welcome screen button
+document.getElementById('gModeWelcomeBtn').addEventListener('click', openPicker);
+
+// Picker choices
+document.getElementById('gModePickWan').addEventListener('click', ()=>{
+  closePicker();
+  // Navigate to Wan first
+  const wanCard = document.getElementById('welcomeWan');
+  if (wanCard) wanCard.click();
+  setTimeout(()=> startTour(WAN_TOUR), 400);
+});
+document.getElementById('gModePickHaz').addEventListener('click', ()=>{
+  closePicker();
+  const hazCard = document.getElementById('welcomeHaz');
+  if (hazCard) hazCard.click();
+  setTimeout(()=> startTour(HAZ_TOUR), 400);
+});
+document.getElementById('gModePickClose').addEventListener('click', closePicker);
+document.getElementById('gModePicker').addEventListener('click', e=>{
+  if (e.target === document.getElementById('gModePicker')) closePicker();
+});
+
+// ── Floating buttons ───────────────────────────────────────────────
+document.getElementById('gModeFloatWan').addEventListener('click', ()=> startTour(WAN_TOUR));
+document.getElementById('gModeFloatHaz').addEventListener('click', ()=> startTour(HAZ_TOUR));
+
+// Show/hide floating buttons based on current tool
+function syncFloatButtons() {
+  const page = window.CURRENT_WORK_PAGE || '';
+  const onHaz = !!document.getElementById('hazWrap') &&
+                document.getElementById('hazWrap').style.display !== 'none' &&
+                !document.getElementById('welcomeBackdrop')?.classList.contains('hidden') === false &&
+                document.getElementById('welcomeBackdrop')?.style.display === 'none';
+
+  // Simpler: just watch which wrap is visible
+  const hazVisible = document.getElementById('hazWrap') &&
+                     !document.getElementById('hazWrap').classList.contains('hidden') &&
+                     document.getElementById('hazWrap').style.display !== 'none';
+  const wanVisible = !hazVisible && document.getElementById('welcomeBackdrop') &&
+                     document.getElementById('welcomeBackdrop').style.display === 'none';
+
+  document.getElementById('gModeFloatWan').style.display = (wanVisible && !gActive) ? 'block' : 'none';
+  document.getElementById('gModeFloatHaz').style.display = (hazVisible && !gActive) ? 'block' : 'none';
+}
+
+// Poll every second (lightweight)
+setInterval(syncFloatButtons, 1000);
+
+// ── Navigation ─────────────────────────────────────────────────────
+document.getElementById('gModeNext').addEventListener('click', ()=>{
+  if (gStep >= gTour.length - 1) { endTour(); return; }
+  gStep++;
+  renderStep();
+});
+document.getElementById('gModePrev').addEventListener('click', ()=>{
+  if (gStep <= 0) return;
+  gStep--;
+  renderStep();
+});
+document.getElementById('gModeSkip').addEventListener('click', endTour);
+
+// Re-render on resize
+window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
+
 })();
 </script>
 </body>
