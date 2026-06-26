@@ -12619,6 +12619,7 @@ document.querySelectorAll('.gai-chip').forEach(btn => {
   <div class="smo-body" id="smo-body"></div>
   <div class="smo-bottom">
     <button class="smo-btn-skip" onclick="smoSkipAll()">Skip all</button>
+    <button class="smo-btn-skip" style="flex:none;width:44px;" onclick="smoRender()" title="Refresh">⟳</button>
     <button class="smo-btn-push" onclick="smoCopyReady()">✓ Mark ready</button>
   </div>
 </div>
@@ -12630,6 +12631,100 @@ document.querySelectorAll('.gai-chip').forEach(btn => {
 const CLOUD   = 'dic0mifhj';
 const PRESET  = 'syg_unsigned';
 const PM_KEY  = 'syg_photo_urls'; // localStorage key: {sku: [url, ...]}
+const SMO_LS_KEY = 'syg_mobile_lister_v1';
+
+const SMO_LISTERS = [
+  { initial: 'J',  name: 'Juan' },
+  { initial: 'IS', name: 'Ibrahim' },
+  { initial: 'P',  name: 'Paul' },
+];
+
+function smoGetLister() {
+  try { return JSON.parse(localStorage.getItem(SMO_LS_KEY) || 'null'); } catch(e) { return null; }
+}
+function smoSaveLister(initial, batch) {
+  try { localStorage.setItem(SMO_LS_KEY, JSON.stringify({ initial, batch })); } catch(e) {}
+}
+function smoClearLister() {
+  try { localStorage.removeItem(SMO_LS_KEY); } catch(e) {}
+}
+
+// Build SKU on mobile independently of desktop LISTER_INITIAL
+function smoMakeSKU(index, lister) {
+  if (!lister || !lister.initial || !lister.batch) return '#' + (index + 1);
+  return 'NJ02-' + lister.initial + '-' + lister.batch + '-' + (index + 1);
+}
+
+let smoSelectedInitial = '';
+let smoSelectedName = '';
+
+function smoRenderLockIn() {
+  const body   = document.getElementById('smo-body');
+  const bottom = document.querySelector('.smo-bottom');
+  if (bottom) bottom.style.display = 'none';
+  document.getElementById('smo-batch-label').textContent = 'Who are you?';
+  document.getElementById('smo-progress-label').textContent = 'Select your name and batch to load items.';
+  document.getElementById('smo-progress-fill').style.width = '0%';
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;padding:8px 0;">
+      <div>
+        <p style="font-size:11px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px;">Your name</p>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="smo-lister-btns">
+          ${SMO_LISTERS.map(l => `
+            <button onclick="smoSelectLister('${l.initial}','${l.name}',this)"
+              data-initial="${l.initial}"
+              style="padding:13px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+              border-radius:10px;color:rgba(255,255,255,.7);font-size:14px;font-weight:600;
+              text-align:left;cursor:pointer;">
+              ${l.name}
+              <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.3);margin-left:6px;">${l.initial}</span>
+            </button>`).join('')}
+        </div>
+      </div>
+      <div id="smo-batch-field" style="display:none;">
+        <p style="font-size:11px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px;">Batch number</p>
+        <input id="smo-batch-input" type="text" placeholder="e.g. RTL0623"
+          maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false"
+          style="width:100%;padding:13px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+          border-radius:10px;color:#fff;font-size:15px;font-family:monospace;outline:none;box-sizing:border-box;">
+        <button onclick="smoLockIn()"
+          style="margin-top:10px;width:100%;padding:13px;background:#1F4E79;border:none;border-radius:10px;
+          color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
+          Continue →
+        </button>
+      </div>
+    </div>`;
+}
+
+window.smoSelectLister = function(initial, name, btn) {
+  smoSelectedInitial = initial;
+  smoSelectedName    = name;
+  document.querySelectorAll('#smo-lister-btns button').forEach(b => {
+    b.style.background   = 'rgba(255,255,255,.05)';
+    b.style.borderColor  = 'rgba(255,255,255,.1)';
+    b.style.color        = 'rgba(255,255,255,.7)';
+  });
+  btn.style.background  = 'rgba(31,78,121,.4)';
+  btn.style.borderColor = '#1F4E79';
+  btn.style.color       = '#fff';
+  document.getElementById('smo-batch-field').style.display = '';
+  setTimeout(() => document.getElementById('smo-batch-input')?.focus(), 50);
+};
+
+window.smoLockIn = function() {
+  const batch = (document.getElementById('smo-batch-input')?.value || '').trim().toUpperCase();
+  if (!smoSelectedInitial) { alert('Select your name first'); return; }
+  if (!batch || batch.length < 6) { alert('Enter a full batch number, e.g. RTL0623'); return; }
+  smoSaveLister(smoSelectedInitial, batch);
+  const bottom = document.querySelector('.smo-bottom');
+  if (bottom) bottom.style.display = '';
+  smoRender();
+};
+
+window.smoSignOut = function() {
+  smoClearLister();
+  smoRenderLockIn();
+};
 
 // ─── Shared photo store (used by both mobile and mirror) ──────────
 function pmGetStore() {
@@ -12647,10 +12742,15 @@ function pmAddUrls(sku, urls) {
 // ─── Get current dpEntries as [{sku, title}] ─────────────────────
 function getSKUList() {
   if (typeof dpEntries === 'undefined' || !dpEntries.length) return [];
+  const mobileLister = isMobile ? smoGetLister() : null;
   return dpEntries.map((e, i) => {
-    const sku = (typeof dpEntrySkuLabel === 'function') ? dpEntrySkuLabel(e) : ('#' + (i+1));
-    const title = e.code || '—';
-    return { sku, title, code: e.code, result: e.result, sn: e.sn };
+    let sku;
+    if (mobileLister) {
+      sku = smoMakeSKU(i, mobileLister);
+    } else {
+      sku = (typeof dpEntrySkuLabel === 'function') ? dpEntrySkuLabel(e) : ('#' + (i+1));
+    }
+    return { sku, title: e.code || '—', code: e.code, result: e.result, sn: e.sn };
   }).filter(x => x.sku && x.code);
 }
 
@@ -12673,8 +12773,13 @@ async function uploadToCloudinary(file, sku) {
 
 // Fetch uploaded URLs for a SKU from Cloudinary tag list
 async function fetchUrlsForSKU(sku) {
+  if (!sku || sku.startsWith('#')) return []; // lister not locked in yet
   try {
     const res = await fetch(`https://res.cloudinary.com/${CLOUD}/image/list/${encodeURIComponent(sku)}.json`);
+    if (res.status === 401) {
+      console.warn('[SYG Photo] Cloudinary tag list is restricted. Go to Cloudinary Dashboard → Settings → Security → uncheck "Resource list".');
+      return [];
+    }
     if (!res.ok) return [];
     const data = await res.json();
     return (data.resources || []).map(r => `https://res.cloudinary.com/${CLOUD}/image/upload/${r.public_id}`);
@@ -12685,6 +12790,7 @@ async function fetchUrlsForSKU(sku) {
 //  MOBILE OVERLAY
 // ═══════════════════════════════════════════════════════════════════
 const isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+console.log('[SYG Photo] isMobile:', isMobile, '| width:', window.innerWidth, '| UA:', navigator.userAgent.substring(0,60));
 
 function smoGetItems() {
   const store = pmGetStore();
@@ -12695,22 +12801,29 @@ function smoGetItems() {
 }
 
 function smoRender() {
+  const lister = smoGetLister();
+  if (!lister) { smoRenderLockIn(); return; }
+
+  const bottom = document.querySelector('.smo-bottom');
+  if (bottom) bottom.style.display = '';
+
   const items  = smoGetItems();
   const done   = items.filter(x => x.photos.length > 0);
-  const pending = items.filter(x => x.photos.length === 0);
   const total  = items.length;
   const doneN  = done.length;
 
-  // Header
-  const batchLabel = (typeof LISTER_BATCH !== 'undefined' && LISTER_BATCH)
-    ? `${LISTER_BATCH} · ${total} items · ${doneN} of ${total} done`
-    : `${total} items · ${doneN} of ${total} done`;
-  document.getElementById('smo-batch-label').textContent = batchLabel;
+  const listerName = SMO_LISTERS.find(l => l.initial === lister.initial)?.name || lister.initial;
+  document.getElementById('smo-batch-label').textContent =
+    `${lister.batch} · ${listerName} · ${doneN} of ${total} done`;
   document.getElementById('smo-progress-fill').style.width = total ? Math.round(doneN/total*100)+'%' : '0%';
-  document.getElementById('smo-progress-label').textContent = `${doneN} of ${total} items have photos`;
+  document.getElementById('smo-progress-label').innerHTML =
+    `${doneN} of ${total} items have photos · `
+    + `<span onclick="smoSignOut()" style="color:#818CF8;text-decoration:underline;cursor:pointer;">Switch lister</span>`;
 
   const body = document.getElementById('smo-body');
   body.innerHTML = '';
+
+  const pending = items.filter(x => x.photos.length === 0);
 
   if (!items.length) {
     body.innerHTML = '<p style="color:rgba(255,255,255,.25);font-size:13px;text-align:center;padding:40px 0;">No entries yet — add items in the manifest queue on desktop first.</p>';
@@ -12954,8 +13067,15 @@ function hookDpUpdate(cb) {
 if (isMobile) {
   // Show overlay immediately, then keep re-rendering as entries arrive
   const showOverlay = () => {
-    document.getElementById('syg-mobile-overlay').classList.add('visible');
-    smoRender();
+    const overlay = document.getElementById('syg-mobile-overlay');
+    overlay.classList.add('visible');
+    overlay.style.cssText += ';display:flex!important;';
+    const lister = smoGetLister();
+    if (!lister) {
+      smoRenderLockIn();
+    } else {
+      smoRender();
+    }
   };
   if (document.readyState !== 'loading') showOverlay();
   else document.addEventListener('DOMContentLoaded', showOverlay);
