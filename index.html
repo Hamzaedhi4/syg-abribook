@@ -1542,7 +1542,7 @@
                 <div>② Check off what <strong style="color:var(--ink);">differs per unit</strong> — Health, Serial, or Notes</div>
                 <div>③ Set how many units and hit <strong style="color:var(--ink);">Generate slots →</strong></div>
                 <div>④ Fill in the unique value for each slot — Wan will suggest the next serial number in sequence if it detects a hex pattern</div>
-                <div>⑤ Hit <strong style="color:var(--ink);">✓ Copy All entries</strong> — paste straight into Claude</div>
+                <div>⑤ Hit <strong style="color:var(--ink);">✓ Add all to queue</strong> — entries go straight into the manifest queue</div>
               </div>
             </div>
             <div style="background:var(--accent-tint);border-left:3px solid var(--accent);border-radius:0 var(--r-md) var(--r-md) 0;padding:8px 11px;font-size:12.5px;color:var(--accent-ink);">
@@ -1638,7 +1638,7 @@
 
       <div class="blitz-slots" id="blitzSlots"></div>
 
-      <button class="blitz-copy-all" id="blitzCopyAll" style="display:none">✓ Copy All entries</button>
+      <button class="blitz-copy-all" id="blitzCopyAll" style="display:none">✓ Add all to queue</button>
     </div>
 
     <!-- Speed Review Section -->
@@ -3330,7 +3330,7 @@ function switchWorkPage(page){
   if(p) p.textContent = page==='universal'
     ? 'Universal entries are stored here first. Review everything, then copy the Claude manifest-prep prompt or sync to the Universal Sheet.'
     : page==='blitzting'
-    ? 'Template Clone or Speed Review your listings fast.'
+    ? 'Template Clone feeds the queue fast. Speed Review QCs everything before export.'
     : 'Store RAM/storage data first. Review the full batch at the end, then copy the Claude manifest-prep prompt or sync to the Universal Sheet.';
 }
 
@@ -3658,13 +3658,40 @@ function allManifestObjects(){
 }
 function buildClaudePrepPrompt(){
   const entries = allManifestObjects();
-  const payload = entries.map((e, i)=>({
-    entry_number:i+1, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister, website_sku:e.website_sku, panel:e.panel, item_type:e.item_type,
-    abribook_code:e.abribook_code, serial_number:e.serial_number, health_test_result:e.health_test_result, raw_item_description:e.raw_item_description,
-    testing_notes:e.testing_notes, condition_notes:e.condition_notes, known_issues_missing_parts:e.known_issues, notes_for_claude:e.notes_for_claude,
-    title_preview:e.title_preview, html_description_preview:e.html_description_preview, metafields_preview:e.metafields_preview, needs_research:e.needs_research||'', status:e.status
-  }));
-  return `You are preparing the SYG manifest for bulk listing edits.\n\nRules:\n- Website SKU is the matching key. Do not change it.\n- Do not invent missing specs. Mark missing info as MISSING.\n- For Batch entries, preserve Abribook code, serial, health/test result, and notes.\n- For Universal entries, use the item type and typed fields to generate category-correct title, compact HTML description, and metafields.\n- Every final HTML description must include Shipping and Returns rows using the provided policy values.\n- Respect Needs Research. If an entry is Needs Research, explain what must be verified before listing.\n- If an entry is ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- Universal item types are CPU, GPU, Console, Laptop, Desktop, Phone, Motherboard.\n\nSHOPIFY METAFIELD KEYS (namespace: custom) — use ONLY these exact keys, no others:\n  type, brand, model, model_number, features, screen_size, color, connectivity,\n  processor, storage_capacity, operating_system, ram, gpu, mpn, network,\n  platform, release_year, game_name, upc\n\nPer item type, fill only the relevant keys:\n- Console:     type, brand, model, model_number, storage_capacity, color, network, mpn\n- Phone:       type, brand, model, model_number, storage_capacity, color, network, operating_system, screen_size, mpn, upc\n- Laptop:      type, brand, model, model_number, processor, ram, storage_capacity, gpu, operating_system, screen_size, mpn\n- Desktop:     type, brand, model, processor, ram, storage_capacity, gpu, operating_system, mpn\n- GPU:         type, brand, model, model_number, gpu, features, mpn\n- CPU:         type, brand, model, model_number, processor, platform, mpn\n- Motherboard: type, brand, model, model_number, platform, features, mpn\n\nDo NOT output keys like console_model, edition_storage, controller_included, cables_included, shipping, returns, or any other freeform keys not in the list above.\n\nReturn one completed row per Website SKU with these columns:\nWebsite SKU | Internal SKU | Item Type | Corrected Title | Final HTML Description | Final Metafields | Missing Info Warnings | Photo Reminder | Status\n\nBatch manifest data:\n${JSON.stringify(payload,null,2)}`;
+
+  // Split by panel type
+  const batchEntries = entries.filter(e => e.panel === 'Batch');
+  const uniEntries   = entries.filter(e => e.panel === 'Universal');
+
+  const parts = [];
+
+  // ── Batch → syg-listing-generator skill ──────────────────────
+  if(batchEntries.length){
+    const batchLines = batchEntries.map(e => e.entry_line).filter(Boolean);
+    parts.push(
+      `// ═══════════════════════════════════════════════════════════\n` +
+      `// BATCH ENTRIES (RAM / Storage)\n` +
+      `// Use the /syg-listing-generator skill — load it first, then paste these lines.\n` +
+      `// DO NOT use the Universal listing-edit prompt for these.\n` +
+      `// ═══════════════════════════════════════════════════════════\n\n` +
+      batchLines.join('\n')
+    );
+  }
+
+  // ── Universal → listing-edit system prompt ───────────────────
+  if(uniEntries.length){
+    const payload = uniEntries.map((e, i)=>({
+      entry_number:i+1, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister, website_sku:e.website_sku, panel:e.panel, item_type:e.item_type,
+      abribook_code:e.abribook_code, serial_number:e.serial_number, health_test_result:e.health_test_result, raw_item_description:e.raw_item_description,
+      testing_notes:e.testing_notes, condition_notes:e.condition_notes, known_issues_missing_parts:e.known_issues, notes_for_claude:e.notes_for_claude,
+      title_preview:e.title_preview, html_description_preview:e.html_description_preview, metafields_preview:e.metafields_preview, needs_research:e.needs_research||'', status:e.status
+    }));
+    parts.push(
+      `You are preparing the SYG manifest for bulk listing edits.\n\nRules:\n- Website SKU is the matching key. Do not change it.\n- Do not invent missing specs. Mark missing info as MISSING.\n- For Universal entries, use the item type and typed fields to generate category-correct title, compact HTML description, and metafields.\n- Every final HTML description must include Shipping and Returns rows using the provided policy values.\n- Respect Needs Research. If an entry is Needs Research, explain what must be verified before listing.\n- If an entry is ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- Universal item types are CPU, GPU, Console, Laptop, Desktop, Phone, Motherboard.\n\nSHOPIFY METAFIELD KEYS (namespace: custom) — use ONLY these exact keys, no others:\n  type, brand, model, model_number, features, screen_size, color, connectivity,\n  processor, storage_capacity, operating_system, ram, gpu, mpn, network,\n  platform, release_year, game_name, upc\n\nPer item type, fill only the relevant keys:\n- Console:     type, brand, model, model_number, storage_capacity, color, network, mpn\n- Phone:       type, brand, model, model_number, storage_capacity, color, network, operating_system, screen_size, mpn, upc\n- Laptop:      type, brand, model, model_number, processor, ram, storage_capacity, gpu, operating_system, screen_size, mpn\n- Desktop:     type, brand, model, processor, ram, storage_capacity, gpu, operating_system, mpn\n- GPU:         type, brand, model, model_number, gpu, features, mpn\n- CPU:         type, brand, model, model_number, processor, platform, mpn\n- Motherboard: type, brand, model, model_number, platform, features, mpn\n\nDo NOT output keys like console_model, edition_storage, controller_included, cables_included, shipping, returns, or any other freeform keys not in the list above.\n\nReturn one completed row per Website SKU with these columns:\nWebsite SKU | Internal SKU | Item Type | Corrected Title | Final HTML Description | Final Metafields | Missing Info Warnings | Photo Reminder | Status\n\nUniversal manifest data:\n${JSON.stringify(payload,null,2)}`
+    );
+  }
+
+  return parts.join('\n\n// ────────────────────────────────────────────────────────────\n\n');
 }
 function dpManifestPreviewText(){
   const batchLines = dpEntries.map(dpLineFor).filter(Boolean);
@@ -4159,18 +4186,37 @@ document.getElementById('blitzCopyAll').addEventListener('click',()=>{
   const diffS  = document.getElementById('blitzDiffSerial').checked;
   const diffN  = document.getElementById('blitzDiffNotes').checked;
 
-  const lines = [];
+  if(!code){ toast('Enter a code in the Master Entry first'); return; }
+
+  let added = 0;
   for(let i=0;i<_blitzSlotCount;i++){
     const h = diffH ? (document.getElementById('blitz-h-'+i)||{}).value||health : health;
     const s = diffS ? (document.getElementById('blitz-s-'+i)||{}).value||'' : '';
     const n = diffN ? (document.getElementById('blitz-n-'+i)||{}).value||notes : notes;
-    const hFmt = h ? h.replace(/%/g,'')+'% Health' : '';
-    let line = '*'+code+(hFmt?' '+hFmt:'')+(n?' '+n:'')+(s?' SN: '+s:'');
-    line += ' | SKU: '+listerSKU(i+1);
-    line += ' <!-- Listed by: '+(LISTER_INITIAL==='J'?'Juan':LISTER_INITIAL==='IS'?'Ibrahim':'Paul')+' ('+LISTER_INITIAL+') | NJ02 -->';
-    lines.push(line);
+
+    // Push into Batch queue (dpEntries) as a storage/RAM entry
+    const e = {
+      id: dpNextId++,
+      code, sn: s, result: h ? h.replace(/%/g,'')+'% Health' : '',
+      notes: n, ram: false, pairsOn: false, pairs: 1,
+      websiteSku: '', price: '', addedAt: Date.now()
+    };
+    dpEntries.push(e);
+    dpRenderEntry && dpRenderEntry(e);
+    added++;
   }
-  copyText(lines.join('\n'), ()=> toast('Copied '+_blitzSlotCount+' cloned entries'));
+
+  dpUpdatePreviewAll && dpUpdatePreviewAll();
+  updateGoalCounter && updateGoalCounter();
+  toast('Added '+added+' entr'+(added===1?'y':'ies')+' to the queue ✓');
+
+  // Reset form for next batch
+  document.getElementById('blitzMasterCode').value = '';
+  document.getElementById('blitzMasterHealth').value = '';
+  document.getElementById('blitzMasterNotes').value = '';
+  document.getElementById('blitzSlots').innerHTML = '';
+  document.getElementById('blitzCopyAll').style.display = 'none';
+  _blitzSlotCount = 0;
 });
 
 // ── Speed Review ──────────────────────────────────────────────────
@@ -4227,20 +4273,34 @@ async function blitzLoadShopify(){
 }
 
 function blitzReviewInit(){
-  // Build queue from session entries
-  _brQueue = dpEntries
+  // Build queue from BOTH Batch (dpEntries) and Universal (uniEntriesData)
+  const batchQ = dpEntries
     .filter(e => e.code || e.websiteSku)
     .map((e,i)=>({
-      id: e.id,
+      id: 'batch-'+e.id,
       sku: dpEntrySkuLabel(e),
-      title: dpLineFor(e).split(' | ')[0].replace('*',''),
+      title: dpLineFor(e).split(' | ')[0].replace('*','').trim(),
       price: '',
       qty: e.pairsOn ? (e.pairs||1) : 1,
       metafields: {},
       desc: dpLineFor(e),
+      panel: 'Batch',
       flagged: false,
       approved: false,
     }));
+  const uniQ = (uniEntriesData||[]).map((e,i)=>({
+    id: 'uni-'+e.id,
+    sku: e.websiteSku || e.id,
+    title: (e.titlePreview || (e.brand+' '+e.model)||e.itemType||'Universal entry').trim(),
+    price: e.price || '',
+    qty: 1,
+    metafields: {},
+    desc: uniEntryLine ? uniEntryLine(e,0) : '',
+    panel: 'Universal',
+    flagged: false,
+    approved: false,
+  }));
+  _brQueue = batchQ.concat(uniQ);
   _brIdx = 0;
   _brFlagged = [];
   blitzRenderReview();
