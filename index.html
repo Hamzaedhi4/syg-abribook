@@ -5894,23 +5894,21 @@ dpUpdatePreviewAll = function(){
   });
   const el = document.getElementById('dpPreviewAll');
   if(el) el.textContent = dpManifestPreviewText();
-  // Sync entries to localStorage so phone can read them
+  // Sync to localStorage so phone can read entries
   try {
-    const payload = dpEntries.map((e, i) => ({
-      idx:    i,
-      code:   e.code   || '',
-      result: e.result || '',
-      sn:     e.sn     || '',
-      notes:  e.notes  || '',
-      sku:    dpEntrySkuLabel(e)
-    }));
     localStorage.setItem('syg_dp_entries', JSON.stringify({
       batch:   LISTER_BATCH   || '',
       initial: LISTER_INITIAL || '',
-      entries: payload,
-      ts:      Date.now()
+      entries: dpEntries.map((e,i) => ({
+        code:   e.code   || '',
+        result: e.result || '',
+        sn:     e.sn     || '',
+        notes:  e.notes  || '',
+        sku:    dpEntrySkuLabel(e)
+      })),
+      ts: Date.now()
     }));
-  } catch(e) {}
+  } catch(_){}
 };
 
 async function syncManifestEntries(){
@@ -10769,19 +10767,18 @@ function initCanvas() {
   createPanel('queue',  '📋 Manifest Queue', document.getElementById('draftPanel'),   queuePos);
   createPanel('cart',   '🛒 Session Cart',   document.getElementById('cartPanelContent'), cartPos);
 
-  // Photo Mirror panel — build content inline, don't move a DOM node
+  // Photo Mirror panel
   const photosPos = saved.photos || { x: 1400, y: 20, w: 380, h: 560 };
   const pmHolder  = document.createElement('div');
-  pmHolder.id     = 'photoMirrorContent';
   pmHolder.innerHTML = `
     <div id="pm-inner" style="padding:12px;display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;overflow-y:auto;">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <div id="pm-status-pill" style="font-size:11px;font-weight:600;font-family:var(--mono);background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.25);color:#4ADE80;padding:4px 10px;border-radius:20px;">Waiting for entries…</div>
-        <button id="pm-refresh-btn" style="font-size:11px;font-weight:600;background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);padding:4px 10px;border-radius:20px;cursor:pointer;" onclick="pmRefresh()">⟳ Refresh</button>
-        <button id="pm-ready-btn" style="display:none;font-size:11px;font-weight:700;background:#4ADE80;border:none;color:#0A1A0A;padding:5px 12px;border-radius:20px;cursor:pointer;" onclick="pmCopyReady()">✓ Photos ready — copy message</button>
+        <button style="font-size:11px;font-weight:600;background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);padding:4px 10px;border-radius:20px;cursor:pointer;" onclick="pmRefresh()">⟳ Refresh</button>
+        <button id="pm-ready-btn" style="display:none;font-size:11px;font-weight:700;background:#4ADE80;border:none;color:#0A1A0A;padding:5px 12px;border-radius:20px;cursor:pointer;" onclick="pmCopyReady()">✓ Photos ready</button>
       </div>
       <div id="pm-cards" style="display:flex;flex-direction:column;gap:8px;"></div>
-      <div id="pm-empty" style="color:rgba(255,255,255,.2);font-size:12px;text-align:center;padding:30px 10px;">No manifest entries yet.<br>Add items in the queue panel first.</div>
+      <div id="pm-empty" style="color:rgba(255,255,255,.2);font-size:12px;text-align:center;padding:30px 10px;">No entries yet.</div>
     </div>`;
   createPanel('photos', '📸 Photo Mirror', pmHolder, photosPos);
   pmStartPolling();
@@ -11271,8 +11268,6 @@ function saveLayout() {
     localStorage.setItem(LS_LAYOUT, JSON.stringify({
       search: getPanelLayout('search'),
       queue:  getPanelLayout('queue'),
-      cart:   getPanelLayout('cart'),
-      photos: getPanelLayout('photos'),
       scale:  canvasScale,
       canvasX, canvasY
     }));
@@ -11281,22 +11276,8 @@ function saveLayout() {
 
 function loadLayout() {
   try {
-    const raw = localStorage.getItem(LS_LAYOUT);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    // Validate — if any position is wildly out of range, clear and reset
-    for (const key of ['search','queue','cart','photos']) {
-      const p = parsed[key];
-      if (p && (isNaN(p.x) || isNaN(p.y) || p.w < 10 || p.h < 10)) {
-        localStorage.removeItem(LS_LAYOUT);
-        return {};
-      }
-    }
-    return parsed;
-  } catch(e) {
-    localStorage.removeItem(LS_LAYOUT);
-    return {};
-  }
+    return JSON.parse(localStorage.getItem(LS_LAYOUT) || '{}');
+  } catch(e) { return {}; }
 }
 
 // ── Save session snapshot on unload ───────────────────────────────
@@ -12489,162 +12470,68 @@ document.querySelectorAll('.gai-chip').forEach(btn => {
 })();
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     SYG PHOTO UPLOAD — Mobile overlay + Desktop mirror
-     Cloud: dic0mifhj | Preset: syg_unsigned
-════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+     SYG PHOTO UPLOAD  ·  Mobile + Desktop Mirror
+     Cloud: dic0mifhj  |  Preset: syg_unsigned
+════════════════════════════════════════════ -->
 <style>
-#syg-mobile-overlay {
-  display: none;
-  position: fixed; inset: 0; z-index: 99999;
-  background: #0D1117;
-  font-family: var(--sans, -apple-system, sans-serif);
-  flex-direction: column;
-  overflow: hidden;
-}
-#syg-mobile-overlay.visible { display: flex; }
-.smo-header {
-  background: #1F4E79;
-  padding: 16px 16px 14px;
-  flex: none;
-}
-.smo-header-top {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 4px;
-}
-.smo-title { font-size: 17px; font-weight: 600; color: #fff; margin: 0; }
-.smo-sub   { font-size: 12px; color: rgba(255,255,255,.65); margin: 0; }
-.smo-batch-pill {
-  display: inline-block; margin-top: 8px;
-  background: rgba(255,255,255,.15); border-radius: 20px;
-  padding: 3px 10px; font-size: 11px; color: rgba(255,255,255,.85);
-  font-family: monospace;
-}
-.smo-progress-bar {
-  height: 3px; background: rgba(255,255,255,.15); border-radius: 2px;
-  margin-top: 10px; overflow: hidden;
-}
-.smo-progress-fill {
-  height: 100%; background: #4ADE80; border-radius: 2px;
-  transition: width .4s ease;
-}
-.smo-progress-label {
-  font-size: 10px; color: rgba(255,255,255,.45); margin-top: 4px;
-}
-.smo-body {
-  flex: 1; overflow-y: auto; padding: 12px;
-  display: flex; flex-direction: column; gap: 10px;
-}
-.smo-section-label {
-  font-size: 10px; font-weight: 600; color: rgba(255,255,255,.3);
-  text-transform: uppercase; letter-spacing: .08em;
-  padding: 4px 0 2px;
-}
-.smo-card {
-  background: #161B22; border: 1px solid rgba(255,255,255,.08);
-  border-radius: 12px; padding: 12px; cursor: pointer;
-}
-.smo-card.smo-active { border-color: #1F4E79; }
-.smo-card.smo-done   { border-color: rgba(74,222,128,.4); }
-.smo-card-top {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 6px;
-}
-.smo-sku {
-  font-size: 11px; font-weight: 600; color: #818CF8;
-  font-family: monospace;
-}
-.smo-status {
-  font-size: 10px; font-weight: 600; padding: 2px 8px;
-  border-radius: 20px;
-}
-.smo-status.pending   { background: rgba(251,191,36,.15); color: #FCD34D; }
-.smo-status.uploading { background: rgba(99,102,241,.2);  color: #818CF8; }
-.smo-status.done      { background: rgba(74,222,128,.15); color: #4ADE80; }
-.smo-card-title {
-  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.85);
-  line-height: 1.4; margin-bottom: 8px;
-}
-.smo-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.smo-chip {
-  font-size: 11px; color: rgba(255,255,255,.4);
-  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
-  border-radius: 6px; padding: 2px 7px;
-}
-.smo-upload-zone {
-  margin-top: 10px; border: 1.5px dashed rgba(255,255,255,.15);
-  border-radius: 8px; padding: 10px;
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  background: rgba(255,255,255,.03);
-}
-.smo-upload-zone.hidden { display: none; }
-.smo-upload-btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 11px 16px;
-  background: #1F4E79; border: none; border-radius: 8px;
-  color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
-}
-.smo-upload-hint { font-size: 11px; color: rgba(255,255,255,.3); }
-.smo-thumbs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-.smo-thumb {
-  width: 52px; height: 52px; border-radius: 7px; overflow: hidden;
-  background: rgba(31,78,121,.25); border: 1px solid rgba(31,78,121,.4);
-  display: flex; align-items: center; justify-content: center;
-}
-.smo-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.smo-thumb-icon { font-size: 20px; }
-.smo-bottom {
-  flex: none; background: #0D1117;
-  border-top: 1px solid rgba(255,255,255,.07);
-  padding: 12px 16px; display: flex; gap: 8px;
-}
-.smo-btn-skip {
-  flex: 1; background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 8px; padding: 11px; font-size: 13px; font-weight: 600;
-  color: rgba(255,255,255,.4); cursor: pointer;
-}
-.smo-btn-push {
-  flex: 2; background: #4ADE80; border: none;
-  border-radius: 8px; padding: 11px; font-size: 13px; font-weight: 700;
-  color: #0A1A0A; cursor: pointer;
-}
-
-/* Photo Mirror panel dark styles */
-.pm-card {
-  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-  border-radius: 10px; padding: 10px 11px;
-}
-.pm-card.pm-has-photos { border-color: rgba(74,222,128,.3); }
-.pm-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.pm-sku { font-size: 10px; font-weight: 700; font-family: monospace; color: #818CF8; }
-.pm-badge { font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
-.pm-badge.none     { background: rgba(255,255,255,.06); color: rgba(255,255,255,.3); }
-.pm-badge.has-photos { background: rgba(74,222,128,.15); color: #4ADE80; }
-.pm-title { font-size: 11px; color: rgba(255,255,255,.5); line-height: 1.3; margin-bottom: 6px; }
-.pm-thumbs { display: flex; gap: 5px; flex-wrap: wrap; }
-.pm-thumb {
-  width: 40px; height: 40px; border-radius: 5px; overflow: hidden;
-  background: rgba(31,78,121,.2); border: 1px solid rgba(31,78,121,.3);
-}
-.pm-thumb img { width: 100%; height: 100%; object-fit: cover; }
+#syg-mobile-overlay{display:none;position:fixed;inset:0;z-index:99999;background:#0D1117;font-family:var(--sans,-apple-system,sans-serif);flex-direction:column;overflow:hidden;}
+#syg-mobile-overlay.smo-on{display:flex!important;}
+.smo-header{background:#1F4E79;padding:16px 16px 14px;flex:none;}
+.smo-title{font-size:17px;font-weight:600;color:#fff;margin:0 0 2px;}
+.smo-sub{font-size:12px;color:rgba(255,255,255,.65);margin:0;}
+.smo-batch-pill{display:inline-block;margin-top:8px;background:rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.85);font-family:monospace;}
+.smo-progress-bar{height:3px;background:rgba(255,255,255,.15);border-radius:2px;margin-top:10px;overflow:hidden;}
+.smo-progress-fill{height:100%;background:#4ADE80;border-radius:2px;transition:width .4s ease;width:0%;}
+.smo-progress-label{font-size:10px;color:rgba(255,255,255,.45);margin-top:4px;}
+.smo-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.smo-section-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;padding:4px 0 2px;}
+.smo-card{background:#161B22;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;}
+.smo-card.smo-done{border-color:rgba(74,222,128,.4);}
+.smo-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.smo-sku{font-size:11px;font-weight:600;color:#818CF8;font-family:monospace;}
+.smo-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.smo-status.pending{background:rgba(251,191,36,.15);color:#FCD34D;}
+.smo-status.uploading{background:rgba(99,102,241,.2);color:#818CF8;}
+.smo-status.done{background:rgba(74,222,128,.15);color:#4ADE80;}
+.smo-card-title{font-size:13px;font-weight:500;color:rgba(255,255,255,.85);line-height:1.4;margin-bottom:8px;}
+.smo-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.smo-chip{font-size:11px;color:rgba(255,255,255,.4);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:2px 7px;}
+.smo-upload-zone{margin-top:10px;border:1.5px dashed rgba(255,255,255,.15);border-radius:8px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px;background:rgba(255,255,255,.03);}
+.smo-upload-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px 16px;background:#1F4E79;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;}
+.smo-upload-hint{font-size:11px;color:rgba(255,255,255,.3);}
+.smo-thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.smo-thumb{width:52px;height:52px;border-radius:7px;overflow:hidden;background:rgba(31,78,121,.25);border:1px solid rgba(31,78,121,.4);display:flex;align-items:center;justify-content:center;}
+.smo-thumb img{width:100%;height:100%;object-fit:cover;}
+.smo-bottom{flex:none;background:#0D1117;border-top:1px solid rgba(255,255,255,.07);padding:12px 16px;display:flex;gap:8px;}
+.smo-btn-skip{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:11px;font-size:13px;font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;}
+.smo-btn-refresh{flex:none;width:44px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:11px;font-size:15px;cursor:pointer;}
+.smo-btn-push{flex:2;background:#4ADE80;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:700;color:#0A1A0A;cursor:pointer;}
+.pm-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 11px;}
+.pm-card.pm-has-photos{border-color:rgba(74,222,128,.3);}
+.pm-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.pm-sku{font-size:10px;font-weight:700;font-family:monospace;color:#818CF8;}
+.pm-badge{font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;}
+.pm-badge.none{background:rgba(255,255,255,.06);color:rgba(255,255,255,.3);}
+.pm-badge.has-photos{background:rgba(74,222,128,.15);color:#4ADE80;}
+.pm-title{font-size:11px;color:rgba(255,255,255,.5);line-height:1.3;margin-bottom:6px;}
+.pm-thumbs{display:flex;gap:5px;flex-wrap:wrap;}
+.pm-thumb{width:40px;height:40px;border-radius:5px;overflow:hidden;background:rgba(31,78,121,.2);border:1px solid rgba(31,78,121,.3);}
+.pm-thumb img{width:100%;height:100%;object-fit:cover;}
 </style>
 
-<!-- Mobile overlay -->
 <div id="syg-mobile-overlay">
   <div class="smo-header">
-    <div class="smo-header-top">
-      <p class="smo-title">📸 Photo upload</p>
-    </div>
-    <p class="smo-sub">Add photos for each item before pushing listings</p>
-    <div class="smo-batch-pill" id="smo-batch-label">Loading batch…</div>
-    <div class="smo-progress-bar"><div class="smo-progress-fill" id="smo-progress-fill" style="width:0%"></div></div>
-    <p class="smo-progress-label" id="smo-progress-label">0 of 0 items have photos</p>
+    <p class="smo-title">📸 Photo upload</p>
+    <p class="smo-sub">Add photos before pushing listings</p>
+    <div class="smo-batch-pill" id="smo-batch-label">Loading…</div>
+    <div class="smo-progress-bar"><div class="smo-progress-fill" id="smo-progress-fill"></div></div>
+    <p class="smo-progress-label" id="smo-progress-label">0 of 0 items</p>
   </div>
   <div class="smo-body" id="smo-body"></div>
   <div class="smo-bottom">
     <button class="smo-btn-skip" onclick="smoSkipAll()">Skip all</button>
-    <button class="smo-btn-skip" style="flex:none;width:44px;" onclick="smoRender()" title="Refresh">⟳</button>
+    <button class="smo-btn-refresh" onclick="smoRender()">⟳</button>
     <button class="smo-btn-push" onclick="smoCopyReady()">✓ Mark ready</button>
   </div>
 </div>
@@ -12653,519 +12540,380 @@ document.querySelectorAll('.gai-chip').forEach(btn => {
 (function(){
 'use strict';
 
-const CLOUD   = 'dic0mifhj';
-const PRESET  = 'syg_unsigned';
-const PM_KEY  = 'syg_photo_urls'; // localStorage key: {sku: [url, ...]}
-const SMO_LS_KEY = 'syg_mobile_lister_v1';
+// ── Config ────────────────────────────────────────────────────────
+const CLOUD  = 'dic0mifhj';
+const PRESET = 'syg_unsigned';
+const LS_PHOTOS  = 'syg_photo_urls';    // {sku:[url,...]}
+const LS_ENTRIES = 'syg_dp_entries';    // written by desktop
+const LS_LISTER  = 'syg_mobile_lister_v1'; // {initial, batch}
 
-const SMO_LISTERS = [
-  { initial: 'J',  name: 'Juan' },
-  { initial: 'IS', name: 'Ibrahim' },
-  { initial: 'P',  name: 'Paul' },
+const LISTERS = [
+  {initial:'J',  name:'Juan'},
+  {initial:'IS', name:'Ibrahim'},
+  {initial:'P',  name:'Paul'},
 ];
 
-function smoGetLister() {
-  try { return JSON.parse(localStorage.getItem(SMO_LS_KEY) || 'null'); } catch(e) { return null; }
-}
-function smoSaveLister(initial, batch) {
-  try { localStorage.setItem(SMO_LS_KEY, JSON.stringify({ initial, batch })); } catch(e) {}
-}
-function smoClearLister() {
-  try { localStorage.removeItem(SMO_LS_KEY); } catch(e) {}
+// ── Photo store ───────────────────────────────────────────────────
+function getStore(){ try{return JSON.parse(localStorage.getItem(LS_PHOTOS)||'{}')}catch(e){return{}} }
+function saveStore(s){ try{localStorage.setItem(LS_PHOTOS,JSON.stringify(s))}catch(e){} }
+function addUrls(sku,urls){ const s=getStore(); s[sku]=(s[sku]||[]).concat(urls); saveStore(s); }
+
+// ── Mobile lister ─────────────────────────────────────────────────
+function getLister(){ try{return JSON.parse(localStorage.getItem(LS_LISTER)||'null')}catch(e){return null} }
+function saveLister(i,b){ try{localStorage.setItem(LS_LISTER,JSON.stringify({initial:i,batch:b}))}catch(e){} }
+function clearLister(){ try{localStorage.removeItem(LS_LISTER)}catch(e){} }
+
+function makeSKU(idx, lister){
+  if(!lister||!lister.initial||!lister.batch) return '#'+(idx+1);
+  return 'NJ02-'+lister.initial+'-'+lister.batch+'-'+(idx+1);
 }
 
-// Build SKU on mobile independently of desktop LISTER_INITIAL
-function smoMakeSKU(index, lister) {
-  if (!lister || !lister.initial || !lister.batch) return '#' + (index + 1);
-  return 'NJ02-' + lister.initial + '-' + lister.batch + '-' + (index + 1);
+// ── Entry list ────────────────────────────────────────────────────
+function getEntries(){
+  try{
+    const raw = localStorage.getItem(LS_ENTRIES);
+    if(!raw) return [];
+    const data = JSON.parse(raw);
+    const lister = getLister();
+    return (data.entries||[]).filter(e=>e.code).map((e,i)=>({
+      sku:    makeSKU(i, lister),
+      title:  e.code,
+      code:   e.code,
+      result: e.result||'',
+      sn:     e.sn||'',
+      photos: (getStore()[makeSKU(i,lister)]||[])
+    }));
+  }catch(e){ return []; }
 }
 
-let smoSelectedInitial = '';
-let smoSelectedName = '';
+// ── Mobile detection ──────────────────────────────────────────────
+const isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-function smoRenderLockIn() {
-  const body   = document.getElementById('smo-body');
-  const bottom = document.querySelector('.smo-bottom');
-  if (bottom) bottom.style.display = 'none';
+// ── Cloudinary upload ─────────────────────────────────────────────
+async function uploadFile(file, sku){
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', PRESET);
+  fd.append('tags', sku);
+  fd.append('folder', 'syg-photos');
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
+  if(!res.ok) throw new Error('Upload failed '+res.status);
+  return (await res.json()).secure_url;
+}
+
+async function fetchCloudinaryURLs(sku){
+  if(!sku||sku.startsWith('#')) return [];
+  try{
+    const res = await fetch(`https://res.cloudinary.com/${CLOUD}/image/list/${encodeURIComponent(sku)}.json`);
+    if(!res.ok) return [];
+    const data = await res.json();
+    return (data.resources||[]).map(r=>`https://res.cloudinary.com/${CLOUD}/image/upload/${r.public_id}`);
+  }catch(e){ return []; }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  MOBILE UI
+// ══════════════════════════════════════════════════════════════════
+if(!isMobile) return; // everything below is mobile-only
+
+let smoLocked = false; // prevent re-render while typing
+
+function smoInit(){
+  document.getElementById('syg-mobile-overlay').classList.add('smo-on');
+  const lister = getLister();
+  if(!lister) smoShowLockIn();
+  else smoRender();
+}
+
+// ── Lock-in screen ────────────────────────────────────────────────
+let _selInitial = '', _selName = '';
+
+function smoShowLockIn(){
+  document.querySelector('.smo-bottom').style.display = 'none';
   document.getElementById('smo-batch-label').textContent = 'Who are you?';
-  document.getElementById('smo-progress-label').textContent = 'Select your name and batch to load items.';
+  document.getElementById('smo-progress-label').textContent = 'Select your name and batch number';
   document.getElementById('smo-progress-fill').style.width = '0%';
-  body.innerHTML = `
+  document.getElementById('smo-body').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:14px;padding:8px 0;">
       <div>
         <p style="font-size:11px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px;">Your name</p>
-        <div style="display:flex;flex-direction:column;gap:8px;" id="smo-lister-btns">
-          ${SMO_LISTERS.map(l => `
-            <button onclick="smoSelectLister('${l.initial}','${l.name}',this)"
-              data-initial="${l.initial}"
+        <div style="display:flex;flex-direction:column;gap:8px;" id="smo-name-btns">
+          ${LISTERS.map(l=>`
+            <button data-ini="${l.initial}"
+              onclick="smoPickName('${l.initial}','${l.name}',this)"
               style="padding:13px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-              border-radius:10px;color:rgba(255,255,255,.7);font-size:14px;font-weight:600;
-              text-align:left;cursor:pointer;">
-              ${l.name}
-              <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.3);margin-left:6px;">${l.initial}</span>
+              border-radius:10px;color:rgba(255,255,255,.7);font-size:14px;font-weight:600;text-align:left;cursor:pointer;">
+              ${l.name} <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.3);margin-left:6px;">${l.initial}</span>
             </button>`).join('')}
         </div>
       </div>
-      <div id="smo-batch-field" style="display:none;">
+      <div id="smo-batch-row" style="display:none;">
         <p style="font-size:11px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px;">Batch number</p>
-        <input id="smo-batch-input" type="text" placeholder="e.g. RTL0623"
-          maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false"
+        <input id="smo-batch-inp" type="text" placeholder="e.g. RTL0626" maxlength="12"
+          autocomplete="off" autocapitalize="characters" spellcheck="false"
           style="width:100%;padding:13px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
           border-radius:10px;color:#fff;font-size:15px;font-family:monospace;outline:none;box-sizing:border-box;">
-        <button onclick="smoLockIn()"
-          style="margin-top:10px;width:100%;padding:13px;background:#1F4E79;border:none;border-radius:10px;
-          color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
+        <button onclick="smoDoLockIn()"
+          style="margin-top:10px;width:100%;padding:13px;background:#1F4E79;border:none;
+          border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
           Continue →
         </button>
       </div>
     </div>`;
 }
 
-window.smoSelectLister = function(initial, name, btn) {
-  smoSelectedInitial = initial;
-  smoSelectedName    = name;
-  document.querySelectorAll('#smo-lister-btns button').forEach(b => {
-    b.style.background   = 'rgba(255,255,255,.05)';
-    b.style.borderColor  = 'rgba(255,255,255,.1)';
-    b.style.color        = 'rgba(255,255,255,.7)';
+window.smoPickName = function(initial, name, btn){
+  _selInitial = initial; _selName = name;
+  document.querySelectorAll('#smo-name-btns button').forEach(b=>{
+    b.style.background='rgba(255,255,255,.05)'; b.style.borderColor='rgba(255,255,255,.1)'; b.style.color='rgba(255,255,255,.7)';
   });
-  btn.style.background  = 'rgba(31,78,121,.4)';
-  btn.style.borderColor = '#1F4E79';
-  btn.style.color       = '#fff';
-  document.getElementById('smo-batch-field').style.display = '';
-  setTimeout(() => document.getElementById('smo-batch-input')?.focus(), 50);
+  btn.style.background='rgba(31,78,121,.4)'; btn.style.borderColor='#1F4E79'; btn.style.color='#fff';
+  document.getElementById('smo-batch-row').style.display='';
+  smoLocked = true; // prevent smoRender from wiping form
+  setTimeout(()=>document.getElementById('smo-batch-inp')?.focus(), 80);
 };
 
-window.smoLockIn = function() {
-  const batch = (document.getElementById('smo-batch-input')?.value || '').trim().toUpperCase();
-  if (!smoSelectedInitial) { alert('Select your name first'); return; }
-  if (!batch || batch.length < 6) { alert('Enter a full batch number, e.g. RTL0623'); return; }
-  smoSaveLister(smoSelectedInitial, batch);
-  const bottom = document.querySelector('.smo-bottom');
-  if (bottom) bottom.style.display = '';
+window.smoDoLockIn = function(){
+  const batch = (document.getElementById('smo-batch-inp')?.value||'').trim().toUpperCase();
+  if(!_selInitial){ alert('Select your name first'); return; }
+  if(batch.length < 6){ alert('Enter full batch number e.g. RTL0626'); return; }
+  saveLister(_selInitial, batch);
+  smoLocked = false;
+  document.querySelector('.smo-bottom').style.display = '';
   smoRender();
 };
 
-window.smoSignOut = function() {
-  smoClearLister();
-  smoRenderLockIn();
-};
+window.smoSignOut = function(){ clearLister(); smoShowLockIn(); };
 
-// ─── Shared photo store (used by both mobile and mirror) ──────────
-function pmGetStore() {
-  try { return JSON.parse(localStorage.getItem(PM_KEY) || '{}'); } catch(e) { return {}; }
-}
-function pmSaveStore(store) {
-  try { localStorage.setItem(PM_KEY, JSON.stringify(store)); } catch(e) {}
-}
-function pmAddUrls(sku, urls) {
-  const store = pmGetStore();
-  store[sku] = (store[sku] || []).concat(urls);
-  pmSaveStore(store);
-}
+// ── Main render ───────────────────────────────────────────────────
+function smoRender(){
+  if(smoLocked) return;
+  const lister = getLister();
+  if(!lister){ smoShowLockIn(); return; }
 
-// ─── Get current entries as [{sku, title, code, result, sn}] ─────
-function getSKUList() {
-  if (isMobile) {
-    // Phone reads from localStorage written by desktop
-    try {
-      const raw = localStorage.getItem('syg_dp_entries');
-      if (!raw) return [];
-      const data    = JSON.parse(raw);
-      const lister  = smoGetLister();
-      return (data.entries || []).filter(e => e.code).map((e, i) => ({
-        sku:    lister ? smoMakeSKU(i, lister) : (e.sku || ('#' + (i+1))),
-        title:  e.code,
-        code:   e.code,
-        result: e.result,
-        sn:     e.sn
-      }));
-    } catch(err) { return []; }
-  }
-  // Desktop reads from live dpEntries
-  if (typeof dpEntries === 'undefined' || !dpEntries.length) return [];
-  return dpEntries.map((e, i) => ({
-    sku:    (typeof dpEntrySkuLabel === 'function') ? dpEntrySkuLabel(e) : ('#' + (i+1)),
-    title:  e.code || '—',
-    code:   e.code,
-    result: e.result,
-    sn:     e.sn
-  })).filter(x => x.code);
-}
+  const items  = getEntries();
+  const doneN  = items.filter(x=>x.photos.length>0).length;
+  const total  = items.length;
+  const lName  = LISTERS.find(l=>l.initial===lister.initial)?.name||lister.initial;
 
-// ═══════════════════════════════════════════════════════════════════
-//  CLOUDINARY UPLOAD
-// ═══════════════════════════════════════════════════════════════════
-async function uploadToCloudinary(file, sku) {
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('upload_preset', PRESET);
-  fd.append('tags', sku);
-  fd.append('folder', 'syg-photos');
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, {
-    method: 'POST', body: fd
-  });
-  if (!res.ok) throw new Error('Upload failed: ' + res.status);
-  const data = await res.json();
-  return data.secure_url;
-}
-
-// Fetch uploaded URLs for a SKU from Cloudinary tag list
-async function fetchUrlsForSKU(sku) {
-  if (!sku || sku.startsWith('#')) return []; // lister not locked in yet
-  try {
-    const res = await fetch(`https://res.cloudinary.com/${CLOUD}/image/list/${encodeURIComponent(sku)}.json`);
-    if (res.status === 401) {
-      console.warn('[SYG Photo] Cloudinary tag list is restricted. Go to Cloudinary Dashboard → Settings → Security → uncheck "Resource list".');
-      return [];
-    }
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.resources || []).map(r => `https://res.cloudinary.com/${CLOUD}/image/upload/${r.public_id}`);
-  } catch(e) { return []; }
-}
-
-// ═══════════════════════════════════════════════════════════════════
-//  MOBILE OVERLAY
-// ═══════════════════════════════════════════════════════════════════
-const isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-console.log('[SYG Photo] isMobile:', isMobile, '| width:', window.innerWidth, '| UA:', navigator.userAgent.substring(0,60));
-
-function smoGetItems() {
-  const store = pmGetStore();
-  return getSKUList().map(item => ({
-    ...item,
-    photos: store[item.sku] || []
-  }));
-}
-
-function smoRender() {
-  const lister = smoGetLister();
-  console.log('[SMO] smoRender fired | lister:', JSON.stringify(lister));
-  if (!lister) { smoRenderLockIn(); return; }
-
-  const focused = document.activeElement;
-  if (focused && focused.id === 'smo-batch-input') return;
-
-  const items  = smoGetItems();
-  console.log('[SMO] items:', items.length, JSON.stringify(items.map(x => x.sku)));
-
-  const overlay = document.getElementById('syg-mobile-overlay');
-  console.log('[SMO] overlay visible:', overlay?.classList.contains('visible'), '| display:', overlay?.style.display);
-
-  const bottom = document.querySelector('.smo-bottom');
-  if (bottom) bottom.style.display = '';
-
-  const done    = items.filter(x => x.photos.length > 0);
-  const total   = items.length;
-  const doneN   = done.length;
-
-  const listerName = SMO_LISTERS.find(l => l.initial === lister.initial)?.name || lister.initial;
-  document.getElementById('smo-batch-label').textContent =
-    `${lister.batch} · ${listerName} · ${doneN} of ${total} done`;
+  document.getElementById('smo-batch-label').textContent = `${lister.batch} · ${lName} · ${doneN}/${total} done`;
   document.getElementById('smo-progress-fill').style.width = total ? Math.round(doneN/total*100)+'%' : '0%';
   document.getElementById('smo-progress-label').innerHTML =
-    `${doneN} of ${total} items have photos · `
-    + `<span onclick="smoSignOut()" style="color:#818CF8;text-decoration:underline;cursor:pointer;">Switch lister</span>`;
+    `${doneN} of ${total} items have photos &nbsp;·&nbsp; <span onclick="smoSignOut()" style="color:#818CF8;text-decoration:underline;cursor:pointer;">Switch</span>`;
+  document.querySelector('.smo-bottom').style.display = '';
 
   const body = document.getElementById('smo-body');
   body.innerHTML = '';
 
-  const pending = items.filter(x => x.photos.length === 0);
-
-  if (!items.length) {
-    // Check if there's a stale sync or no sync at all
-    const raw = localStorage.getItem('syg_dp_entries');
-    const msg = raw
-      ? 'No entries found for this batch. Make sure the batch number matches what\'s on the desktop.'
-      : 'No entries yet — add items in Haz on the desktop first, then refresh here.';
-    body.innerHTML = `<p style="color:rgba(255,255,255,.35);font-size:13px;text-align:center;padding:40px 16px;line-height:1.6;">${msg}</p>`;
+  if(!items.length){
+    const raw = localStorage.getItem(LS_ENTRIES);
+    body.innerHTML = `<p style="color:rgba(255,255,255,.35);font-size:13px;text-align:center;padding:40px 16px;line-height:1.6;">
+      ${raw ? 'No entries for this batch.<br>Check that your batch number matches the desktop.' : 'No entries yet.<br>Add items in Haz on the desktop first, then tap ⟳'}
+    </p>`;
     return;
   }
 
-  if (pending.length) {
-    const lbl = document.createElement('p'); lbl.className = 'smo-section-label'; lbl.textContent = 'Pending';
-    body.appendChild(lbl);
-    pending.forEach(item => body.appendChild(smoMakeCard(item, false)));
-  }
+  const pending = items.filter(x=>x.photos.length===0);
+  const done    = items.filter(x=>x.photos.length>0);
 
-  if (done.length) {
-    const lbl = document.createElement('p'); lbl.className = 'smo-section-label'; lbl.textContent = 'Done';
+  if(pending.length){
+    const lbl=document.createElement('p'); lbl.className='smo-section-label'; lbl.textContent='Pending';
     body.appendChild(lbl);
-    done.forEach(item => body.appendChild(smoMakeCard(item, true)));
+    pending.forEach(item=>body.appendChild(smoMakeCard(item)));
+  }
+  if(done.length){
+    const lbl=document.createElement('p'); lbl.className='smo-section-label'; lbl.textContent='Done';
+    body.appendChild(lbl);
+    done.forEach(item=>body.appendChild(smoMakeCard(item)));
   }
 }
 
-function smoMakeCard(item, isDone) {
+function smoMakeCard(item){
+  const isDone = item.photos.length > 0;
   const card = document.createElement('div');
-  card.className = 'smo-card' + (isDone ? ' smo-done' : ' smo-active');
-  card.id = 'smo-card-' + item.sku;
-
-  const statusText = isDone ? `${item.photos.length} photo${item.photos.length>1?'s':''}` : 'Tap to upload';
-  const statusCls  = isDone ? 'done' : 'pending';
-
+  card.className = 'smo-card'+(isDone?' smo-done':'');
+  card.id = 'smo-card-'+item.sku;
   card.innerHTML = `
     <div class="smo-card-top">
       <span class="smo-sku">${item.sku}</span>
-      <span class="smo-status ${statusCls}" id="smo-status-${item.sku}">${statusText}</span>
+      <span class="smo-status ${isDone?'done':'pending'}" id="smo-st-${item.sku}">${isDone?item.photos.length+' photo'+(item.photos.length>1?'s':''):'Tap to upload'}</span>
     </div>
-    <p class="smo-card-title" id="smo-title-${item.sku}">${item.title}${item.result ? ' — ' + item.result + '% Health' : ''}</p>
-    <div class="smo-chips">
-      ${item.sn ? `<span class="smo-chip">SN: ${item.sn}</span>` : ''}
-    </div>
-  `;
+    <p class="smo-card-title">${item.title}${item.result?' — '+item.result+'% Health':''}</p>
+    ${item.sn?`<div class="smo-chips"><span class="smo-chip">SN: ${item.sn}</span></div>`:''}`;
 
-  if (isDone) {
-    const thumbs = document.createElement('div'); thumbs.className = 'smo-thumbs';
-    item.photos.forEach(url => {
-      const t = document.createElement('div'); t.className = 'smo-thumb';
-      t.innerHTML = `<img src="${url}" loading="lazy">`;
-      thumbs.appendChild(t);
-    });
-    card.appendChild(thumbs);
+  if(isDone){
+    const row=document.createElement('div'); row.className='smo-thumbs';
+    item.photos.forEach(u=>{ const t=document.createElement('div'); t.className='smo-thumb'; t.innerHTML=`<img src="${u}" loading="lazy">`; row.appendChild(t); });
+    card.appendChild(row);
   } else {
-    const zone = document.createElement('div');
-    zone.className = 'smo-upload-zone';
-    zone.id = 'smo-zone-' + item.sku;
-    zone.innerHTML = `
+    const zone=document.createElement('div'); zone.className='smo-upload-zone';
+    zone.innerHTML=`
       <input type="file" accept="image/*" multiple capture="environment"
-        style="display:none" id="smo-input-${item.sku}"
-        onchange="smoHandleFiles('${item.sku}', this.files)">
-      <button class="smo-upload-btn" onclick="document.getElementById('smo-input-${item.sku}').click()">
+        style="display:none" id="smo-inp-${item.sku}"
+        onchange="smoHandleFiles('${item.sku}',this.files)">
+      <button class="smo-upload-btn" onclick="document.getElementById('smo-inp-${item.sku}').click()">
         📷 Take or choose photos
       </button>
-      <p class="smo-upload-hint">Up to 5 photos · JPEG or PNG</p>
-    `;
+      <p class="smo-upload-hint">Up to 5 photos · JPEG or PNG</p>`;
     card.appendChild(zone);
   }
-
   return card;
 }
 
-window.smoHandleFiles = async function(sku, files) {
-  if (!files || !files.length) return;
-  const limited = Array.from(files).slice(0, 5);
-  const statusEl = document.getElementById('smo-status-' + sku);
-  const zoneEl   = document.getElementById('smo-zone-' + sku);
-  const cardEl   = document.getElementById('smo-card-' + sku);
-
-  if (statusEl) { statusEl.textContent = 'Uploading…'; statusEl.className = 'smo-status uploading'; }
-  if (zoneEl) zoneEl.innerHTML = '<p style="color:#818CF8;font-size:12px;font-weight:600;text-align:center;padding:6px 0;">Uploading ' + limited.length + ' photo' + (limited.length > 1 ? 's' : '') + '…</p>';
-
-  try {
-    const urls = [];
-    for (const file of limited) {
-      const url = await uploadToCloudinary(file, sku);
-      urls.push(url);
-    }
-    pmAddUrls(sku, urls);
-
-    // Update card to done state
-    if (cardEl) {
-      cardEl.className = 'smo-card smo-done';
-      if (statusEl) { statusEl.textContent = urls.length + ' photo' + (urls.length>1?'s':''); statusEl.className = 'smo-status done'; }
-      if (zoneEl) {
-        const thumbs = document.createElement('div'); thumbs.className = 'smo-thumbs'; thumbs.style.marginTop = '8px';
-        urls.forEach(u => { const t = document.createElement('div'); t.className = 'smo-thumb'; t.innerHTML = `<img src="${u}" loading="lazy">`; thumbs.appendChild(t); });
-        zoneEl.replaceWith(thumbs);
-      }
-    }
-    // Re-render mirror on desktop
-    pmRenderCards();
-  } catch(err) {
-    if (statusEl) { statusEl.textContent = 'Upload failed'; statusEl.className = 'smo-status pending'; }
-    if (zoneEl) zoneEl.innerHTML = `<p style="color:#EF4444;font-size:12px;text-align:center;">Upload failed — tap to retry</p><button class="smo-upload-btn" style="background:#7F1D1D;" onclick="document.getElementById('smo-input-${sku}').click()">Retry</button><input type="file" accept="image/*" multiple capture="environment" style="display:none" id="smo-input-${sku}" onchange="smoHandleFiles('${sku}', this.files)">`;
+window.smoHandleFiles = async function(sku, files){
+  if(!files||!files.length) return;
+  const list = Array.from(files).slice(0,5);
+  const stEl = document.getElementById('smo-st-'+sku);
+  const zone = document.querySelector(`#smo-card-${sku} .smo-upload-zone`);
+  if(stEl){ stEl.textContent='Uploading…'; stEl.className='smo-status uploading'; }
+  if(zone) zone.innerHTML=`<p style="color:#818CF8;font-size:12px;font-weight:600;text-align:center;padding:6px;">Uploading ${list.length} photo${list.length>1?'s':''}…</p>`;
+  try{
+    const urls=[];
+    for(const f of list) urls.push(await uploadFile(f,sku));
+    addUrls(sku,urls);
+    smoRender();
+  }catch(err){
+    if(stEl){ stEl.textContent='Failed — retry'; stEl.className='smo-status pending'; }
+    if(zone) zone.innerHTML=`<p style="color:#EF4444;font-size:12px;text-align:center;margin-bottom:6px;">Upload failed</p>
+      <button class="smo-upload-btn" style="background:#7F1D1D;" onclick="document.getElementById('smo-inp-${sku}').click()">Retry</button>
+      <input type="file" accept="image/*" multiple capture="environment" style="display:none" id="smo-inp-${sku}" onchange="smoHandleFiles('${sku}',this.files)">`;
   }
 };
 
-window.smoSkipAll = function() {
-  if (confirm('Skip all photos and mark as ready?')) smoCopyReady();
+window.smoSkipAll = function(){
+  if(confirm('Skip photos and mark ready?')) smoCopyReady();
+};
+window.smoCopyReady = function(){
+  const items=getEntries(), done=items.filter(x=>x.photos.length>0);
+  const msg=`Photos ready — ${done.length}/${items.length} items have photos.`;
+  try{navigator.clipboard.writeText(msg)}catch(e){}
+  alert(msg);
 };
 
-window.smoCopyReady = function() {
-  const items = smoGetItems();
-  const done = items.filter(x => x.photos.length > 0);
-  const msg = done.length > 0
-    ? `Photos ready — ${done.length} of ${items.length} items have photos uploaded. You can push listings now.`
-    : 'No photos uploaded. Proceed without photos.';
-  try { navigator.clipboard.writeText(msg); } catch(e) {}
-  alert(done.length > 0 ? `✓ ${done.length} item(s) have photos. Message copied — paste it in Claude.` : 'No photos uploaded.');
-};
+// Boot + polling
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', smoInit);
+else smoInit();
 
-// ═══════════════════════════════════════════════════════════════════
-//  DESKTOP PHOTO MIRROR PANEL
-// ═══════════════════════════════════════════════════════════════════
-let pmPollingInterval = null;
+setInterval(()=>{ if(!smoLocked && getLister()) smoRender(); }, 4000);
 
-window.pmStartPolling = function() {
+})();
+</script>
+
+<!-- ── Desktop Photo Mirror JS ─────────────────────────────────── -->
+<script>
+(function(){
+'use strict';
+const CLOUD     = 'dic0mifhj';
+const LS_PHOTOS = 'syg_photo_urls';
+
+function getStore(){ try{return JSON.parse(localStorage.getItem(LS_PHOTOS)||'{}')}catch(e){return{}} }
+function saveStore(s){ try{localStorage.setItem(LS_PHOTOS,JSON.stringify(s))}catch(e){} }
+
+function getDesktopEntries(){
+  if(typeof dpEntries==='undefined'||!dpEntries.length) return [];
+  return dpEntries.map((e,i)=>({
+    sku:    typeof dpEntrySkuLabel==='function'?dpEntrySkuLabel(e):('#'+(i+1)),
+    title:  e.code||'—',
+    result: e.result||'',
+    photos: (getStore()[typeof dpEntrySkuLabel==='function'?dpEntrySkuLabel(e):('#'+(i+1))]||[])
+  })).filter(x=>x.title!=='—');
+}
+
+async function fetchCloudinaryURLs(sku){
+  if(!sku||sku.startsWith('#')) return [];
+  try{
+    const res=await fetch(`https://res.cloudinary.com/${CLOUD}/image/list/${encodeURIComponent(sku)}.json`);
+    if(!res.ok) return [];
+    return ((await res.json()).resources||[]).map(r=>`https://res.cloudinary.com/${CLOUD}/image/upload/${r.public_id}`);
+  }catch(e){ return []; }
+}
+
+window.pmStartPolling = function(){
   pmRenderCards();
-  if (pmPollingInterval) clearInterval(pmPollingInterval);
-  pmPollingInterval = setInterval(async () => {
-    const items = getSKUList();
-    const store = pmGetStore();
-    let changed = false;
-    for (const item of items) {
-      const existing = store[item.sku] || [];
-      if (existing.length === 0) {
-        const urls = await fetchUrlsForSKU(item.sku);
-        if (urls.length > 0) { store[item.sku] = urls; changed = true; }
+  setInterval(async()=>{
+    const items=getDesktopEntries(), store=getStore(); let changed=false;
+    for(const item of items){
+      if(!(store[item.sku]||[]).length){
+        const urls=await fetchCloudinaryURLs(item.sku);
+        if(urls.length){ store[item.sku]=urls; changed=true; }
       }
     }
-    if (changed) { pmSaveStore(store); pmRenderCards(); }
+    if(changed){ saveStore(store); pmRenderCards(); }
     pmUpdateStatus();
   }, 6000);
 };
 
-function pmRenderCards() {
-  const cardsEl = document.getElementById('pm-cards');
-  const empty   = document.getElementById('pm-empty');
-  if (!cardsEl) return;
-
-  const items = getSKUList();
-  const store = pmGetStore();
-
-  if (!items.length) {
-    cardsEl.innerHTML = '';
-    if (empty) empty.style.display = '';
-    return;
+window.pmRefresh = async function(){
+  const items=getDesktopEntries(), store=getStore();
+  for(const item of items){
+    const urls=await fetchCloudinaryURLs(item.sku);
+    if(urls.length) store[item.sku]=urls;
   }
-  if (empty) empty.style.display = 'none';
+  saveStore(store); pmRenderCards();
+};
 
-  // Diff — only rebuild cards whose photo count changed
-  const existingIds = new Set([...cardsEl.querySelectorAll('[data-pm-sku]')].map(el => el.dataset.pmSku));
-  const newIds      = new Set(items.map(x => x.sku));
+window.pmCopyReady = function(){
+  const items=getDesktopEntries(), store=getStore();
+  const done=items.filter(x=>(store[x.sku]||[]).length>0);
+  try{navigator.clipboard.writeText(`Photos ready — ${done.length}/${items.length} items.`)}catch(e){}
+};
 
-  // Remove stale cards
-  existingIds.forEach(sku => {
-    if (!newIds.has(sku)) cardsEl.querySelector(`[data-pm-sku="${CSS.escape(sku)}"]`)?.remove();
-  });
+function pmRenderCards(){
+  const cardsEl=document.getElementById('pm-cards');
+  const emptyEl=document.getElementById('pm-empty');
+  if(!cardsEl) return;
+  const items=getDesktopEntries(), store=getStore();
+  if(!items.length){ cardsEl.innerHTML=''; if(emptyEl) emptyEl.style.display=''; return; }
+  if(emptyEl) emptyEl.style.display='none';
 
-  items.forEach((item, idx) => {
-    const photos  = store[item.sku] || [];
-    const hasP    = photos.length > 0;
-    const existEl = cardsEl.querySelector(`[data-pm-sku="${CSS.escape(item.sku)}"]`);
+  // Diff — only replace cards whose photo count changed
+  items.forEach((item,idx)=>{
+    const photos=store[item.sku]||[], hasP=photos.length>0;
+    const existing=cardsEl.querySelector(`[data-sku="${CSS.escape(item.sku)}"]`);
+    if(existing && parseInt(existing.dataset.photos||0)===photos.length) return;
 
-    if (existEl) {
-      // Only re-render if photo count changed
-      const prev = parseInt(existEl.dataset.pmPhotoCount || '0');
-      if (prev === photos.length) return;
-    }
-
-    const card = document.createElement('div');
-    card.className = 'pm-card' + (hasP ? ' pm-has-photos' : '');
-    card.dataset.pmSku        = item.sku;
-    card.dataset.pmPhotoCount = photos.length;
-
-    const badge = hasP
-      ? `<span class="pm-badge has-photos">${photos.length} photo${photos.length>1?'s':''}</span>`
-      : `<span class="pm-badge none">No photos</span>`;
-
-    card.innerHTML = `
+    const card=document.createElement('div');
+    card.className='pm-card'+(hasP?' pm-has-photos':'');
+    card.dataset.sku=item.sku; card.dataset.photos=photos.length;
+    card.innerHTML=`
       <div class="pm-card-top">
         <span class="pm-sku">${item.sku}</span>
-        ${badge}
+        <span class="pm-badge ${hasP?'has-photos':'none'}">${hasP?photos.length+' photo'+(photos.length>1?'s':''):'No photos'}</span>
       </div>
-      <p class="pm-title">${item.title}${item.result ? ' — ' + item.result + '% Health' : ''}</p>
-    `;
-
-    if (hasP) {
-      const thumbs = document.createElement('div'); thumbs.className = 'pm-thumbs';
-      photos.slice(0, 6).forEach(url => {
-        const t = document.createElement('div'); t.className = 'pm-thumb';
-        t.innerHTML = `<img src="${url}" loading="lazy">`;
-        thumbs.appendChild(t);
-      });
-      card.appendChild(thumbs);
+      <p class="pm-title">${item.title}${item.result?' — '+item.result+'% Health':''}</p>`;
+    if(hasP){
+      const row=document.createElement('div'); row.className='pm-thumbs';
+      photos.slice(0,6).forEach(u=>{ const t=document.createElement('div'); t.className='pm-thumb'; t.innerHTML=`<img src="${u}" loading="lazy">`; row.appendChild(t); });
+      card.appendChild(row);
     }
-
-    if (existEl) {
-      existEl.replaceWith(card);
-    } else {
-      // Insert in order
-      const allCards = [...cardsEl.querySelectorAll('[data-pm-sku]')];
-      const insertBefore = allCards[idx] || null;
-      cardsEl.insertBefore(card, insertBefore);
-    }
+    if(existing) existing.replaceWith(card);
+    else cardsEl.insertBefore(card, cardsEl.children[idx]||null);
   });
-
   pmUpdateStatus();
 }
 
-function pmUpdateStatus() {
-  const items  = getSKUList();
-  const store  = pmGetStore();
-  const doneN  = items.filter(x => (store[x.sku]||[]).length > 0).length;
-  const total  = items.length;
-  const pill   = document.getElementById('pm-status-pill');
-  const readyBtn = document.getElementById('pm-ready-btn');
-  if (!pill) return;
-  if (!total) { pill.textContent = 'Waiting for entries…'; return; }
-  pill.textContent = `${doneN} / ${total} items have photos`;
-  if (readyBtn) readyBtn.style.display = doneN > 0 ? '' : 'none';
+function pmUpdateStatus(){
+  const items=getDesktopEntries(), store=getStore();
+  const doneN=items.filter(x=>(store[x.sku]||[]).length>0).length;
+  const pill=document.getElementById('pm-status-pill');
+  const btn=document.getElementById('pm-ready-btn');
+  if(pill) pill.textContent=items.length?`${doneN} / ${items.length} items have photos`:'Waiting for entries…';
+  if(btn) btn.style.display=doneN>0?'':'none';
 }
 
-window.pmRefresh = async function() {
-  const items = getSKUList();
-  const store = pmGetStore();
-  for (const item of items) {
-    const urls = await fetchUrlsForSKU(item.sku);
-    if (urls.length > 0) store[item.sku] = urls;
+// Hook into dpUpdatePreviewAll to refresh mirror when entries change
+const _hook = ()=>{
+  const orig=window.dpUpdatePreviewAll;
+  if(typeof orig==='function' && !orig._pmHooked){
+    window.dpUpdatePreviewAll=function(){
+      orig.apply(this,arguments);
+      pmRenderCards();
+    };
+    window.dpUpdatePreviewAll._pmHooked=true;
   }
-  pmSaveStore(store);
-  pmRenderCards();
 };
-
-window.pmCopyReady = function() {
-  const items = getSKUList();
-  const store = pmGetStore();
-  const done  = items.filter(x => (store[x.sku]||[]).length > 0);
-  const msg   = `Photos ready — ${done.length} of ${items.length} items have photos. Push listings.`;
-  try { navigator.clipboard.writeText(msg); } catch(e) {}
-};
-
-// ─── Boot ─────────────────────────────────────────────────────────
-
-// Hook dpUpdatePreviewAll on BOTH mobile and desktop so re-renders
-// fire whenever entries are added/removed/edited
-function hookDpUpdate(cb) {
-  const tryHook = () => {
-    if (typeof window.dpUpdatePreviewAll === 'function') {
-      const orig = window.dpUpdatePreviewAll;
-      window.dpUpdatePreviewAll = function() {
-        orig.apply(this, arguments);
-        cb();
-      };
-    }
-  };
-  if (document.readyState !== 'loading') tryHook();
-  else document.addEventListener('DOMContentLoaded', tryHook);
-}
-
-if (isMobile) {
-  // Show overlay immediately, then keep re-rendering as entries arrive
-  const showOverlay = () => {
-    const overlay = document.getElementById('syg-mobile-overlay');
-    overlay.classList.add('visible');
-    overlay.style.cssText += ';display:flex!important;';
-    const lister = smoGetLister();
-    if (!lister) {
-      smoRenderLockIn();
-    } else {
-      smoRender();
-    }
-  };
-  if (document.readyState !== 'loading') showOverlay();
-  else document.addEventListener('DOMContentLoaded', showOverlay);
-
-  // Re-render every time an entry is added/edited/removed
-  hookDpUpdate(() => { if (smoGetLister()) smoRender(); });
-
-  // Poll every 3s but ONLY if lister is already locked in
-  setInterval(() => { if (smoGetLister()) smoRender(); }, 3000);
-} else {
-  // Desktop: mirror panel boots when initCanvas calls pmStartPolling
-  hookDpUpdate(pmRenderCards);
-}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_hook);
+else _hook();
 
 })();
 </script>
