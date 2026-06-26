@@ -2899,6 +2899,182 @@
     color: #fff !important;
     border-radius: 2px !important;
   }
+
+  /* ── Shovo Command Map ── */
+  #shovoCmdList::-webkit-scrollbar { width: 4px; }
+  #shovoCmdList::-webkit-scrollbar-thumb { background: rgba(99,102,241,.4); border-radius: 4px; }
+  #shovoCmdList::-webkit-scrollbar-track { background: transparent; }
+  #shovoCmdShortcut:focus, #shovoCmdTarget:focus {
+    border-color: rgba(99,102,241,.5) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(99,102,241,.12) !important;
+  }
+
+  /* ══════════════════════════════════════════════════
+     SPEED REVIEW — dark blending fixes
+     ══════════════════════════════════════════════════ */
+
+  /* Card container */
+  .wan-panel .blitz-card,
+  .outer .blitz-card {
+    background: #1A1D2E !important;
+    border-color: rgba(255,255,255,.12) !important;
+  }
+
+  /* Card head */
+  .wan-panel .blitz-card-head,
+  .outer .blitz-card-head {
+    background: transparent !important;
+    border-color: rgba(255,255,255,.08) !important;
+  }
+  .wan-panel .blitz-card-title,
+  .outer .blitz-card-title {
+    color: #E8EBF8 !important;
+    font-size: 13.5px !important;
+  }
+
+  /* Individual field boxes (Price, Cost, Qty, SKU) */
+  .wan-panel .blitz-card-field,
+  .outer .blitz-card-field {
+    background: rgba(255,255,255,.04) !important;
+    border-color: rgba(255,255,255,.1) !important;
+    border-radius: 10px !important;
+  }
+  .wan-panel .blitz-card-field label,
+  .outer .blitz-card-field label {
+    color: rgba(255,255,255,.4) !important;
+    font-size: 9.5px !important;
+    letter-spacing: .08em !important;
+  }
+  .wan-panel .blitz-card-field input,
+  .wan-panel .blitz-card-field select,
+  .outer .blitz-card-field input,
+  .outer .blitz-card-field select {
+    background: transparent !important;
+    color: #E8EBF8 !important;
+    font-size: 13px !important;
+    border: none !important;
+    outline: none !important;
+  }
+  .wan-panel .blitz-card-field input::placeholder,
+  .outer .blitz-card-field input::placeholder {
+    color: rgba(255,255,255,.25) !important;
+  }
+  .wan-panel .blitz-card-field input:focus,
+  .outer .blitz-card-field input:focus {
+    box-shadow: 0 0 0 2px rgba(99,102,241,.3) !important;
+    border-radius: 6px !important;
+  }
+
+  /* Card body */
+  .wan-panel .blitz-card-body,
+  .outer .blitz-card-body {
+    background: transparent !important;
+  }
+
+  /* Actions bar */
+  .wan-panel .blitz-card-actions,
+  .outer .blitz-card-actions {
+    background: rgba(255,255,255,.03) !important;
+    border-color: rgba(255,255,255,.08) !important;
+  }
+
+  /* Metafields section */
+  .wan-panel .blitz-card-metafields summary,
+  .outer .blitz-card-metafields summary {
+    color: rgba(255,255,255,.45) !important;
+  }
+  .wan-panel .blitz-card-mf-item label,
+  .outer .blitz-card-mf-item label {
+    color: rgba(255,255,255,.35) !important;
+  }
+  .wan-panel .blitz-card-mf-item input,
+  .outer .blitz-card-mf-item input {
+    background: rgba(255,255,255,.05) !important;
+    border-color: rgba(255,255,255,.1) !important;
+    color: #E8EBF8 !important;
+  }
+  .wan-panel .blitz-card-mf-item input:focus,
+  .outer .blitz-card-mf-item input:focus {
+    border-color: #6366F1 !important;
+    background: rgba(99,102,241,.08) !important;
+  }
+
+  /* Entry preview section */
+  .wan-panel .blitz-card-desc summary,
+  .outer .blitz-card-desc summary {
+    color: rgba(255,255,255,.4) !important;
+  }
+  .wan-panel .blitz-card-desc-body,
+  .outer .blitz-card-desc-body {
+    background: rgba(255,255,255,.03) !important;
+    border-color: rgba(255,255,255,.08) !important;
+    color: rgba(255,255,255,.5) !important;
+    font-size: 11.5px !important;
+  }
+
+  /* Progress bar track */
+  .wan-panel .blitz-progress-bar,
+  .outer .blitz-progress-bar {
+    background: rgba(255,255,255,.08) !important;
+  }
+  .wan-panel .blitz-progress-fill,
+  .outer .blitz-progress-fill {
+    background: #6366F1 !important;
+  }
+  .wan-panel .blitz-progress-label,
+  .outer .blitz-progress-label {
+    color: rgba(255,255,255,.4) !important;
+  }
+
+  /* Flagged banner */
+  .wan-panel .blitz-flagged-banner,
+  .outer .blitz-flagged-banner {
+    background: rgba(239,68,68,.07) !important;
+    border-color: rgba(239,68,68,.2) !important;
+    color: rgba(252,165,165,.8) !important;
+  }
+
+  /* Double kbd legend — hide one */
+  .wan-panel .blitz-kbd-legend + .blitz-kbd-legend,
+  .outer .blitz-kbd-legend + .blitz-kbd-legend {
+    display: none !important;
+  }
+
+  /* ══════════════════════════════════════════════════
+     SPEED REVIEW — NUCLEAR DARK FIX (final override)
+     All rules use #blitzReview ancestor for max specificity
+     ══════════════════════════════════════════════════ */
+  #blitzReview .blitz-card { background: #13152A !important; border: 1px solid rgba(255,255,255,.1) !important; }
+  #blitzReview .blitz-card-head { background: transparent !important; border-color: rgba(255,255,255,.07) !important; }
+  #blitzReview .blitz-card-title { color: #E8EBF8 !important; }
+  #blitzReview .blitz-card-body { background: transparent !important; }
+
+  /* The white boxes — kill the light surface color */
+  #blitzReview .blitz-card-field { background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.1) !important; border-radius: 10px !important; }
+  #blitzReview .blitz-card-field label { color: rgba(255,255,255,.38) !important; font-size: 9.5px !important; }
+  #blitzReview .blitz-card-field input,
+  #blitzReview .blitz-card-field select { background: transparent !important; color: #E8EBF8 !important; border: none !important; outline: none !important; box-shadow: none !important; }
+  #blitzReview .blitz-card-field input::placeholder { color: rgba(255,255,255,.22) !important; }
+  #blitzReview .blitz-card-field input[readonly] { color: rgba(255,255,255,.4) !important; }
+
+  /* Actions bar */
+  #blitzReview .blitz-card-actions { background: rgba(255,255,255,.03) !important; border-color: rgba(255,255,255,.07) !important; }
+
+  /* Metafields */
+  #blitzReview .blitz-card-metafields summary,
+  #blitzReview .blitz-card-desc summary { color: rgba(255,255,255,.4) !important; }
+  #blitzReview .blitz-card-mf-item label { color: rgba(255,255,255,.3) !important; }
+  #blitzReview .blitz-card-mf-item input { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.1) !important; color: #E8EBF8 !important; }
+  #blitzReview .blitz-card-desc-body { background: rgba(255,255,255,.03) !important; border-color: rgba(255,255,255,.07) !important; color: rgba(255,255,255,.5) !important; }
+
+  /* Progress + labels */
+  #blitzReview .blitz-progress-bar { background: rgba(255,255,255,.08) !important; }
+  #blitzReview .blitz-progress-fill { background: #6366F1 !important; }
+  #blitzReview .blitz-progress-label { color: rgba(255,255,255,.4) !important; }
+
+  /* Hide duplicate kbd legend */
+  #blitzReview .blitz-kbd-legend ~ .blitz-kbd-legend { display: none !important; }
 </style>
 <body>
 
@@ -10603,6 +10779,9 @@ function createPanel(id, title, sourceEl, pos) {
 
   document.getElementById('wanCanvasInner').appendChild(panel);
   panelState[id] = { el: panel, minimized: false, savedH: pos.h };
+  // Expose to window so Shovo can call it
+  window._wanPanelState = panelState;
+  window._wanToggleMinimize = toggleMinimize;
 
   makeDraggable(panel, handle);
   makeResizable(panel, resize, id);
@@ -11392,19 +11571,42 @@ document.getElementById('tbLockBtn')?.addEventListener('click', () => {
   <div id="gModeAICard" style="position:absolute;top:38%;left:50%;transform:translate(-50%,-50%) scale(0.94);opacity:0;width:min(680px,92vw);pointer-events:all;transition:transform .22s cubic-bezier(.22,1,.36,1),opacity .18s ease;will-change:transform,opacity;">
 
     <!-- Shovo header -->
-    <div style="text-align:center;margin-bottom:12px;">
+    <div style="text-align:center;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px;">
       <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);border-radius:20px;padding:5px 14px;">
         <span style="font-size:13px;">🧿</span>
         <span style="font:700 12px/1 var(--sans);color:#a5b4fc;letter-spacing:.04em;">Shovo</span>
         <span style="width:1px;height:12px;background:rgba(99,102,241,.3);"></span>
         <span style="font:400 11.5px/1 var(--sans);color:rgba(255,255,255,.35);letter-spacing:.01em;">Listing Assistant</span>
       </div>
+      <button id="shovoCmdMapBtn" title="Custom command shortcuts" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:5px 12px;font:600 11px/1 var(--sans);color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='rgba(99,102,241,.18)';this.style.color='#a5b4fc';this.style.borderColor='rgba(99,102,241,.35)'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.4)';this.style.borderColor='rgba(255,255,255,.1)'">⌘ My shortcuts</button>
+    </div>
+
+    <!-- Command Map Panel (hidden by default) -->
+    <div id="shovoCmdMap" style="display:none;margin-bottom:8px;background:rgba(13,15,28,.98);border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;">
+      <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <span style="font:700 12px/1 var(--sans);color:#fff;">⌘ Custom Shortcuts</span>
+          <span style="font:400 11px/1 var(--sans);color:rgba(255,255,255,.3);margin-left:8px;">Type your shortcut → it expands to the full command</span>
+        </div>
+        <button id="shovoCmdMapClose" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:16px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <!-- Existing shortcuts list -->
+      <div id="shovoCmdList" style="max-height:200px;overflow-y:auto;padding:8px 0;"></div>
+      <!-- Add new shortcut -->
+      <div style="padding:10px 14px 12px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:center;">
+        <input id="shovoCmdShortcut" type="text" placeholder="Shortcut (e.g. bc)" maxlength="20" autocomplete="off" spellcheck="false"
+          style="width:110px;flex:none;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 10px;font:500 12.5px/1 var(--mono);color:#E8EBF8;outline:none;">
+        <span style="color:rgba(255,255,255,.25);font-size:14px;flex:none;">→</span>
+        <input id="shovoCmdTarget" type="text" placeholder="Expands to (e.g. switch to batch)" autocomplete="off" spellcheck="false"
+          style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 10px;font:500 12.5px/1 var(--sans);color:#E8EBF8;outline:none;">
+        <button id="shovoCmdAdd" style="flex:none;background:#6366F1;border:none;border-radius:8px;padding:7px 14px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;transition:all .15s;white-space:nowrap;" onmouseover="this.style.background='#4F52D0'" onmouseout="this.style.background='#6366F1'">+ Add</button>
+      </div>
     </div>
 
     <!-- Search bar -->
     <div id="gModeAIBar" style="display:flex;align-items:center;gap:12px;background:rgba(15,17,32,.97);border:1.5px solid rgba(99,102,241,.45);border-radius:16px;padding:15px 18px;box-shadow:0 0 0 5px rgba(99,102,241,.08),0 40px 90px rgba(0,0,0,.8);">
       <span style="font-size:19px;flex:none;opacity:.85;">⚡</span>
-      <input id="gModeAIInput" type="text" placeholder="Ask Shovo anything about this system…" autocomplete="off" spellcheck="false"
+      <input id="gModeAIInput" type="text" placeholder="Ask anything or say \"open blitzting\", \"add entry\"…" autocomplete="off" spellcheck="false"
         style="flex:1;background:transparent;border:none;outline:none;font:400 15.5px/1 var(--sans);color:#E8EBF8;caret-color:#818CF8;letter-spacing:-.01em;">
       <kbd style="font:600 10px/1 var(--mono);color:rgba(255,255,255,.22);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:3px 8px;flex:none;">ESC</kbd>
     </div>
@@ -11419,16 +11621,26 @@ document.getElementById('tbLockBtn')?.addEventListener('click', () => {
     </div>
 
     <!-- Suggestions -->
-    <div id="gModeAISuggestions" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;padding:0 2px;">
-      <button class="gai-chip" data-q="how do I log a drive">How do I log a drive?</button>
-      <button class="gai-chip" data-q="what is template clone blitzting">What is Template Clone?</button>
-      <button class="gai-chip" data-q="how do offer chips work haz">How do offer chips work?</button>
-      <button class="gai-chip" data-q="full flow from intake to shopify listing">Full flow → Shopify</button>
-      <button class="gai-chip" data-q="what does drive health percentage mean">Drive health grading</button>
-      <button class="gai-chip" data-q="how do I fill a purchase order fill po">How does Fill PO work?</button>
-      <button class="gai-chip" data-q="keyboard shortcuts">Keyboard shortcuts</button>
-      <button class="gai-chip" data-q="what is shovo listing assistant">What is Shovo?</button>
-      <button class="gai-chip" data-q="what is speed review">What is Speed Review?</button>
+    <div id="gModeAISuggestions" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;padding:0 2px;">
+      <div style="font:600 9.5px/1 var(--sans);color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:0 2px;">⚡ Quick actions</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <button class="gai-chip gai-action" data-q="switch to blitzting">⚡ Open Blitzting</button>
+        <button class="gai-chip gai-action" data-q="switch to universal">📱 Open Universal</button>
+        <button class="gai-chip gai-action" data-q="add entry">➕ Add entry</button>
+        <button class="gai-chip gai-action" data-q="copy manifest prompt">📤 Copy prompt</button>
+        <button class="gai-chip gai-action" data-q="add sticky note">📌 Add note</button>
+        <button class="gai-chip gai-action" data-q="reset view">⊙ Reset view</button>
+        <button class="gai-chip gai-action" data-q="speed review">🔎 Speed Review</button>
+      </div>
+      <div style="font:600 9.5px/1 var(--sans);color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:2px 2px 0;">🧠 Ask anything</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <button class="gai-chip" data-q="how do I log a drive">How do I log a drive?</button>
+        <button class="gai-chip" data-q="what is template clone blitzting">What is Template Clone?</button>
+        <button class="gai-chip" data-q="what does drive health percentage mean">Drive health grading</button>
+        <button class="gai-chip" data-q="full flow from intake to shopify listing">Full flow → Shopify</button>
+        <button class="gai-chip" data-q="keyboard shortcuts">Shortcuts</button>
+        <button class="gai-chip" data-q="what is speed review">Speed Review?</button>
+      </div>
     </div>
   </div>
 </div>
@@ -11457,6 +11669,17 @@ document.getElementById('tbLockBtn')?.addEventListener('click', () => {
     background: rgba(99,102,241,.16);
     border-color: rgba(99,102,241,.4);
     color: #a5b4fc;
+  }
+  .gai-chip.gai-action {
+    background: rgba(99,102,241,.1);
+    border-color: rgba(99,102,241,.25);
+    color: #a5b4fc;
+    font-weight: 600;
+  }
+  .gai-chip.gai-action:hover {
+    background: rgba(99,102,241,.25);
+    border-color: rgba(99,102,241,.5);
+    color: #c7caff;
   }
   #gModeAIBody strong { color: #c7caff; font-weight: 700; }
   #gModeAIBody code {
@@ -11627,7 +11850,7 @@ const KB = [
   // ── SHOVO ─────────────────────────────────────────────────────────
   { keys: ['shovo','shov','listing assistant','backslash space','what is shovo','assistant','ask question','quick question','i have a question','help me','what does','how does','cant remember','forgot how','shortcut assistant','knowledge'],
     title: 'Shovo — Listing Assistant',
-    answer: `<h3>What Shovo is</h3>Shovo is the built-in listing assistant for this system. He lives behind <strong>\ + Space</strong> — press backslash then space anywhere on the canvas (while not typing in a field) and he opens instantly as a spotlight overlay in the center of the screen.<h3>How to use him</h3><ol><li>Press <strong>\ then Space</strong> on the canvas</li><li>Type your question in plain English — no special syntax needed</li><li>Hit Enter — Shovo finds the best answer from his knowledge base instantly</li><li>Read the answer. Tap related topic chips to explore further.</li><li>Press <strong>Escape</strong> to close — you are back on the canvas where you left off</li></ol><h3>What you can ask</h3><ul><li>How do I log a drive</li><li>What does 47% health mean</li><li>How does Template Clone work</li><li>My SKU shows #1 — how do I fix it</li><li>What is the flow from intake to Shopify</li><li>How do offer chips get calculated</li><li>How does Fill PO work</li><li>What keyboard shortcuts are available</li></ul><h3>Key facts</h3><ul><li>Fully local — no internet or API needed</li><li>Never says I do not know — if it cannot pinpoint your question it shows related topics</li><li>8 quick suggestion chips appear before you type for the most common questions</li><li>Works anywhere on the canvas — does not interrupt your session</li></ul>`,
+    answer: `<h3>What Shovo is</h3>Shovo is the built-in listing assistant for this system. He is not just a Q&amp;A tool — he can also take action directly on the canvas. He lives behind <strong>\ + Space</strong> — press backslash then space anywhere on the canvas (while not typing in a field) and he opens instantly as a spotlight overlay in the center of the screen.<h3>How to use him</h3><ol><li>Press <strong>\ then Space</strong> on the canvas</li><li>Type your question in plain English — no special syntax needed</li><li>Hit Enter — Shovo finds the best answer from his knowledge base instantly</li><li>Read the answer. Tap related topic chips to explore further.</li><li>Press <strong>Escape</strong> to close — you are back on the canvas where you left off</li></ol><h3>What you can ask</h3><ul><li>How do I log a drive</li><li>What does 47% health mean</li><li>How does Template Clone work</li><li>My SKU shows #1 — how do I fix it</li><li>What is the flow from intake to Shopify</li><li>How do offer chips get calculated</li><li>How does Fill PO work</li><li>What keyboard shortcuts are available</li></ul><h3>Key facts</h3><ul><li>Fully local — no internet or API needed</li><li>Never says I do not know — if it cannot pinpoint your question it shows related topics</li><li>8 quick suggestion chips appear before you type for the most common questions</li><li>Works anywhere on the canvas — does not interrupt your session</li></ul>`,
     related: ['g-mode tours','keyboard shortcuts','export claude','log drive'] },
 
   // ── G-MODE TOURS ─────────────────────────────────────────────────
@@ -11701,15 +11924,367 @@ function buildFallback(q) {
     `<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:rgba(255,255,255,.3);">All topics: Drive logging · RAM · Abribook codes · Drive health · Blitzting · Speed Review · Export to Claude · Universal mode · Haz prices · Offer chips · Fill PO · SKU format · Canvas workspace · Sticky notes · Restore session · Shopify drafts · Shov tours</div>`;
 }
 
+// ── Action engine ─────────────────────────────────────────────────
+const ACTIONS = [
+  // ── Panel: Code Lookup ────────────────────────────────────────
+  { keys: ['open code lookup','show code lookup','code lookup','pull up code','open search','show search panel','code panel','search panel','pull up search'],
+    label: '🔍 Opening Code Lookup',
+    run() {
+      const ps = window._wanPanelState || {};
+      if (ps['search'] && ps['search'].minimized) window._wanToggleMinimize && window._wanToggleMinimize('search');
+      document.getElementById('wp-search')?.scrollIntoView();
+      document.getElementById('q')?.focus();
+      return 'Code Lookup panel is open. Start typing a drive name or code.';
+    }
+  },
+  // ── Panel: Manifest Queue ─────────────────────────────────────
+  { keys: ['open queue','show queue','manifest queue','pull up queue','open manifest','show manifest','queue panel'],
+    label: '📋 Opening Manifest Queue',
+    run() {
+      const ps = window._wanPanelState || {};
+      if (ps['queue'] && ps['queue'].minimized) window._wanToggleMinimize && window._wanToggleMinimize('queue');
+      document.getElementById('wp-queue')?.scrollIntoView();
+      return 'Manifest Queue is open and ready.';
+    }
+  },
+  // ── Panel: Session Cart ───────────────────────────────────────
+  { keys: ['open cart','show cart','session cart','pull up cart','cart panel','show session cart'],
+    label: '🛒 Opening Session Cart',
+    run() {
+      const ps = window._wanPanelState || {};
+      if (ps['cart'] && ps['cart'].minimized) window._wanToggleMinimize && window._wanToggleMinimize('cart');
+      document.getElementById('wp-cart')?.scrollIntoView();
+      return 'Session Cart is open. It updates every second with your queued entries.';
+    }
+  },
+  // ── Minimize search ───────────────────────────────────────────
+  { keys: ['minimize code','minimize search','hide search','collapse search','hide code lookup','minimize code lookup'],
+    label: '➖ Minimizing Code Lookup',
+    run() {
+      window._wanToggleMinimize && window._wanToggleMinimize('search');
+      return 'Code Lookup panel minimized. Press M or click − on the panel to restore it.';
+    }
+  },
+  // ── Minimize queue ────────────────────────────────────────────
+  { keys: ['minimize queue','hide queue','collapse queue','hide manifest','minimize manifest'],
+    label: '➖ Minimizing Manifest Queue',
+    run() {
+      window._wanToggleMinimize && window._wanToggleMinimize('queue');
+      return 'Manifest Queue minimized. Press Q or click − on the panel to restore it.';
+    }
+  },
+  // ── Switch to Batch ───────────────────────────────────────────
+  { keys: ['switch to batch','open batch','go to batch','batch mode','batch page','show batch'],
+    label: '📋 Switching to Batch mode',
+    run() {
+      const sel = document.getElementById('tbWorkPage');
+      if (sel) { sel.value = 'batch'; sel.dispatchEvent(new Event('change')); }
+      return 'Switched to Batch mode. Log your RAM and storage drives here.';
+    }
+  },
+  // ── Switch to Universal ───────────────────────────────────────
+  { keys: ['switch to universal','open universal','go to universal','universal mode','universal page','show universal','phones','laptops','consoles'],
+    label: '📱 Switching to Universal mode',
+    run() {
+      const sel = document.getElementById('tbWorkPage');
+      if (sel) { sel.value = 'universal'; sel.dispatchEvent(new Event('change')); }
+      return 'Switched to Universal mode. Log phones, laptops, consoles, GPUs, and more here.';
+    }
+  },
+  // ── Switch to Blitzting ───────────────────────────────────────
+  { keys: ['switch to blitzting','open blitzting','go to blitzting','blitzting','blitz mode','template clone','speed log'],
+    label: '⚡ Switching to Blitzting',
+    run() {
+      const sel = document.getElementById('tbWorkPage');
+      if (sel) { sel.value = 'blitzting'; sel.dispatchEvent(new Event('change')); }
+      return 'Switched to Blitzting. Use Template Clone for batches of identical drives.';
+    }
+  },
+  // ── Add entry ─────────────────────────────────────────────────
+  { keys: ['add entry','add batch entry','new entry','add a drive','new drive','add item','new item','add card','create entry'],
+    label: '➕ Adding a new batch entry',
+    run() {
+      document.getElementById('dpAddEntry')?.click();
+      return 'New batch entry added to the queue. Fill in the code, health %, and serial.';
+    }
+  },
+  // ── Copy manifest prompt ──────────────────────────────────────
+  { keys: ['copy prompt','copy manifest','export','copy claude','copy the prompt','send to claude','export to claude','copy manifest prep','ctrl enter'],
+    label: '📤 Copying Claude manifest-prep prompt',
+    run() {
+      document.getElementById('dpCopyAll')?.click();
+      return 'Manifest prompt copied. Paste it into Claude to generate your listings.';
+    }
+  },
+  // ── Lock in ───────────────────────────────────────────────────
+  { keys: ['lock in','lock name','lock my name','set my name','lock session','confirm name'],
+    label: '🔒 Locking in session',
+    run() {
+      document.getElementById('tbLockBtn')?.click();
+      const name = document.getElementById('tbListerSelect')?.value;
+      const batch = document.getElementById('tbListerBatch')?.value;
+      if (!name || !batch) return 'Set your name and batch in the toolbar first, then lock in.';
+      return `Locked in as ${name} — batch ${batch}. Your SKUs will now generate correctly.`;
+    }
+  },
+  // ── Reset view / zoom ─────────────────────────────────────────
+  { keys: ['reset view','reset zoom','reset canvas','fit to screen','zoom reset','go back to normal','reset layout'],
+    label: '⊙ Resetting canvas view',
+    run() {
+      document.getElementById('tbZoomReset')?.click();
+      return 'Canvas reset to 100% zoom. All panels are back at their default positions.';
+    }
+  },
+  // ── Zoom in ───────────────────────────────────────────────────
+  { keys: ['zoom in','make bigger','zoom closer','increase zoom','bigger view'],
+    label: '🔎 Zooming in',
+    run() {
+      document.getElementById('tbZoomIn')?.click();
+      document.getElementById('tbZoomIn')?.click();
+      document.getElementById('tbZoomIn')?.click();
+      return 'Zoomed in. Use scroll wheel or + / − to fine-tune.';
+    }
+  },
+  // ── Zoom out ──────────────────────────────────────────────────
+  { keys: ['zoom out','make smaller','zoom back','decrease zoom','smaller view','see more'],
+    label: '🔍 Zooming out',
+    run() {
+      document.getElementById('tbZoomOut')?.click();
+      document.getElementById('tbZoomOut')?.click();
+      document.getElementById('tbZoomOut')?.click();
+      return 'Zoomed out. Use scroll wheel or + / − to fine-tune.';
+    }
+  },
+  // ── Add sticky note ───────────────────────────────────────────
+  { keys: ['add note','sticky note','add sticky','new note','add a note','drop a note','pin a note','reminder'],
+    label: '📌 Adding a sticky note',
+    run() {
+      document.getElementById('tbAddSticky')?.click();
+      return 'Sticky note added to the canvas. Drag it anywhere, type your reminder, change color with the dots.';
+    }
+  },
+  // ── Clear entries ─────────────────────────────────────────────
+  { keys: ['clear queue','clear entries','clear all','empty queue','reset queue','start over','wipe queue'],
+    label: '🗑️ Clearing queue',
+    run() {
+      document.getElementById('dpClear')?.click();
+      return 'Queue cleared. Ready for a fresh session.';
+    }
+  },
+  // ── Open Speed Review ─────────────────────────────────────────
+  { keys: ['speed review','open review','start review','review entries','qc','quality check','review queue','check prices'],
+    label: '🔎 Opening Speed Review',
+    run() {
+      const sel = document.getElementById('tbWorkPage');
+      if (sel) { sel.value = 'blitzting'; sel.dispatchEvent(new Event('change')); }
+      setTimeout(() => document.getElementById('blitzSrcSession')?.click(), 200);
+      setTimeout(() => document.getElementById('blitzReviewBtn')?.click(), 400);
+      return 'Switched to Blitzting and opened Speed Review. Flip through entries to set prices and approve.';
+    }
+  },
+  // ── Show keyboard shortcuts ───────────────────────────────────
+  { keys: ['shortcuts','keyboard shortcuts','show shortcuts','what keys','hotkeys','key commands'],
+    label: '⌨️ Showing keyboard shortcuts',
+    run() {
+      const el = document.getElementById('wanShortcutLegend');
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+      return 'Shortcut legend toggled. Key shortcuts:\n/ = search · N = new entry · S = sticky note\nM = minimize search · Q = minimize queue\n\\ + Space = Shovo · Ctrl+Enter = copy prompt\n+ / - = zoom · 0 = reset view';
+    }
+  },
+  // ── Smoke break ───────────────────────────────────────────────
+  { keys: ['smoke break','smoke','break time','take a break','i need a break','step away'],
+    label: '🚬 Smoke break',
+    run() {
+      const btn = document.getElementById('smokeBreakBtn');
+      if (btn && btn.style.display !== 'none') { btn.click(); return 'Enjoy your break 🚬'; }
+      return "That one's Juan-only. Nice try though.";
+    }
+  },
+];
+
+// Score an action match
+function findAction(q) {
+  const ql = q.toLowerCase().trim();
+  let best = null, bestScore = 0;
+  ACTIONS.forEach(a => {
+    a.keys.forEach(k => {
+      if (ql.includes(k)) {
+        const sc = k.split(' ').length * 3;
+        if (sc > bestScore) { bestScore = sc; best = a; }
+      }
+    });
+    // word-level partial
+    ql.split(/\s+/).forEach(w => {
+      if (w.length > 2) a.keys.forEach(k => {
+        if (k.includes(w)) {
+          const sc = 1;
+          if (sc > bestScore) { bestScore = sc; best = a; }
+        }
+      });
+    });
+  });
+  return bestScore >= 3 ? best : null;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  CUSTOM COMMAND MAP
+// ══════════════════════════════════════════════════════════════════
+const CMD_MAP_KEY = 'shovo_cmd_map_v1';
+let customCmds = [];
+
+function loadCmds() {
+  try { customCmds = JSON.parse(localStorage.getItem(CMD_MAP_KEY) || '[]'); } catch(e) { customCmds = []; }
+}
+function saveCmds() {
+  try { localStorage.setItem(CMD_MAP_KEY, JSON.stringify(customCmds)); } catch(e) {}
+}
+
+// Match a query against custom shortcuts — exact or prefix
+function resolveCustomCmd(q) {
+  const ql = q.trim().toLowerCase();
+  // Exact match first
+  const exact = customCmds.find(c => c.shortcut.toLowerCase() === ql);
+  if (exact) return { cmd: exact, rest: '' };
+  // Prefix match: "bc samsung" → shortcut "bc" expands, "samsung" passed as extra context
+  const prefix = customCmds.find(c => ql.startsWith(c.shortcut.toLowerCase() + ' '));
+  if (prefix) return { cmd: prefix, rest: ql.slice(prefix.shortcut.length).trim() };
+  return null;
+}
+
+// Render the command list in the panel
+function renderCmdList() {
+  const list = document.getElementById('shovoCmdList');
+  if (!list) return;
+  if (customCmds.length === 0) {
+    list.innerHTML = '<div style="padding:12px 16px;font-size:12px;color:rgba(255,255,255,.28);text-align:center;">No shortcuts yet. Add one below.</div>';
+    return;
+  }
+  list.innerHTML = customCmds.map(function(c, i) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);">' +
+      '<code style="font:700 12px/1 var(--mono);color:#a5b4fc;background:rgba(99,102,241,.15);padding:3px 8px;border-radius:6px;flex:none;">' + esc2(c.shortcut) + '</code>' +
+      '<span style="color:rgba(255,255,255,.25);font-size:12px;flex:none;">\u2192</span>' +
+      '<span style="font-size:12px;color:rgba(255,255,255,.6);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc2(c.target) + '">' + esc2(c.target) + '</span>' +
+      '<button data-cmd-del="' + i + '" style="background:none;border:1px solid rgba(255,255,255,.08);border-radius:6px;color:rgba(255,255,255,.25);font-size:11px;padding:3px 8px;cursor:pointer;flex:none;">\u2715 Remove</button>' +
+    '</div>';
+  }).join('');
+
+  list.querySelectorAll('[data-cmd-del]').forEach(function(btn) {
+    btn.addEventListener('mouseover', function() { btn.style.borderColor = 'rgba(239,68,68,.35)'; btn.style.color = '#fca5a5'; });
+    btn.addEventListener('mouseout',  function() { btn.style.borderColor = 'rgba(255,255,255,.08)'; btn.style.color = 'rgba(255,255,255,.25)'; });
+    btn.addEventListener('click', function() {
+      customCmds.splice(parseInt(btn.dataset.cmdDel), 1);
+      saveCmds();
+      renderCmdList();
+      renderCmdBadge();
+    });
+  });
+}
+function esc2(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Wire command map UI ───────────────────────────────────────────
+function initCmdMap() {
+  loadCmds();
+
+  const btn     = document.getElementById('shovoCmdMapBtn');
+  const panel   = document.getElementById('shovoCmdMap');
+  const closeBtn= document.getElementById('shovoCmdMapClose');
+  const addBtn  = document.getElementById('shovoCmdAdd');
+  const shortcutInp = document.getElementById('shovoCmdShortcut');
+  const targetInp   = document.getElementById('shovoCmdTarget');
+
+  btn?.addEventListener('click', () => {
+    const showing = panel.style.display !== 'none';
+    panel.style.display = showing ? 'none' : 'block';
+    if (!showing) { renderCmdList(); shortcutInp?.focus(); }
+  });
+  closeBtn?.addEventListener('click', () => { panel.style.display = 'none'; });
+
+  addBtn?.addEventListener('click', addCmd);
+  targetInp?.addEventListener('keydown', e => { if (e.key === 'Enter') addCmd(); });
+  shortcutInp?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); targetInp?.focus(); } });
+
+  function addCmd() {
+    const s = shortcutInp?.value.trim().toLowerCase();
+    const t = targetInp?.value.trim();
+    if (!s || !t) { shortcutInp?.focus(); return; }
+    // Prevent duplicates
+    const existing = customCmds.findIndex(c => c.shortcut === s);
+    if (existing >= 0) customCmds[existing].target = t;
+    else customCmds.push({ shortcut: s, target: t });
+    saveCmds();
+    renderCmdList();
+    if (shortcutInp) shortcutInp.value = '';
+    if (targetInp)   targetInp.value   = '';
+    shortcutInp?.focus();
+    // Show a little confirmation
+    if (addBtn) {
+      const orig = addBtn.textContent;
+      addBtn.textContent = '✓ Saved';
+      addBtn.style.background = 'rgba(34,197,94,.25)';
+      setTimeout(() => { addBtn.textContent = orig; addBtn.style.background = '#6366F1'; }, 1200);
+    }
+  }
+}
+
+// ── Resolve and render custom command ─────────────────────────────
+function renderCustomCmd(match, q) {
+  const resultEl = document.getElementById('gModeAIResult');
+  const bodyEl   = document.getElementById('gModeAIBody');
+  const labelEl  = document.getElementById('gModeAIResultLabel');
+  resultEl.style.display = 'block';
+  document.getElementById('gModeAISuggestions').style.display = 'none';
+
+  // Build the full query by expanding shortcut
+  const expanded = match.rest ? `${match.cmd.target} ${match.rest}` : match.cmd.target;
+
+  if (labelEl) labelEl.textContent = `⌘ ${match.cmd.shortcut} → ${match.cmd.target}`;
+
+  // Now run the expanded command through the normal action/KB pipeline
+  const action = findAction(expanded);
+  if (action) {
+    let result;
+    try { result = action.run(); } catch(e) { result = 'Something went wrong.'; }
+    bodyEl.innerHTML =
+      `<div style="font:600 11px/1 var(--sans);color:rgba(255,255,255,.3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">⌘ Shortcut: <code style="color:#a5b4fc;background:rgba(99,102,241,.15);padding:1px 6px;border-radius:4px;">${esc2(match.cmd.shortcut)}</code> → <span style="color:rgba(255,255,255,.5);">${esc2(match.cmd.target)}</span></div>` +
+      `<div style="color:#86efac;font-weight:600;font-size:13px;margin-bottom:10px;">✓ Done</div>` +
+      `<div style="color:rgba(255,255,255,.72);line-height:1.7;white-space:pre-line;">${result||''}</div>`;
+  } else {
+    // Falls through to KB
+    const { idx, score } = findBestMatch(expanded);
+    const entry = score >= 2 ? KB[idx] : null;
+    bodyEl.innerHTML =
+      `<div style="font:600 11px/1 var(--sans);color:rgba(255,255,255,.3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">⌘ Shortcut: <code style="color:#a5b4fc;background:rgba(99,102,241,.15);padding:1px 6px;border-radius:4px;">${esc2(match.cmd.shortcut)}</code> → <span style="color:rgba(255,255,255,.5);">${esc2(match.cmd.target)}</span></div>` +
+      (entry ? entry.answer + buildRelated(entry) : buildFallback(expanded));
+  }
+}
+
 // ── Render answer ─────────────────────────────────────────────────
 function renderAnswer(q) {
-  const { idx, score } = findBestMatch(q);
   const resultEl = document.getElementById('gModeAIResult');
   const bodyEl   = document.getElementById('gModeAIBody');
   const labelEl  = document.getElementById('gModeAIResultLabel');
 
   resultEl.style.display = 'block';
   document.getElementById('gModeAISuggestions').style.display = 'none';
+
+  // ── 1. Check custom shortcuts first ────────────────────────────
+  const customMatch = resolveCustomCmd(q);
+  if (customMatch) { renderCustomCmd(customMatch, q); return; }
+
+  // ── 2. Check for action intent ─────────────────────────────────
+  const action = findAction(q);
+  if (action) {
+    if (labelEl) labelEl.textContent = action.label;
+    let result;
+    try { result = action.run(); } catch(e) { result = 'Something went wrong running that action.'; }
+    bodyEl.innerHTML = '<div style="color:#86efac;font-weight:600;font-size:13px;margin-bottom:10px;">✓ Done</div>' +
+      '<div style="color:rgba(255,255,255,.72);line-height:1.7;white-space:pre-line;">' + (result||'') + '</div>' +
+      '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:11.5px;color:rgba(255,255,255,.3);">Press Escape to close and get back to work.</div>';
+    return;
+  }
+
+  // ── Fall back to knowledge base ────────────────────────────────
+  const { idx, score } = findBestMatch(q);
 
   if (score < 2) {
     if (labelEl) labelEl.textContent = "Shovo couldn't pinpoint that";
@@ -11759,8 +12334,18 @@ document.addEventListener('keydown', e => {
   gAILastKey = null;
 });
 
+function renderCmdBadge() {
+  const btn = document.getElementById('shovoCmdMapBtn');
+  if (!btn) return;
+  if (customCmds.length > 0) {
+    btn.innerHTML = '⌘ My shortcuts <span style="background:rgba(99,102,241,.3);color:#c7caff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:2px;">' + customCmds.length + '</span>';
+  } else {
+    btn.innerHTML = '⌘ My shortcuts';
+  }
+}
 function openGModeAI() {
   gAIOpen = true;
+  loadCmds();
   const el = document.getElementById('gModeAI');
   el.style.display = 'block';
   // Trigger Spotlight animation next frame
@@ -11773,6 +12358,10 @@ function openGModeAI() {
     document.getElementById('gModeAIResult').style.display = 'none';
     document.getElementById('gModeAISuggestions').style.display = 'flex';
     document.getElementById('gModeAIBody').innerHTML = '';
+    const mapPanel = document.getElementById('shovoCmdMap');
+    if (mapPanel) mapPanel.style.display = 'none';
+    initCmdMap();
+    renderCmdBadge();
   }, 40);
 }
 
