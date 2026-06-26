@@ -7768,22 +7768,56 @@ document.getElementById('promptCopyBtn').addEventListener('click', ()=>{
   <div style="background:#0F1117;border:1px solid rgba(99,102,241,.3);border-radius:20px;box-shadow:0 0 0 1px rgba(99,102,241,.15),0 32px 80px rgba(0,0,0,.6);width:100%;max-width:420px;overflow:hidden;">
     <div style="padding:24px 24px 20px;text-align:center;border-bottom:1px solid rgba(255,255,255,.07);">
       <div style="font-size:26px;margin-bottom:10px;">⚡</div>
-      <div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:6px;">G-Mode — Guided Tour</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.5;">Pick the tool you want to learn.<br>G-Mode will walk you through the whole flow step by step.</div>
+      <div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:6px;">G-Mode</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.5;">Pick a guided tour — or go deep on exactly what you want to know.</div>
     </div>
     <div style="padding:20px;display:flex;flex-direction:column;gap:10px;">
       <button id="gModePickWan" style="padding:16px 18px;background:rgba(99,102,241,.1);border:1.5px solid rgba(99,102,241,.3);border-radius:14px;cursor:pointer;text-align:left;transition:all .15s;" onmouseover="this.style.background='rgba(99,102,241,.22)';this.style.borderColor='rgba(99,102,241,.6)'" onmouseout="this.style.background='rgba(99,102,241,.1)';this.style.borderColor='rgba(99,102,241,.3)'">
-        <div style="font:700 14px/1 var(--sans);color:#a5b4fc;margin-bottom:5px;">📋 Wan — Intake &amp; Listing</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.4);">Log RAM, storage, phones, laptops, consoles — build listings fast.</div>
+        <div style="font:700 14px/1 var(--sans);color:#a5b4fc;margin-bottom:5px;">📋 Tour — Wan (Intake & Listing)</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);">Walk through the full listing flow step by step.</div>
       </button>
       <button id="gModePickHaz" style="padding:16px 18px;background:rgba(34,197,94,.07);border:1.5px solid rgba(34,197,94,.2);border-radius:14px;cursor:pointer;text-align:left;transition:all .15s;" onmouseover="this.style.background='rgba(34,197,94,.16)';this.style.borderColor='rgba(34,197,94,.5)'" onmouseout="this.style.background='rgba(34,197,94,.07)';this.style.borderColor='rgba(34,197,94,.2)'">
-        <div style="font:700 14px/1 var(--sans);color:#86efac;margin-bottom:5px;">🔍 Haz — Buying &amp; Offers</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.4);">Look up prices, calculate offers, and log purchase orders.</div>
+        <div style="font:700 14px/1 var(--sans);color:#86efac;margin-bottom:5px;">🔍 Tour — Haz (Buying & Offers)</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);">Walk through pricing, offers, and purchase orders.</div>
+      </button>
+      <button id="gModePickKIA" style="padding:16px 18px;background:rgba(251,191,36,.07);border:1.5px solid rgba(251,191,36,.25);border-radius:14px;cursor:pointer;text-align:left;transition:all .15s;" onmouseover="this.style.background='rgba(251,191,36,.15)';this.style.borderColor='rgba(251,191,36,.5)'" onmouseout="this.style.background='rgba(251,191,36,.07)';this.style.borderColor='rgba(251,191,36,.25)'">
+        <div style="font:700 14px/1 var(--sans);color:#fbbf24;margin-bottom:5px;">🧠 Want to Know It All?</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);">Pick exactly what you want to understand — no spotlight, just the real explanation.</div>
       </button>
     </div>
     <div style="padding:0 20px 20px;">
       <button id="gModePickClose" style="width:100%;padding:10px;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:10px;font:600 12px/1 var(--sans);color:rgba(255,255,255,.3);cursor:pointer;">Maybe later</button>
     </div>
+  </div>
+</div>
+
+<!-- ── G-Mode Know It All Modal ── -->
+<div id="gModeKIA" style="display:none;position:fixed;inset:0;background:rgba(10,11,16,.92);z-index:450;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;">
+  <div style="background:#0F1117;border:1px solid rgba(251,191,36,.25);border-radius:20px;box-shadow:0 32px 80px rgba(0,0,0,.6);width:100%;max-width:560px;margin:auto;overflow:hidden;">
+
+    <!-- KIA Header -->
+    <div style="padding:20px 22px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.07);">
+      <span style="font-size:20px;">🧠</span>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em;">Know It All</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">Tap anything you want to understand. No steps — just the real explanation.</div>
+      </div>
+      <button id="gModeKIAClose" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+
+    <!-- KIA Topic List -->
+    <div id="gModeKIAList" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+    </div>
+
+    <!-- KIA Detail Panel -->
+    <div id="gModeKIADetail" style="display:none;border-top:1px solid rgba(255,255,255,.07);">
+      <div style="padding:18px 20px;">
+        <button id="gModeKIABack" style="font:600 12px/1 var(--sans);color:rgba(251,191,36,.7);background:none;border:none;cursor:pointer;margin-bottom:14px;padding:0;">← Back to topics</button>
+        <div id="gModeKIADetailTitle" style="font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3;"></div>
+        <div id="gModeKIADetailBody" style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.75;"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -8017,7 +8051,203 @@ function endTour() {
   document.getElementById('gModeHole').setAttribute('height','0');
 }
 
-// ── Picker ─────────────────────────────────────────────────────────
+// ── Know It All topics ───────────────────────────────────────────
+const KIA_TOPICS = [
+  {
+    icon: '🔍',
+    label: "How Haz looks up prices",
+    sublabel: "Where the numbers come from and why it matters",
+    title: "How Haz Looks Up Prices",
+    body: `When you type a device name into Haz, it searches a database of over 970 items that covers real things we have actually sold here, what is currently listed in the store, and general used market prices pulled from sources like eBay.
+
+Every result comes with a colored badge so you know exactly what you are looking at:
+
+🟢 SYG Sold — This is the gold standard. It means we sold that exact item at that price at this store. If Haz shows you a green badge, that number is as real as it gets.
+
+🔵 SYG Listed — This item is currently in our store with that price tag. Good reference point, but it has not sold yet.
+
+⚫ Market Est — A general estimate based on what similar items go for online. Useful as a ceiling, but do not treat it like a guaranteed sell price.
+
+The reason the badges exist is because not all prices are equal. A buyer who offers based on a market estimate without checking our own sold history might overpay. Haz shows you the source so you can make a smarter call on the spot.`
+  },
+  {
+    icon: '💵',
+    label: "What the offer chips mean",
+    sublabel: "Good, Fair, Low — how they are calculated",
+    title: "What the Offer Chips Mean",
+    body: `Once Haz finds a price match, it shows you three offer options — Good, Fair, and Low. These are not random — they are calculated from the matched price with SYG buy margins applied.
+
+🟢 Good — A safe buy at a solid margin. If the item is in good shape and you feel confident about it, this is your go-to.
+
+🟡 Fair — Middle ground. Works for items where you are a little unsure — maybe the condition is not perfect, or you want to leave a bit more buffer.
+
+🔴 Low — Tight offer. Use this when the item has issues, you are not sure how fast it will move, or the market price feels shaky.
+
+Tapping a chip fills the Accepted At field automatically — you do not have to type anything. From there you just log it on the intake board and move on to the next item.
+
+The whole point is to take the math off your plate. You focus on the customer and the condition of the item — Haz handles the numbers.`
+  },
+  {
+    icon: '📋',
+    label: "What Abribook codes are",
+    sublabel: "Why we use short codes instead of typing everything out",
+    title: "What Abribook Codes Are",
+    body: `An Abribook code is a short identifier for a specific storage drive or RAM module — something like S2990P or K1KC3000.
+
+Instead of typing out "Samsung 990 Pro 2TB NVMe M.2 2280" every single time you log a drive, you type the code and Wan knows exactly what item that is. It fills in the full name, form factor, and interface for you.
+
+The codes follow a pattern: the first letter is the brand (S = Samsung, K = Kingston, W = Western Digital, etc.), followed by the capacity, then a shorthand for the model. Once you have used the system for a few days you will start to remember the ones you see the most.
+
+If you get an item that is not in the code list, there is an "Add a new code" option. You fill in the specs once, give it a code, and it is in the system for everyone from then on.
+
+The reason we use codes instead of typing full names is consistency. If five different people type the same drive five different ways, the listings come out five different ways. With a code, everyone gets the exact same description every time.`
+  },
+  {
+    icon: '❤️',
+    label: "What drive health means and why it matters",
+    sublabel: "The health % and what it tells you about the drive",
+    title: "What Drive Health Means",
+    body: `When you plug a drive into the test rig and open CrystalDiskInfo, it gives you a health percentage. That number is telling you how much life the drive has used up.
+
+100% means the drive is essentially brand new — barely been written to. 80% means it has had some use but still has plenty of life left. Below 50% and you are getting into territory where the drive has been used heavily and may be approaching the end of its lifespan.
+
+For listing purposes, health matters because buyers need to know what they are getting. A 95% health drive and a 40% health drive are not the same product — pricing them the same would be misleading and potentially cause returns.
+
+Here is a rough way to think about it:
+— 80% and above: Healthy. List normally.
+— 50 to 79%: Medium health. Disclose it, price it accordingly.
+— Below 50%: Low health. Always flag this clearly in the listing — buyers who want cheap storage for backups will still buy it, but they need to know upfront.
+— 0% or undetectable: The drive may be failing or already failed. These go out as For Parts.
+
+The health number you enter in Wan shows up directly in the listing so there is no disconnect between what you tested and what gets posted.`
+  },
+  {
+    icon: '⚡',
+    label: "How Blitzting saves time on big batches",
+    sublabel: "Template Clone and Speed Review explained",
+    title: "How Blitzting Saves Time on Big Batches",
+    body: `Blitzting is for situations where you have a pile of the same item to log — same model, same batch, just different health percentages and serial numbers.
+
+Without Blitzting, you would add an entry card for each one, type the same code every time, and fill in the health and serial individually. That is fine for two or three drives. For ten or fifteen it gets tedious fast.
+
+Template Clone fixes that. You fill in the code and shared notes once in the Master Entry, check which fields differ per unit (usually just health % and serial), set the quantity, and hit Generate. Slots appear — one per unit — and you just fill in the unique values. Hit Add all to queue and every single one lands in the queue as its own proper entry card, exactly like you logged each one by hand.
+
+Speed Review is the other half. Once you are done logging a session, you flip through every entry in the queue one by one and confirm the price and cost before export. You approve what is right, flag what needs a second look, and skip past anything already reviewed. When you are done, the whole session is ready to hand off to Claude with every price confirmed — no guessing, no fixing it later.`
+  },
+  {
+    icon: '📤',
+    label: "What happens when you export to Claude",
+    sublabel: "What Copy Claude manifest-prep prompt actually does",
+    title: "What Happens When You Export to Claude",
+    body: `When you have logged everything for a session and hit "Copy Claude manifest-prep prompt," Wan builds two things into that copied text:
+
+For RAM and storage entries (Batch mode), it formats them as manifest lines and tells Claude to use the listing generator — a system that knows the SYG format, how to write drive listings, what health language to use, and which Shopify fields to fill in.
+
+For everything else — phones, laptops, consoles, GPUs (Universal mode) — it sends a structured breakdown of each item and tells Claude to rewrite the default listing from the SYG platform into a proper, complete version with the right title, the right HTML table, and all the product fields filled in.
+
+You paste that into Claude and Claude does the rest. The listings come back ready to push to Shopify.
+
+The reason it works this way — one button, two different instructions — is that drives and RAM have a very specific format that needs very specific rules. Phones and laptops need more detailed, custom work. Mixing them into one instruction would confuse Claude and produce worse output for both. Wan keeps them separate so you never have to think about which Claude instruction to use.`
+  },
+  {
+    icon: '📦',
+    label: "How Fill PO works",
+    sublabel: "What it does and why the customer has to be selected first",
+    title: "How Fill PO Works",
+    body: `Every time you buy something from a customer, it needs a purchase order logged on the SYG company website. That is a multi-field form — you pick the category, make, model, condition, color, your estimated value, and your offer price. Doing that manually for every item in a session adds up.
+
+Fill PO is a button on the intake board that handles that for you. When you tap it for an item, Haz builds a detailed prompt that you paste into Claude in Chrome. Claude then opens the company website form and fills every field out automatically based on what you entered during intake — category, make, model, condition, all of it.
+
+One important thing: the customer has to already be selected on the purchase order page before you run it. That step is the one thing Claude cannot do on its own — it needs to know which customer the order is for, and that selection requires the buyer to log in and make the choice manually. Once the customer is selected, everything else is automated.`
+  },
+  {
+    icon: '🏷️',
+    label: "How SKUs work and what each part means",
+    sublabel: "Reading a SKU like NJ02-J-RTL0626-3",
+    title: "How SKUs Work",
+    body: `Every item logged through this system gets a SKU that looks like this: NJ02-J-RTL0626-3
+
+Here is what each part means:
+
+NJ02 — That is this store. Elmwood Park, NJ. Every SYG location has a code, and this one keeps our listings separate from other stores in the system.
+
+J — The initial of whoever logged the item. If it is Juan, it is J. Ibrahim is IS. Paul is P. This means every item can be traced back to the person who logged it — useful if something needs to be checked later.
+
+RTL0626 — The batch ID. This is usually tied to the date or the retail run the items came from. Everything logged in the same session shares the same batch ID, so you can always find all the items from a particular buy.
+
+3 — The item number within the batch. The first item you log is 1, the second is 2, and so on. It resets each session.
+
+The whole point of the SKU format is accountability and traceability. You can look at any listing on Shopify and know immediately where it came from, when it was logged, and who did it.`
+  },
+  {
+    icon: '🛍️',
+    label: "How listings end up on Shopify",
+    sublabel: "From Claude output to a draft product in the store",
+    title: "How Listings End Up on Shopify",
+    body: `After you export to Claude and Claude writes the listings, the next step is getting them into Shopify. This happens automatically — Claude talks directly to the Shopify store and creates or updates the product for you.
+
+It sets the title, writes the full HTML description in the SYG table format, fills in the product metafields (the behind-the-scenes fields Shopify uses for filtering and search), assigns the SKU, and sets the item as tracked inventory.
+
+Everything goes in as a draft. That means it does not show up to customers on the website until someone manually reviews it and hits publish. This is intentional — the automation handles the tedious setup work, but a real person always makes the final call before anything goes live.
+
+The cost you set during Speed Review also gets saved to Shopify's internal cost field. That is the number Shopify uses to track your profit margin on each item — only visible inside the admin, customers never see it. Setting it at intake means your numbers are always up to date without having to go back and add it later.`
+  }
+];
+
+// ── KIA Modal ──────────────────────────────────────────────────────
+function openKIA() {
+  closePicker();
+  const list = document.getElementById('gModeKIAList');
+  const detail = document.getElementById('gModeKIADetail');
+  detail.style.display = 'none';
+  list.style.display = 'flex';
+
+  // Render topic buttons
+  list.innerHTML = KIA_TOPICS.map((t, i) => `
+    <button class="kia-topic-btn" data-kia="${i}" style="padding:13px 15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:20px;flex:none;">${t.icon}</span>
+      <div>
+        <div style="font:600 13px/1.2 var(--sans);color:rgba(255,255,255,.85);margin-bottom:3px;">${t.label}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.35);">${t.sublabel}</div>
+      </div>
+      <span style="margin-left:auto;color:rgba(255,255,255,.2);font-size:16px;flex:none;">›</span>
+    </button>
+  `).join('');
+
+  // Wire topic buttons
+  list.querySelectorAll('.kia-topic-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', ()=>{ btn.style.background='rgba(251,191,36,.08)'; btn.style.borderColor='rgba(251,191,36,.2)'; });
+    btn.addEventListener('mouseleave', ()=>{ btn.style.background='rgba(255,255,255,.04)'; btn.style.borderColor='rgba(255,255,255,.09)'; });
+    btn.addEventListener('click', ()=>{
+      const t = KIA_TOPICS[parseInt(btn.dataset.kia)];
+      document.getElementById('gModeKIADetailTitle').textContent = t.title;
+      // Format body with paragraph breaks
+      document.getElementById('gModeKIADetailBody').innerHTML = t.body
+        .split('\n\n').map(p => `<p style="margin:0 0 12px;">${p.replace(/\n/g,'<br>')}</p>`).join('');
+      list.style.display = 'none';
+      detail.style.display = 'block';
+    });
+  });
+
+  document.getElementById('gModeKIA').style.display = 'flex';
+  document.getElementById('gModeKIA').scrollTop = 0;
+}
+
+function closeKIA() {
+  document.getElementById('gModeKIA').style.display = 'none';
+}
+
+document.getElementById('gModePickKIA').addEventListener('click', openKIA);
+document.getElementById('gModeKIAClose').addEventListener('click', closeKIA);
+document.getElementById('gModeKIABack').addEventListener('click', ()=>{
+  document.getElementById('gModeKIADetail').style.display = 'none';
+  document.getElementById('gModeKIAList').style.display = 'flex';
+});
+document.getElementById('gModeKIA').addEventListener('click', e=>{
+  if (e.target === document.getElementById('gModeKIA')) closeKIA();
+});
+
+
 function openPicker() {
   document.getElementById('gModePicker').style.display = 'flex';
 }
