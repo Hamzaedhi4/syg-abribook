@@ -5894,6 +5894,23 @@ dpUpdatePreviewAll = function(){
   });
   const el = document.getElementById('dpPreviewAll');
   if(el) el.textContent = dpManifestPreviewText();
+  // Sync entries to localStorage so phone can read them
+  try {
+    const payload = dpEntries.map((e, i) => ({
+      idx:    i,
+      code:   e.code   || '',
+      result: e.result || '',
+      sn:     e.sn     || '',
+      notes:  e.notes  || '',
+      sku:    dpEntrySkuLabel(e)
+    }));
+    localStorage.setItem('syg_dp_entries', JSON.stringify({
+      batch:   LISTER_BATCH   || '',
+      initial: LISTER_INITIAL || '',
+      entries: payload,
+      ts:      Date.now()
+    }));
+  } catch(e) {}
 };
 
 async function syncManifestEntries(){
@@ -12747,19 +12764,33 @@ function pmAddUrls(sku, urls) {
   pmSaveStore(store);
 }
 
-// ─── Get current dpEntries as [{sku, title}] ─────────────────────
+// ─── Get current entries as [{sku, title, code, result, sn}] ─────
 function getSKUList() {
+  if (isMobile) {
+    // Phone reads from localStorage written by desktop
+    try {
+      const raw = localStorage.getItem('syg_dp_entries');
+      if (!raw) return [];
+      const data    = JSON.parse(raw);
+      const lister  = smoGetLister();
+      return (data.entries || []).filter(e => e.code).map((e, i) => ({
+        sku:    lister ? smoMakeSKU(i, lister) : (e.sku || ('#' + (i+1))),
+        title:  e.code,
+        code:   e.code,
+        result: e.result,
+        sn:     e.sn
+      }));
+    } catch(err) { return []; }
+  }
+  // Desktop reads from live dpEntries
   if (typeof dpEntries === 'undefined' || !dpEntries.length) return [];
-  const mobileLister = isMobile ? smoGetLister() : null;
-  return dpEntries.map((e, i) => {
-    let sku;
-    if (mobileLister) {
-      sku = smoMakeSKU(i, mobileLister);
-    } else {
-      sku = (typeof dpEntrySkuLabel === 'function') ? dpEntrySkuLabel(e) : ('#' + (i+1));
-    }
-    return { sku, title: e.code || '—', code: e.code, result: e.result, sn: e.sn };
-  }).filter(x => x.sku && x.code);
+  return dpEntries.map((e, i) => ({
+    sku:    (typeof dpEntrySkuLabel === 'function') ? dpEntrySkuLabel(e) : ('#' + (i+1)),
+    title:  e.code || '—',
+    code:   e.code,
+    result: e.result,
+    sn:     e.sn
+  })).filter(x => x.code);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -12838,7 +12869,12 @@ function smoRender() {
   const pending = items.filter(x => x.photos.length === 0);
 
   if (!items.length) {
-    body.innerHTML = '<p style="color:rgba(255,255,255,.25);font-size:13px;text-align:center;padding:40px 0;">No entries yet — add items in the manifest queue on desktop first.</p>';
+    // Check if there's a stale sync or no sync at all
+    const raw = localStorage.getItem('syg_dp_entries');
+    const msg = raw
+      ? 'No entries found for this batch. Make sure the batch number matches what\'s on the desktop.'
+      : 'No entries yet — add items in Haz on the desktop first, then refresh here.';
+    body.innerHTML = `<p style="color:rgba(255,255,255,.35);font-size:13px;text-align:center;padding:40px 16px;line-height:1.6;">${msg}</p>`;
     return;
   }
 
