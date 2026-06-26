@@ -5895,7 +5895,6 @@ dpUpdatePreviewAll = function(){
   });
   const el = document.getElementById('dpPreviewAll');
   if(el) el.textContent = dpManifestPreviewText();
-  // Sync to localStorage so phone can read entries
   try {
     localStorage.setItem('syg_dp_entries', JSON.stringify({
       batch:   LISTER_BATCH   || '',
@@ -8540,32 +8539,155 @@ function hazVelocityMatch(text, category){
 // Local fuzzy matching — returns {title, price, source} or null
 // Sold listings weighted 1.5x. Requires meaningful keyword overlap to match.
 function hazLocalMatch(text){
-  const lo = text.toLowerCase().replace(/[^a-z0-9 .\/]/g,' ');
-  const words = lo.split(/\s+/).filter(w=>w.length>1);
-  let best = null, bestScore = 0;
-  for(const entry of HAZ_STORE_PRICES){
-    let score = 0;
-    const sourceBonus = entry.source==='sold' ? 1.5 : 1.0;
-    for(const kw of entry.keywords){
-      // Full keyword phrase match — strongest signal
-      if(lo.includes(kw)){
-        score += kw.split(' ').length * 3 * sourceBonus;
-        break;
-      }
-      // Partial: all words in keyword must appear in text
-      const kwWords = kw.split(' ').filter(w=>w.length>1);
-      if(kwWords.length >= 2){
-        const allMatch = kwWords.every(k => words.some(w => w===k || w.includes(k)));
-        if(allMatch) score += kwWords.length * 2 * sourceBonus;
+  // ── Normalise ────────────────────────────────────────────────────
+  const lo = text.toLowerCase()
+    .replace(/[\u2018\u2019]/g,"'").replace(/[^a-z0-9 .'\-\/+]/g,' ')
+    .replace(/\s+/g,' ').trim();
+  const qWords = lo.split(' ').filter(w=>w.length>0);
+
+  // ── Spec extractors ──────────────────────────────────────────────
+  function extractGB(s){
+    const m=s.match(/(\d+)\s*gb/); return m?parseInt(m[1]):null;
+  }
+  function extractRAM(s){
+    const m=s.match(/(\d+)\s*gb\s*(?:ram|memory)/); return m?parseInt(m[1]):null;
+  }
+  function extractScreen(s){
+    const m=s.match(/(\d+(?:\.\d+)?)\s*(?:"|inch|in\b)/); return m?parseFloat(m[1]):null;
+  }
+
+  // Generation tokens — longest first to avoid prefix collision
+  const GEN_TOKENS=[
+    'iphone 17 pro max','iphone 17 pro','iphone 17 plus','iphone 17',
+    'iphone 16 pro max','iphone 16 pro','iphone 16 plus','iphone 16',
+    'iphone 15 pro max','iphone 15 pro','iphone 15 plus','iphone 15',
+    'iphone 14 pro max','iphone 14 pro','iphone 14 plus','iphone 14',
+    'iphone 13 pro max','iphone 13 pro','iphone 13 mini','iphone 13',
+    'iphone 12 pro max','iphone 12 pro','iphone 12 mini','iphone 12',
+    'iphone 11 pro max','iphone 11 pro','iphone 11',
+    'iphone xr','iphone xs max','iphone xs','iphone x',
+    'iphone se','iphone 8 plus','iphone 8','iphone 7 plus','iphone 7',
+    'galaxy s25 ultra','galaxy s25+','galaxy s25',
+    'galaxy s24 ultra','galaxy s24+','galaxy s24',
+    'galaxy s23 ultra','galaxy s23+','galaxy s23',
+    'galaxy s22 ultra','galaxy s22+','galaxy s22',
+    'galaxy s21 ultra','galaxy s21+','galaxy s21',
+    'galaxy a55','galaxy a35','galaxy a15',
+    'galaxy z fold 7','galaxy z fold 6','galaxy z fold 5',
+    'galaxy z flip 7','galaxy z flip 6','galaxy z flip 5',
+    'ps5 slim','ps5 pro','ps5',
+    'ps4 pro','ps4 slim','ps4',
+    'ps3 slim','ps3','ps2','ps1',
+    'xbox series x','xbox series s',
+    'xbox one x','xbox one s','xbox one',
+    'xbox 360',
+    'switch 2','switch oled','switch lite','nintendo switch',
+    'wii u','wii',
+    '3ds xl','3ds','2ds xl','2ds','ds lite','nintendo ds',
+    'game boy advance','game boy color','game boy',
+    'psp go','psp','ps vita',
+    'quest 3s','quest 3','quest 2','quest pro','meta quest',
+    'macbook pro','macbook air','macbook',
+    'ipad pro','ipad air','ipad mini','ipad',
+    'apple watch ultra','apple watch se','apple watch series',
+    'pixel 9 pro xl','pixel 9 pro','pixel 9','pixel 8 pro','pixel 8',
+    'pixel 7 pro','pixel 7','pixel 6 pro','pixel 6',
+  ];
+  function extractGen(s){ return GEN_TOKENS.find(g=>s.includes(g))||null; }
+
+  const CARRIERS=['unlocked','t-mobile','tmobile','at&t','att','verizon','boost','cricket','sprint','metro'];
+  function extractCarrier(s){ return CARRIERS.find(c=>s.includes(c))||null; }
+
+  const qGB=extractGB(lo), qRAM=extractRAM(lo), qScreen=extractScreen(lo);
+  const qGen=extractGen(lo), qCarrier=extractCarrier(lo);
+  const qForParts=/for.?parts|broken|cracked|bad.?(lcd|screen|display)|no power|doesn.?t.?(turn|boot|power)/i.test(lo);
+  const qNew=/\bnew\b|\bnib\b|\bsealed\b/.test(lo);
+
+  // ── Per-entry scorer ─────────────────────────────────────────────
+  function scoreEntry(entry){
+    const kws=entry.keywords;
+    const title=entry.title.toLowerCase();
+    let score=0;
+
+    // 1. Keyword phrase matching
+    let kwBest=0;
+    for(const kw of kws){
+      if(lo.includes(kw)){ kwBest=Math.max(kwBest,kw.split(' ').length*10); continue; }
+      const kwW=kw.split(' ').filter(w=>w.length>0);
+      const matched=kwW.filter(w=>qWords.includes(w)||lo.includes(w));
+      const cov=matched.length/kwW.length;
+      if(cov>=0.75)      kwBest=Math.max(kwBest,cov*kwW.length*6);
+      else if(cov>=0.5)  kwBest=Math.max(kwBest,cov*kwW.length*3);
+    }
+    score+=kwBest;
+
+    // 2. Title word coverage
+    const tW=title.split(' ').filter(w=>w.length>1);
+    const tHits=tW.filter(w=>qWords.includes(w)||lo.includes(w));
+    score+=(tHits.length/tW.length)*8;
+
+    // 3. Generation match / mismatch
+    if(qGen){
+      const eGen=extractGen(title+' '+kws.join(' '));
+      if(eGen===qGen)      score+=20;
+      else if(eGen!==null) return -999;
+    }
+
+    // 4. Storage exact match / mismatch
+    if(qGB!==null){
+      const eGB=extractGB(title+' '+kws.join(' '));
+      if(eGB!==null){
+        if(eGB===qGB)                   score+=12;
+        else if(Math.abs(eGB-qGB)<=16)  score+=2;
+        else                             score-=15;
       }
     }
-    if(score > bestScore){ bestScore = score; best = entry; }
+
+    // 5. RAM match
+    if(qRAM!==null){
+      const eRAM=extractRAM(title+' '+kws.join(' '));
+      if(eRAM!==null){ if(eRAM===qRAM) score+=8; else score-=10; }
+    }
+
+    // 6. Screen size match
+    if(qScreen!==null){
+      const eScreen=extractScreen(title);
+      if(eScreen!==null){
+        if(Math.abs(eScreen-qScreen)<0.15) score+=5; else score-=6;
+      }
+    }
+
+    // 7. Carrier match
+    if(qCarrier){
+      const eCarrier=extractCarrier(title+' '+kws.join(' '));
+      if(eCarrier===qCarrier) score+=6;
+      else if(eCarrier!==null&&qCarrier==='unlocked') score-=4;
+    }
+
+    // 8. Condition match
+    const eForParts=/for.?parts|cracked|bad.?(lcd|screen|display)|no power/i.test(title);
+    if(qForParts&&!eForParts) score-=12;
+    if(!qForParts&&eForParts) score-=12;
+    if(qNew&&/\bnew\b|\bnib\b/.test(title)) score+=5;
+
+    // 9. Source bonus
+    if(entry.source==='sold')      score*=1.3;
+    else if(entry.source==='syg')  score*=1.1;
+
+    return score;
   }
-  // Require a score of at least 3 to avoid garbage matches
-  if(bestScore < 3) return null;
-  // Map internal source tag to display label
-  const sourceLabel = best.source==='sold' ? 'SYG Sold' : best.source==='syg' ? 'SYG Listed' : 'Market Est';
-  return {...best, source: sourceLabel};
+
+  let best=null, bestScore=0;
+  for(const entry of HAZ_STORE_PRICES){
+    const s=scoreEntry(entry);
+    if(s>bestScore){ bestScore=s; best=entry; }
+  }
+
+  const minThreshold = qGen ? 25 : 8;
+  if(bestScore<minThreshold||!best) return null;
+
+  const sourceLabel=best.source==='sold'?'SYG Sold':best.source==='syg'?'SYG Listed':'Market Est';
+  return {...best, source:sourceLabel, _score:bestScore};
 }
 
 const HAZ_FEE_RATE   = 0.13;
@@ -10768,7 +10890,6 @@ function initCanvas() {
   createPanel('queue',  '📋 Manifest Queue', document.getElementById('draftPanel'),   queuePos);
   createPanel('cart',   '🛒 Session Cart',   document.getElementById('cartPanelContent'), cartPos);
 
-  // Photo Mirror panel
   const photosPos = saved.photos || { x: 1400, y: 20, w: 380, h: 560 };
   const pmHolder  = document.createElement('div');
   pmHolder.innerHTML = `
@@ -11932,29 +12053,85 @@ KB.forEach((entry, i) => {
 
 // ── Score a query against all KB entries ─────────────────────────
 function findBestMatch(raw) {
-  const q = raw.toLowerCase().trim();
-  const scores = new Array(KB.length).fill(0);
+  // Normalise
+  const q = raw.toLowerCase()
+    .replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
+  const qWords = new Set(q.split(' ').filter(w => w.length > 1));
 
-  INDEX.forEach(({ term, idx }) => {
-    // Exact substring match in query
-    if (q.includes(term)) scores[idx] += term.split(' ').length * 3;
-    // Query words inside term
-    q.split(/\s+/).forEach(word => {
-      if (word.length > 2 && term.includes(word)) scores[idx] += 1;
-    });
+  // Synonym expansion — common phrasings mapped to KB key terms
+  const SYNONYMS = {
+    'whats':'what is', 'wont':'won\'t', 'cant':'can\'t', 'dont':"don't",
+    'how do i':'how to', 'how do you':'how to', 'show me':'how to',
+    'add entry':'log drive', 'new entry':'log drive', 'add item':'log drive',
+    'blitz':'blitzting', 'template':'blitzting', 'clone':'blitzting',
+    'qc':'speed review', 'quality check':'speed review',
+    'copy prompt':'export', 'ctrl enter':'export', 'copy manifest':'export',
+    'phones':'universal mode', 'laptops':'universal mode', 'consoles':'universal mode',
+    'purchase order':'fill po', 'company website':'fill po', 'po form':'fill po',
+    'item number':'sku format', 'entry number':'sku format',
+    'set my name':'lock in', 'who am i':'lock in', 'lister':'lock in',
+    'what have i logged':'session cart', 'what did i log':'session cart',
+    'backslash space':'shovo', 'backslash':'shovo', 'ai assistant':'shovo',
+    'tour':'g-mode tours', 'training':'g-mode tours', 'tutorial':'g-mode tours',
+    'hotkey':'keyboard shortcuts', 'shortcuts':'keyboard shortcuts',
+    'move panel':'canvas', 'drag panel':'canvas', 'zoom in':'canvas',
+    'save notes':'sticky notes', 'pin note':'sticky notes',
+    'recover session':'restore session', 'lost entries':'restore session',
+    'goes live':'shopify', 'publish listing':'shopify', 'draft listing':'shopify',
+    'how much':'haz price lookup', 'what to offer':'offer chips',
+    'price a device':'haz price lookup', 'buying price':'haz price lookup',
+  };
+
+  // Expand synonyms in query
+  let expanded = q;
+  for(const [from, to] of Object.entries(SYNONYMS)){
+    if(expanded.includes(from)) expanded = expanded.replace(from, to);
+  }
+  const eWords = new Set(expanded.split(' ').filter(w => w.length > 1));
+
+  // Score each KB entry
+  const scores = KB.map((entry, i) => {
+    let score = 0;
+
+    // 1. Exact key phrase match in expanded query — strongest signal
+    let keyBest = 0;
+    for(const key of entry.keys){
+      if(expanded.includes(key)){
+        keyBest = Math.max(keyBest, key.split(' ').length * 12);
+        continue;
+      }
+      // Partial key word overlap
+      const kW = key.split(' ').filter(w => w.length > 1);
+      const hits = kW.filter(w => eWords.has(w));
+      const cov = hits.length / kW.length;
+      if(cov >= 0.8)       keyBest = Math.max(keyBest, cov * kW.length * 8);
+      else if(cov >= 0.5)  keyBest = Math.max(keyBest, cov * kW.length * 4);
+    }
+    score += keyBest;
+
+    // 2. Title word match
+    const tW = entry.title.toLowerCase().split(' ').filter(w => w.length > 2);
+    const tHits = tW.filter(w => eWords.has(w));
+    score += (tHits.length / tW.length) * 10;
+
+    // 3. Require minimum meaningful overlap — reject noise
+    const allEntryWords = new Set([
+      ...entry.keys.join(' ').split(' '),
+      ...tW
+    ].filter(w => w.length > 2));
+    const overlap = [...eWords].filter(w => allEntryWords.has(w)).length;
+    if(overlap === 0) return 0; // zero shared words → no match
+
+    return score;
   });
 
-  // Bonus: title word matches
-  KB.forEach((entry, i) => {
-    entry.title.toLowerCase().split(/\s+/).forEach(word => {
-      if (word.length > 3 && q.includes(word)) scores[i] += 2;
-    });
-  });
+  const maxScore = Math.max(...scores);
+  const best = scores.indexOf(maxScore);
 
-  const best = scores.indexOf(Math.max(...scores));
-  return { idx: best, score: Math.max(...scores) };
+  // Minimum threshold — must have at least one solid key phrase partial match
+  if(maxScore < 4) return { idx: best, score: maxScore };
+  return { idx: best, score: maxScore };
 }
-
 // ── Build related chips ───────────────────────────────────────────
 function buildRelated(entry) {
   if (!entry.related || entry.related.length === 0) return '';
@@ -12540,382 +12717,184 @@ document.querySelectorAll('.gai-chip').forEach(btn => {
 <script>
 (function(){
 'use strict';
-
-// ── Config ────────────────────────────────────────────────────────
-const CLOUD  = 'dic0mifhj';
-const PRESET = 'syg_unsigned';
-const LS_PHOTOS  = 'syg_photo_urls';    // {sku:[url,...]}
-const LS_ENTRIES = 'syg_dp_entries';    // written by desktop
-const LS_LISTER  = 'syg_mobile_lister_v1'; // {initial, batch}
-
-const LISTERS = [
-  {initial:'J',  name:'Juan'},
-  {initial:'IS', name:'Ibrahim'},
-  {initial:'P',  name:'Paul'},
-];
-
-// ── Photo store ───────────────────────────────────────────────────
-function getStore(){ try{return JSON.parse(localStorage.getItem(LS_PHOTOS)||'{}')}catch(e){return{}} }
-function saveStore(s){ try{localStorage.setItem(LS_PHOTOS,JSON.stringify(s))}catch(e){} }
-function addUrls(sku,urls){ const s=getStore(); s[sku]=(s[sku]||[]).concat(urls); saveStore(s); }
-
-// ── Mobile lister ─────────────────────────────────────────────────
-function getLister(){ try{return JSON.parse(localStorage.getItem(LS_LISTER)||'null')}catch(e){return null} }
-function saveLister(i,b){ try{localStorage.setItem(LS_LISTER,JSON.stringify({initial:i,batch:b}))}catch(e){} }
-function clearLister(){ try{localStorage.removeItem(LS_LISTER)}catch(e){} }
-
-function makeSKU(idx, lister){
-  if(!lister||!lister.initial||!lister.batch) return '#'+(idx+1);
-  return 'NJ02-'+lister.initial+'-'+lister.batch+'-'+(idx+1);
-}
-
-// ── Entry list ────────────────────────────────────────────────────
+const CLOUD='dic0mifhj',PRESET='syg_unsigned',LS_PHOTOS='syg_photo_urls',LS_ENTRIES='syg_dp_entries',LS_LISTER='syg_mobile_lister_v1';
+const LISTERS=[{initial:'J',name:'Juan'},{initial:'IS',name:'Ibrahim'},{initial:'P',name:'Paul'}];
+function getStore(){try{return JSON.parse(localStorage.getItem(LS_PHOTOS)||'{}')}catch(e){return{}}}
+function saveStore(s){try{localStorage.setItem(LS_PHOTOS,JSON.stringify(s))}catch(e){}}
+function addUrls(sku,urls){const s=getStore();s[sku]=(s[sku]||[]).concat(urls);saveStore(s);}
+function getLister(){try{return JSON.parse(localStorage.getItem(LS_LISTER)||'null')}catch(e){return null}}
+function saveLister(i,b){try{localStorage.setItem(LS_LISTER,JSON.stringify({initial:i,batch:b}))}catch(e){}}
+function clearLister(){try{localStorage.removeItem(LS_LISTER)}catch(e){}}
+function makeSKU(idx,l){if(!l||!l.initial||!l.batch)return'#'+(idx+1);return'NJ02-'+l.initial+'-'+l.batch+'-'+(idx+1);}
 function getEntries(){
   try{
-    const raw = localStorage.getItem(LS_ENTRIES);
-    if(!raw) return [];
-    const data = JSON.parse(raw);
-    const lister = getLister();
-    return (data.entries||[]).filter(e=>e.code).map((e,i)=>({
-      sku:    makeSKU(i, lister),
-      title:  e.code,
-      code:   e.code,
-      result: e.result||'',
-      sn:     e.sn||'',
-      photos: (getStore()[makeSKU(i,lister)]||[])
-    }));
-  }catch(e){ return []; }
+    const raw=localStorage.getItem(LS_ENTRIES);if(!raw)return[];
+    const data=JSON.parse(raw),l=getLister();
+    return(data.entries||[]).filter(e=>e.code).map((e,i)=>({sku:makeSKU(i,l),title:e.code,code:e.code,result:e.result||'',sn:e.sn||'',photos:(getStore()[makeSKU(i,l)]||[])}));
+  }catch(e){return[];}
 }
-
-// ── Mobile detection ──────────────────────────────────────────────
-const isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
-// ── Cloudinary upload ─────────────────────────────────────────────
-async function uploadFile(file, sku){
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('upload_preset', PRESET);
-  fd.append('tags', sku);
-  fd.append('folder', 'syg-photos');
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
-  if(!res.ok) throw new Error('Upload failed '+res.status);
-  return (await res.json()).secure_url;
+async function uploadFile(file,sku){
+  const fd=new FormData();fd.append('file',file);fd.append('upload_preset',PRESET);fd.append('tags',sku);fd.append('folder','syg-photos');
+  const res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
+  if(!res.ok)throw new Error('Upload failed '+res.status);
+  return(await res.json()).secure_url;
 }
-
-async function fetchCloudinaryURLs(sku){
-  if(!sku||sku.startsWith('#')) return [];
-  try{
-    const res = await fetch(`https://res.cloudinary.com/${CLOUD}/image/list/${encodeURIComponent(sku)}.json`);
-    if(!res.ok) return [];
-    const data = await res.json();
-    return (data.resources||[]).map(r=>`https://res.cloudinary.com/${CLOUD}/image/upload/${r.public_id}`);
-  }catch(e){ return []; }
-}
-
-// ══════════════════════════════════════════════════════════════════
-//  MOBILE UI
-// ══════════════════════════════════════════════════════════════════
-if(!isMobile) return; // everything below is mobile-only
-
-let smoLocked = false; // prevent re-render while typing
-
+const isMobile=window.innerWidth<768||/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+if(!isMobile)return;
+let smoLocked=false;
 function smoInit(){
   document.getElementById('syg-mobile-overlay').classList.add('smo-on');
-  const lister = getLister();
-  if(!lister) smoShowLockIn();
-  else smoRender();
+  getLister()?smoRender():smoShowLockIn();
 }
-
-// ── Lock-in screen ────────────────────────────────────────────────
-let _selInitial = '', _selName = '';
-
+let _selI='',_selN='';
 function smoShowLockIn(){
-  document.querySelector('.smo-bottom').style.display = 'none';
-  document.getElementById('smo-batch-label').textContent = 'Who are you?';
-  document.getElementById('smo-progress-label').textContent = 'Select your name and batch number';
-  document.getElementById('smo-progress-fill').style.width = '0%';
-  document.getElementById('smo-body').innerHTML = `
+  document.querySelector('.smo-bottom').style.display='none';
+  document.getElementById('smo-batch-label').textContent='Who are you?';
+  document.getElementById('smo-progress-label').textContent='Select your name and batch number';
+  document.getElementById('smo-progress-fill').style.width='0%';
+  document.getElementById('smo-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:14px;padding:8px 0;">
       <div>
         <p style="font-size:11px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px;">Your name</p>
         <div style="display:flex;flex-direction:column;gap:8px;" id="smo-name-btns">
-          ${LISTERS.map(l=>`
-            <button data-ini="${l.initial}"
-              onclick="smoPickName('${l.initial}','${l.name}',this)"
-              style="padding:13px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-              border-radius:10px;color:rgba(255,255,255,.7);font-size:14px;font-weight:600;text-align:left;cursor:pointer;">
-              ${l.name} <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.3);margin-left:6px;">${l.initial}</span>
-            </button>`).join('')}
+          ${LISTERS.map(l=>`<button data-ini="${l.initial}" onclick="smoPickName('${l.initial}','${l.name}',this)"
+            style="padding:13px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:rgba(255,255,255,.7);font-size:14px;font-weight:600;text-align:left;cursor:pointer;">
+            ${l.name} <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.3);margin-left:6px;">${l.initial}</span></button>`).join('')}
         </div>
       </div>
       <div id="smo-batch-row" style="display:none;">
         <p style="font-size:11px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px;">Batch number</p>
-        <input id="smo-batch-inp" type="text" placeholder="e.g. RTL0626" maxlength="12"
-          autocomplete="off" autocapitalize="characters" spellcheck="false"
-          style="width:100%;padding:13px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
-          border-radius:10px;color:#fff;font-size:15px;font-family:monospace;outline:none;box-sizing:border-box;">
-        <button onclick="smoDoLockIn()"
-          style="margin-top:10px;width:100%;padding:13px;background:#1F4E79;border:none;
-          border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
-          Continue →
-        </button>
+        <input id="smo-batch-inp" type="text" placeholder="e.g. RTL0626" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false"
+          style="width:100%;padding:13px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:15px;font-family:monospace;outline:none;box-sizing:border-box;">
+        <button onclick="smoDoLockIn()" style="margin-top:10px;width:100%;padding:13px;background:#1F4E79;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Continue →</button>
       </div>
     </div>`;
 }
-
-window.smoPickName = function(initial, name, btn){
-  _selInitial = initial; _selName = name;
-  document.querySelectorAll('#smo-name-btns button').forEach(b=>{
-    b.style.background='rgba(255,255,255,.05)'; b.style.borderColor='rgba(255,255,255,.1)'; b.style.color='rgba(255,255,255,.7)';
-  });
-  btn.style.background='rgba(31,78,121,.4)'; btn.style.borderColor='#1F4E79'; btn.style.color='#fff';
+window.smoPickName=function(initial,name,btn){
+  _selI=initial;_selN=name;
+  document.querySelectorAll('#smo-name-btns button').forEach(b=>{b.style.background='rgba(255,255,255,.05)';b.style.borderColor='rgba(255,255,255,.1)';b.style.color='rgba(255,255,255,.7)';});
+  btn.style.background='rgba(31,78,121,.4)';btn.style.borderColor='#1F4E79';btn.style.color='#fff';
   document.getElementById('smo-batch-row').style.display='';
-  smoLocked = true; // prevent smoRender from wiping form
-  setTimeout(()=>document.getElementById('smo-batch-inp')?.focus(), 80);
+  smoLocked=true;
+  setTimeout(()=>document.getElementById('smo-batch-inp')?.focus(),80);
 };
-
-window.smoDoLockIn = function(){
-  const batch = (document.getElementById('smo-batch-inp')?.value||'').trim().toUpperCase();
-  if(!_selInitial){ alert('Select your name first'); return; }
-  if(batch.length < 6){ alert('Enter full batch number e.g. RTL0626'); return; }
-  saveLister(_selInitial, batch);
-  smoLocked = false;
-  document.querySelector('.smo-bottom').style.display = '';
-  smoRender();
+window.smoDoLockIn=function(){
+  const batch=(document.getElementById('smo-batch-inp')?.value||'').trim().toUpperCase();
+  if(!_selI){alert('Select your name first');return;}
+  if(batch.length<6){alert('Enter full batch e.g. RTL0626');return;}
+  saveLister(_selI,batch);smoLocked=false;
+  document.querySelector('.smo-bottom').style.display='';smoRender();
 };
-
-window.smoSignOut = function(){ clearLister(); smoShowLockIn(); };
-
-// ── Main render ───────────────────────────────────────────────────
+window.smoSignOut=function(){clearLister();smoShowLockIn();};
 function smoRender(){
-  if(smoLocked) return;
-  const lister = getLister();
-  if(!lister){ smoShowLockIn(); return; }
-
-  const items  = getEntries();
-  const doneN  = items.filter(x=>x.photos.length>0).length;
-  const total  = items.length;
-  const lName  = LISTERS.find(l=>l.initial===lister.initial)?.name||lister.initial;
-
-  document.getElementById('smo-batch-label').textContent = `${lister.batch} · ${lName} · ${doneN}/${total} done`;
-  document.getElementById('smo-progress-fill').style.width = total ? Math.round(doneN/total*100)+'%' : '0%';
-  document.getElementById('smo-progress-label').innerHTML =
-    `${doneN} of ${total} items have photos &nbsp;·&nbsp; <span onclick="smoSignOut()" style="color:#818CF8;text-decoration:underline;cursor:pointer;">Switch</span>`;
-  document.querySelector('.smo-bottom').style.display = '';
-
-  const body = document.getElementById('smo-body');
-  body.innerHTML = '';
-
+  if(smoLocked)return;
+  const l=getLister();if(!l){smoShowLockIn();return;}
+  const items=getEntries(),doneN=items.filter(x=>x.photos.length>0).length,total=items.length;
+  const lName=LISTERS.find(x=>x.initial===l.initial)?.name||l.initial;
+  document.getElementById('smo-batch-label').textContent=`${l.batch} · ${lName} · ${doneN}/${total} done`;
+  document.getElementById('smo-progress-fill').style.width=total?Math.round(doneN/total*100)+'%':'0%';
+  document.getElementById('smo-progress-label').innerHTML=`${doneN} of ${total} items have photos &nbsp;·&nbsp; <span onclick="smoSignOut()" style="color:#818CF8;text-decoration:underline;cursor:pointer;">Switch</span>`;
+  document.querySelector('.smo-bottom').style.display='';
+  const body=document.getElementById('smo-body');body.innerHTML='';
   if(!items.length){
-    const raw = localStorage.getItem(LS_ENTRIES);
-    body.innerHTML = `<p style="color:rgba(255,255,255,.35);font-size:13px;text-align:center;padding:40px 16px;line-height:1.6;">
-      ${raw ? 'No entries for this batch.<br>Check that your batch number matches the desktop.' : 'No entries yet.<br>Add items in Haz on the desktop first, then tap ⟳'}
-    </p>`;
+    const raw=localStorage.getItem(LS_ENTRIES);
+    body.innerHTML=`<p style="color:rgba(255,255,255,.35);font-size:13px;text-align:center;padding:40px 16px;line-height:1.6;">${raw?'No entries for this batch.<br>Check batch number matches desktop.':'No entries yet.<br>Add items in Haz on desktop first, then tap ⟳'}</p>`;
     return;
   }
-
-  const pending = items.filter(x=>x.photos.length===0);
-  const done    = items.filter(x=>x.photos.length>0);
-
-  if(pending.length){
-    const lbl=document.createElement('p'); lbl.className='smo-section-label'; lbl.textContent='Pending';
-    body.appendChild(lbl);
-    pending.forEach(item=>body.appendChild(smoMakeCard(item)));
-  }
-  if(done.length){
-    const lbl=document.createElement('p'); lbl.className='smo-section-label'; lbl.textContent='Done';
-    body.appendChild(lbl);
-    done.forEach(item=>body.appendChild(smoMakeCard(item)));
-  }
+  const pending=items.filter(x=>x.photos.length===0),done=items.filter(x=>x.photos.length>0);
+  if(pending.length){const lbl=document.createElement('p');lbl.className='smo-section-label';lbl.textContent='Pending';body.appendChild(lbl);pending.forEach(item=>body.appendChild(smoMakeCard(item)));}
+  if(done.length){const lbl=document.createElement('p');lbl.className='smo-section-label';lbl.textContent='Done';body.appendChild(lbl);done.forEach(item=>body.appendChild(smoMakeCard(item)));}
 }
-
 function smoMakeCard(item){
-  const isDone = item.photos.length > 0;
-  const card = document.createElement('div');
-  card.className = 'smo-card'+(isDone?' smo-done':'');
-  card.id = 'smo-card-'+item.sku;
-  card.innerHTML = `
-    <div class="smo-card-top">
-      <span class="smo-sku">${item.sku}</span>
-      <span class="smo-status ${isDone?'done':'pending'}" id="smo-st-${item.sku}">${isDone?item.photos.length+' photo'+(item.photos.length>1?'s':''):'Tap to upload'}</span>
-    </div>
+  const isDone=item.photos.length>0;
+  const card=document.createElement('div');card.className='smo-card'+(isDone?' smo-done':'');card.id='smo-card-'+item.sku;
+  card.innerHTML=`<div class="smo-card-top"><span class="smo-sku">${item.sku}</span><span class="smo-status ${isDone?'done':'pending'}" id="smo-st-${item.sku}">${isDone?item.photos.length+' photo'+(item.photos.length>1?'s':''):'Tap to upload'}</span></div>
     <p class="smo-card-title">${item.title}${item.result?' — '+item.result+'% Health':''}</p>
     ${item.sn?`<div class="smo-chips"><span class="smo-chip">SN: ${item.sn}</span></div>`:''}`;
-
-  if(isDone){
-    const row=document.createElement('div'); row.className='smo-thumbs';
-    item.photos.forEach(u=>{ const t=document.createElement('div'); t.className='smo-thumb'; t.innerHTML=`<img src="${u}" loading="lazy">`; row.appendChild(t); });
-    card.appendChild(row);
-  } else {
-    const zone=document.createElement('div'); zone.className='smo-upload-zone';
-    zone.innerHTML=`
-      <input type="file" accept="image/*" multiple capture="environment"
-        style="display:none" id="smo-inp-${item.sku}"
-        onchange="smoHandleFiles('${item.sku}',this.files)">
-      <button class="smo-upload-btn" onclick="document.getElementById('smo-inp-${item.sku}').click()">
-        📷 Take or choose photos
-      </button>
-      <p class="smo-upload-hint">Up to 5 photos · JPEG or PNG</p>`;
-    card.appendChild(zone);
-  }
+  if(isDone){const row=document.createElement('div');row.className='smo-thumbs';item.photos.forEach(u=>{const t=document.createElement('div');t.className='smo-thumb';t.innerHTML=`<img src="${u}" loading="lazy">`;row.appendChild(t);});card.appendChild(row);}
+  else{const zone=document.createElement('div');zone.className='smo-upload-zone';zone.innerHTML=`<input type="file" accept="image/*" multiple capture="environment" style="display:none" id="smo-inp-${item.sku}" onchange="smoHandleFiles('${item.sku}',this.files)"><button class="smo-upload-btn" onclick="document.getElementById('smo-inp-${item.sku}').click()">📷 Take or choose photos</button><p class="smo-upload-hint">Up to 5 photos · JPEG or PNG</p>`;card.appendChild(zone);}
   return card;
 }
-
-window.smoHandleFiles = async function(sku, files){
-  if(!files||!files.length) return;
-  const list = Array.from(files).slice(0,5);
-  const stEl = document.getElementById('smo-st-'+sku);
-  const zone = document.querySelector(`#smo-card-${sku} .smo-upload-zone`);
-  if(stEl){ stEl.textContent='Uploading…'; stEl.className='smo-status uploading'; }
-  if(zone) zone.innerHTML=`<p style="color:#818CF8;font-size:12px;font-weight:600;text-align:center;padding:6px;">Uploading ${list.length} photo${list.length>1?'s':''}…</p>`;
+window.smoHandleFiles=async function(sku,files){
+  if(!files||!files.length)return;
+  const list=Array.from(files).slice(0,5);
+  const stEl=document.getElementById('smo-st-'+sku);
+  const zone=document.querySelector(`#smo-card-${sku} .smo-upload-zone`);
+  if(stEl){stEl.textContent='Uploading…';stEl.className='smo-status uploading';}
+  if(zone)zone.innerHTML=`<p style="color:#818CF8;font-size:12px;font-weight:600;text-align:center;padding:6px;">Uploading ${list.length} photo${list.length>1?'s':''}…</p>`;
   try{
-    const urls=[];
-    for(const f of list) urls.push(await uploadFile(f,sku));
-    addUrls(sku,urls);
-    smoRender();
+    const urls=[];for(const f of list)urls.push(await uploadFile(f,sku));
+    addUrls(sku,urls);smoRender();
   }catch(err){
-    if(stEl){ stEl.textContent='Failed — retry'; stEl.className='smo-status pending'; }
-    if(zone) zone.innerHTML=`<p style="color:#EF4444;font-size:12px;text-align:center;margin-bottom:6px;">Upload failed</p>
-      <button class="smo-upload-btn" style="background:#7F1D1D;" onclick="document.getElementById('smo-inp-${sku}').click()">Retry</button>
-      <input type="file" accept="image/*" multiple capture="environment" style="display:none" id="smo-inp-${sku}" onchange="smoHandleFiles('${sku}',this.files)">`;
+    if(stEl){stEl.textContent='Failed — retry';stEl.className='smo-status pending';}
+    if(zone)zone.innerHTML=`<p style="color:#EF4444;font-size:12px;text-align:center;margin-bottom:6px;">Upload failed</p><button class="smo-upload-btn" style="background:#7F1D1D;" onclick="document.getElementById('smo-inp-${sku}').click()">Retry</button><input type="file" accept="image/*" multiple capture="environment" style="display:none" id="smo-inp-${sku}" onchange="smoHandleFiles('${sku}',this.files)">`;
   }
 };
-
-window.smoSkipAll = function(){
-  if(confirm('Skip photos and mark ready?')) smoCopyReady();
-};
-window.smoCopyReady = function(){
-  const items=getEntries(), done=items.filter(x=>x.photos.length>0);
-  const msg=`Photos ready — ${done.length}/${items.length} items have photos.`;
-  try{navigator.clipboard.writeText(msg)}catch(e){}
-  alert(msg);
-};
-
-// Boot + polling
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', smoInit);
-else smoInit();
-
-setInterval(()=>{ if(!smoLocked && getLister()) smoRender(); }, 4000);
-
+window.smoSkipAll=function(){if(confirm('Skip photos and mark ready?'))smoCopyReady();};
+window.smoCopyReady=function(){const items=getEntries(),done=items.filter(x=>x.photos.length>0);const msg=`Photos ready — ${done.length}/${items.length} items have photos.`;try{navigator.clipboard.writeText(msg)}catch(e){}alert(msg);};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',smoInit);else smoInit();
+setInterval(()=>{if(!smoLocked&&getLister())smoRender();},4000);
 })();
 </script>
 
-<!-- ── Desktop Photo Mirror JS ─────────────────────────────────── -->
 <script>
 (function(){
 'use strict';
-const CLOUD     = 'dic0mifhj';
-const LS_PHOTOS = 'syg_photo_urls';
-
-function getStore(){ try{return JSON.parse(localStorage.getItem(LS_PHOTOS)||'{}')}catch(e){return{}} }
-function saveStore(s){ try{localStorage.setItem(LS_PHOTOS,JSON.stringify(s))}catch(e){} }
-
+const CLOUD='dic0mifhj',LS_PHOTOS='syg_photo_urls';
+function getStore(){try{return JSON.parse(localStorage.getItem(LS_PHOTOS)||'{}')}catch(e){return{}}}
+function saveStore(s){try{localStorage.setItem(LS_PHOTOS,JSON.stringify(s))}catch(e){}}
 function getDesktopEntries(){
-  if(typeof dpEntries==='undefined'||!dpEntries.length) return [];
-  return dpEntries.map((e,i)=>({
-    sku:    typeof dpEntrySkuLabel==='function'?dpEntrySkuLabel(e):('#'+(i+1)),
-    title:  e.code||'—',
-    result: e.result||'',
-    photos: (getStore()[typeof dpEntrySkuLabel==='function'?dpEntrySkuLabel(e):('#'+(i+1))]||[])
-  })).filter(x=>x.title!=='—');
+  if(typeof dpEntries==='undefined'||!dpEntries.length)return[];
+  return dpEntries.map((e,i)=>({sku:typeof dpEntrySkuLabel==='function'?dpEntrySkuLabel(e):('#'+(i+1)),title:e.code||'—',result:e.result||'',photos:(getStore()[typeof dpEntrySkuLabel==='function'?dpEntrySkuLabel(e):('#'+(i+1))]||[])})).filter(x=>x.title!=='—');
 }
-
 async function fetchCloudinaryURLs(sku){
-  if(!sku||sku.startsWith('#')) return [];
-  try{
-    const res=await fetch(`https://res.cloudinary.com/${CLOUD}/image/list/${encodeURIComponent(sku)}.json`);
-    if(!res.ok) return [];
-    return ((await res.json()).resources||[]).map(r=>`https://res.cloudinary.com/${CLOUD}/image/upload/${r.public_id}`);
-  }catch(e){ return []; }
+  if(!sku||sku.startsWith('#'))return[];
+  try{const res=await fetch(`https://res.cloudinary.com/${CLOUD}/image/list/${encodeURIComponent(sku)}.json`);if(!res.ok)return[];return((await res.json()).resources||[]).map(r=>`https://res.cloudinary.com/${CLOUD}/image/upload/${r.public_id}`);}catch(e){return[];}
 }
-
-window.pmStartPolling = function(){
+window.pmStartPolling=function(){
   pmRenderCards();
   setInterval(async()=>{
-    const items=getDesktopEntries(), store=getStore(); let changed=false;
-    for(const item of items){
-      if(!(store[item.sku]||[]).length){
-        const urls=await fetchCloudinaryURLs(item.sku);
-        if(urls.length){ store[item.sku]=urls; changed=true; }
-      }
-    }
-    if(changed){ saveStore(store); pmRenderCards(); }
-    pmUpdateStatus();
-  }, 6000);
+    const items=getDesktopEntries(),store=getStore();let changed=false;
+    for(const item of items){if(!(store[item.sku]||[]).length){const urls=await fetchCloudinaryURLs(item.sku);if(urls.length){store[item.sku]=urls;changed=true;}}}
+    if(changed){saveStore(store);pmRenderCards();}pmUpdateStatus();
+  },6000);
 };
-
-window.pmRefresh = async function(){
-  const items=getDesktopEntries(), store=getStore();
-  for(const item of items){
-    const urls=await fetchCloudinaryURLs(item.sku);
-    if(urls.length) store[item.sku]=urls;
-  }
-  saveStore(store); pmRenderCards();
+window.pmRefresh=async function(){
+  const items=getDesktopEntries(),store=getStore();
+  for(const item of items){const urls=await fetchCloudinaryURLs(item.sku);if(urls.length)store[item.sku]=urls;}
+  saveStore(store);pmRenderCards();
 };
-
-window.pmCopyReady = function(){
-  const items=getDesktopEntries(), store=getStore();
-  const done=items.filter(x=>(store[x.sku]||[]).length>0);
+window.pmCopyReady=function(){
+  const items=getDesktopEntries(),store=getStore(),done=items.filter(x=>(store[x.sku]||[]).length>0);
   try{navigator.clipboard.writeText(`Photos ready — ${done.length}/${items.length} items.`)}catch(e){}
 };
-
 function pmRenderCards(){
-  const cardsEl=document.getElementById('pm-cards');
-  const emptyEl=document.getElementById('pm-empty');
-  if(!cardsEl) return;
-  const items=getDesktopEntries(), store=getStore();
-  if(!items.length){ cardsEl.innerHTML=''; if(emptyEl) emptyEl.style.display=''; return; }
-  if(emptyEl) emptyEl.style.display='none';
-
-  // Diff — only replace cards whose photo count changed
+  const cardsEl=document.getElementById('pm-cards'),emptyEl=document.getElementById('pm-empty');if(!cardsEl)return;
+  const items=getDesktopEntries(),store=getStore();
+  if(!items.length){cardsEl.innerHTML='';if(emptyEl)emptyEl.style.display='';return;}
+  if(emptyEl)emptyEl.style.display='none';
   items.forEach((item,idx)=>{
-    const photos=store[item.sku]||[], hasP=photos.length>0;
+    const photos=store[item.sku]||[],hasP=photos.length>0;
     const existing=cardsEl.querySelector(`[data-sku="${CSS.escape(item.sku)}"]`);
-    if(existing && parseInt(existing.dataset.photos||0)===photos.length) return;
-
-    const card=document.createElement('div');
-    card.className='pm-card'+(hasP?' pm-has-photos':'');
-    card.dataset.sku=item.sku; card.dataset.photos=photos.length;
-    card.innerHTML=`
-      <div class="pm-card-top">
-        <span class="pm-sku">${item.sku}</span>
-        <span class="pm-badge ${hasP?'has-photos':'none'}">${hasP?photos.length+' photo'+(photos.length>1?'s':''):'No photos'}</span>
-      </div>
-      <p class="pm-title">${item.title}${item.result?' — '+item.result+'% Health':''}</p>`;
-    if(hasP){
-      const row=document.createElement('div'); row.className='pm-thumbs';
-      photos.slice(0,6).forEach(u=>{ const t=document.createElement('div'); t.className='pm-thumb'; t.innerHTML=`<img src="${u}" loading="lazy">`; row.appendChild(t); });
-      card.appendChild(row);
-    }
-    if(existing) existing.replaceWith(card);
-    else cardsEl.insertBefore(card, cardsEl.children[idx]||null);
+    if(existing&&parseInt(existing.dataset.photos||0)===photos.length)return;
+    const card=document.createElement('div');card.className='pm-card'+(hasP?' pm-has-photos':'');card.dataset.sku=item.sku;card.dataset.photos=photos.length;
+    card.innerHTML=`<div class="pm-card-top"><span class="pm-sku">${item.sku}</span><span class="pm-badge ${hasP?'has-photos':'none'}">${hasP?photos.length+' photo'+(photos.length>1?'s':''):'No photos'}</span></div><p class="pm-title">${item.title}${item.result?' — '+item.result+'% Health':''}</p>`;
+    if(hasP){const row=document.createElement('div');row.className='pm-thumbs';photos.slice(0,6).forEach(u=>{const t=document.createElement('div');t.className='pm-thumb';t.innerHTML=`<img src="${u}" loading="lazy">`;row.appendChild(t);});card.appendChild(row);}
+    if(existing)existing.replaceWith(card);else cardsEl.insertBefore(card,cardsEl.children[idx]||null);
   });
   pmUpdateStatus();
 }
-
 function pmUpdateStatus(){
-  const items=getDesktopEntries(), store=getStore();
-  const doneN=items.filter(x=>(store[x.sku]||[]).length>0).length;
-  const pill=document.getElementById('pm-status-pill');
-  const btn=document.getElementById('pm-ready-btn');
-  if(pill) pill.textContent=items.length?`${doneN} / ${items.length} items have photos`:'Waiting for entries…';
-  if(btn) btn.style.display=doneN>0?'':'none';
+  const items=getDesktopEntries(),store=getStore(),doneN=items.filter(x=>(store[x.sku]||[]).length>0).length;
+  const pill=document.getElementById('pm-status-pill'),btn=document.getElementById('pm-ready-btn');
+  if(pill)pill.textContent=items.length?`${doneN} / ${items.length} items have photos`:'Waiting for entries…';
+  if(btn)btn.style.display=doneN>0?'':'none';
 }
-
-// Hook into dpUpdatePreviewAll to refresh mirror when entries change
-const _hook = ()=>{
+const _hook=()=>{
   const orig=window.dpUpdatePreviewAll;
-  if(typeof orig==='function' && !orig._pmHooked){
-    window.dpUpdatePreviewAll=function(){
-      orig.apply(this,arguments);
-      pmRenderCards();
-    };
-    window.dpUpdatePreviewAll._pmHooked=true;
-  }
+  if(typeof orig==='function'&&!orig._pmHooked){window.dpUpdatePreviewAll=function(){orig.apply(this,arguments);pmRenderCards();};window.dpUpdatePreviewAll._pmHooked=true;}
 };
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_hook);
-else _hook();
-
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_hook);else _hook();
 })();
 </script>
 
