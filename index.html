@@ -5888,6 +5888,7 @@ function smokeCelebrate(total, goal){
 // Override preview updater so Batch + Universal show together.
 const _oldDpUpdatePreviewAll = dpUpdatePreviewAll;
 dpUpdatePreviewAll = function(){
+  _oldDpUpdatePreviewAll.apply(this, arguments);
   dpEntries.forEach(e=>{
     const skuEl = document.getElementById('dp-sku-'+e.id);
     if(skuEl) skuEl.textContent = dpEntrySkuLabel(e);
