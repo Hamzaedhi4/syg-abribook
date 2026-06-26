@@ -11264,8 +11264,22 @@ function saveLayout() {
 
 function loadLayout() {
   try {
-    return JSON.parse(localStorage.getItem(LS_LAYOUT) || '{}');
-  } catch(e) { return {}; }
+    const raw = localStorage.getItem(LS_LAYOUT);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    // Validate — if any position is wildly out of range, clear and reset
+    for (const key of ['search','queue','cart','photos']) {
+      const p = parsed[key];
+      if (p && (isNaN(p.x) || isNaN(p.y) || p.w < 10 || p.h < 10)) {
+        localStorage.removeItem(LS_LAYOUT);
+        return {};
+      }
+    }
+    return parsed;
+  } catch(e) {
+    localStorage.removeItem(LS_LAYOUT);
+    return {};
+  }
 }
 
 // ── Save session snapshot on unload ───────────────────────────────
