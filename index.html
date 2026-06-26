@@ -1155,6 +1155,9 @@
         <h3>Welcome to SYG Abribook</h3>
         <p>Abribook is the intake logging and code lookup tool for <strong>Sell Your Gadgets</strong>. It helps you quickly identify storage drives and RAM modules, log their condition, and build a manifest that Claude uses to generate your Shopify listings.</p>
         <p>This tutorial walks you through the full process — from picking up the item to handing off to Claude. It only takes a minute.</p>
+        <div style="margin-top:16px;">
+          <button id="openAboutBtn" style="padding:9px 18px;background:transparent;border:1px solid var(--line-2);border-radius:var(--r-pill);font:600 12px/1 var(--sans);color:var(--ink-soft);cursor:pointer;transition:all .15s;">ℹ About this system</button>
+        </div>
       </div>
 
       <div class="tut-slide" data-slide="1">
@@ -3569,7 +3572,9 @@ function batchEntryObject(e, idx){
   return {
     panel:'Batch', item_type: ram ? 'RAM' : 'Storage', website_sku:'', abribook_code:e.code||'', serial_number:e.sn||'', health_test_result:e.result||'',
     raw_item_description: hit ? hit.desc : '', testing_notes: ram ? (e.result||'') : (e.result ? 'Drive health: '+e.result : ''), condition_notes:e.notes||'', known_issues:'',
-    notes_for_claude: e.pairsOn && e.pairs ? ('Qty: '+e.pairs+' pairs') : '', title_preview:'', html_description_preview:'', metafields_preview:'',
+    notes_for_claude: [e.pairsOn && e.pairs ? ('Qty: '+e.pairs+' pairs') : '', e.price ? ('Price: $'+e.price) : '', e.cost ? ('Cost: $'+e.cost) : ''].filter(Boolean).join(' | '),
+    price: e.price||'', cost: e.cost||'',
+    title_preview:'', html_description_preview:'', metafields_preview:'',
     status: e.code ? 'Ready for Claude' : 'Missing Info', entry_line: dpLineFor(e)
   };
 }
@@ -3646,7 +3651,9 @@ function uniMapMetafields(e){
 function universalEntryObject(e){
   return {
     panel:'Universal', item_type:e.itemType, website_sku:e.websiteSku||'', abribook_code:'', serial_number:'', health_test_result:'',
-    raw_item_description:e.desc||'', testing_notes:e.testing||'', condition_notes:e.condition||'', known_issues:e.issues||'', notes_for_claude:[e.claudeNotes||'', e.shippingPolicy ? ('Shipping: '+e.shippingPolicy) : '', e.returnPolicy ? ('Returns: '+e.returnPolicy) : ''].filter(Boolean).join(' | '),
+    raw_item_description:e.desc||'', testing_notes:e.testing||'', condition_notes:e.condition||'', known_issues:e.issues||'',
+    notes_for_claude:[e.claudeNotes||'', e.shippingPolicy ? ('Shipping: '+e.shippingPolicy) : '', e.returnPolicy ? ('Returns: '+e.returnPolicy) : '', e.price ? ('Price: $'+e.price) : '', e.cost ? ('Cost: $'+e.cost) : ''].filter(Boolean).join(' | '),
+    price: e.price||'', cost: e.cost||'',
     title_preview:e.titlePreview||'', html_description_preview:e.htmlPreview||compactTableHtml(e), metafields_preview:JSON.stringify(uniMapMetafields(e)), status:e.status||'Draft',
     needs_research:e.needsResearch?'Yes':'', entry_line: uniEntryLine(e,0)
   };
@@ -4194,15 +4201,26 @@ document.getElementById('blitzCopyAll').addEventListener('click',()=>{
     const s = diffS ? (document.getElementById('blitz-s-'+i)||{}).value||'' : '';
     const n = diffN ? (document.getElementById('blitz-n-'+i)||{}).value||notes : notes;
 
-    // Push into Batch queue (dpEntries) as a storage/RAM entry
+    // Push into Batch queue (dpEntries) as a proper Batch entry card
+    const isRam = dpIsRam ? dpIsRam(code) : false;
+    const resultFmt = isRam
+      ? (h || '')
+      : (h ? h.replace(/%/g,'').trim()+'% Health' : '');
     const e = {
       id: dpNextId++,
-      code, sn: s, result: h ? h.replace(/%/g,'')+'% Health' : '',
-      notes: n, ram: false, pairsOn: false, pairs: 1,
-      websiteSku: '', price: '', addedAt: Date.now()
+      code, sn: s, result: resultFmt,
+      notes: n, ram: isRam, pairsOn: false, pairs: 1,
+      websiteSku: '', price: '', cost: '', addedAt: Date.now()
     };
     dpEntries.push(e);
-    dpRenderEntry && dpRenderEntry(e);
+    // Build full card in DOM exactly like dpAddEntry does
+    const container = document.getElementById('dpEntries');
+    if(container){
+      const div = document.createElement('div');
+      div.innerHTML = dpBuildEntryHTML(e);
+      container.appendChild(div.firstElementChild);
+      dpRenderEntry(e);
+    }
     added++;
   }
 
@@ -4354,6 +4372,10 @@ function blitzRenderReview(){
             <input id="brPrice" value="${esc(e.price)}" placeholder="0.00" type="text">
           </div>
           <div class="blitz-card-field">
+            <label>Cost Per Item</label>
+            <input id="brCost" value="${esc(e.cost||'')}" placeholder="0.00" type="text">
+          </div>
+          <div class="blitz-card-field">
             <label>Qty</label>
             <input id="brQty" value="${e.qty}" type="number" min="1">
           </div>
@@ -4395,20 +4417,52 @@ function brSaveEdits(){
   const e = _brQueue[_brIdx];
   if(!e) return;
   e.price = (document.getElementById('brPrice')||{}).value||e.price;
+  e.cost  = (document.getElementById('brCost')||{}).value||e.cost||'';
   e.qty   = parseInt((document.getElementById('brQty')||{}).value)||e.qty;
   document.querySelectorAll('#brMfGrid [data-mfkey]').forEach(inp=>{
     e.metafields[inp.dataset.mfkey] = inp.value;
   });
+  // Write back to source entry so it flows into the export prompt
+  brWriteBack(e);
   toast('Edits saved for '+e.sku);
   blitzRenderReview();
+}
+
+function brWriteBack(qe){
+  // Match by panel + source id and update the source entry
+  if(qe.panel === 'Batch'){
+    const srcId = parseInt(String(qe.id).replace('batch-',''));
+    const src = dpEntries.find(e=>e.id===srcId);
+    if(src){
+      if(qe.price) src.price = qe.price;
+      if(qe.cost)  src.cost  = qe.cost;
+      if(qe.qty)   src.pairs = qe.qty;
+    }
+  } else if(qe.panel === 'Universal'){
+    const srcId = parseInt(String(qe.id).replace('uni-',''));
+    const src = (uniEntriesData||[]).find(e=>e.id===srcId);
+    if(src){
+      if(qe.price) src.price = qe.price;
+      if(qe.cost)  src.cost  = qe.cost;
+    }
+  }
+  dpUpdatePreviewAll && dpUpdatePreviewAll();
 }
 
 function brApprove(){
   const e = _brQueue[_brIdx];
   if(!e) return;
-  brSaveEdits();
+  // Pull current field values into queue entry
+  e.price = (document.getElementById('brPrice')||{}).value||e.price;
+  e.cost  = (document.getElementById('brCost')||{}).value||e.cost||'';
+  e.qty   = parseInt((document.getElementById('brQty')||{}).value)||e.qty;
+  document.querySelectorAll('#brMfGrid [data-mfkey]').forEach(inp=>{
+    e.metafields[inp.dataset.mfkey] = inp.value;
+  });
+  // Write back to source entry
+  brWriteBack(e);
   e.approved = true; e.flagged = false;
-  toast('✓ '+e.sku+' approved');
+  toast('✓ '+e.sku+' approved — edits confirmed');
   _brIdx++;
   blitzRenderReview();
 }
@@ -7590,5 +7644,136 @@ document.getElementById('promptCopyBtn').addEventListener('click', ()=>{
 });
 </script>
 
+<!-- ── About Modal ── -->
+<div id="aboutBackdrop" style="display:none;position:fixed;inset:0;background:rgba(10,11,16,.80);z-index:300;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;">
+  <div style="background:var(--surface);border-radius:18px;box-shadow:0 32px 80px rgba(0,0,0,.45);width:100%;max-width:680px;margin:auto;overflow:hidden;">
+
+    <!-- Header -->
+    <div style="background:var(--header);padding:20px 24px 18px;display:flex;align-items:center;gap:14px;box-shadow:inset 0 -2px 0 var(--accent);">
+      <span style="font-size:22px;">⚙️</span>
+      <div style="flex:1;">
+        <div style="font-size:16px;font-weight:800;color:var(--on-dark);letter-spacing:-.02em;">About This System</div>
+        <div style="font-size:11px;color:var(--on-dark-soft);margin-top:3px;">SYG Abribook · v2.6 · by J · NJ02 Elmwood Park</div>
+      </div>
+      <button id="aboutClose" style="background:none;border:none;color:var(--on-dark-soft);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px;">×</button>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:24px;font-size:13.5px;color:var(--ink-soft);line-height:1.7;display:flex;flex-direction:column;gap:24px;">
+
+      <!-- Intro -->
+      <div>
+        <p style="margin:0;color:var(--ink);">This tool was built to solve a real problem at SYG Elmwood Park: intake was slow, listings were inconsistent, and there was no single place to track what came in, what it was worth, and what got listed. Abribook fixes all three — it is the connective tissue between buying an item and it appearing correctly on Shopify.</p>
+      </div>
+
+      <!-- HAZ -->
+      <div>
+        <div style="font-size:12px;font-weight:800;color:var(--accent-ink);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:7px;"><span style="background:var(--accent-tint);padding:2px 8px;border-radius:20px;">⚡ Haz — Buying Assistant</span></div>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why it exists:</strong> Buyers need to make fast pricing decisions on used electronics without looking things up every time. Haz is a real-time price lookup engine trained on actual SYG sold data, current store listings, and general market estimates.</p>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">How it works:</strong> You type a device name and Haz searches its internal price database of <strong>974+ entries</strong> using keyword matching. Results are scored by how closely your query matches known keywords, then ranked by confidence. Every result is tagged with a source badge:</p>
+        <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;display:flex;flex-direction:column;gap:5px;font-size:12.5px;">
+          <div><span style="display:inline-block;background:#DCFCE7;color:#166534;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">SYG Sold</span>Item was actually sold at this store. Most reliable signal.</div>
+          <div><span style="display:inline-block;background:#DBEAFE;color:#1D4ED8;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">SYG Listed</span>Currently priced in the store. Good directional reference.</div>
+          <div><span style="display:inline-block;background:#F3F4F6;color:#6B7280;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">Market Est</span>General used market estimate. Not from SYG — treat as a ceiling.</div>
+        </div>
+        <p style="margin:0;"><strong style="color:var(--ink);">Offer chips:</strong> Haz calculates a 🟢 Good / 🟡 Fair / 🔴 Low offer range automatically from the matched price, adjusted for typical SYG buy margins. Tap a chip to populate the Accepted At field. Haz stays in its lane — it is a buying tool only and does not touch listings.</p>
+      </div>
+
+      <!-- WAN -->
+      <div>
+        <div style="font-size:12px;font-weight:800;color:#7C3AED;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:20px;">📋 Wan — Intake &amp; Listing Engine</span></div>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why it exists:</strong> Listing refurbished electronics by hand is error-prone and slow. Wan standardizes how items are described so every listing that leaves this store has the same structure, the same HTML format, the same metafields. Consistency means fewer buyer questions, fewer returns, and better search visibility.</p>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Two modes, two item types:</strong></p>
+        <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;font-size:12.5px;display:flex;flex-direction:column;gap:8px;">
+          <div><strong style="color:var(--ink);">Batch mode</strong> (RAM / Storage) — You enter an Abribook code, health %, serial number, and notes. The code is a compact identifier like <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">S2990P</code> that maps to a full drive description. This keeps entries short and consistent. Each entry becomes a manifest line that feeds the <strong>/syg-listing-generator</strong> skill in Claude, which produces the final SEO title, HTML description, and metafields.</div>
+          <div><strong style="color:var(--ink);">Universal mode</strong> (CPUs, GPUs, Consoles, Laptops, Desktops, Phones, Motherboards) — You type the item's specs in plain English and fill structured fields. Wan generates a title preview, HTML table preview, and metafields in real time. These entries feed a separate <strong>listing-edit prompt</strong> in Claude that refines them for Shopify.</div>
+        </div>
+        <p style="margin:0;"><strong style="color:var(--ink);">Why split?</strong> Storage and RAM are commodity items — they sell on health and model alone. The Abribook code system is purpose-built for that. Everything else (phones, laptops, consoles) needs richer per-unit detail that doesn't fit neatly into a code. Universal handles that free-form intake and structures it for Claude.</p>
+      </div>
+
+      <!-- BLITZTING -->
+      <div>
+        <div style="font-size:12px;font-weight:800;color:#0891B2;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#CFFAFE;color:#0E7490;padding:2px 8px;border-radius:20px;">⚡ Blitzting — Fast Queue Feeder</span></div>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why it exists:</strong> When you receive a lot of the same model — say, 10 Kingston KC3000s from the same batch — filling each one out individually is repetitive and wastes time. Blitzting is the speed path for that scenario.</p>
+        <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;font-size:12.5px;display:flex;flex-direction:column;gap:8px;">
+          <div><strong style="color:var(--ink);">Template Clone</strong> — Enter the shared code, base health, and notes in the Master Entry. Check what differs per unit (health, serial, notes). Set quantity and hit Generate. Fill each slot's unique values — Wan will suggest the next serial number in hex sequence if it detects a pattern. Hit Add all to queue and every slot becomes a full Batch entry card in the queue, exactly as if you had logged each one manually.</div>
+          <div><strong style="color:var(--ink);">Speed Review</strong> — At the end of any session, switch here to flip through every entry in the queue (both Batch and Universal) one by one. Set the price and cost per item, adjust metafields, then Approve or Flag. Approved entries write their price and cost back to the source queue entry so the final exported prompt contains the confirmed values. Flagged entries stay in the list for a second pass.</div>
+        </div>
+        <p style="margin:0;"><strong style="color:var(--ink);">Why Approve writes back:</strong> The queue is the source of truth. When you export the manifest prompt for Claude, it reads from the queue. If Speed Review edits stayed only in the review layer and not in the queue, the exported prompt would have stale data. Writeback ensures what you confirmed is what gets listed.</p>
+      </div>
+
+      <!-- QUEUE + PROMPT SPLIT -->
+      <div>
+        <div style="font-size:12px;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:20px;">📤 The Queue &amp; Manifest Export</span></div>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why one queue for everything:</strong> Batch and Universal entries live in the same session queue so you can mix item types freely in one intake session without switching tools. The queue is entirely in-memory — it resets when you close the tab, which is intentional. Abribook is a session-based intake tool, not a database. The export to Claude is the handoff.</p>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">The prompt split:</strong> When you hit <strong>Copy Claude manifest-prep prompt</strong>, Abribook does something important — it splits the output by panel type:</p>
+        <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;font-size:12.5px;display:flex;flex-direction:column;gap:6px;">
+          <div><strong style="color:var(--ink);">Batch entries</strong> → go at the top with a header telling you to load the <strong>/syg-listing-generator skill</strong> first. The skill knows the SYG listing rules, condition grading, banned terms, and Shopify metafield schema for RAM and storage. It produces ready-to-use titles, HTML, and metafields.</div>
+          <div><strong style="color:var(--ink);">Universal entries</strong> → go as a structured JSON manifest under the <strong>listing-edit system prompt</strong>. Claude reads each entry's typed fields and returns a corrected title, final HTML description, and Shopify metafields per Website SKU.</div>
+        </div>
+        <p style="margin:0;"><strong style="color:var(--ink);">Why they're separate:</strong> The /syg-listing-generator skill is a purpose-built system for PC parts — it knows drive health tiers, storage-specific metafields, and the Abribook code format. The Universal listing-edit prompt is a different format entirely — it expects JSON with item type, typed fields, and a Website SKU to match against. Mixing them in one prompt would confuse Claude and produce wrong output for both.</p>
+      </div>
+
+      <!-- SHOPIFY PUSH -->
+      <div>
+        <div style="font-size:12px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:20px;">🛍 Shopify Integration</span></div>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why Claude pushes to Shopify directly:</strong> After Claude generates the title, HTML description, and metafields, someone has to paste that into Shopify manually — or not. The system is wired so Claude can call the Shopify Admin API directly to create or update draft products, set SKUs, write metafields, and set inventory tracking. This eliminates the copy-paste step entirely.</p>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Always DRAFT:</strong> New products are always created as drafts. Nothing goes live automatically. A human reviews and publishes. This is intentional — the system is a tool to accelerate intake, not to bypass quality control.</p>
+        <p style="margin:0;"><strong style="color:var(--ink);">Cost Per Item:</strong> The cost field set in Speed Review flows into Shopify's <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">inventoryItem.cost</code> — this is the internal cost of goods field Shopify uses for margin reporting. It never shows to customers and is only visible in the admin. Setting it during intake means your profit margins are tracked from day one without a separate step.</p>
+      </div>
+
+      <!-- PO AUTOMATION -->
+      <div>
+        <div style="font-size:12px;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:20px;">📦 Fill PO — Purchase Order Automation</span></div>
+        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why it exists:</strong> Creating a purchase order on buyer.sellyourgadgets.com is a multi-step form — category, make, model, condition, color, estimated value, offer. Doing this for every item you buy takes time and introduces typos. Fill PO generates a surgical prompt you paste into Claude in Chrome, which then fills the form for you.</p>
+        <p style="margin:0;"><strong style="color:var(--ink);">Why it uses Claude in Chrome instead of running directly:</strong> buyer.sellyourgadgets.com is a different domain. Abribook runs in your browser and cannot script another website's forms directly due to browser security restrictions. Claude in Chrome has direct page access and can interact with the Bubble.io form using precise coordinate-based clicking and the native input value setter trick required to make Bubble's framework recognize the change. The customer must be selected on the PO page before the automation runs — this is a required step, not an option to skip.</p>
+      </div>
+
+      <!-- SKU FORMAT -->
+      <div>
+        <div style="font-size:12px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:var(--surface-2);color:var(--ink-soft);padding:2px 8px;border-radius:20px;border:1px solid var(--line-2);">🏷 SKU Format</span></div>
+        <p style="margin:0 0 8px;">Every SKU generated by this tool follows the format <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">NJ02-[INITIAL]-[BATCH]-[ITEM#]</code>. For example: <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">NJ02-J-RTL0626-3</code>.</p>
+        <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;font-size:12.5px;display:flex;flex-direction:column;gap:5px;">
+          <div><code style="font-family:var(--mono);">NJ02</code> — Store code for SYG Elmwood Park, NJ. Distinguishes this location from other SYG stores.</div>
+          <div><code style="font-family:var(--mono);">J</code> — Lister initial. Every item is traceable back to the person who logged it.</div>
+          <div><code style="font-family:var(--mono);">RTL0626</code> — Batch ID, typically a date-stamped retail batch. Groups all items bought or processed together.</div>
+          <div><code style="font-family:var(--mono);">3</code> — Sequential item number within the batch. Resets each session.</div>
+        </div>
+      </div>
+
+      <!-- DESIGN PHILOSOPHY -->
+      <div style="border-top:1px solid var(--line);padding-top:20px;">
+        <div style="font-size:12px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Design Philosophy</div>
+        <p style="margin:0 0 8px;">This system was designed around one principle: <strong style="color:var(--ink);">staff should never have to think about the tool — only about the item in their hand.</strong> Every decision in the UI reflects that:</p>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;">
+          <div>→ <strong style="color:var(--ink);">Abribook codes</strong> exist because typing "Samsung 990 Pro 2TB NVMe M.2 2280" every time is slow and inconsistent. <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">S2990P</code> takes one second and resolves to the full description automatically.</div>
+          <div>→ <strong style="color:var(--ink);">Haz source badges</strong> exist because not all prices are equal. A price from a real SYG sale is worth more than a market estimate — staff need to know which they're looking at.</div>
+          <div>→ <strong style="color:var(--ink);">Blitzting</strong> exists because cloning 10 of the same drive into the queue one by one is busywork that a computer should do.</div>
+          <div>→ <strong style="color:var(--ink);">Speed Review</strong> exists because the time to catch a wrong price is before it reaches Claude, not after the listing is drafted.</div>
+          <div>→ <strong style="color:var(--ink);">The prompt split</strong> exists because giving Claude the wrong format produces wrong output. Routing is handled by the tool so staff don't have to think about which Claude prompt to use.</div>
+          <div>→ <strong style="color:var(--ink);">Drafts only</strong> exists because automation that skips human review is a liability in a resale business where every unit is unique.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:14px 24px 20px;border-top:1px solid var(--line);background:var(--surface);">
+      <button id="aboutCloseBtn" style="width:100%;padding:11px;border:1px solid var(--line-2);border-radius:var(--r-md);background:transparent;color:var(--ink-soft);font:600 13px/1 var(--sans);cursor:pointer;transition:all .15s;">Got it</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  function openAbout(){ const b=document.getElementById('aboutBackdrop'); if(b){b.style.display='flex'; b.scrollTop=0;} }
+  function closeAbout(){ const b=document.getElementById('aboutBackdrop'); if(b) b.style.display='none'; }
+  document.getElementById('openAboutBtn').addEventListener('click', function(){ closeAbout(); openAbout(); });
+  document.getElementById('aboutClose').addEventListener('click', closeAbout);
+  document.getElementById('aboutCloseBtn').addEventListener('click', closeAbout);
+  document.getElementById('aboutBackdrop').addEventListener('click', function(ev){ if(ev.target===this) closeAbout(); });
+})();
+</script>
 </body>
 </html>
