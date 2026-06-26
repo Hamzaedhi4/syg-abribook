@@ -10950,7 +10950,7 @@ function makeResizable(panel, resizeHandle, id) {
 const canvas = document.getElementById('wanCanvas');
 if (canvas) {
   canvas.addEventListener('mousedown', e => {
-    if (e.target.closest('.wan-panel') || e.target.closest('.wan-sticky')) return;
+    if (e.target.closest('.wan-panel') || e.target.closest('.wan-sticky') || e.target.closest('#syg-mobile-overlay')) return;
     isPanning = true;
     panStartX = e.clientX - canvasX;
     panStartY = e.clientY - canvasY;
@@ -12968,27 +12968,44 @@ window.pmStartPolling = function() {
 };
 
 function pmRenderCards() {
-  const cards   = document.getElementById('pm-cards');
+  const cardsEl = document.getElementById('pm-cards');
   const empty   = document.getElementById('pm-empty');
-  if (!cards) return;
+  if (!cardsEl) return;
 
-  const items   = getSKUList();
-  const store   = pmGetStore();
+  const items = getSKUList();
+  const store = pmGetStore();
 
   if (!items.length) {
-    cards.innerHTML = '';
+    cardsEl.innerHTML = '';
     if (empty) empty.style.display = '';
     return;
   }
   if (empty) empty.style.display = 'none';
 
-  cards.innerHTML = '';
-  items.forEach(item => {
-    const photos = store[item.sku] || [];
-    const hasP   = photos.length > 0;
+  // Diff — only rebuild cards whose photo count changed
+  const existingIds = new Set([...cardsEl.querySelectorAll('[data-pm-sku]')].map(el => el.dataset.pmSku));
+  const newIds      = new Set(items.map(x => x.sku));
+
+  // Remove stale cards
+  existingIds.forEach(sku => {
+    if (!newIds.has(sku)) cardsEl.querySelector(`[data-pm-sku="${CSS.escape(sku)}"]`)?.remove();
+  });
+
+  items.forEach((item, idx) => {
+    const photos  = store[item.sku] || [];
+    const hasP    = photos.length > 0;
+    const existEl = cardsEl.querySelector(`[data-pm-sku="${CSS.escape(item.sku)}"]`);
+
+    if (existEl) {
+      // Only re-render if photo count changed
+      const prev = parseInt(existEl.dataset.pmPhotoCount || '0');
+      if (prev === photos.length) return;
+    }
 
     const card = document.createElement('div');
     card.className = 'pm-card' + (hasP ? ' pm-has-photos' : '');
+    card.dataset.pmSku        = item.sku;
+    card.dataset.pmPhotoCount = photos.length;
 
     const badge = hasP
       ? `<span class="pm-badge has-photos">${photos.length} photo${photos.length>1?'s':''}</span>`
@@ -13012,7 +13029,14 @@ function pmRenderCards() {
       card.appendChild(thumbs);
     }
 
-    cards.appendChild(card);
+    if (existEl) {
+      existEl.replaceWith(card);
+    } else {
+      // Insert in order
+      const allCards = [...cardsEl.querySelectorAll('[data-pm-sku]')];
+      const insertBefore = allCards[idx] || null;
+      cardsEl.insertBefore(card, insertBefore);
+    }
   });
 
   pmUpdateStatus();
