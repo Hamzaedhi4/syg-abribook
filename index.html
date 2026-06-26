@@ -942,6 +942,9 @@
         <div class="welcome-card-desc">Buying intake<br>Offer calculator</div>
       </div>
     </div>
+    <div style="margin-top:18px;text-align:center;">
+      <button id="openAboutWelcomeBtn" style="padding:9px 22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;font:600 12px/1 var(--sans);color:rgba(255,255,255,.45);cursor:pointer;letter-spacing:.02em;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.45)'">ℹ About this system</button>
+    </div>
   </div>
 </div>
 
@@ -7770,6 +7773,7 @@ document.getElementById('promptCopyBtn').addEventListener('click', ()=>{
   function openAbout(){ const b=document.getElementById('aboutBackdrop'); if(b){b.style.display='flex'; b.scrollTop=0;} }
   function closeAbout(){ const b=document.getElementById('aboutBackdrop'); if(b) b.style.display='none'; }
   document.getElementById('openAboutBtn').addEventListener('click', function(){ closeAbout(); openAbout(); });
+  document.getElementById('openAboutWelcomeBtn').addEventListener('click', function(){ openAbout(); });
   document.getElementById('aboutClose').addEventListener('click', closeAbout);
   document.getElementById('aboutCloseBtn').addEventListener('click', closeAbout);
   document.getElementById('aboutBackdrop').addEventListener('click', function(ev){ if(ev.target===this) closeAbout(); });
