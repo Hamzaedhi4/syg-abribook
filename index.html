@@ -1267,6 +1267,7 @@
     <div class="title">
       <h1>SYG Abribook</h1>
       <span class="sub" id="sub">drive shorthand lookup</span>
+      <span style="font-size:10px;font-weight:500;color:rgba(255,255,255,.28);letter-spacing:.06em;margin-left:2px;white-space:nowrap;">v2.6 · by J</span>
       <div class="tools">
         <span class="count" id="count">0 codes</span>
         <span id="syncStatus" style="font-size:11px;font-family:var(--mono);color:var(--ink-faint);cursor:pointer;" title="Click to refresh from sheet">○ idle</span>
@@ -1512,6 +1513,89 @@
       <h2>⚡ Blitzting</h2>
       <button class="blitz-tab on" id="blitzTabClone">Template Clone</button>
       <button class="blitz-tab" id="blitzTabReview">Speed Review</button>
+      <button id="blitzHelpBtn" style="padding:6px 13px;border:1px solid var(--line-2);border-radius:var(--r-pill);background:transparent;color:var(--ink-soft);font:600 12px/1 var(--sans);cursor:pointer;transition:all .15s;margin-left:auto;">? Help</button>
+    </div>
+
+    <!-- ── Blitzting Help Modal ── -->
+    <div id="blitzHelpBackdrop" style="display:none;position:fixed;inset:0;background:rgba(10,11,16,.75);z-index:200;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--surface);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="background:var(--header);padding:18px 22px 16px;display:flex;align-items:center;gap:12px;box-shadow:inset 0 -2px 0 var(--accent);flex:none;">
+          <span style="font-size:20px;">⚡</span>
+          <div style="flex:1;">
+            <div style="margin:0;font-size:15px;font-weight:700;color:var(--on-dark);letter-spacing:-.02em;">Blitzting — How It Works</div>
+            <div style="font-size:10.5px;color:var(--on-dark-soft);margin-top:3px;">Two tools for listing fast: Template Clone and Speed Review</div>
+          </div>
+          <button id="blitzHelpClose" style="background:none;border:none;color:var(--on-dark-soft);font-size:20px;cursor:pointer;line-height:1;">×</button>
+        </div>
+        <div style="padding:20px 22px;overflow-y:auto;flex:1;font-size:13.5px;color:var(--ink-soft);line-height:1.65;">
+
+          <div style="margin-bottom:18px;">
+            <div style="font-size:13px;font-weight:800;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent-tint);color:var(--accent-ink);font:700 11px/1 var(--mono);">1</span>
+              Template Clone — log a batch of identical items fast
+            </div>
+            <p style="margin:0 0 8px;">Use this when you have <strong style="color:var(--ink);">multiple units of the same model</strong> — same drive, same RAM stick, same SSD — but each one has a different health % or serial number.</p>
+            <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;">
+              <div style="font:700 11px/1 var(--sans);color:var(--ink-soft);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Steps</div>
+              <div style="display:flex;flex-direction:column;gap:5px;">
+                <div>① Enter the shared code, a base health %, and notes in <strong style="color:var(--ink);">Master Entry</strong></div>
+                <div>② Check off what <strong style="color:var(--ink);">differs per unit</strong> — Health, Serial, or Notes</div>
+                <div>③ Set how many units and hit <strong style="color:var(--ink);">Generate slots →</strong></div>
+                <div>④ Fill in the unique value for each slot — Wan will suggest the next serial number in sequence if it detects a hex pattern</div>
+                <div>⑤ Hit <strong style="color:var(--ink);">✓ Copy All entries</strong> — paste straight into Claude</div>
+              </div>
+            </div>
+            <div style="background:var(--accent-tint);border-left:3px solid var(--accent);border-radius:0 var(--r-md) var(--r-md) 0;padding:8px 11px;font-size:12.5px;color:var(--accent-ink);">
+              💡 Wan auto-suggests the next serial: if you type <code style="font-family:var(--mono);background:var(--accent-tint-2);padding:1px 4px;border-radius:3px;">A1F3B9</code> in slot 1, slot 2 will show <code style="font-family:var(--mono);background:var(--accent-tint-2);padding:1px 4px;border-radius:3px;">A1F3BA</code> as a suggestion. Hit <strong>Use</strong> to accept it.
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--line);padding-top:18px;margin-bottom:18px;">
+            <div style="font-size:13px;font-weight:800;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent-tint);color:var(--accent-ink);font:700 11px/1 var(--mono);">2</span>
+              Speed Review — QC your session entries before handing off to Claude
+            </div>
+            <p style="margin:0 0 8px;">Use this at the end of a batch session to <strong style="color:var(--ink);">flip through every entry one by one</strong>, fix prices or metafields on the spot, approve the good ones, and flag anything that needs a second look.</p>
+            <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;">
+              <div style="font:700 11px/1 var(--sans);color:var(--ink-soft);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Steps</div>
+              <div style="display:flex;flex-direction:column;gap:5px;">
+                <div>① Make sure you have entries in the Batch queue (logged in this session)</div>
+                <div>② Click <strong style="color:var(--ink);">Speed Review</strong> tab — your session entries load automatically</div>
+                <div>③ For each card: set the price, check metafields, then hit <strong style="color:var(--ink);">✓ Approve</strong>, <strong style="color:var(--ink);">⚑ Flag</strong>, or <strong style="color:var(--ink);">✎ Save edits</strong></div>
+                <div>④ Flagged items stay in the list for a second pass — they show a banner count at the top</div>
+              </div>
+            </div>
+            <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;">
+              <div style="font:700 11px/1 var(--sans);color:var(--ink-soft);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Keyboard shortcuts</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:12.5px;">
+                <div><kbd style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface);font:700 10px/1 var(--mono);color:var(--ink-soft);margin-right:5px;">A</kbd>Approve</div>
+                <div><kbd style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface);font:700 10px/1 var(--mono);color:var(--ink-soft);margin-right:5px;">F</kbd>Flag</div>
+                <div><kbd style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface);font:700 10px/1 var(--mono);color:var(--ink-soft);margin-right:5px;">E</kbd>Save edits</div>
+                <div><kbd style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface);font:700 10px/1 var(--mono);color:var(--ink-soft);margin-right:5px;">→</kbd>Next</div>
+                <div><kbd style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface);font:700 10px/1 var(--mono);color:var(--ink-soft);margin-right:5px;">←</kbd>Back</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--line);padding-top:14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">When to use each</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px;">
+              <div style="background:var(--accent-tint);border-radius:var(--r-md);padding:10px 11px;">
+                <div style="font-weight:700;color:var(--accent-ink);margin-bottom:4px;">Template Clone</div>
+                <div style="color:var(--accent-ink);opacity:.8;">Got 5 of the same Kingston KC3000 with different health %? Clone it.</div>
+              </div>
+              <div style="background:var(--pass-tint);border-radius:var(--r-md);padding:10px 11px;">
+                <div style="font-weight:700;color:var(--pass-ink);margin-bottom:4px;">Speed Review</div>
+                <div style="color:var(--pass-ink);opacity:.8;">Done logging a batch? Flip through, set prices, approve, hand off.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div style="padding:14px 22px 18px;border-top:1px solid var(--line);background:var(--surface);flex:none;">
+          <button id="blitzHelpCloseBtn" style="width:100%;padding:11px;border:1px solid var(--line-2);border-radius:var(--r-md);background:transparent;color:var(--ink-soft);font:600 13px/1 var(--sans);cursor:pointer;transition:all .15s;">Got it</button>
+        </div>
+      </div>
     </div>
 
     <!-- Template Clone Section -->
@@ -3933,6 +4017,18 @@ const SHOPIFY_MF_KEYS = ['type','brand','model','model_number','features','scree
   'network','platform','release_year','game_name','upc'];
 
 // Tab switching
+// Blitzting help modal
+(function(){
+  function openBlitzHelp(){ const b=document.getElementById('blitzHelpBackdrop'); if(b){b.style.display='flex';} }
+  function closeBlitzHelp(){ const b=document.getElementById('blitzHelpBackdrop'); if(b){b.style.display='none';} }
+  document.getElementById('blitzHelpBtn').addEventListener('click', openBlitzHelp);
+  document.getElementById('blitzHelpClose').addEventListener('click', closeBlitzHelp);
+  document.getElementById('blitzHelpCloseBtn').addEventListener('click', closeBlitzHelp);
+  document.getElementById('blitzHelpBackdrop').addEventListener('click', ev=>{
+    if(ev.target===document.getElementById('blitzHelpBackdrop')) closeBlitzHelp();
+  });
+})();
+
 document.getElementById('blitzTabClone').addEventListener('click',()=>{
   document.getElementById('blitzTabClone').classList.add('on');
   document.getElementById('blitzTabReview').classList.remove('on');
@@ -4903,59 +4999,1107 @@ function hazHelperFinish(){
 // Last updated: June 25 2026 · 130+ entries
 // Run "update Haz pricing" to refresh from Shopify
 const HAZ_STORE_PRICES = [
-  // ── CONSOLES ─────────────────────────────────────────────────
-  {title:"Sony PS5 Slim Disc Edition 1TB",        keywords:["ps5 slim disc","ps5 slim standard","cfi-2015 disc","playstation 5 slim disc"], price:449.97, source:"sold"},
-  {title:"Sony PS5 Slim Digital Edition 1TB",     keywords:["ps5 slim digital","ps5 digital","cfi-2015","ps5 slim"], price:300.00, source:"sold"},
-  {title:"Sony PlayStation 5",                    keywords:["ps5","playstation 5","sony ps5"], price:350.00, source:"active"},
-  {title:"Sony PS4 Slim 1TB w/ Controller",       keywords:["ps4 slim 1tb","playstation 4 slim","cuh-2115b"], price:119.99, source:"sold"},
-  {title:"Sony PlayStation 4 Grade C",            keywords:["ps4 grade c","ps4 console only","ps4 no controller"], price:91.95, source:"active"},
-  {title:"Sony PlayStation 4",                    keywords:["ps4","playstation 4"], price:100.00, source:"active"},
-  {title:"Sony PlayStation 3 Slim 320GB",         keywords:["ps3 slim","ps3 320gb","cech-3001b","playstation 3 slim"], price:79.99, source:"sold"},
-  {title:"Sony PlayStation VR Bundle",            keywords:["playstation vr","psvr","cuh-zvr2","ps vr bundle"], price:110.00, source:"sold"},
-  {title:"Sony PSP Slim For Parts",               keywords:["psp for parts","psp-2001","playstation portable parts"], price:29.99, source:"active"},
-  {title:"Microsoft Xbox Series X 1TB",           keywords:["xbox series x","series x 1tb","xbox 1880"], price:439.99, source:"sold"},
-  {title:"Microsoft Xbox Series S 512GB",         keywords:["xbox series s","series s","xbox s 512gb","xbox 1883"], price:239.99, source:"sold"},
-  {title:"Microsoft Xbox One S 500GB Bundle",     keywords:["xbox one s 500gb bundle","xbox one s 1681 bundle","xbox 1681 bundle"], price:159.97, source:"sold"},
-  {title:"Microsoft Xbox One S 500GB",            keywords:["xbox one s","xbox one s 500gb","xbox 1681"], price:99.99, source:"active"},
-  {title:"Microsoft Xbox One 512GB",              keywords:["xbox one 512gb","xbox one 1540 512","xbox one black"], price:67.89, source:"sold"},
-  {title:"Microsoft Xbox One 500GB",              keywords:["xbox one 500gb","xbox one 1540","original xbox one"], price:64.99, source:"sold"},
-  {title:"Nintendo Switch OLED Zelda Edition",    keywords:["switch oled zelda","switch oled tears of kingdom","heg-001 zelda"], price:179.99, source:"active"},
-  {title:"Nintendo Switch OLED",                  keywords:["switch oled","nintendo switch oled","heg-001"], price:200.00, source:"active"},
-  {title:"Nintendo Switch",                       keywords:["nintendo switch","switch console","switch v2","hac-001-01"], price:160.00, source:"active"},
-  {title:"Nintendo Switch Lite For Parts",        keywords:["switch lite for parts","switch lite parts","hdh-001 parts"], price:49.99, source:"sold"},
-  {title:"Nintendo Switch For Parts",             keywords:["switch for parts","nintendo switch parts","hac-001 parts"], price:74.99, source:"sold"},
-  {title:"Meta Quest 3S 128GB VR",               keywords:["meta quest 3s","quest 3s","meta quest vr","quest vr"], price:199.99, source:"sold"},
-  // ── PHONES ───────────────────────────────────────────────────
-  {title:"Apple iPhone 13 Pro Max 256GB BH100%",  keywords:["iphone 13 pro max 256gb","iphone 13 pro max bh100","a2484 256gb"], price:349.99, source:"sold"},
-  {title:"Apple iPhone 13 Mini 256GB BH100%",     keywords:["iphone 13 mini 256gb","iphone 13 mini bh100","a2481"], price:209.99, source:"sold"},
-  {title:"Apple iPhone 13 256GB For Parts",       keywords:["iphone 13 256gb parts","iphone 13 pink parts","a2482 256"], price:159.54, source:"sold"},
-  {title:"Apple iPhone 13 128GB For Parts",       keywords:["iphone 13 for parts","iphone 13 parts","iphone 13 128gb parts"], price:139.99, source:"sold"},
-  {title:"Apple iPhone 14 Pro Max 256GB For Parts",keywords:["iphone 14 pro max parts","14 pro max for parts"], price:349.99, source:"sold"},
-  {title:"Apple iPhone 14 Pro Max 256GB For Parts BH100%",keywords:["iphone 14 pro max bh100 parts","iphone 14 pro max space black parts"], price:379.99, source:"active"},
-  {title:"Apple iPhone 14 Pro Max 256GB Active",  keywords:["iphone 14 pro max 256 active","iphone 14 pro max verizon parts"], price:179.99, source:"active"},
-  {title:"Apple iPhone 14 256GB BH76% For Parts", keywords:["iphone 14 256gb bh76","iphone 14 blue parts","a2649 bh76"], price:214.99, source:"sold"},
-  {title:"Samsung Galaxy S26 256GB",              keywords:["galaxy s26","samsung s26","sm-s942u"], price:529.99, source:"sold"},
-  {title:"Samsung Galaxy S24 128GB Unlocked",     keywords:["galaxy s24","samsung s24 128gb","sm-s921u"], price:279.99, source:"sold"},
-  {title:"Samsung Galaxy S23 Ultra 512GB",        keywords:["galaxy s23 ultra 512gb","sm-s918u 512gb","s23 ultra verizon"], price:364.99, source:"active"},
-  {title:"Samsung Galaxy S20 FE Cracked Screen",  keywords:["galaxy s20 fe cracked","s20 fe parts","sm-g781v cracked"], price:54.99, source:"sold"},
-  {title:"Samsung Galaxy A37 5G 128GB",           keywords:["galaxy a37","samsung a37","sm-s376v"], price:99.99, source:"sold"},
-  {title:"Motorola Razr 2025 256GB Unlocked",     keywords:["motorola razr 2025","razr xt2553","motorola razr"], price:246.97, source:"sold"},
-  {title:"OnePlus 13R 256GB Unlocked",            keywords:["oneplus 13r","one plus 13r","13r nebula noir"], price:419.99, source:"sold"},
-  // ── TABLETS ──────────────────────────────────────────────────
-  {title:"Apple iPad 10th Gen 64GB WiFi",         keywords:["ipad 10th gen","ipad 10 64gb","a2696 ipad"], price:229.99, source:"sold"},
-  {title:"Apple iPad mini 5 64GB WiFi",           keywords:["ipad mini 5","ipad mini 5th gen","a2133 mini"], price:129.99, source:"active"},
-  {title:"Apple iPad Pro 11 M1 128GB WiFi+Cellular",keywords:["ipad pro 11 m1","ipad pro 11 cellular","a2301"], price:374.99, source:"sold"},
-  {title:"Apple iPad Pro 12.9 3rd Gen 64GB",      keywords:["ipad pro 12.9 3rd","ipad pro 12.9 64gb","a1876"], price:252.97, source:"sold"},
-  {title:"Samsung Galaxy Tab A7 Lite 32GB",       keywords:["galaxy tab a7 lite","samsung tab a7","sm-t220"], price:39.99, source:"sold"},
-  {title:"Acer Iconia One 7 8GB",                 keywords:["acer iconia tab","iconia one 7","b1-730 tablet"], price:19.99, source:"active"},
-  // ── LAPTOPS ──────────────────────────────────────────────────
+
+  // ══════════════════════════════════════════════════════════════
+  // VR HEADSETS — Real SYG sold prices
+  // ══════════════════════════════════════════════════════════════
+  {title:"Apple Vision Pro 256GB with Dual Loop Band and Case",     keywords:["apple vision pro 256gb","vision pro vr 256gb dual loop","apple vision pro headset case"], price:2199.99, source:"sold"},
+  {title:"Meta Quest Pro 256GB Full Set Complete In Box",           keywords:["meta quest pro 256gb full set","meta oculus quest pro 256gb","quest pro complete box"], price:599.99, source:"sold"},
+  {title:"Meta Quest 3 512GB White with Controllers Charger",       keywords:["meta quest 3 512gb white controllers","quest 3 512gb charger","meta quest 3 512"], price:384.99, source:"sold"},
+  {title:"Meta Quest 3S P97 128GB with 2 Controllers",              keywords:["meta quest 3s p97 128gb controllers","quest 3s 128gb 2 controllers","meta quest 3s p97"], price:186.97, source:"sold"},
+  {title:"Meta Quest 3S P97 128GB Standalone VR",                   keywords:["meta quest 3s 128gb standalone","meta quest 3s vr 128gb","quest 3s standalone 128gb"], price:202.11, source:"sold"},
+  {title:"Meta Oculus Quest 2 128GB White with 2 Controllers",      keywords:["meta oculus quest 2 128gb white controllers","oculus quest 2 128gb km49cm","meta quest 2 128gb white"], price:118.86, source:"sold"},
+  {title:"Meta Oculus Quest 2 128GB Standalone VR",                 keywords:["meta oculus quest 2 128gb standalone","oculus quest 2 km49cm 128gb","quest 2 128gb vr"], price:113.79, source:"sold"},
+  {title:"Sony PlayStation VR2 CFI-ZVR1 with Controllers Charging Station",keywords:["sony psvr2 cfi-zvr1 controllers charging","playstation vr2 cfi-zvr1 controllers","ps vr2 with controllers charging"], price:259.49, source:"sold"},
+  {title:"Sony PlayStation VR2 CFI-ZVR1 Headset",                  keywords:["sony playstation vr2 cfi-zvr1","psvr2 headset","ps vr2 headset only"], price:210.55, source:"sold"},
+  {title:"HTC Vive Tracker 3.0 2QAB100 with Dongle",               keywords:["htc vive tracker 3.0 2qab100","vive tracker 3.0 dongle","htc vive 3.0 tracker"], price:179.98, source:"sold"},
+  {title:"Asus ROG Ally X RC72LA Z1 Extreme 24GB 1TB",             keywords:["asus rog ally x rc72la z1 extreme 24gb","rog ally x 1tb 24gb","rc72la rog ally x"], price:699.99, source:"sold"},
+
+  // ══════════════════════════════════════════════════════════════
+  // NEW ITEMS FROM 1000-ROW PULL — Real SYG sold prices
+  // ══════════════════════════════════════════════════════════════
+
+  // ── iPhones — extended real prices ───────────────────────────
+  {title:"Apple iPhone 17 Pro Max 1TB Silver Unlocked Used A",      keywords:["iphone 17 pro max 1tb silver","iphone 17 pro max 1tb unlocked","a3257 1tb silver used"], price:1250, source:"sold"},
+  {title:"Apple iPhone 17 Pro Max 512GB Blue Unlocked Used A",      keywords:["iphone 17 pro max 512gb blue","iphone 17 pro max blue 512gb unlocked"], price:1200, source:"sold"},
+  {title:"Apple iPhone 17 Pro Max 512GB White Unlocked Used A",     keywords:["iphone 17 pro max 512gb white used","iphone 17 pro max white 512gb"], price:1130, source:"sold"},
+  {title:"Apple iPhone 17 Pro Max 256GB AT&T New Open Box",         keywords:["iphone 17 pro max 256gb att new open box","iphone 17 pro max att open box"], price:800, source:"sold"},
+  {title:"Apple iPhone 17 Pro 256GB Orange Unlocked Used A",        keywords:["iphone 17 pro 256gb orange used","iphone 17 pro orange used a"], price:950, source:"sold"},
+  {title:"Apple iPhone 17 Pro 256GB White New In Box",              keywords:["iphone 17 pro 256gb white new box","iphone 17 pro white new in box"], price:1100, source:"sold"},
+  {title:"Apple iPhone 17 Pro 256GB Blue New Open Box",             keywords:["iphone 17 pro 256gb blue new open box","iphone 17 pro blue open box"], price:670, source:"sold"},
+  {title:"Apple iPhone 17 Pro 512GB Orange Verizon New In Box",     keywords:["iphone 17 pro 512gb orange verizon","iphone 17 pro 512gb verizon new"], price:760, source:"sold"},
+  {title:"Apple iPhone 17 256GB Black New In Box",                  keywords:["iphone 17 256gb black new","iphone 17 black new in box","a3258 256gb black new"], price:600, source:"sold"},
+  {title:"Apple iPhone 17 512GB Black New In Box",                  keywords:["iphone 17 512gb black new box","iphone 17 black 512gb new"], price:600, source:"sold"},
+  {title:"Apple iPhone 17 256GB Green Used A",                      keywords:["iphone 17 256gb green used a","iphone 17 green used"], price:500, source:"sold"},
+  {title:"Apple iPhone 17 256GB Blue Used A",                       keywords:["iphone 17 256gb blue used a","iphone 17 blue used"], price:400, source:"sold"},
+  {title:"Apple iPhone 17 256GB Black Used A",                      keywords:["iphone 17 256gb black used a","iphone 17 black used"], price:400, source:"sold"},
+  {title:"Apple iPhone 17 Air 256GB Sky Blue Unlocked",             keywords:["iphone 17 air 256gb sky blue","iphone air 256gb unlocked","a3260 256gb sky blue"], price:700, source:"sold"},
+  {title:"Apple iPhone 17 Air 256GB Black AT&T",                    keywords:["iphone 17 air 256gb black att","iphone air black att 256gb"], price:599.99, source:"sold"},
+  {title:"Apple iPhone 17 Air 256GB Blue T-Mobile",                 keywords:["iphone 17 air 256gb blue t-mobile","iphone air blue t-mobile"], price:626.99, source:"sold"},
+  {title:"Apple iPhone 17 Air 256GB Lavender Unlocked",             keywords:["iphone 17 air 256gb lavender","iphone air lavender unlocked"], price:689.99, source:"sold"},
+  {title:"Apple iPhone 16 Pro Max 256GB Black Titanium Unlocked",   keywords:["iphone 16 pro max 256gb black titanium unlocked","iphone 16 pro max black unlocked used"], price:949.99, source:"sold"},
+  {title:"Apple iPhone 16 Pro Max 256GB White Titanium Unlocked",   keywords:["iphone 16 pro max 256gb white titanium","iphone 16 pro max white unlocked"], price:999.98, source:"sold"},
+  {title:"Apple iPhone 16 Pro Max 256GB Desert Titanium Unlocked",  keywords:["iphone 16 pro max 256gb desert titanium","iphone 16 pro max desert unlocked"], price:789.99, source:"sold"},
+  {title:"Apple iPhone 16 Pro Max 256GB Natural Titanium Unlocked", keywords:["iphone 16 pro max 256gb natural titanium","iphone 16 pro max natural unlocked"], price:749.99, source:"sold"},
+  {title:"Apple iPhone 16 Pro Max 512GB Black Titanium Unlocked",   keywords:["iphone 16 pro max 512gb black titanium","iphone 16 pro max 512gb unlocked"], price:1020.95, source:"sold"},
+  {title:"Apple iPhone 16 Pro Max 1TB AT&T Black",                  keywords:["iphone 16 pro max 1tb att black","iphone 16 pro max 1tb att"], price:989.99, source:"sold"},
+  {title:"Apple iPhone 16 Pro Max 1TB Desert Titanium AT&T",        keywords:["iphone 16 pro max 1tb desert att","iphone 16 pro max 1tb desert titanium att"], price:650, source:"sold"},
+  {title:"Apple iPhone 16 Pro 256GB Black Titanium Unlocked",       keywords:["iphone 16 pro 256gb black titanium unlocked","iphone 16 pro black titanium used"], price:749.99, source:"sold"},
+  {title:"Apple iPhone 16 Pro 256GB Desert Titanium Unlocked",      keywords:["iphone 16 pro 256gb desert titanium","iphone 16 pro desert titanium unlocked"], price:600, source:"sold"},
+  {title:"Apple iPhone 16 Pro 128GB Black Titanium Unlocked",       keywords:["iphone 16 pro 128gb black titanium unlocked","iphone 16 pro 128gb black unlocked used"], price:719.99, source:"sold"},
+  {title:"Apple iPhone 16 Pro 512GB Black Titanium Unlocked",       keywords:["iphone 16 pro 512gb black titanium","iphone 16 pro 512gb unlocked"], price:869.99, source:"sold"},
+  {title:"Apple iPhone 16 128GB Black Unlocked",                    keywords:["iphone 16 128gb black unlocked","a3081 128gb black unlocked used"], price:649.99, source:"sold"},
+  {title:"Apple iPhone 16 128GB Ultramarine Unlocked",              keywords:["iphone 16 128gb ultramarine unlocked","iphone 16 ultramarine 128gb"], price:1039.98, source:"sold"},
+  {title:"Apple iPhone 16 128GB Teal Unlocked",                     keywords:["iphone 16 128gb teal unlocked","iphone 16 teal 128gb"], price:1039.98, source:"sold"},
+  {title:"Apple iPhone 16 128GB White Unlocked",                    keywords:["iphone 16 128gb white unlocked","iphone 16 white 128gb"], price:559.99, source:"sold"},
+  {title:"Apple iPhone 16 Plus 128GB Black Unlocked",               keywords:["iphone 16 plus 128gb black unlocked","iphone 16 plus black 128gb used"], price:634.99, source:"sold"},
+  {title:"Apple iPhone 16 Plus 128GB Teal Unlocked",                keywords:["iphone 16 plus 128gb teal unlocked","iphone 16 plus teal"], price:729.99, source:"sold"},
+  {title:"Apple iPhone 16 Plus 128GB Pink Unlocked",                keywords:["iphone 16 plus 128gb pink unlocked","iphone 16 plus pink"], price:499.99, source:"sold"},
+  {title:"Apple iPhone 16 256GB Black Unlocked",                    keywords:["iphone 16 256gb black unlocked","a3081 256gb black unlocked used"], price:649.99, source:"sold"},
+  {title:"Apple iPhone 16e 128GB Black Unlocked New In Box",        keywords:["iphone 16e 128gb black new","a3212 128gb black new box"], price:479.99, source:"sold"},
+  {title:"Apple iPhone 15 Pro Max 256GB Black Titanium Unlocked",   keywords:["iphone 15 pro max 256gb black titanium unlocked","a2849 256gb black titanium used"], price:529.99, source:"sold"},
+  {title:"Apple iPhone 15 Pro Max 256GB White Titanium Unlocked",   keywords:["iphone 15 pro max 256gb white titanium","iphone 15 pro max white unlocked"], price:629.99, source:"sold"},
+  {title:"Apple iPhone 15 Pro Max 256GB Natural Titanium Unlocked", keywords:["iphone 15 pro max 256gb natural titanium","iphone 15 pro max natural used"], price:529.99, source:"sold"},
+  {title:"Apple iPhone 15 Pro Max 256GB Blue Titanium Unlocked",    keywords:["iphone 15 pro max 256gb blue titanium","iphone 15 pro max blue used"], price:579.99, source:"sold"},
+  {title:"Apple iPhone 15 Pro Max 512GB Blue Titanium Unlocked",    keywords:["iphone 15 pro max 512gb blue titanium","iphone 15 pro max 512gb blue"], price:684.99, source:"sold"},
+  {title:"Apple iPhone 15 Pro Max 512GB Natural Titanium Unlocked", keywords:["iphone 15 pro max 512gb natural titanium","iphone 15 pro max 512gb natural"], price:617.49, source:"sold"},
+  {title:"Apple iPhone 15 Pro 256GB Black Titanium Unlocked",       keywords:["iphone 15 pro 256gb black titanium unlocked","a2848 256gb black titanium used"], price:489.99, source:"sold"},
+  {title:"Apple iPhone 15 Pro 256GB Blue Titanium Unlocked",        keywords:["iphone 15 pro 256gb blue titanium","iphone 15 pro blue used"], price:569.99, source:"sold"},
+  {title:"Apple iPhone 15 128GB Black Unlocked",                    keywords:["iphone 15 128gb black unlocked","a2846 128gb black used"], price:419.99, source:"sold"},
+  {title:"Apple iPhone 15 128GB Blue Unlocked",                     keywords:["iphone 15 128gb blue unlocked","a2846 128gb blue used"], price:400, source:"sold"},
+  {title:"Apple iPhone 15 128GB Pink Unlocked",                     keywords:["iphone 15 128gb pink unlocked","a2846 128gb pink used"], price:479.99, source:"sold"},
+  {title:"Apple iPhone 14 Pro Max 256GB Purple Unlocked",           keywords:["iphone 14 pro max 256gb purple unlocked","a2651 256gb purple used"], price:444.44, source:"sold"},
+  {title:"Apple iPhone 14 Pro Max 256GB Gold Unlocked",             keywords:["iphone 14 pro max 256gb gold unlocked","iphone 14 pro max gold used"], price:520, source:"sold"},
+  {title:"Apple iPhone 14 Pro Max 128GB Deep Purple Unlocked",      keywords:["iphone 14 pro max 128gb deep purple","a2651 128gb deep purple used"], price:449.99, source:"sold"},
+  {title:"Apple iPhone 14 Pro Max 256GB BH79% Purple For Parts",    keywords:["iphone 14 pro max 256gb bh79 purple parts","iphone 14 pro max purple bh79 for parts"], price:356.66, source:"sold"},
+  {title:"Apple iPhone 14 Pro 256GB Space Gray Unlocked",           keywords:["iphone 14 pro 256gb space gray unlocked","a2650 256gb space gray used"], price:879.98, source:"sold"},
+  {title:"Apple iPhone 14 128GB Midnight T-Mobile",                 keywords:["iphone 14 128gb midnight t-mobile","a2649 128gb midnight t-mobile"], price:239.99, source:"sold"},
+  {title:"Apple iPhone 13 Pro Max 256GB Sierra Blue Unlocked",      keywords:["iphone 13 pro max 256gb sierra blue unlocked","a2484 256gb sierra blue used"], price:479.99, source:"sold"},
+  {title:"Apple iPhone 13 128GB Midnight Unlocked",                 keywords:["iphone 13 128gb midnight unlocked","a2482 128gb midnight used"], price:224.74, source:"sold"},
+  {title:"Apple iPhone 13 128GB Blue Unlocked",                     keywords:["iphone 13 128gb blue unlocked","a2482 128gb blue used"], price:144.66, source:"sold"},
+  {title:"Apple iPhone X 64GB Silver Cracked Back For Parts",       keywords:["iphone x 64gb silver cracked back parts","iphone x cracked back for parts used"], price:44.99, source:"sold"},
+
+  // ── More phones ───────────────────────────────────────────────
+  {title:"Samsung Galaxy S26 Ultra 256GB Black T-Mobile",           keywords:["galaxy s26 ultra 256gb black t-mobile","sm-s948u black 256gb","s26 ultra black t-mobile"], price:807.49, source:"sold"},
+  {title:"Samsung Galaxy S25 Ultra 512GB Titanium Gray Unlocked",   keywords:["galaxy s25 ultra 512gb titanium gray","sm-s938u 512gb titanium gray unlocked"], price:839.99, source:"sold"},
+  {title:"Samsung Galaxy S25 Ultra 256GB Titanium Whitesilver Unlocked",keywords:["galaxy s25 ultra 256gb titanium whitesilver","sm-s938u 256gb whitesilver"], price:769.99, source:"sold"},
+  {title:"Samsung Galaxy S25 Plus 256GB Silver Shadow Unlocked",    keywords:["galaxy s25 plus 256gb silver shadow","sm-s936u 256gb silver shadow"], price:688.88, source:"sold"},
+  {title:"Samsung Galaxy S25 Plus 256GB Navy Blue Unlocked",        keywords:["galaxy s25 plus 256gb navy blue unlocked","sm-s936u 256gb navy blue"], price:522.49, source:"sold"},
+  {title:"Samsung Galaxy S25 Edge 512GB Silver Unlocked New Sealed",keywords:["samsung galaxy s25 edge 512gb silver","galaxy s25 edge unlocked new"], price:731.24, source:"sold"},
+  {title:"Samsung Galaxy S24 Ultra 256GB Titanium Gray Unlocked",   keywords:["galaxy s24 ultra 256gb titanium gray unlocked","sm-s928u1 256gb gray unlocked"], price:599.99, source:"sold"},
+  {title:"Samsung Galaxy S24 Ultra 512GB Blue Unlocked",            keywords:["galaxy s24 ultra 512gb blue unlocked","sm-s928u1 512gb blue"], price:626.99, source:"sold"},
+  {title:"Samsung Galaxy S22 Ultra 128GB Burgundy Unlocked",        keywords:["galaxy s22 ultra 128gb burgundy unlocked","sm-s908u burgundy 128gb"], price:317.49, source:"sold"},
+  {title:"Samsung Galaxy Z Fold 7 256GB Jet Black AT&T",            keywords:["galaxy z fold 7 256gb jet black att","sm-f966u jet black att"], price:1099.99, source:"sold"},
+  {title:"Samsung Galaxy Z Fold 7 512GB Silver Unlocked",           keywords:["galaxy z fold 7 512gb silver unlocked","sm-f966u1 512gb silver"], price:649.99, source:"sold"},
+  {title:"Samsung Galaxy Z Flip 7 512GB Blue Shadow AT&T",          keywords:["galaxy z flip 7 512gb blue shadow att","sm-f766u blue shadow att"], price:501.25, source:"sold"},
+  {title:"Samsung Galaxy Z Flip 6 256GB Silver Spectrum",           keywords:["galaxy z flip 6 256gb silver spectrum","sm-f741u silver 256gb spectrum"], price:407.50, source:"sold"},
+  {title:"Google Pixel 10 Pro Fold 512GB Moonstone Unlocked New",   keywords:["google pixel 10 pro fold 512gb moonstone","pixel 10 pro fold unlocked new"], price:1199.99, source:"sold"},
+  {title:"Google Pixel 10 Pro XL 512GB Black Unlocked New",         keywords:["google pixel 10 pro xl 512gb black","pixel 10 pro xl unlocked new"], price:870, source:"sold"},
+  {title:"Google Pixel 10 128GB Indigo T-Mobile",                   keywords:["google pixel 10 128gb indigo t-mobile","pixel 10 indigo t-mobile"], price:374.99, source:"sold"},
+  {title:"Google Pixel 9 Pro XL 256GB Obsidian AT&T",              keywords:["google pixel 9 pro xl 256gb obsidian att","pixel 9 pro xl att obsidian"], price:372.86, source:"sold"},
+
+  // ── Tablets — extended ────────────────────────────────────────
+  {title:"Apple iPad Pro 13 M4 A2926 1TB Silver WiFi+Cellular Unlocked",keywords:["ipad pro 13 m4 1tb silver cellular","a2926 1tb cellular silver unlocked"], price:974.99, source:"sold"},
+  {title:"Apple iPad Pro 13 M4 A2926 256GB Space Black WiFi+Cellular",keywords:["ipad pro 13 m4 256gb space black cellular","a2926 256gb space black cellular"], price:819.99, source:"sold"},
+  {title:"Apple iPad Pro 13 M4 256GB Space Black WiFi Only",        keywords:["ipad pro 13 m4 256gb space black wifi","a2925 256gb space black wifi"], price:700, source:"sold"},
+  {title:"Apple iPad Pro 11 M4 256GB Space Black WiFi Only",        keywords:["ipad pro 11 m4 256gb space black wifi","a2837 256gb space black wifi"], price:634.99, source:"sold"},
+  {title:"Apple iPad Pro 11 M4 512GB Silver WiFi Only",             keywords:["ipad pro 11 m4 512gb silver wifi","a2837 512gb silver wifi"], price:889.89, source:"sold"},
+  {title:"Apple iPad Pro 12.9 6th Gen M2 128GB Space Gray WiFi",   keywords:["ipad pro 12.9 6th gen m2 128gb space gray","a2436 m2 128gb space gray wifi"], price:544.99, source:"sold"},
+  {title:"Apple iPad Pro 12.9 6th Gen M2 256GB Space Gray WiFi",   keywords:["ipad pro 12.9 6th gen m2 256gb space gray","a2436 m2 256gb space gray wifi"], price:565.24, source:"sold"},
+  {title:"Apple iPad Pro 12.9 6th Gen M2 512GB Space Gray WiFi+Cellular",keywords:["ipad pro 12.9 6th gen m2 512gb cellular","a2764 m2 512gb gray cellular"], price:580, source:"sold"},
+  {title:"Apple iPad Air 13 M2 256GB Space Gray WiFi",             keywords:["ipad air 13 m2 256gb space gray wifi","a2898 m2 256gb gray wifi"], price:474.99, source:"sold"},
+  {title:"Apple iPad Air 13 M2 128GB Space Gray WiFi",             keywords:["ipad air 13 m2 128gb space gray wifi","a2898 m2 128gb gray wifi"], price:474.99, source:"sold"},
+  {title:"Apple iPad Air 13 M3 128GB WiFi+Cellular Space Gray",    keywords:["ipad air 13 m3 128gb cellular space gray","mcj14ll/a ipad air 13 m3 cellular"], price:509.99, source:"sold"},
+  {title:"Apple iPad Air 11 M3 128GB Space Gray WiFi",             keywords:["ipad air 11 m3 128gb space gray wifi","a3266 m3 128gb gray wifi"], price:459.99, source:"sold"},
+  {title:"Apple iPad Air 11 M3 128GB Black WiFi Wholesale",        keywords:["ipad air 11 m3 128gb black wholesale","ipad air 11 m3 black 128gb"], price:515, source:"sold"},
+  {title:"Apple iPad Mini A17 Pro 128GB Space Gray WiFi",          keywords:["ipad mini a17 pro 128gb space gray wifi","a2993 a17 pro 128gb gray"], price:330.74, source:"sold"},
+  {title:"Apple iPad 11th Gen A16 128GB Blue WiFi Only",           keywords:["ipad 11th gen a16 128gb blue wifi","a3354 128gb blue wifi only"], price:259.99, source:"sold"},
+  {title:"Apple iPad 11th Gen A16 128GB Silver WiFi Only",         keywords:["ipad 11th gen a16 128gb silver wifi","a3354 128gb silver wifi"], price:229.99, source:"sold"},
+  {title:"Apple iPad 11th Gen A16 128GB Black WiFi New",           keywords:["ipad 11th gen a16 128gb black wifi new","a3354 128gb black new box"], price:530, source:"sold"},
+  {title:"Apple iPad 11th Gen A16 512GB New In Box",               keywords:["ipad 11th gen a16 512gb new box","ipad a16 512gb new in box"], price:450, source:"sold"},
+  {title:"Apple iPad 10th Gen A2696 64GB Blue WiFi Only",          keywords:["ipad 10th gen a2696 64gb blue wifi","a2696 64gb blue wifi only"], price:228.99, source:"sold"},
+  {title:"Apple iPad 9th Gen 64GB Silver WiFi New In Box",         keywords:["ipad 9th gen 64gb silver wifi new","mk2l3ll/a ipad 9th gen new box"], price:249.99, source:"sold"},
+  {title:"Samsung Galaxy Tab S11 Ultra SM-X930 128GB Gray WiFi",   keywords:["galaxy tab s11 ultra 128gb gray wifi","sm-x730 128gb gray wifi only"], price:498.74, source:"sold"},
+  {title:"Samsung Galaxy Tab S8 Ultra SM-X900 512GB Graphite New", keywords:["galaxy tab s8 ultra 512gb graphite new","sm-x900 512gb graphite new box"], price:590.82, source:"sold"},
+  {title:"Samsung Galaxy Tab A8 64GB New",                         keywords:["samsung galaxy tab a8 64gb new","sm-x200 64gb new box tab a8"], price:479.96, source:"sold"},
+  {title:"AT&T Samsung Galaxy Tab S10 Plus 5G 256GB Open Box",     keywords:["galaxy tab s10 plus 5g 256gb open box att","sm-x828u att open box"], price:624.99, source:"sold"},
+  {title:"Verizon Samsung Galaxy Tab S10 FE 5G 128GB Remotely Managed",keywords:["galaxy tab s10 fe 5g 128gb remotely managed","sm-x528u remotely managed"], price:138.56, source:"sold"},
+  {title:"Apple iPad Pro 13 M5 A3361 256GB Space Black Verizon",   keywords:["ipad pro 13 m5 256gb space black verizon","a3361 m5 256gb space black verizon"], price:959.60, source:"sold"},
+
+  // ── Laptops — extended real prices ───────────────────────────
+  {title:"Apple MacBook Air 13 M3 A3113 8GB 512GB Starlight",      keywords:["macbook air 13 m3 a3113 512gb starlight","a3113 512gb starlight m3","macbook air m3 512gb starlight"], price:665, source:"sold"},
+  {title:"Apple MacBook Air 13 M3 A3113 8GB 256GB Midnight",       keywords:["macbook air 13 m3 a3113 256gb midnight","a3113 256gb midnight m3","macbook air m3 256gb midnight"], price:633.74, source:"sold"},
+  {title:"Apple MacBook Air 13 M4 A3240 16GB 256GB Midnight",      keywords:["macbook air 13 m4 a3240 16gb 256gb midnight","a3240 m4 16gb midnight","macbook air m4 midnight 16gb"], price:759.99, source:"sold"},
+  {title:"Apple MacBook Air 13 M4 A3240 16GB 512GB Space Gray",    keywords:["macbook air 13 m4 a3240 16gb 512gb space gray","a3240 m4 16gb 512gb space gray"], price:844.99, source:"sold"},
+  {title:"Apple MacBook Air 15 M2 A2941 8GB 256GB Midnight",       keywords:["macbook air 15 m2 a2941 8gb 256gb midnight","a2941 m2 256gb midnight","macbook air 15 m2 midnight"], price:589.99, source:"sold"},
+  {title:"Apple MacBook Air 15 M2 A2941 16GB 1TB Starlight Used",  keywords:["macbook air 15 m2 a2941 16gb 1tb starlight","a2941 m2 16gb 1tb starlight used"], price:799.99, source:"sold"},
+  {title:"Apple MacBook Air 15 M4 A3241 16GB 256GB Midnight",      keywords:["macbook air 15 m4 a3241 16gb 256gb midnight","a3241 m4 16gb midnight used"], price:900, source:"sold"},
+  {title:"Apple MacBook Air 15 M4 A3241 16GB 256GB Blue",          keywords:["macbook air 15 m4 a3241 16gb 256gb blue","a3241 m4 16gb blue"], price:900, source:"sold"},
+  {title:"Apple MacBook Air 15 M4 A3241 16GB 256GB Starlight",     keywords:["macbook air 15 m4 a3241 16gb 256gb starlight","a3241 m4 16gb starlight"], price:779.99, source:"sold"},
+  {title:"Apple MacBook Air 15 M5 A3448 New In Box Space Gray",    keywords:["macbook air 15 m5 a3448 new space gray","a3448 m5 15 new box space gray"], price:1300, source:"sold"},
+  {title:"Apple MacBook Air 15 M5 A3448 Used A Black",             keywords:["macbook air 15 m5 a3448 used black","a3448 m5 15 used black"], price:990, source:"sold"},
+  {title:"Apple MacBook Air 13 M5 A3449 Used A Black",             keywords:["macbook air 13 m5 a3449 used black","a3449 m5 13 used black"], price:910, source:"sold"},
+  {title:"Apple MacBook Air 13 M5 A3449 Used A Silver",            keywords:["macbook air 13 m5 a3449 used silver","a3449 m5 13 used silver"], price:910, source:"sold"},
+  {title:"Apple MacBook Neo 13 A3404 2026 8GB 256GB Indigo Open Box",keywords:["macbook neo 13 a3404 256gb indigo open box","a3404 neo 256gb indigo open box"], price:549.99, source:"sold"},
+  {title:"Apple MacBook Neo 13 A3404 2026 8GB 512GB Indigo",       keywords:["macbook neo 13 a3404 512gb indigo","a3404 neo 512gb indigo"], price:529.96, source:"sold"},
+  {title:"Apple MacBook Neo 13 A3404 2026 8GB 256GB Citrus",       keywords:["macbook neo 13 a3404 256gb citrus","a3404 neo 256gb citrus"], price:519.99, source:"sold"},
+  {title:"Apple MacBook Pro 16 M5 A3428 2026 24GB 1TB Jet Black New",keywords:["macbook pro 16 m5 a3428 24gb 1tb jet black new","a3428 m5 24gb 1tb jet black"], price:2250, source:"sold"},
+  {title:"Apple MacBook Pro 16 M4 Pro A3403 14C 48GB 1TB Space Gray",keywords:["macbook pro 16 m4 pro a3403 48gb 1tb","a3403 m4 pro 48gb space gray"], price:2211.11, source:"sold"},
+  {title:"Apple MacBook Pro 16 M4 Pro A3403 24GB 512GB Space Gray",keywords:["macbook pro 16 m4 pro a3403 24gb 512gb","a3403 m4 pro 24gb 512gb space gray"], price:1549.99, source:"sold"},
+  {title:"Apple MacBook Pro 16 M1 Max A2485 64GB 1TB Silver",      keywords:["macbook pro 16 m1 max a2485 64gb 1tb silver","a2485 m1 max 64gb silver"], price:1249.99, source:"sold"},
+  {title:"Apple MacBook Pro 14 M3 Pro A2992 36GB 1TB Space Gray",  keywords:["macbook pro 14 m3 pro a2992 36gb 1tb","a2992 m3 pro 36gb 1tb"], price:1424.99, source:"sold"},
+  {title:"Apple MacBook Pro 14 M4 Space Black 16GB 512GB",         keywords:["macbook pro 14 m4 space black 16gb 512gb","a3132 m4 space black 16gb 512gb"], price:1049.99, source:"sold"},
+  {title:"Apple MacBook Pro 14 M1 Pro A2442 2021 32GB 512GB",      keywords:["macbook pro 14 m1 pro a2442 32gb 512gb","a2442 m1 pro 2021 32gb 512gb"], price:830, source:"sold"},
+  {title:"Apple MacBook Pro 14 M1 Pro A2442 2021 16GB 512GB Used",keywords:["macbook pro 14 m1 pro a2442 2021 16gb 512gb used","a2442 m1 pro 2021 16gb used"], price:699.99, source:"sold"},
+  {title:"Apple MacBook Pro 13 M2 A2338 2022 8GB 256GB Bad Display",keywords:["macbook pro 13 m2 a2338 2022 bad display","a2338 m2 2022 bad lcd display"], price:299.99, source:"syg"},
+  {title:"Asus ROG Ally X RC72LA Z1 Extreme 24GB 1TB",             keywords:["asus rog ally x rc72la 24gb 1tb","rog ally x rc72la z1 extreme 24gb","rc72la ally x 1tb"], price:699.99, source:"sold"},
+  {title:"Asus ROG Ally RC71L Z1 Extreme 16GB 512GB",              keywords:["asus rog ally rc71l z1 extreme 512gb","rog ally rc71l 512gb","rc71l rog ally z1 extreme"], price:394.99, source:"sold"},
+  {title:"Valve Steam Deck OLED 1030 1TB 16GB",                    keywords:["steam deck oled 1030 1tb","valve steam deck oled 1tb 16gb","steam deck oled 1tb used"], price:899.99, source:"sold"},
+  {title:"Valve Steam Deck OLED 512GB Used",                       keywords:["steam deck oled 512gb used","valve steam deck oled 512gb used","steam deck oled 512 used"], price:499.99, source:"sold"},
+  {title:"Valve Steam Deck LCD 512GB Used",                        keywords:["steam deck lcd 512gb used","valve steam deck 512gb used","steam deck 1010 512gb used"], price:294.99, source:"sold"},
+  {title:"Valve Steam Deck LCD 512GB No Power",                    keywords:["steam deck lcd 512gb no power","steam deck 1010 512gb no power","valve steam deck no power"], price:533.21, source:"sold"},
+  {title:"Nintendo Switch 2 BEE-001 Console Only",                 keywords:["nintendo switch 2 bee-001 console only","switch 2 console only","bee-001 switch 2"], price:360.60, source:"sold"},
+  {title:"Nintendo Switch 2 BEE-001 with Dock Joy-Cons Charger",   keywords:["nintendo switch 2 bee-001 dock joy-cons","switch 2 with dock joy-cons charger","bee-001 switch 2 with accessories"], price:414.99, source:"sold"},
+  {title:"Nintendo Switch 2 Mario Kart World Bundle New",           keywords:["nintendo switch 2 mario kart world bundle new","switch 2 mario kart bundle new open box"], price:449.99, source:"sold"},
+  {title:"Nintendo Switch 2 HAC-002 Red New In Box",               keywords:["nintendo switch 2 hac-002 red new","switch 2 hac-002 red new box"], price:400, source:"sold"},
+  {title:"Nintendo Switch OLED HEG-001 Open Box",                  keywords:["nintendo switch oled heg-001 open box","switch oled open box used"], price:264.99, source:"sold"},
+  {title:"Sony PlayStation 5 Pro CFI-7019 2TB White with Controller",keywords:["ps5 pro cfi-7019 2tb white controller","playstation 5 pro cfi-7019 2tb","ps5 pro controller hdmi cables"], price:649.99, source:"sold"},
+  {title:"Sony PlayStation 5 Pro CFI-7019 2TB White",              keywords:["ps5 pro cfi-7019 2tb","playstation 5 pro 2tb white","ps5 pro 2tb console"], price:616.66, source:"sold"},
+  {title:"Sony PlayStation 3 CECHA01 60GB YLOD For Parts",         keywords:["ps3 cecha01 60gb ylod parts","playstation 3 60gb ylod for parts","ps3 fat 60gb ylod"], price:188.32, source:"sold"},
+  {title:"Microsoft Xbox One X 2017 Black",                        keywords:["xbox one x 2017 black","microsoft xbox one x 1787","xbox one x black console"], price:550, source:"sold"},
+  {title:"Microsoft Xbox Series X Halo Infinite Edition 1TB",      keywords:["xbox series x halo infinite edition 1tb","xbox series x halo limited edition","1882 halo infinite edition"], price:699.99, source:"sold"},
+  {title:"Microsoft Surface Pro 10 2079 Ultra 7 32GB 1TB with Keyboard",keywords:["surface pro 10 2079 ultra 7 32gb 1tb keyboard","microsoft surface pro 10 ultra 7 keyboard"], price:926.24, source:"sold"},
+  {title:"Microsoft Surface Pro 9 2038 i7 32GB 1TB Silver",        keywords:["surface pro 9 2038 i7 32gb 1tb silver","microsoft surface pro 9 i7 32gb"], price:749.99, source:"sold"},
+  {title:"Microsoft Surface Pro 9 2038 i5 16GB 256GB Black with Keyboard",keywords:["surface pro 9 i5 16gb 256gb black keyboard","surface pro 9 2038 i5 keyboard"], price:499.99, source:"sold"},
+  {title:"Microsoft Surface Laptop 7th Edition 2108 15 Core Ultra i7 16GB 256GB Black",keywords:["surface laptop 7th edition 2108 15 ultra i7","surface laptop 7 15 core ultra i7 black"], price:999.99, source:"sold"},
+  {title:"Microsoft Surface 7th Edition 13.8 Snapdragon X Plus 16GB 512GB New",keywords:["surface 7th edition snapdragon x plus 16gb 512gb","surface 7th 13 snapdragon new"], price:715, source:"sold"},
+  {title:"Microsoft Surface Pro 6 2033 Touch Ultra 5 256GB 16GB",  keywords:["surface pro 6 2033 touch ultra 5 256gb","microsoft surface pro 6 touch ultra 5"], price:449.99, source:"sold"},
+  {title:"Microsoft Surface 12 2110 Snapdragon X Plus 16GB 256GB Silver",keywords:["surface 12 2110 snapdragon x plus 16gb 256gb","microsoft surface 12 snapdragon silver"], price:560.49, source:"sold"},
+
+  // ── New GPUs ──────────────────────────────────────────────────
+  {title:"Zotac RTX 5070 Ti AMP Extreme INFINITY 16GB GDDR7",      keywords:["zotac rtx 5070 ti amp extreme infinity 16gb","rtx 5070 ti amp extreme infinity zotac"], price:849.99, source:"sold"},
+  {title:"PNY RTX 5070 Ti OC Triple Fan 16GB GDDR7",               keywords:["pny rtx 5070 ti oc triple fan 16gb","pny rtx 5070 ti 16gb gddr7"], price:749.99, source:"sold"},
+  {title:"Asus RTX 5070 Used",                                      keywords:["asus rtx 5070 used","rtx 5070 asus used with box"], price:549.99, source:"sold"},
+  {title:"PNY RTX 5070 Ti 8GB Used",                               keywords:["pny rtx 5070 ti 8gb used","rtx 5070 ti pny 8gb used box"], price:730, source:"sold"},
+  {title:"ZOTAC RTX 4080 Trinity OC 16GB",                         keywords:["zotac rtx 4080 trinity oc 16gb","rtx 4080 trinity oc zotac"], price:699.99, source:"sold"},
+  {title:"MSI RTX 4070 Ti Gaming X Slim 12GB GDDR6X",              keywords:["msi rtx 4070 ti gaming x slim 12gb","rtx 4070 ti gaming x slim msi"], price:655.49, source:"sold"},
+  {title:"Asus ProArt RTX 4070 Ti 12GB",                           keywords:["asus proart rtx 4070 ti 12gb","rtx 4070 ti proart asus"], price:679.99, source:"sold"},
+  {title:"GIGABYTE RTX 4070 WindForce OC 12GB GDDR6X",             keywords:["gigabyte rtx 4070 windforce oc 12gb","rtx 4070 windforce oc gigabyte"], price:444.44, source:"sold"},
+  {title:"Gigabyte RX 7800 XT 16GB GDDR6",                         keywords:["gigabyte rx 7800 xt 16gb gddr6","radeon rx 7800 xt gigabyte 16gb"], price:416.99, source:"sold"},
+  {title:"PowerColor Hellhound RX 7900 XT OC 20GB",                keywords:["powercolor hellhound rx 7900 xt 20gb","rx 7900 xt powercolor hellhound oc"], price:639.99, source:"sold"},
+  {title:"MSI RTX 3080 Ti Ventus 3X 12GB",                         keywords:["msi rtx 3080 ti ventus 3x 12gb","rtx 3080 ti ventus msi"], price:479.99, source:"sold"},
+  {title:"EVGA RTX 3060 Ti XC3 Ultra 8GB GDDR6",                   keywords:["evga rtx 3060 ti xc3 ultra 8gb","rtx 3060 ti evga xc3"], price:215.99, source:"sold"},
+  {title:"MSI GTX 1660 Super 6GB",                                 keywords:["msi gtx 1660 super 6gb","gtx 1660 super msi gigabyte 6gb"], price:99.99, source:"syg"},
+
+  // ── New desktops ──────────────────────────────────────────────
+  {title:"Alienware Aurora R13 i9-12900F 64GB DDR5 2.5TB RTX 3060 Ti",keywords:["alienware aurora r13 i9-12900f 64gb rtx 3060 ti","aurora r13 64gb ddr5 rtx 3060ti"], price:849.99, source:"sold"},
+  {title:"Gaming Desktop AMD Ryzen 9 9800X 64GB DDR5 1TB RTX 3090",keywords:["gaming desktop ryzen 9 9800x 64gb rtx 3090","custom desktop rtx 3090 ryzen 9 9800x"], price:1999.99, source:"sold"},
+  {title:"iBUYPOWER Gaming i7-14700F RTX 4070 32GB 2TB",           keywords:["ibuypowerpnc gaming i7-14700f rtx 4070 32gb","ibuypowerpnc rtx 4070 32gb desktop"], price:1199.99, source:"sold"},
+  {title:"HP Z4 G4 Workstation i9-10900X 64GB 512GB",              keywords:["hp z4 g4 workstation i9-10900x 64gb","hp z4 workstation 64gb i9"], price:683.99, source:"sold"},
+  {title:"Dell OptiPlex Micro Plus 7020 i7-14700 32GB DDR5 256GB", keywords:["dell optiplex micro plus 7020 i7-14700 32gb","optiplex micro plus 7020 i7 32gb"], price:628.87, source:"sold"},
+  {title:"Dell OptiPlex 3060 Micro i5-8500T 8GB 128GB For Parts",  keywords:["dell optiplex 3060 micro i5-8500t for parts","optiplex 3060 micro i5 parts"], price:122.77, source:"sold"},
+  {title:"Dell Tower Plus EBT2250 Core Ultra 7 265 32GB 1TB Sealed",keywords:["dell tower plus ebt2250 ultra 7 265 32gb sealed","dell tower ebt2250 ultra 7 sealed"], price:1289.99, source:"sold"},
+  {title:"HP Elite Mini 800 G9 i5-12500T 16GB 256GB New In Box",   keywords:["hp elite mini 800 g9 i5-12500t 16gb","elite mini 800 g9 new box"], price:569.99, source:"sold"},
+  {title:"Apple iMac 24 M4 A3137 Blue 24GB 512GB 10-Core GPU",     keywords:["apple imac 24 m4 a3137 blue 24gb 512gb","imac m4 blue 24gb 512gb 10-core"], price:1350.99, source:"sold"},
+  {title:"Apple iMac 24 M4 A3247 Silver 16GB 256GB New In Box",    keywords:["apple imac 24 m4 a3247 silver 16gb 256gb new","imac m4 silver 16gb new box"], price:1282.49, source:"sold"},
+  {title:"Apple Mac Mini M4 16GB 256GB",                           keywords:["apple mac mini m4 16gb 256gb","mac mini m4 a3239 16gb 256gb"], price:430, source:"sold"},
+  {title:"Apple Mac Studio M1 Max A2615 32GB 512GB Silver",        keywords:["apple mac studio m1 max a2615 32gb 512gb","mac studio m1 max 32gb silver"], price:1333.33, source:"sold"},
+
+  // ── Smartwatches ─────────────────────────────────────────────
+  {title:"Apple Watch Ultra 2 49mm Black Titanium GPS Used",       keywords:["apple watch ultra 2 49mm black titanium gps used","apple watch ultra 2 black titanium used"], price:449.99, source:"sold"},
+  {title:"Apple Watch Ultra 1 A2622 49mm GPS+Cellular Midnight",   keywords:["apple watch ultra 1 a2622 49mm midnight","apple watch ultra 1 ocean band"], price:319.99, source:"sold"},
+  {title:"Apple Watch Ultra 3 A3281 49mm GPS+Cellular Titanium Black",keywords:["apple watch ultra 3 a3281 49mm titanium black","apple watch ultra 3 titanium black gps"], price:544.99, source:"sold"},
+  {title:"Apple Watch Series 10 42mm GPS+LTE Jet Black",           keywords:["apple watch series 10 42mm jet black gps lte","apple watch 10 42mm jet black cellular"], price:228.99, source:"sold"},
+  {title:"Apple Watch Series 10 46mm GPS+LTE",                     keywords:["apple watch series 10 46mm gps lte","apple watch series 10 46mm cellular"], price:211.94, source:"sold"},
+  {title:"Apple Watch Series 11 46mm A3333 Jet Black GPS Only",    keywords:["apple watch series 11 46mm jet black gps","apple watch 11 46mm jet black"], price:250, source:"sold"},
+  {title:"Garmin Forerunner 970 47mm AMOLED GPS New Open Box",      keywords:["garmin forerunner 970 47mm amoled gps new","garmin forerunner 970 new open box"], price:609.99, source:"sold"},
+  {title:"Garmin Fenix 8 AMOLED Sapphire 51mm GPS Orange",        keywords:["garmin fenix 8 amoled sapphire 51mm orange","garmin fenix 8 sapphire orange"], price:807.49, source:"sold"},
+
+
+  // ══════════════════════════════════════════════════════════════
+  // REAL SYG SOLD — Last 60 days (pulled June 26 2026)
+  // Per-unit prices derived from gross_sales / orders
+  // ══════════════════════════════════════════════════════════════
+
+  // ── Accessories / Networking ──────────────────────────────────
+  {title:"Amazon 9W USB Power Adapter with Micro-USB New",       keywords:["amazon 9w usb power adapter","amazon 9w micro-usb","amazon oem charger"], price:4.51, source:"sold"},
+  {title:"Eero 6+ Plus R010001 Mesh WiFi 6 Router Open Box",     keywords:["eero 6 plus r010001","eero 6+ mesh wifi","eero mesh router open box"], price:50.26, source:"sold"},
+  {title:"Chamberlain myQ Wireless Garage Door Keypad CH348",     keywords:["chamberlain myq keypad ch348","chamberlain ch348 keypad","myq ch348"], price:33.26, source:"sold"},
+  {title:"Chamberlain CHU48 Universal Wireless Garage Door Keypad New", keywords:["chamberlain chu48 keypad","chu48 garage keypad new","chamberlain universal keypad new"], price:79.13, source:"sold"},
+  {title:"Apple Magic Keyboard with Numeric Keypad White A1843",  keywords:["apple magic keyboard numeric a1843","magic keyboard white numeric","a1843 magic keyboard"], price:29.97, source:"sold"},
+  {title:"Apple Magic Mouse 2 White A1657",                       keywords:["apple magic mouse 2 white a1657","magic mouse 2 white","a1657 magic mouse"], price:34.77, source:"sold"},
+  {title:"Logitech R400 Wireless Presenter Black",                keywords:["logitech r400 presenter","logitech wireless presenter r400"], price:8.82, source:"sold"},
+  {title:"Ring Stick Up Cam Battery 5UM7E5 Wireless",            keywords:["ring stick up cam battery","ring stick up cam 5um7e5","ring wireless camera"], price:136.40, source:"sold"},
+  {title:"Google Nest Hub Max H2A Smart Display For Parts",       keywords:["google nest hub max h2a","nest hub max for parts","nest hub max parts"], price:139.97, source:"sold"},
+  {title:"Netgear Orbi RBE971 BE27000 WiFi 7 Router",            keywords:["netgear orbi rbe971","orbi be27000 wifi7","netgear orbi wifi7"], price:404.99, source:"syg"},
+  {title:"TP-Link 16-Port Gigabit Switch TL-SG1016GD",           keywords:["tp-link 16 port gigabit switch","tl-sg1016gd","tp-link 16 port switch"], price:29.99, source:"syg"},
+
+  // ── Storage — Last 60 days sold ───────────────────────────────
+  {title:"Toshiba MQ02ABF100 1TB 2.5 SATA HDD 100% Health",      keywords:["toshiba mq02abf100 1tb","toshiba 1tb 2.5 sata hdd","mq02abf100 100% health"], price:31.65, source:"sold"},
+  {title:"Toshiba MG08ACA16TE 16TB HDD New Sealed",              keywords:["toshiba mg08aca16te 16tb","toshiba 16tb new sealed","mg08aca16te"], price:3689.99, source:"sold"},
+  {title:"Samsung 870 QVO 4TB SATA MZ-77Q4T0",                   keywords:["samsung 870 qvo 4tb","mz-77q4t0","870 qvo 4tb sata"], price:524.68, source:"sold"},
+  {title:"Samsung 870 QVO 1TB SATA MZ-77Q1T0 80%+ Health",       keywords:["samsung 870 qvo 1tb 80%","mz-77q1t0 80%","870 qvo 1tb good health"], price:483.96, source:"sold"},
+  {title:"Samsung 980 500GB NVMe M.2 New In Box",                 keywords:["samsung 980 500gb new","mz-v8v500b new","samsung 980 500gb nvme new"], price:124.98, source:"sold"},
+  {title:"Samsung 980 2TB NVMe Used A",                           keywords:["samsung 980 2tb used a","mz-v8v2t0 used a"], price:65, source:"syg"},
+  {title:"Samsung 990 Pro 2TB NVMe 0% Health For Parts",          keywords:["samsung 990 pro 2tb 0%","990 pro 2tb for parts 0%","mz-v9p2t0 0%"], price:109.99, source:"sold"},
+  {title:"Intel SSD 660p 1TB NVMe M.2 54% Health",               keywords:["intel 660p 1tb 54%","ssdpeknw0t8 54%","intel 660p 54 health"], price:82.91, source:"sold"},
+  {title:"Kingston KC2500 1TB NVMe 100% Health",                  keywords:["kingston kc2500 1tb 100%","skc2500m8 1tb 100%","kc2500 1tb good health"], price:108.16, source:"sold"},
+  {title:"Kingston KC3000 1TB NVMe 100% Health",                  keywords:["kingston kc3000 1tb 100%","skc3000s 1024g 100%","kc3000 1tb good health"], price:199.98, source:"sold"},
+  {title:"Kingston DC500R 1.92TB SATA 85-100% Health",            keywords:["kingston dc500r 1.92tb 85%","sedc500r 1920g 85%","dc500r 1.92tb good"], price:2407.96, source:"sold"},
+  {title:"Crucial MX500 1TB 2.5 SATA",                           keywords:["crucial mx500 1tb sata","ct1000mx500ssd1","mx500 1tb 2.5"], price:149.99, source:"sold"},
+  {title:"Crucial MX200 1TB 2.5 SATA Bad Health",                keywords:["crucial mx200 1tb bad health","ct100mx200ssd1 bad health","mx200 1tb bad"], price:55.33, source:"sold"},
+  {title:"WD Blue SA510 4TB SATA 2.5",                           keywords:["wd blue sa510 4tb sata","wds400t3b0a 4tb","western digital sa510 4tb"], price:724.98, source:"sold"},
+  {title:"Seagate Exos Enterprise 12TB HDD 100% Health",          keywords:["seagate exos 12tb","st12000dm0007 12tb","seagate enterprise 12tb"], price:1399.93, source:"sold"},
+  {title:"Seagate Exos X16 16TB SATA Enterprise HDD",            keywords:["seagate exos x16 16tb","st16000nm001g","seagate 16tb enterprise"], price:299.99, source:"syg"},
+
+  // ── RAM — Last 60 days sold ───────────────────────────────────
+  {title:"Samsung 64GB DDR5 EC8 RDIMM 2Rx4 PC5-6400B Server RAM",keywords:["samsung 64gb ddr5 rdimm ec8","samsung 64gb pc5-6400b rdimm","ddr5 64gb ec8 rdimm"], price:3600, source:"sold"},
+  {title:"Samsung 64GB 2x32GB UDIMM 2Rx8 PC5-4800B RAM",         keywords:["samsung 64gb udimm pc5-4800b","m324rga3bb0 64gb","samsung 64gb ddr5 udimm"], price:1818.18, source:"sold"},
+  {title:"SK Hynix 16GB DDR5 4800MHz SODIMM Lot of 21",          keywords:["sk hynix ddr5 4800 lot 21","hmcg78mebsa092n lot 21","hynix ddr5 sodimm lot 21"], price:2449.99, source:"sold"},
+  {title:"Micron 32GB DDR5-5600 EUDIMM Workstation RAM",          keywords:["micron 32gb ddr5 5600 eudimm","micron ddr5-5600 workstation","micron 32gb eudimm"], price:649.99, source:"sold"},
+  {title:"Micron 64GB 2x32GB 2RX8 PC4-3200AA DDR4 Desktop RAM",  keywords:["micron 64gb 2x32gb pc4-3200aa ddr4","micron 64gb ddr4 desktop","2x32gb pc4-3200aa"], price:119.98, source:"sold"},
+  {title:"Crucial 32GB 2x16GB PC4-2666V ECC UDIMM Server RAM",   keywords:["crucial 32gb ecc udimm pc4-2666","crucial 2x16gb ecc server ram","crucial 32gb ecc server"], price:194.99, source:"sold"},
+
+  // ── Laptops — Last 60 days sold ──────────────────────────────
+  {title:"Apple MacBook Pro 16 M1 Max A2485 2021 32GB 1TB",      keywords:["macbook pro 16 m1 max a2485 2021 32gb","a2485 m1 max 32gb 1tb","macbook pro 16 m1 max 2021"], price:1249.99, source:"sold"},
+  {title:"Apple MacBook Pro 16 M1 Max A2485 2021 64GB 1TB",      keywords:["macbook pro 16 m1 max 64gb a2485","a2485 m1 max 64gb 1tb"], price:1249.99, source:"sold"},
+  {title:"Apple MacBook Pro 16 M5 A3428 2026 24GB 1TB New In Box",keywords:["macbook pro 16 m5 a3428 2026","a3428 m5 24gb","macbook pro m5 2026 new"], price:2250, source:"sold"},
+  {title:"Apple MacBook Pro 14 M3 Pro A2992 2023 36GB 1TB",      keywords:["macbook pro 14 m3 pro a2992 2023 36gb","a2992 m3 pro 36gb","macbook pro 14 m3 2023 36gb"], price:1424.99, source:"sold"},
+  {title:"Apple MacBook Air 15 M5 A3448 2025 Space Gray New In Box",keywords:["macbook air 15 m5 a3448","macbook air 15 m5 2025","a3448 m5 space gray new"], price:1300, source:"sold"},
+  {title:"Apple MacBook Air 15 M4 2025 16GB 512GB Black",        keywords:["macbook air 15 m4 2025 black","macbook air 15 m4 black 512gb","m4 macbook air 15 black"], price:1180, source:"sold"},
+  {title:"Apple MacBook Neo 13 A3404 2026 8GB 256GB Indigo Open Box",keywords:["macbook neo 13 a3404","macbook neo 2026 indigo","a3404 macbook neo 256gb"], price:549.99, source:"sold"},
+  {title:"Asus Zephyrus G16 Ultra 9 32GB 1TB RTX 5070 Ti",       keywords:["asus zephyrus g16 ultra 9 rtx 5070 ti","zephyrus g16 rtx 5070 ti 32gb","zephyrus g16 1tb 32gb"], price:2090, source:"sold"},
+  {title:"Acer Predator Helios Neo 14 Ultra 9 RTX 5070 32GB 1TB New", keywords:["acer predator helios neo 14 ultra 9 rtx 5070","predator helios neo rtx 5070 32gb","helios neo 14 rtx 5070"], price:1249.99, source:"sold"},
+  {title:"Lenovo Legion 7i 16 i9-14900HX 32GB 1TB RTX 4070 White",keywords:["lenovo legion 7i 16 i9-14900hx rtx 4070 white","legion 7i 16 white rtx 4070","legion 7i i9 rtx 4070 1tb"], price:1399.99, source:"sold"},
+  {title:"HP ProBook 4 G1i 16 Core Ultra 5 225U 16GB 512GB Open Box",keywords:["hp probook 4 g1i 16 ultra 5 225u","probook 4 g1i 16 open box 512gb"], price:699.99, source:"sold"},
+  {title:"HP Omen 16 i7-13700HX 32GB 1TB RTX 4060",              keywords:["hp omen 16 i7-13700hx rtx 4060 32gb","omen 16 rtx 4060 1tb 32gb"], price:749.99, source:"sold"},
+  {title:"HP Pavilion Ryzen 7 5700G 16GB RTX 3060 512GB+1TB",    keywords:["hp pavilion ryzen 7 5700g rtx 3060","hp pavilion rtx 3060 ryzen 7","hp pavilion amd rtx 3060"], price:549.99, source:"sold"},
+  {title:"Dell Precision 5690 Core Ultra 9 64GB 1TB RTX 3500 Touch",keywords:["dell precision 5690 ultra 9 64gb rtx 3500","precision 5690 touch 64gb","precision 5690 rtx 3500 touch"], price:1399.99, source:"sold"},
+  {title:"Dell Latitude 7430 14 Touch i7-1265U 32GB 1TB",        keywords:["dell latitude 7430 touch i7-1265u 32gb","latitude 7430 32gb 1tb touch","latitude 7430 i7 32gb touch"], price:349.99, source:"sold"},
+  {title:"Dell Latitude 7450 Core Ultra 7 165U 32GB 1TB Heavy Wear",keywords:["dell latitude 7450 ultra 7 32gb 1tb","latitude 7450 ultra 7 32gb heavy wear"], price:592.50, source:"sold"},
+  {title:"Dell Inspiron 15 5000 i5-6200U 8GB No OS Bad Battery As-Is",keywords:["dell inspiron 15 5000 i5-6200u no os","inspiron 15 5000 bad battery as-is"], price:44.99, source:"sold"},
+  {title:"MXZ Gaming PC Ryzen 5 3600 RTX 4060 16GB 500GB Open Box",keywords:["mxz gaming pc ryzen 5 3600 rtx 4060","gaming pc rtx 4060 ryzen 5 3600 open box"], price:599.97, source:"sold"},
+
+  // ── iPhones — Last 60 days sold ──────────────────────────────
+  {title:"Apple iPhone 17 Pro Max 256GB Silver New Open Box",     keywords:["iphone 17 pro max 256gb silver open box","iphone 17 pro max silver new open box"], price:1190, source:"sold"},
+  {title:"Apple iPhone 17 Pro Max 256GB Silver Unlocked",         keywords:["iphone 17 pro max silver unlocked 256gb","iphone 17 pro max unlocked silver"], price:1111.11, source:"sold"},
+  {title:"Apple iPhone 14 Pro Max 256GB BH79% Purple For Parts",  keywords:["iphone 14 pro max 256gb bh79% purple","iphone 14 pro max bh79 for parts","iphone 14 pro max purple bh79"], price:356.66, source:"sold"},
+  {title:"Apple iPhone 13 Pro Max 128GB Alpine Green Cracked Back 90% BH T-Mobile",keywords:["iphone 13 pro max 128gb cracked back t-mobile","iphone 13 pro max alpine green cracked back","iphone 13 pro max 128gb cracked bh90"], price:184.97, source:"sold"},
+  {title:"Apple iPhone X 64GB Silver Cracked Back Service Battery For Parts",keywords:["iphone x 64gb silver cracked back for parts","iphone x cracked back service battery","iphone x 64gb cracked parts"], price:44.99, source:"sold"},
+  {title:"Apple iPhone SE 3rd Gen 64GB Black Used Clean IMEI",    keywords:["iphone se 3rd gen 64gb black used","iphone se 3rd 64gb black clean"], price:120, source:"syg"},
+
+  // ── Tablets — Last 60 days sold ──────────────────────────────
+  {title:"Apple iPad Pro 12.9 6th Gen 1TB Silver WiFi A2436",    keywords:["ipad pro 12.9 6th gen 1tb silver","a2436 ipad pro 1tb silver","ipad pro 12.9 1tb wifi 6th gen"], price:672.48, source:"sold"},
+  {title:"Samsung Galaxy Tab S11 Ultra SM-X930 256GB WiFi New",   keywords:["samsung galaxy tab s11 ultra 256gb wifi","sm-x930 256gb wifi","galaxy tab s11 ultra 256gb"], price:749.99, source:"sold"},
+
+  // ── Phones — Last 60 days sold ───────────────────────────────
+  {title:"Samsung Galaxy S26 Ultra 256GB Black T-Mobile",         keywords:["galaxy s26 ultra 256gb black t-mobile","sm-s948u black 256gb","s26 ultra t-mobile black"], price:807.49, source:"sold"},
+
+  // ── Consoles — Last 60 days sold ─────────────────────────────
+  {title:"Meta Quest 3S P97 128GB VR with Controllers",           keywords:["meta quest 3s p97 128gb","quest 3s 128gb controllers","meta quest 3s vr 128gb"], price:186.97, source:"sold"},
+  {title:"Nintendo Switch HAC-001 with Joy-Cons Charger Dock",   keywords:["nintendo switch hac-001 joy-cons charger dock","switch hac-001 with dock charger","switch with joy-cons dock charger"], price:124.99, source:"sold"},
+  {title:"Nintendo Switch Super Mario Odyssey Game Case Cartridge Only", keywords:["switch mario odyssey case cartridge","super mario odyssey switch case only","mario odyssey switch cartridge only"], price:29.99, source:"sold"},
+  {title:"Nintendo Switch Mario Kart 8 Deluxe Loose Cartridge",   keywords:["switch mario kart 8 deluxe loose","mario kart 8 deluxe switch cartridge","mario kart 8 switch loose"], price:32.49, source:"sold"},
+  {title:"Nintendo 3DS CTR-001 Purple 2011",                      keywords:["nintendo 3ds ctr-001 purple 2011","3ds purple ctr-001 2011"], price:180, source:"syg"},
+  {title:"GameBoy Advance AGB-001 Translucent with Pokemon Leafgreen", keywords:["gameboy advance agb-001 translucent pokemon leafgreen","gba translucent leafgreen","agb-001 pokemon leafgreen"], price:89.99, source:"sold"},
+  {title:"Microsoft Xbox Series S 1883 512GB with Controller HDMI Power", keywords:["xbox series s 1883 512gb controller hdmi power","xbox series s 512gb bundle controller hdmi"], price:253.74, source:"sold"},
+  {title:"Sony PlayStation Portal CFI-Y1001 with Case",           keywords:["playstation portal cfi-y1001 case","ps portal cfi-y1001 with case","sony portal case bundle"], price:138.32, source:"sold"},
+  {title:"Sony PlayStation 5 Slim Digital CFI-2115 1TB with Controller HDMI", keywords:["ps5 slim digital cfi-2115 1tb","playstation 5 slim digital cfi-2115","ps5 slim 2115 digital"], price:366.66, source:"sold"},
+  {title:"Sony PlayStation 5 Slim Disc CFI-2015 1TB with Controller HDMI", keywords:["ps5 slim disc cfi-2015 1tb controller","playstation 5 slim disc cfi-2015 controller"], price:379.99, source:"sold"},
+  {title:"Sony PlayStation 4 CUH-1215A 500GB with Controller HDMI Power", keywords:["ps4 cuh-1215a 500gb controller hdmi","playstation 4 cuh-1215a 500gb bundle","ps4 500gb 1215a bundle"], price:118.32, source:"sold"},
+
+  // ── Desktops — Last 60 days sold ─────────────────────────────
+  {title:"HP Mini 400 G9 i5-12500T 16GB 256GB No Power Supply",   keywords:["hp mini 400 g9 i5-12500t no psu","hp mini 400 g9 no power supply","hp mini 400 g9 i5 no psu"], price:1799.94, source:"sold"},
+  {title:"HP Slim Desktop 290 i5-8400 8GB 1TB HDD",               keywords:["hp slim desktop 290 i5-8400 8gb 1tb","hp slim desktop 290-p0046","hp slim 290 i5 8gb"], price:86.24, source:"sold"},
+  {title:"Lenovo ThinkCentre M73 Mini Desktop i5-4570T 4GB",      keywords:["lenovo thinkcentre m73 mini i5-4570t","thinkcentre m73 desktop i5 4570t","m73 mini pc 4570t"], price:49.99, source:"sold"},
+  {title:"GIGABYTE BRIX GB-BLCE-4105 Mini PC Barebone No Display", keywords:["gigabyte brix gb-blce-4105","brix mini pc barebone no display","gb-blce-4105 barebone"], price:26.33, source:"sold"},
+  {title:"Dell Tower Plus EBT2250 Core Ultra 7 265 32GB 1TB Sealed",keywords:["dell tower plus ebt2250 ultra 7 265","dell tower plus ebt2250 sealed","dell tower ultra 7 265 sealed"], price:1289.99, source:"sold"},
+  {title:"GMKtec EVO X2 AI Mini PC Ryzen AI Max+ 395 128GB 2TB",  keywords:["gmktec evo x2 ryzen ai max 395 128gb","gmktec evo x2 ai mini pc","ryzen ai max 395 128gb mini pc"], price:2489.99, source:"sold"},
+  {title:"MXZ Gaming PC Ryzen 5 3600 RTX 4060 16GB 500GB",        keywords:["mxz gaming pc rtx 4060 ryzen 5 3600","gaming desktop rtx 4060 ryzen 5 3600","custom pc rtx 4060 ryzen 5 3600"], price:599.97, source:"sold"},
+  {title:"HP Pavilion Desktop Ryzen 7 5700G 16GB RTX 3060",       keywords:["hp pavilion desktop ryzen 7 5700g rtx 3060","hp pavilion rtx 3060 ryzen 7 5700g"], price:549.99, source:"sold"},
+
+  // ── Apple Computers/Displays — Last 60 days ───────────────────
+  {title:"Apple iMac 24 M4 2024 A3137 Blue 24GB 512GB 10-Core GPU", keywords:["apple imac 24 m4 2024 a3137 blue","imac m4 24 blue 24gb 512gb","a3137 imac m4 blue"], price:1350.99, source:"sold"},
+  {title:"Apple iMac 24 M4 2024 Silver 16GB 256GB New In Box",    keywords:["apple imac 24 m4 silver 16gb 256gb new","imac m4 silver new box","a3247 imac m4 silver new"], price:1282.49, source:"sold"},
+  {title:"Apple Mac Studio M1 Max A2615 2022 32GB 512GB Silver",   keywords:["apple mac studio m1 max a2615 2022","mac studio m1 max 32gb 512gb","a2615 mac studio m1 max"], price:1333.33, source:"sold"},
+  {title:"Apple MacBook Air 15 M5 A3448 New In Box Space Gray",    keywords:["macbook air 15 m5 a3448 space gray new","a3448 m5 space gray new box"], price:1300, source:"sold"},
+  {title:"Apple MacBook Air 15 M4 2025 16GB 512GB Black",          keywords:["macbook air 15 m4 2025 16gb 512gb black","m4 macbook air 15 black 16gb"], price:1180, source:"sold"},
+
+  // ── GPUs — Last 60 days sold ─────────────────────────────────
+  {title:"Gigabyte RTX 5080 WindForce OC 16GB New Open Box",       keywords:["gigabyte rtx 5080 windforce oc 16gb","rtx 5080 windforce new open box","gigabyte 5080 windforce 16gb"], price:1169.99, source:"sold"},
+  {title:"NVIDIA RTX 4080 Super Founders Edition 16GB GDDR6X",     keywords:["rtx 4080 super founders edition","nvidia 4080 super fe 16gb","geforce rtx 4080 super fe"], price:1139.99, source:"sold"},
+  {title:"ASRock RX 7900 XTX Taichi White OC 24GB Damaged PCB",   keywords:["asrock rx 7900 xtx taichi white damaged pcb","rx 7900 xtx taichi white pcb damage","7900 xtx taichi white damaged"], price:698.98, source:"sold"},
+  {title:"Colorful RTX 2070 8GB GDDR6 Blower OEM",                keywords:["colorful rtx 2070 8gb blower oem","colorful geforce rtx 2070 8gb gddr6","n2070-806-si2 colorful"], price:159.91, source:"sold"},
+  {title:"Gigabyte GTX 1070 Windforce OC 8GB For Parts",           keywords:["gigabyte gtx 1070 windforce 8gb for parts","gtx 1070 windforce oc for parts","gigabyte 1070 windforce parts"], price:63.32, source:"sold"},
+
+  // ── Cameras — Last 60 days sold ──────────────────────────────
+  {title:"Nikon Z6 II Mirrorless 24.5MP Body Only No Charger",    keywords:["nikon z6 ii mirrorless body only no charger","nikon z6ii body only","nikon z6 2 body no charger"], price:799.99, source:"sold"},
+  {title:"Sony Cinema Line FX30 ILME-FX30 with 55-210mm Lens Charger",keywords:["sony fx30 ilme-fx30 55-210mm lens","sony cinema fx30 with lens","ilme-fx30 55-210mm"], price:1499.99, source:"sold"},
+  {title:"Nikon Z fc 20.9MP Mirrorless with Nikkor Z 28mm f2.8 SE Lens",keywords:["nikon z fc 20.9mp 28mm lens","nikon zfc mirrorless 28mm","nikon z fc with 28mm se"], price:660.24, source:"sold"},
+  {title:"Canon PowerShot G7 X Mark III 20.1MP 4K Vlogging Camera",keywords:["canon g7x mark iii 4k","canon powershot g7x mark 3","canon g7 x mark iii vlogging"], price:1244.44, source:"sold"},
+  {title:"Blackmagic URSA Mini Pro 4.6K G1 Cinema Camera Lot 3 For Parts",keywords:["blackmagic ursa mini pro 4.6k g1 lot 3","ursa mini pro 4.6k for parts lot","blackmagic ursa mini g1 parts"], price:415.83, source:"sold"},
+
+
+  // ══════════════════════════════════════════════════════════════
+  // REAL SYG ELMWOOD PARK DATA — from actual sold orders + active listings
+  // source:"sold" = confirmed sold on Shopify
+  // source:"syg"  = currently listed/priced in our store
+  // ══════════════════════════════════════════════════════════════
+
+  // ── Laptops — Real SYG prices ────────────────────────────────
+  {title:"Apple MacBook Pro 13 A1706 2017 i5 16GB 512GB",    keywords:["macbook pro 13 a1706 2017","a1706 2017 i5 16gb","macbook pro 13 2017 512gb"], price:140, source:"syg"},
+  {title:"Apple MacBook Pro 13 A1708 2017 i5 8GB 128GB Bad LCD", keywords:["macbook pro 13 a1708 2017 bad lcd","a1708 bad display","macbook pro 13 a1708 bad screen"], price:76, source:"syg"},
+  {title:"Apple MacBook Pro 13 A1708 2017 i5 8GB 256GB Service Battery", keywords:["macbook pro 13 a1708 2017 service battery","a1708 2017 256gb battery"], price:131.97, source:"syg"},
+  {title:"Apple MacBook Pro 13 A1706 2017 i5 8GB 256GB Bad Display", keywords:["macbook pro 13 a1706 2017 bad display","a1706 bad display 256gb"], price:85.97, source:"syg"},
+  {title:"Apple MacBook Pro 13 A1278 2011 For Parts",         keywords:["macbook pro 13 a1278 2011 parts","a1278 2011 parts","macbook pro 2011 parts"], price:49.99, source:"syg"},
+  {title:"Apple MacBook Pro 15 A1707 2016 No Power Bad Display For Parts", keywords:["macbook pro 15 a1707 2016 parts","a1707 no power bad display"], price:92, source:"syg"},
+  {title:"Apple MacBook Pro 15 A1286 2011 Untested",          keywords:["macbook pro 15 a1286 2011 untested","a1286 untested"], price:39, source:"syg"},
+  {title:"Apple MacBook Pro 14 M1 Pro A2442 2021 16GB 512GB", keywords:["macbook pro 14 m1 pro a2442 2021","a2442 m1 pro 2021 512gb"], price:342.97, source:"syg"},
+  {title:"Apple MacBook Pro 13 M2 A2338 2022 8GB 256GB Turns On Bad LCD", keywords:["macbook pro m2 a2338 2022 bad lcd","a2338 m2 bad lcd","macbook pro m2 bad screen"], price:299.99, source:"syg"},
+  {title:"Apple MacBook Pro 13 M2 A2338 2022 Full Working",   keywords:["macbook pro 13 m2 a2338 2022","a2338 m2 2022","macbook pro m2 2022"], price:452.97, source:"syg"},
+  {title:"Apple MacBook Pro 16 M4 Pro A3403 2024 48GB 1TB",   keywords:["macbook pro 16 m4 pro a3403","macbook pro 16 m4 48gb","a3403 m4 pro 48gb"], price:2211.11, source:"sold"},
+  {title:"Apple MacBook Pro 16 M5 A3428 2026 24GB 1TB New In Box", keywords:["macbook pro 16 m5 a3428","macbook pro m5 2026","a3428 m5"], price:2250, source:"sold"},
+  {title:"Apple MacBook Air 13 A1466 2015 i5 8GB 128GB",      keywords:["macbook air 13 a1466 2015","a1466 2015 128gb","macbook air 2015 128gb"], price:84.99, source:"syg"},
+  {title:"Apple MacBook Air 13 A1466 i7 8GB 256GB",           keywords:["macbook air a1466 i7 256gb","a1466 i7 256gb"], price:59.99, source:"syg"},
+  {title:"Apple MacBook Air 11 A1465 i5 4GB 256GB",           keywords:["macbook air 11 a1465 256gb","a1465 11 inch 256gb"], price:57.77, source:"syg"},
+  {title:"Apple MacBook Air 13 A2179 2020 Intel No Power For Parts", keywords:["macbook air a2179 2020 no power","a2179 no power parts","macbook air 2020 parts"], price:129.97, source:"syg"},
+  {title:"Apple MacBook Pro 13 A2338 NJ02 2022 Full Working",  keywords:["nj02-21202 macbook pro","macbook pro 13 a2338 nj02"], price:4110, source:"sold"},
+  {title:"Dell Precision 5690 Core Ultra 9 64GB 1TB RTX 3500 TOUCH", keywords:["dell precision 5690 ultra 9","precision 5690 rtx 3500","precision 5690 64gb"], price:1399.99, source:"sold"},
+  {title:"Dell Precision 5570 i7-12800H TOUCH 32GB 1TB RTX A2000", keywords:["dell precision 5570 touch 32gb","precision 5570 rtx a2000 touch","precision 5570 1tb touch"], price:674.71, source:"sold"},
+  {title:"Dell Latitude 5480 i7 8GB 256GB",                   keywords:["dell latitude 5480 i7 8gb","latitude 5480 i7 256gb"], price:115, source:"syg"},
+  {title:"Dell Latitude 7480 i5 8GB 256GB",                   keywords:["dell latitude 7480 i5 8gb","latitude 7480 i5 256gb"], price:80, source:"syg"},
+  {title:"HP Envy x360 15 i5 8GB 256GB Cracked Bezel",        keywords:["hp envy x360 15 cracked bezel","envy x360 15 crack bezel"], price:169, source:"syg"},
+  {title:"HP ProBook 4 G1i 16 Core Ultra 5 16GB 512GB Open Box",keywords:["hp probook 4 g1i 16 ultra 5","probook 4 g1i 16 open box"], price:933.32, source:"sold"},
+  {title:"HP Omen 16 i7-13700HX 32GB 1TB RTX 4060",           keywords:["hp omen 16 i7-13700hx rtx 4060","omen 16 rtx 4060 32gb"], price:749.99, source:"sold"},
+  {title:"Lenovo Legion 7 16IRX9 i9-14900HX 32GB 1TB RTX 4070",keywords:["lenovo legion 7 16irx9 rtx 4070","legion 7 i9 rtx 4070 32gb"], price:1333.49, source:"sold"},
+  {title:"Samsung Galaxy Book2 Pro 360 13 i7-1260P 8GB 256GB", keywords:["samsung galaxy book2 pro 360","galaxy book2 pro 360 i7-1260p"], price:249.99, source:"syg"},
+  {title:"Microsoft Surface Book 3 i7 16GB 256GB",             keywords:["surface book 3 i7 16gb 256gb","surface book 3 i7"], price:299.99, source:"syg"},
+  {title:"MSI Raider 18 HX Ultra 9 RTX 5090 64GB 2TB New In Box", keywords:["msi raider 18 rtx 5090","msi raider 18 hx ultra 9","msi rtx 5090 laptop"], price:3999.99, source:"sold"},
+
+  // ── iPhones — Real SYG prices ────────────────────────────────
+  {title:"Apple iPhone 17 Pro Max 256GB Orange New In Box",    keywords:["iphone 17 pro max 256gb orange","iphone 17 pro max orange new","a3257 orange new"], price:3750, source:"sold"},
+  {title:"Apple iPhone 17 Pro Max 256GB Silver Unlocked",      keywords:["iphone 17 pro max silver unlocked","iphone 17 pro max silver","a3257 silver 256gb"], price:1111.11, source:"sold"},
+  {title:"Apple iPhone 17 Pro Max 256GB Deep Blue Unlocked",   keywords:["iphone 17 pro max deep blue","iphone 17 pro max blue","a3257 deep blue"], price:1111.11, source:"sold"},
+  {title:"Apple iPhone 17 Pro AT&T 256GB Silver",              keywords:["iphone 17 pro att 256gb silver","iphone 17 pro silver att","a3256 att 256gb"], price:899.99, source:"sold"},
+  {title:"Apple iPhone 15 Pro 256GB Broken Clean IMEI For Parts", keywords:["iphone 15 pro 256gb broken parts","iphone 15 pro blue broken","iphone 15 pro for parts broken"], price:350, source:"syg"},
+  {title:"Apple iPhone SE 3rd Gen 64GB Black Used Clean IMEI", keywords:["iphone se 3rd gen 64gb black","iphone se 3rd 64gb black used"], price:120, source:"syg"},
+  {title:"Samsung Galaxy S21 FE 128GB Black",                  keywords:["galaxy s21 fe black 128gb","samsung s21 fe black"], price:119.99, source:"syg"},
+  {title:"Samsung Galaxy S23 Ultra 512GB Verizon",             keywords:["galaxy s23 ultra 512gb verizon","sm-s918v 512gb"], price:364.99, source:"syg"},
+
+  // ── Consoles — Real SYG prices ───────────────────────────────
+  {title:"Sony PlayStation 5 Disc Edition CFI-1215A 825GB w/ Controller HDMI Power Cable", keywords:["ps5 disc cfi-1215a","playstation 5 disc cfi-1215a","ps5 disc 825gb controller"], price:351.91, source:"sold"},
+  {title:"Sony PlayStation 5 CFI-1115A Disc 825GB w/ Controller HDMI Power Cable", keywords:["ps5 cfi-1115a disc","playstation 5 cfi-1115a","ps5 1115a controller"], price:349.07, source:"sold"},
+  {title:"Sony PlayStation 5 Slim Disc CFI-2015 1TB w/ Controller HDMI Power Cable", keywords:["ps5 slim disc cfi-2015","playstation 5 slim disc 1tb","ps5 slim 2015 disc controller"], price:372.49, source:"sold"},
+  {title:"Sony PlayStation 5 Slim Digital CFI-2015 1TB w/ Controller HDMI Power Cable", keywords:["ps5 slim digital cfi-2015 1tb","ps5 slim digital 1tb controller","cfi-2015b 1tb controller"], price:361.16, source:"sold"},
+  {title:"Microsoft Xbox Series S 512GB White Used",            keywords:["xbox series s 512gb white used","xbox 1883 white used"], price:210, source:"syg"},
+  {title:"Nintendo 3DS CTR-001 2011 Purple",                   keywords:["nintendo 3ds ctr-001 2011 purple","3ds purple 2011"], price:180, source:"syg"},
+
+  // ── Storage — Real SYG prices ────────────────────────────────
+  {title:"Crucial P3 Plus 4TB M.2 PCIe Gen4 NVMe SSD",       keywords:["crucial p3 plus 4tb","ct4000p3pssd8","p3 plus 4tb gen4"], price:202.09, source:"sold"},
+  {title:"Crucial P3 Plus 4TB M.2 PCIe Gen4 For Parts Low Health", keywords:["crucial p3 plus 4tb for parts","p3 plus 4tb read","p3 plus 4tb bad"], price:233.82, source:"sold"},
+  {title:"Crucial P3 4TB NVMe Used A",                         keywords:["crucial p3 4tb used a","ct4000p3ssd8 used","p3 4tb black good health"], price:140, source:"syg"},
+  {title:"Crucial P3 4TB SSD 0% Health For Parts",             keywords:["crucial p3 4tb 0% health","p3 4tb broken","ct4000p3ssd8 0% health"], price:135, source:"syg"},
+  {title:"Crucial MX500 1TB 2.5 SATA 81% Health",             keywords:["crucial mx500 1tb 81%","ct1000mx500ssd1 81%","mx500 1tb 81 health"], price:99.99, source:"syg"},
+  {title:"Samsung 980 PRO 2TB NVMe Used A",                    keywords:["samsung 980 pro 2tb used a","mz-v8p2t0 used a","980 pro 2tb good health"], price:189, source:"syg"},
+  {title:"Samsung 980 Pro 2TB 0% Health For Parts",            keywords:["samsung 980 pro 2tb 0%","980 pro 2tb broken","mz-v8p2t0 0% health"], price:60, source:"syg"},
+  {title:"Samsung 990 PRO 2TB NVMe New In Box",                keywords:["samsung 990 pro 2tb new","mz-v9p2t0 new box","990 pro 2tb new"], price:325.99, source:"syg"},
+  {title:"Samsung 990 PRO 2TB For Parts Broken",               keywords:["samsung 990 pro 2tb parts broken","990 pro 2tb broken","mz-v9p2t0 broken"], price:65, source:"syg"},
+  {title:"Samsung 990 2TB NVMe Broken",                        keywords:["samsung 990 2tb broken","mz-v9s2t0 broken","samsung 990 2tb for parts"], price:65, source:"syg"},
+  {title:"Samsung 980 2TB NVMe Used A",                        keywords:["samsung 980 2tb used a","mz-v8v2t0 used a","samsung 980 2tb good"], price:65, source:"syg"},
+  {title:"Samsung 870 EVO 1TB SATA New In Box",                keywords:["samsung 870 evo 1tb new","mz-77e1t0 new box","870 evo 1tb new"], price:184.99, source:"syg"},
+  {title:"Samsung 870 QVO 1TB SATA 80%+ Health",              keywords:["samsung 870 qvo 1tb 80%","mz-77q1t0 80%","870 qvo 1tb good"], price:129.99, source:"sold"},
+  {title:"Samsung 870 QVO 4TB SATA",                          keywords:["samsung 870 qvo 4tb","mz-77q4t0","870 qvo 4tb"], price:524.68, source:"sold"},
+  {title:"Kingston 1.92TB DC500R SATA 85-100% Health",         keywords:["kingston dc500r 1.92tb 85%","sedc500r/1920g 85%","dc500r 1.92tb good"], price:2407.96, source:"sold"},
+  {title:"Kingston KC2500 1TB NVMe Defective",                 keywords:["kingston kc2500 1tb defective","skc2500m8 defective","kc2500 1tb broken"], price:143.90, source:"sold"},
+  {title:"Toshiba 16TB HDD MG08ACA16TE New Sealed",            keywords:["toshiba 16tb hdd mg08aca16te","toshiba 16tb new sealed","mg08aca16te new"], price:3689.99, source:"sold"},
+
+  // ── RAM — Real SYG prices ─────────────────────────────────────
+  {title:"Samsung 64GB DDR5 EC8 RDIMM 2Rx4 PC5-6400B Server RAM", keywords:["samsung 64gb ddr5 rdimm","samsung 64gb ddr5 ec8 rdimm","pc5-6400b 64gb rdimm"], price:3600, source:"sold"},
+  {title:"SK Hynix 16GB DDR5 4800MHz SODIMM Lot of 21",        keywords:["sk hynix ddr5 4800 lot 21","hmcg78mebsa092n lot","hynix ddr5 4800 sodimm lot"], price:2449.99, source:"sold"},
+  {title:"Crucial 96GB 2x48GB DDR5 5600MHz RAM Kit",           keywords:["crucial 96gb ddr5 5600","crucial 2x48gb ddr5","crucial 96gb ram kit"], price:422.04, source:"sold"},
+  {title:"Corsair 32GB 2x16GB DDR5 5600MHz Desktop RAM",       keywords:["corsair 32gb ddr5 5600","corsair 2x16gb ddr5","corsair ddr5 32gb"], price:259.99, source:"syg"},
+  {title:"TeamGroup 16GB 2x8GB DDR4 3200MHz Red RAM",          keywords:["teamgroup 16gb ddr4 3200 red","teamgroup 2x8gb ddr4","teamgroup ddr4 3200 red"], price:84.99, source:"syg"},
+  {title:"TeamGroup T-Create Expert 16GB 2x8GB DDR5 6000MHz White RAM", keywords:["teamgroup t-create ddr5 6000 white","t-create expert ddr5 6000","teamgroup ddr5 6000 white"], price:149.99, source:"syg"},
+  {title:"Samsung 16GB DDR5 5600MHz SODIMM Lot of 13",         keywords:["samsung ddr5 5600 lot 13","samsung 16gb ddr5 lot 13"], price:1249.97, source:"sold"},
+
+  // ── Desktops — Real SYG prices ───────────────────────────────
+  {title:"HP Mini 400 G9 i5-12500T 16GB 256GB No Power Supply", keywords:["hp mini 400 g9 i5-12500t","hp mini 400 g9 no psu","hp mini 400 g9 no power supply"], price:1799.94, source:"sold"},
+  {title:"HP Pro Mini 400 G9 i5-12500T 16GB 256GB No Power Supply", keywords:["hp pro mini 400 g9","hp pro mini 400 g9 no psu"], price:779.97, source:"sold"},
+  {title:"Dell Pro Micro QCM1255 Ryzen 7 PRO 8700GE 16GB 512GB New", keywords:["dell pro micro qcm1255","dell pro micro ryzen 7 8700ge"], price:835.80, source:"sold"},
+  {title:"GMKtec EVO X2 AI Mini PC AMD Ryzen AI Max+ 395 128GB 2TB",keywords:["gmktec evo x2 ryzen ai max","gmktec evo x2 128gb","gmktec ryzen ai max 395"], price:2489.99, source:"sold"},
+  {title:"Gaming Desktop Ryzen 5 3600 RTX 2080 16GB 512GB",    keywords:["gaming desktop ryzen 5 3600 rtx 2080","custom gaming rtx 2080 ryzen 5 3600"], price:699.99, source:"syg"},
+
+  // ── GPUs — Real SYG prices ───────────────────────────────────
+  {title:"MSI GeForce RTX 4090 SUPRIM Liquid X 24GB",          keywords:["msi rtx 4090 suprim liquid","rtx 4090 suprim liquid x","msi 4090 suprim"], price:2499.99, source:"sold"},
+  {title:"PNY GeForce RTX 5090 OC Triple Fan 32GB Open Box",   keywords:["pny rtx 5090 oc triple fan","pny rtx 5090 open box","rtx 5090 open box"], price:2279.99, source:"sold"},
+  {title:"ASRock Radeon RX 7900 XTX OC 24GB Damaged PCB",      keywords:["asrock rx 7900 xtx damaged pcb","rx 7900 xtx damaged","7900 xtx pcb damage"], price:812.61, source:"sold"},
+  {title:"Colorful RTX 2070 8GB GDDR6",                        keywords:["colorful rtx 2070 8gb","colorful geforce rtx 2070","n2070-806-si2"], price:114.99, source:"syg"},
+  {title:"Radeon RX 6500 XT 4GB",                              keywords:["radeon rx 6500 xt 4gb","rx 6500 xt","288-2e460-101lh"], price:68.97, source:"syg"},
+  {title:"MSI Gigabyte GTX 1660 Super 6GB",                    keywords:["gtx 1660 super 6gb","msi gtx 1660 super","gigabyte 1660 super"], price:99.99, source:"syg"},
+
+  // ── Accessories/Other — Real SYG prices ──────────────────────
+  {title:"Apple Vision Pro VR 256GB",                           keywords:["apple vision pro 256gb","vision pro vr 256gb","apple vision pro headset"], price:2199.99, source:"sold"},
+  {title:"Garmin GPSMAP 8612XSV Chartplotter",                 keywords:["garmin gpsmap 8612xsv","garmin 8612xsv chartplotter","gpsmap 8612"], price:3150, source:"sold"},
+  {title:"Garmin EchoMap Ultra 2 126sv LiveScope Plus New Open Box", keywords:["garmin echomap ultra 2 126sv","garmin livescope plus 126sv"], price:2899.99, source:"sold"},
+  {title:"Roland V-Stage 76 Performance Keyboard",             keywords:["roland v-stage 76","roland vstage 76 keyboard"], price:2989.99, source:"sold"},
+  {title:"Linn Drum LM-2 Pro Audio",                           keywords:["linn drum lm-2","linn drum pro audio"], price:3350, source:"sold"},
+  {title:"Fender Tone Master Pro Multi-Effects Guitar Workstation", keywords:["fender tone master pro","tone master pro guitar workstation"], price:1125, source:"sold"},
+  {title:"Alpha Theta OMNIS DUO DJ Controller",                keywords:["alpha theta omnis duo","omnis duo dj controller"], price:1090.49, source:"sold"},
+  {title:"Apple Watch SE 44mm GPS+LTE Face Only",              keywords:["apple watch se 44mm face only","apple watch se face only"], price:79.97, source:"syg"},
+  {title:"Nintendo 3DS CTR-001 Purple 2011",                   keywords:["nintendo 3ds ctr-001 purple","3ds purple 2011 ctr"], price:180, source:"syg"},
+  {title:"Asus ROG STRIX X870E WiFi 7 Motherboard New In Box", keywords:["asus rog strix x870e","rog strix x870e-e gaming wifi7","x870e motherboard new"], price:384.97, source:"syg"},
+  {title:"ASUS TUF Gaming X870E-Plus WiFi 7 Motherboard New",  keywords:["asus tuf x870e plus wifi7","tuf x870e-plus motherboard new"], price:209.99, source:"syg"},
+  {title:"Intel Core i5-10600KF CPU",                          keywords:["intel i5-10600kf cpu","core i5 10600kf","srh6s 10600kf"], price:89.99, source:"syg"},
+  {title:"AMD Ryzen 7 7800X3D CPU AM5",                        keywords:["ryzen 7 7800x3d","amd 7800x3d am5","100-000000910 7800x3d"], price:278.99, source:"syg"},
+  {title:"Seagate Exos X16 16TB SATA Enterprise HDD",          keywords:["seagate exos x16 16tb","st16000nm001g","seagate 16tb enterprise hdd"], price:299.99, source:"syg"},
+  {title:"Intel SSD D3-S4610 3.84TB Enterprise SATA 100% Health", keywords:["intel ssd d3-s4610 3.84tb","ssdsc2kg038t8","intel enterprise 3.84tb sata"], price:954.97, source:"syg"},
+
+
+  // ══════════════════════════════════════════════════════════════
+  // IPHONES — Full lineup iPhone 6 → iPhone 16 series
+  // Prices: working/unlocked/good condition baseline
+  // ══════════════════════════════════════════════════════════════
+  // ── iPhone 6 / 6 Plus / 6S / 6S Plus ────────────────────────
+  {title:"Apple iPhone 6 16GB",        keywords:["iphone 6 16gb","iphone6 16gb","a1549 16gb"], price:30, source:"market"},
+  {title:"Apple iPhone 6 64GB",        keywords:["iphone 6 64gb","iphone6 64gb","a1549 64gb"], price:35, source:"market"},
+  {title:"Apple iPhone 6 128GB",       keywords:["iphone 6 128gb","a1549 128gb"], price:40, source:"market"},
+  {title:"Apple iPhone 6 Plus 16GB",   keywords:["iphone 6 plus 16gb","iphone 6plus 16gb","a1522 16gb"], price:35, source:"market"},
+  {title:"Apple iPhone 6 Plus 64GB",   keywords:["iphone 6 plus 64gb","a1522 64gb"], price:40, source:"market"},
+  {title:"Apple iPhone 6 Plus 128GB",  keywords:["iphone 6 plus 128gb","a1522 128gb"], price:45, source:"market"},
+  {title:"Apple iPhone 6S 16GB",       keywords:["iphone 6s 16gb","iphone6s 16gb","a1633 16gb"], price:45, source:"market"},
+  {title:"Apple iPhone 6S 32GB",       keywords:["iphone 6s 32gb","a1633 32gb"], price:50, source:"market"},
+  {title:"Apple iPhone 6S 64GB",       keywords:["iphone 6s 64gb","a1633 64gb"], price:55, source:"market"},
+  {title:"Apple iPhone 6S 128GB",      keywords:["iphone 6s 128gb","a1633 128gb"], price:60, source:"market"},
+  {title:"Apple iPhone 6S Plus 16GB",  keywords:["iphone 6s plus 16gb","iphone 6splus 16gb","a1634 16gb"], price:50, source:"market"},
+  {title:"Apple iPhone 6S Plus 64GB",  keywords:["iphone 6s plus 64gb","a1634 64gb"], price:60, source:"market"},
+  {title:"Apple iPhone 6S Plus 128GB", keywords:["iphone 6s plus 128gb","a1634 128gb"], price:65, source:"market"},
+  // ── iPhone 7 / 7 Plus ────────────────────────────────────────
+  {title:"Apple iPhone 7 32GB",        keywords:["iphone 7 32gb","iphone7 32gb","a1660 32gb"], price:55, source:"market"},
+  {title:"Apple iPhone 7 128GB",       keywords:["iphone 7 128gb","a1660 128gb"], price:65, source:"market"},
+  {title:"Apple iPhone 7 256GB",       keywords:["iphone 7 256gb","a1660 256gb"], price:75, source:"market"},
+  {title:"Apple iPhone 7 Plus 32GB",   keywords:["iphone 7 plus 32gb","iphone 7plus 32gb","a1661 32gb"], price:65, source:"market"},
+  {title:"Apple iPhone 7 Plus 128GB",  keywords:["iphone 7 plus 128gb","a1661 128gb"], price:75, source:"market"},
+  {title:"Apple iPhone 7 Plus 256GB",  keywords:["iphone 7 plus 256gb","a1661 256gb"], price:85, source:"market"},
+  // ── iPhone 8 / 8 Plus / X ────────────────────────────────────
+  {title:"Apple iPhone 8 64GB",        keywords:["iphone 8 64gb","iphone8 64gb","a1863 64gb"], price:75, source:"market"},
+  {title:"Apple iPhone 8 128GB",       keywords:["iphone 8 128gb","a1863 128gb"], price:85, source:"market"},
+  {title:"Apple iPhone 8 256GB",       keywords:["iphone 8 256gb","a1863 256gb"], price:95, source:"market"},
+  {title:"Apple iPhone 8 Plus 64GB",   keywords:["iphone 8 plus 64gb","iphone 8plus 64gb","a1864 64gb"], price:90, source:"market"},
+  {title:"Apple iPhone 8 Plus 128GB",  keywords:["iphone 8 plus 128gb","a1864 128gb"], price:100, source:"market"},
+  {title:"Apple iPhone 8 Plus 256GB",  keywords:["iphone 8 plus 256gb","a1864 256gb"], price:110, source:"market"},
+  {title:"Apple iPhone X 64GB",        keywords:["iphone x 64gb","iphonex 64gb","a1865 64gb"], price:100, source:"market"},
+  {title:"Apple iPhone X 256GB",       keywords:["iphone x 256gb","a1865 256gb"], price:115, source:"market"},
+  // ── iPhone XS / XS Max / XR ──────────────────────────────────
+  {title:"Apple iPhone XR 64GB",       keywords:["iphone xr 64gb","a1984 64gb","iphone xr blue","iphone xr red","iphone xr black","iphone xr white"], price:110, source:"market"},
+  {title:"Apple iPhone XR 128GB",      keywords:["iphone xr 128gb","a1984 128gb"], price:120, source:"market"},
+  {title:"Apple iPhone XR 256GB",      keywords:["iphone xr 256gb","a1984 256gb"], price:135, source:"market"},
+  {title:"Apple iPhone XS 64GB",       keywords:["iphone xs 64gb","a1920 64gb"], price:120, source:"market"},
+  {title:"Apple iPhone XS 256GB",      keywords:["iphone xs 256gb","a1920 256gb"], price:140, source:"market"},
+  {title:"Apple iPhone XS 512GB",      keywords:["iphone xs 512gb","a1920 512gb"], price:155, source:"market"},
+  {title:"Apple iPhone XS Max 64GB",   keywords:["iphone xs max 64gb","a1921 64gb"], price:130, source:"market"},
+  {title:"Apple iPhone XS Max 256GB",  keywords:["iphone xs max 256gb","a1921 256gb"], price:150, source:"market"},
+  {title:"Apple iPhone XS Max 512GB",  keywords:["iphone xs max 512gb","a1921 512gb"], price:165, source:"market"},
+  // ── iPhone SE ────────────────────────────────────────────────
+  {title:"Apple iPhone SE 1st Gen 16GB",keywords:["iphone se 1st gen","iphone se 2016","a1662 16gb"], price:35, source:"market"},
+  {title:"Apple iPhone SE 1st Gen 64GB",keywords:["iphone se 1st 64gb","a1662 64gb"], price:40, source:"market"},
+  {title:"Apple iPhone SE 2nd Gen 64GB",keywords:["iphone se 2020","iphone se 2nd gen 64gb","a2275 64gb"], price:100, source:"market"},
+  {title:"Apple iPhone SE 2nd Gen 128GB",keywords:["iphone se 2020 128gb","iphone se 2nd 128gb","a2275 128gb"], price:110, source:"market"},
+  {title:"Apple iPhone SE 2nd Gen 256GB",keywords:["iphone se 2020 256gb","a2275 256gb"], price:120, source:"market"},
+  {title:"Apple iPhone SE 3rd Gen 64GB",keywords:["iphone se 2022","iphone se 3rd gen","a2595 64gb"], price:120, source:"market"},
+  {title:"Apple iPhone SE 3rd Gen 128GB",keywords:["iphone se 3rd 128gb","a2595 128gb"], price:135, source:"market"},
+  {title:"Apple iPhone SE 3rd Gen 256GB",keywords:["iphone se 3rd 256gb","a2595 256gb"], price:150, source:"market"},
+  // ── iPhone 11 series ─────────────────────────────────────────
+  {title:"Apple iPhone 11 64GB",        keywords:["iphone 11 64gb","a2111 64gb"], price:120, source:"market"},
+  {title:"Apple iPhone 11 128GB",       keywords:["iphone 11 128gb","a2111 128gb"], price:135, source:"market"},
+  {title:"Apple iPhone 11 256GB",       keywords:["iphone 11 256gb","a2111 256gb"], price:150, source:"market"},
+  {title:"Apple iPhone 11 Pro 64GB",    keywords:["iphone 11 pro 64gb","a2160 64gb"], price:150, source:"market"},
+  {title:"Apple iPhone 11 Pro 256GB",   keywords:["iphone 11 pro 256gb","a2160 256gb"], price:170, source:"market"},
+  {title:"Apple iPhone 11 Pro 512GB",   keywords:["iphone 11 pro 512gb","a2160 512gb"], price:190, source:"market"},
+  {title:"Apple iPhone 11 Pro Max 64GB",keywords:["iphone 11 pro max 64gb","a2161 64gb"], price:160, source:"market"},
+  {title:"Apple iPhone 11 Pro Max 256GB",keywords:["iphone 11 pro max 256gb","a2161 256gb"], price:185, source:"market"},
+  {title:"Apple iPhone 11 Pro Max 512GB",keywords:["iphone 11 pro max 512gb","a2161 512gb"], price:205, source:"market"},
+  // ── iPhone 12 series ─────────────────────────────────────────
+  {title:"Apple iPhone 12 Mini 64GB",   keywords:["iphone 12 mini 64gb","a2176 64gb"], price:130, source:"market"},
+  {title:"Apple iPhone 12 Mini 128GB",  keywords:["iphone 12 mini 128gb","a2176 128gb"], price:145, source:"market"},
+  {title:"Apple iPhone 12 Mini 256GB",  keywords:["iphone 12 mini 256gb","a2176 256gb"], price:160, source:"market"},
+  {title:"Apple iPhone 12 64GB",        keywords:["iphone 12 64gb","a2172 64gb"], price:150, source:"market"},
+  {title:"Apple iPhone 12 128GB",       keywords:["iphone 12 128gb","a2172 128gb"], price:165, source:"market"},
+  {title:"Apple iPhone 12 256GB",       keywords:["iphone 12 256gb","a2172 256gb"], price:185, source:"market"},
+  {title:"Apple iPhone 12 Pro 128GB",   keywords:["iphone 12 pro 128gb","a2341 128gb"], price:195, source:"market"},
+  {title:"Apple iPhone 12 Pro 256GB",   keywords:["iphone 12 pro 256gb","a2341 256gb"], price:215, source:"market"},
+  {title:"Apple iPhone 12 Pro 512GB",   keywords:["iphone 12 pro 512gb","a2341 512gb"], price:235, source:"market"},
+  {title:"Apple iPhone 12 Pro Max 128GB",keywords:["iphone 12 pro max 128gb","a2342 128gb"], price:210, source:"market"},
+  {title:"Apple iPhone 12 Pro Max 256GB",keywords:["iphone 12 pro max 256gb","a2342 256gb"], price:230, source:"market"},
+  {title:"Apple iPhone 12 Pro Max 512GB",keywords:["iphone 12 pro max 512gb","a2342 512gb"], price:255, source:"market"},
+  // ── iPhone 13 series ─────────────────────────────────────────
+  {title:"Apple iPhone 13 Mini 128GB",  keywords:["iphone 13 mini 128gb","a2481 128gb"], price:170, source:"market"},
+  {title:"Apple iPhone 13 Mini 256GB",  keywords:["iphone 13 mini 256gb","a2481 256gb"], price:190, source:"market"},
+  {title:"Apple iPhone 13 Mini 512GB",  keywords:["iphone 13 mini 512gb","a2481 512gb"], price:210, source:"market"},
+  {title:"Apple iPhone 13 128GB",       keywords:["iphone 13 128gb","a2482 128gb","iphone 13 pink","iphone 13 blue","iphone 13 midnight"], price:185, source:"market"},
+  {title:"Apple iPhone 13 256GB",       keywords:["iphone 13 256gb","a2482 256gb"], price:205, source:"sold"},
+  {title:"Apple iPhone 13 512GB",       keywords:["iphone 13 512gb","a2482 512gb"], price:225, source:"market"},
+  {title:"Apple iPhone 13 Pro 128GB",   keywords:["iphone 13 pro 128gb","a2483 128gb"], price:230, source:"market"},
+  {title:"Apple iPhone 13 Pro 256GB",   keywords:["iphone 13 pro 256gb","a2483 256gb"], price:250, source:"market"},
+  {title:"Apple iPhone 13 Pro 512GB",   keywords:["iphone 13 pro 512gb","a2483 512gb"], price:275, source:"market"},
+  {title:"Apple iPhone 13 Pro 1TB",     keywords:["iphone 13 pro 1tb","a2483 1tb"], price:295, source:"market"},
+  {title:"Apple iPhone 13 Pro Max 128GB",keywords:["iphone 13 pro max 128gb","a2484 128gb"], price:250, source:"market"},
+  {title:"Apple iPhone 13 Pro Max 256GB",keywords:["iphone 13 pro max 256gb","a2484 256gb"], price:270, source:"sold"},
+  {title:"Apple iPhone 13 Pro Max 512GB",keywords:["iphone 13 pro max 512gb","a2484 512gb"], price:295, source:"market"},
+  {title:"Apple iPhone 13 Pro Max 1TB", keywords:["iphone 13 pro max 1tb","a2484 1tb"], price:320, source:"market"},
+  // ── iPhone 14 series ─────────────────────────────────────────
+  {title:"Apple iPhone 14 128GB",       keywords:["iphone 14 128gb","a2649 128gb","iphone 14 blue","iphone 14 midnight","iphone 14 starlight"], price:245, source:"market"},
+  {title:"Apple iPhone 14 256GB",       keywords:["iphone 14 256gb","a2649 256gb"], price:275, source:"sold"},
+  {title:"Apple iPhone 14 512GB",       keywords:["iphone 14 512gb","a2649 512gb"], price:305, source:"market"},
+  {title:"Apple iPhone 14 Plus 128GB",  keywords:["iphone 14 plus 128gb","a2632 128gb"], price:265, source:"market"},
+  {title:"Apple iPhone 14 Plus 256GB",  keywords:["iphone 14 plus 256gb","a2632 256gb"], price:295, source:"market"},
+  {title:"Apple iPhone 14 Plus 512GB",  keywords:["iphone 14 plus 512gb","a2632 512gb"], price:325, source:"market"},
+  {title:"Apple iPhone 14 Pro 128GB",   keywords:["iphone 14 pro 128gb","a2650 128gb"], price:340, source:"market"},
+  {title:"Apple iPhone 14 Pro 256GB",   keywords:["iphone 14 pro 256gb","a2650 256gb"], price:370, source:"market"},
+  {title:"Apple iPhone 14 Pro 512GB",   keywords:["iphone 14 pro 512gb","a2650 512gb"], price:400, source:"market"},
+  {title:"Apple iPhone 14 Pro 1TB",     keywords:["iphone 14 pro 1tb","a2650 1tb"], price:430, source:"market"},
+  {title:"Apple iPhone 14 Pro Max 128GB",keywords:["iphone 14 pro max 128gb","a2651 128gb"], price:360, source:"market"},
+  {title:"Apple iPhone 14 Pro Max 256GB",keywords:["iphone 14 pro max 256gb","a2651 256gb"], price:390, source:"sold"},
+  {title:"Apple iPhone 14 Pro Max 512GB",keywords:["iphone 14 pro max 512gb","a2651 512gb"], price:420, source:"market"},
+  {title:"Apple iPhone 14 Pro Max 1TB", keywords:["iphone 14 pro max 1tb","a2651 1tb"], price:450, source:"market"},
+  // ── iPhone 15 series ─────────────────────────────────────────
+  {title:"Apple iPhone 15 128GB",       keywords:["iphone 15 128gb","a3090 128gb","iphone 15 pink","iphone 15 yellow","iphone 15 green"], price:320, source:"market"},
+  {title:"Apple iPhone 15 256GB",       keywords:["iphone 15 256gb","a3090 256gb"], price:355, source:"market"},
+  {title:"Apple iPhone 15 512GB",       keywords:["iphone 15 512gb","a3090 512gb"], price:390, source:"market"},
+  {title:"Apple iPhone 15 Plus 128GB",  keywords:["iphone 15 plus 128gb","a3094 128gb"], price:345, source:"market"},
+  {title:"Apple iPhone 15 Plus 256GB",  keywords:["iphone 15 plus 256gb","a3094 256gb"], price:380, source:"market"},
+  {title:"Apple iPhone 15 Plus 512GB",  keywords:["iphone 15 plus 512gb","a3094 512gb"], price:415, source:"market"},
+  {title:"Apple iPhone 15 Pro 128GB",   keywords:["iphone 15 pro 128gb","a3101 128gb"], price:430, source:"market"},
+  {title:"Apple iPhone 15 Pro 256GB",   keywords:["iphone 15 pro 256gb","a3101 256gb"], price:465, source:"market"},
+  {title:"Apple iPhone 15 Pro 512GB",   keywords:["iphone 15 pro 512gb","a3101 512gb"], price:500, source:"market"},
+  {title:"Apple iPhone 15 Pro 1TB",     keywords:["iphone 15 pro 1tb","a3101 1tb"], price:535, source:"market"},
+  {title:"Apple iPhone 15 Pro Max 256GB",keywords:["iphone 15 pro max 256gb","a3105 256gb"], price:490, source:"market"},
+  {title:"Apple iPhone 15 Pro Max 512GB",keywords:["iphone 15 pro max 512gb","a3105 512gb"], price:525, source:"market"},
+  {title:"Apple iPhone 15 Pro Max 1TB", keywords:["iphone 15 pro max 1tb","a3105 1tb"], price:560, source:"market"},
+  // ── iPhone 16 series ─────────────────────────────────────────
+  {title:"Apple iPhone 16 128GB",       keywords:["iphone 16 128gb","a3287 128gb","iphone 16 ultramarine","iphone 16 teal","iphone 16 white","iphone 16 black"], price:430, source:"market"},
+  {title:"Apple iPhone 16 256GB",       keywords:["iphone 16 256gb","a3287 256gb"], price:470, source:"market"},
+  {title:"Apple iPhone 16 512GB",       keywords:["iphone 16 512gb","a3287 512gb"], price:510, source:"market"},
+  {title:"Apple iPhone 16 Plus 128GB",  keywords:["iphone 16 plus 128gb","a3291 128gb"], price:455, source:"market"},
+  {title:"Apple iPhone 16 Plus 256GB",  keywords:["iphone 16 plus 256gb","a3291 256gb"], price:495, source:"market"},
+  {title:"Apple iPhone 16 Plus 512GB",  keywords:["iphone 16 plus 512gb","a3291 512gb"], price:535, source:"market"},
+  {title:"Apple iPhone 16 Pro 128GB",   keywords:["iphone 16 pro 128gb","a3293 128gb"], price:560, source:"market"},
+  {title:"Apple iPhone 16 Pro 256GB",   keywords:["iphone 16 pro 256gb","a3293 256gb"], price:600, source:"market"},
+  {title:"Apple iPhone 16 Pro 512GB",   keywords:["iphone 16 pro 512gb","a3293 512gb"], price:645, source:"market"},
+  {title:"Apple iPhone 16 Pro 1TB",     keywords:["iphone 16 pro 1tb","a3293 1tb"], price:685, source:"market"},
+  {title:"Apple iPhone 16 Pro Max 256GB",keywords:["iphone 16 pro max 256gb","a3297 256gb"], price:635, source:"market"},
+  {title:"Apple iPhone 16 Pro Max 512GB",keywords:["iphone 16 pro max 512gb","a3297 512gb"], price:675, source:"market"},
+  {title:"Apple iPhone 16 Pro Max 1TB", keywords:["iphone 16 pro max 1tb","a3297 1tb"], price:715, source:"market"},
+  {title:"Apple iPhone 16e 128GB",      keywords:["iphone 16e","iphone 16e 128gb"], price:310, source:"market"},
+
+  // ══════════════════════════════════════════════════════════════
+  // SAMSUNG GALAXY — S series S6→S25, A-series, Z-series, Note
+  // ══════════════════════════════════════════════════════════════
+  // ── Galaxy S6 / S7 ───────────────────────────────────────────
+  {title:"Samsung Galaxy S6 32GB",      keywords:["galaxy s6 32gb","sm-g920 32gb","galaxy s6"], price:30, source:"market"},
+  {title:"Samsung Galaxy S6 Edge 32GB", keywords:["galaxy s6 edge","sm-g925 32gb"], price:35, source:"market"},
+  {title:"Samsung Galaxy S7 32GB",      keywords:["galaxy s7 32gb","sm-g930 32gb","galaxy s7"], price:45, source:"market"},
+  {title:"Samsung Galaxy S7 Edge 32GB", keywords:["galaxy s7 edge","sm-g935 32gb"], price:50, source:"market"},
+  // ── Galaxy S8 / S9 ───────────────────────────────────────────
+  {title:"Samsung Galaxy S8 64GB",      keywords:["galaxy s8 64gb","sm-g950 64gb","galaxy s8"], price:60, source:"market"},
+  {title:"Samsung Galaxy S8 Plus 64GB", keywords:["galaxy s8 plus","sm-g955 64gb"], price:70, source:"market"},
+  {title:"Samsung Galaxy S9 64GB",      keywords:["galaxy s9 64gb","sm-g960 64gb","galaxy s9"], price:75, source:"market"},
+  {title:"Samsung Galaxy S9 Plus 64GB", keywords:["galaxy s9 plus","sm-g965 64gb"], price:90, source:"market"},
+  // ── Galaxy S10 series ────────────────────────────────────────
+  {title:"Samsung Galaxy S10e 128GB",   keywords:["galaxy s10e","sm-g970 128gb"], price:85, source:"market"},
+  {title:"Samsung Galaxy S10 128GB",    keywords:["galaxy s10 128gb","sm-g973 128gb","galaxy s10"], price:95, source:"market"},
+  {title:"Samsung Galaxy S10 Plus 128GB",keywords:["galaxy s10 plus","sm-g975 128gb"], price:110, source:"market"},
+  {title:"Samsung Galaxy S10 5G 256GB", keywords:["galaxy s10 5g","sm-g977 256gb"], price:120, source:"market"},
+  // ── Galaxy S20 series ────────────────────────────────────────
+  {title:"Samsung Galaxy S20 128GB",    keywords:["galaxy s20 128gb","sm-g981 128gb","galaxy s20"], price:110, source:"market"},
+  {title:"Samsung Galaxy S20 Plus 128GB",keywords:["galaxy s20 plus","sm-g986 128gb"], price:125, source:"market"},
+  {title:"Samsung Galaxy S20 Ultra 128GB",keywords:["galaxy s20 ultra","sm-g988 128gb"], price:145, source:"market"},
+  {title:"Samsung Galaxy S20 FE 128GB", keywords:["galaxy s20 fe","galaxy s20 fan edition","sm-g781 128gb","sm-g780 128gb"], price:95, source:"market"},
+  {title:"Samsung Galaxy S20 FE Cracked Screen",keywords:["galaxy s20 fe cracked","s20 fe parts","sm-g781v cracked"], price:54.99, source:"sold"},
+  // ── Galaxy S21 series ────────────────────────────────────────
+  {title:"Samsung Galaxy S21 128GB",    keywords:["galaxy s21 128gb","sm-g991 128gb","galaxy s21"], price:145, source:"market"},
+  {title:"Samsung Galaxy S21 Plus 128GB",keywords:["galaxy s21 plus","sm-g996 128gb"], price:165, source:"market"},
+  {title:"Samsung Galaxy S21 Ultra 128GB",keywords:["galaxy s21 ultra 128gb","sm-g998 128gb"], price:195, source:"market"},
+  {title:"Samsung Galaxy S21 Ultra 256GB",keywords:["galaxy s21 ultra 256gb","sm-g998 256gb"], price:215, source:"market"},
+  {title:"Samsung Galaxy S21 FE 128GB", keywords:["galaxy s21 fe","s21 fan edition","sm-g990 128gb"], price:125, source:"market"},
+  // ── Galaxy S22 series ────────────────────────────────────────
+  {title:"Samsung Galaxy S22 128GB",    keywords:["galaxy s22 128gb","sm-s901 128gb","galaxy s22"], price:175, source:"market"},
+  {title:"Samsung Galaxy S22 Plus 128GB",keywords:["galaxy s22 plus","sm-s906 128gb"], price:200, source:"market"},
+  {title:"Samsung Galaxy S22 Ultra 128GB",keywords:["galaxy s22 ultra 128gb","sm-s908 128gb"], price:240, source:"market"},
+  {title:"Samsung Galaxy S22 Ultra 256GB",keywords:["galaxy s22 ultra 256gb","sm-s908 256gb"], price:265, source:"market"},
+  {title:"Samsung Galaxy S22 Ultra 512GB",keywords:["galaxy s22 ultra 512gb","sm-s908 512gb"], price:290, source:"market"},
+  // ── Galaxy S23 series ────────────────────────────────────────
+  {title:"Samsung Galaxy S23 128GB",    keywords:["galaxy s23 128gb","sm-s911 128gb","galaxy s23"], price:210, source:"market"},
+  {title:"Samsung Galaxy S23 256GB",    keywords:["galaxy s23 256gb","sm-s911 256gb"], price:235, source:"market"},
+  {title:"Samsung Galaxy S23 Plus 256GB",keywords:["galaxy s23 plus","sm-s916 256gb"], price:265, source:"market"},
+  {title:"Samsung Galaxy S23 Ultra 256GB",keywords:["galaxy s23 ultra 256gb","sm-s918 256gb"], price:320, source:"market"},
+  {title:"Samsung Galaxy S23 Ultra 512GB",keywords:["galaxy s23 ultra 512gb","sm-s918 512gb"], price:364.99, source:"market"},
+  {title:"Samsung Galaxy S23 FE 128GB", keywords:["galaxy s23 fe","s23 fan edition","sm-s711 128gb"], price:185, source:"market"},
+  // ── Galaxy S24 series ────────────────────────────────────────
+  {title:"Samsung Galaxy S24 128GB",    keywords:["galaxy s24 128gb","sm-s921 128gb","galaxy s24"], price:280, source:"sold"},
+  {title:"Samsung Galaxy S24 256GB",    keywords:["galaxy s24 256gb","sm-s921 256gb"], price:310, source:"market"},
+  {title:"Samsung Galaxy S24 Plus 256GB",keywords:["galaxy s24 plus","sm-s926 256gb"], price:355, source:"market"},
+  {title:"Samsung Galaxy S24 Ultra 256GB",keywords:["galaxy s24 ultra 256gb","sm-s928 256gb"], price:430, source:"market"},
+  {title:"Samsung Galaxy S24 Ultra 512GB",keywords:["galaxy s24 ultra 512gb","sm-s928 512gb"], price:470, source:"market"},
+  {title:"Samsung Galaxy S24 Ultra 1TB",keywords:["galaxy s24 ultra 1tb","sm-s928 1tb"], price:510, source:"market"},
+  {title:"Samsung Galaxy S24 FE 128GB", keywords:["galaxy s24 fe","s24 fan edition","sm-s721 128gb"], price:245, source:"market"},
+  // ── Galaxy S25 series ────────────────────────────────────────
+  {title:"Samsung Galaxy S25 128GB",    keywords:["galaxy s25 128gb","sm-s931 128gb","galaxy s25"], price:380, source:"market"},
+  {title:"Samsung Galaxy S25 256GB",    keywords:["galaxy s25 256gb","sm-s931 256gb"], price:415, source:"market"},
+  {title:"Samsung Galaxy S25 Plus 256GB",keywords:["galaxy s25 plus","sm-s936 256gb"], price:465, source:"market"},
+  {title:"Samsung Galaxy S25 Ultra 256GB",keywords:["galaxy s25 ultra 256gb","sm-s938 256gb"], price:560, source:"market"},
+  {title:"Samsung Galaxy S25 Ultra 512GB",keywords:["galaxy s25 ultra 512gb","sm-s938 512gb"], price:600, source:"market"},
+  {title:"Samsung Galaxy S25 Ultra 1TB",keywords:["galaxy s25 ultra 1tb","sm-s938 1tb"], price:640, source:"market"},
+  {title:"Samsung Galaxy S26 256GB",    keywords:["galaxy s26","samsung s26","sm-s942u"], price:529.99, source:"sold"},
+  // ── Galaxy Note series ───────────────────────────────────────
+  {title:"Samsung Galaxy Note 8 64GB",  keywords:["galaxy note 8","note8 64gb","sm-n950 64gb"], price:65, source:"market"},
+  {title:"Samsung Galaxy Note 9 128GB", keywords:["galaxy note 9 128gb","sm-n960 128gb"], price:85, source:"market"},
+  {title:"Samsung Galaxy Note 10 256GB",keywords:["galaxy note 10 256gb","sm-n970 256gb"], price:110, source:"market"},
+  {title:"Samsung Galaxy Note 10 Plus 256GB",keywords:["galaxy note 10 plus","sm-n975 256gb"], price:130, source:"market"},
+  {title:"Samsung Galaxy Note 20 128GB",keywords:["galaxy note 20 128gb","sm-n981 128gb"], price:175, source:"market"},
+  {title:"Samsung Galaxy Note 20 Ultra 128GB",keywords:["galaxy note 20 ultra","sm-n986 128gb"], price:210, source:"market"},
+  {title:"Samsung Galaxy Note 20 Ultra 256GB",keywords:["galaxy note 20 ultra 256gb","sm-n986 256gb"], price:235, source:"market"},
+  // ── Galaxy Z Fold / Z Flip ───────────────────────────────────
+  {title:"Samsung Galaxy Z Flip 3 128GB",keywords:["galaxy z flip 3","z flip3","sm-f711 128gb"], price:145, source:"market"},
+  {title:"Samsung Galaxy Z Flip 4 128GB",keywords:["galaxy z flip 4","z flip4","sm-f721 128gb"], price:185, source:"market"},
+  {title:"Samsung Galaxy Z Flip 5 256GB",keywords:["galaxy z flip 5","z flip5","sm-f731 256gb"], price:250, source:"market"},
+  {title:"Samsung Galaxy Z Flip 6 256GB",keywords:["galaxy z flip 6","z flip6","sm-f741 256gb"], price:320, source:"market"},
+  {title:"Samsung Galaxy Z Fold 3 256GB",keywords:["galaxy z fold 3","z fold3","sm-f926 256gb"], price:250, source:"market"},
+  {title:"Samsung Galaxy Z Fold 4 256GB",keywords:["galaxy z fold 4","z fold4","sm-f936 256gb"], price:350, source:"market"},
+  {title:"Samsung Galaxy Z Fold 5 256GB",keywords:["galaxy z fold 5","z fold5","sm-f946 256gb"], price:450, source:"market"},
+  {title:"Samsung Galaxy Z Fold 6 256GB",keywords:["galaxy z fold 6","z fold6","sm-f956 256gb"], price:580, source:"market"},
+  // ── Galaxy A series (budget/mid-range) ───────────────────────
+  {title:"Samsung Galaxy A13 32GB",     keywords:["galaxy a13 32gb","sm-a135 32gb"], price:50, source:"market"},
+  {title:"Samsung Galaxy A14 5G 64GB",  keywords:["galaxy a14 5g","sm-a146 64gb"], price:65, source:"market"},
+  {title:"Samsung Galaxy A15 5G 128GB", keywords:["galaxy a15 5g","sm-a156 128gb"], price:80, source:"market"},
+  {title:"Samsung Galaxy A23 5G 64GB",  keywords:["galaxy a23 5g","sm-a236 64gb"], price:80, source:"market"},
+  {title:"Samsung Galaxy A32 128GB",    keywords:["galaxy a32","sm-a325 128gb"], price:90, source:"market"},
+  {title:"Samsung Galaxy A33 5G 128GB", keywords:["galaxy a33 5g","sm-a336 128gb"], price:100, source:"market"},
+  {title:"Samsung Galaxy A34 5G 128GB", keywords:["galaxy a34 5g","sm-a346 128gb"], price:120, source:"market"},
+  {title:"Samsung Galaxy A35 5G 128GB", keywords:["galaxy a35 5g","sm-a356 128gb"], price:140, source:"market"},
+  {title:"Samsung Galaxy A36 5G 128GB", keywords:["galaxy a36 5g","sm-a366 128gb"], price:155, source:"market"},
+  {title:"Samsung Galaxy A37 5G 128GB", keywords:["galaxy a37","samsung a37","sm-s376v"], price:99.99, source:"sold"},
+  {title:"Samsung Galaxy A52 5G 128GB", keywords:["galaxy a52 5g","sm-a526 128gb"], price:110, source:"market"},
+  {title:"Samsung Galaxy A53 5G 128GB", keywords:["galaxy a53 5g","sm-a536 128gb"], price:130, source:"market"},
+  {title:"Samsung Galaxy A54 5G 128GB", keywords:["galaxy a54 5g","sm-a546 128gb"], price:150, source:"market"},
+
+  // ══════════════════════════════════════════════════════════════
+  // OTHER PHONES — Google Pixel, Motorola, OnePlus
+  // ══════════════════════════════════════════════════════════════
+  {title:"Google Pixel 5 128GB",        keywords:["pixel 5 128gb","google pixel 5","g025e"], price:90, source:"market"},
+  {title:"Google Pixel 6 128GB",        keywords:["pixel 6 128gb","google pixel 6","g9s9b"], price:120, source:"market"},
+  {title:"Google Pixel 6 Pro 128GB",    keywords:["pixel 6 pro 128gb","google pixel 6 pro"], price:145, source:"market"},
+  {title:"Google Pixel 6a 128GB",       keywords:["pixel 6a","google pixel 6a","gb62z"], price:110, source:"market"},
+  {title:"Google Pixel 7 128GB",        keywords:["pixel 7 128gb","google pixel 7","gvu6c"], price:175, source:"market"},
+  {title:"Google Pixel 7 Pro 128GB",    keywords:["pixel 7 pro 128gb","google pixel 7 pro"], price:210, source:"market"},
+  {title:"Google Pixel 7a 128GB",       keywords:["pixel 7a","google pixel 7a","gwkk3"], price:185, source:"market"},
+  {title:"Google Pixel 8 128GB",        keywords:["pixel 8 128gb","google pixel 8","gkws6"], price:245, source:"market"},
+  {title:"Google Pixel 8 Pro 128GB",    keywords:["pixel 8 pro 128gb","google pixel 8 pro"], price:290, source:"market"},
+  {title:"Google Pixel 8a 128GB",       keywords:["pixel 8a","google pixel 8a"], price:260, source:"market"},
+  {title:"Google Pixel 9 128GB",        keywords:["pixel 9 128gb","google pixel 9"], price:340, source:"market"},
+  {title:"Google Pixel 9 Pro 128GB",    keywords:["pixel 9 pro 128gb","google pixel 9 pro"], price:420, source:"market"},
+  {title:"Motorola Razr 2025 256GB",    keywords:["motorola razr 2025","razr xt2553"], price:246.97, source:"sold"},
+  {title:"Motorola Moto G Stylus 128GB",keywords:["moto g stylus","motorola g stylus"], price:85, source:"market"},
+  {title:"Motorola Moto G Power 64GB",  keywords:["moto g power","motorola g power"], price:75, source:"market"},
+  {title:"OnePlus 12 256GB",            keywords:["oneplus 12 256gb","one plus 12"], price:380, source:"market"},
+  {title:"OnePlus 13 256GB",            keywords:["oneplus 13 256gb","one plus 13"], price:480, source:"market"},
+  {title:"OnePlus 13R 256GB",           keywords:["oneplus 13r","one plus 13r"], price:419.99, source:"sold"},
+
+  // ══════════════════════════════════════════════════════════════
+  // TABLETS — iPad full lineup + Samsung + Microsoft Surface
+  // ══════════════════════════════════════════════════════════════
+  // ── iPad (standard) ──────────────────────────────────────────
+  {title:"Apple iPad 5th Gen 32GB WiFi",keywords:["ipad 5th gen 32gb","a1822 32gb","ipad 2017"], price:55, source:"market"},
+  {title:"Apple iPad 6th Gen 32GB WiFi",keywords:["ipad 6th gen","a1893 32gb","ipad 2018"], price:70, source:"market"},
+  {title:"Apple iPad 7th Gen 32GB WiFi",keywords:["ipad 7th gen","a2197 32gb","ipad 2019"], price:85, source:"market"},
+  {title:"Apple iPad 8th Gen 32GB WiFi",keywords:["ipad 8th gen","a2270 32gb","ipad 2020 32gb"], price:100, source:"market"},
+  {title:"Apple iPad 8th Gen 128GB WiFi",keywords:["ipad 8th gen 128gb","a2270 128gb","ipad 2020 128gb"], price:120, source:"market"},
+  {title:"Apple iPad 9th Gen 64GB WiFi",keywords:["ipad 9th gen","a2602 64gb","ipad 2021"], price:135, source:"market"},
+  {title:"Apple iPad 9th Gen 256GB WiFi",keywords:["ipad 9th gen 256gb","a2602 256gb"], price:160, source:"market"},
+  {title:"Apple iPad 10th Gen 64GB WiFi",keywords:["ipad 10th gen","a2696 64gb","ipad 2022"], price:229.99, source:"sold"},
+  {title:"Apple iPad 10th Gen 256GB WiFi",keywords:["ipad 10th gen 256gb","a2696 256gb"], price:275, source:"market"},
+  // ── iPad mini ────────────────────────────────────────────────
+  {title:"Apple iPad mini 4 64GB",      keywords:["ipad mini 4 64gb","a1538 64gb"], price:70, source:"market"},
+  {title:"Apple iPad mini 5 64GB WiFi", keywords:["ipad mini 5","ipad mini 5th gen","a2133 64gb"], price:129.99, source:"market"},
+  {title:"Apple iPad mini 5 256GB WiFi",keywords:["ipad mini 5 256gb","a2133 256gb"], price:160, source:"market"},
+  {title:"Apple iPad mini 6 64GB WiFi", keywords:["ipad mini 6","ipad mini 6th gen","a2567 64gb"], price:195, source:"market"},
+  {title:"Apple iPad mini 6 256GB WiFi",keywords:["ipad mini 6 256gb","a2567 256gb"], price:235, source:"market"},
+  {title:"Apple iPad mini 7 128GB WiFi",keywords:["ipad mini 7","ipad mini 7th gen","a3286 128gb"], price:270, source:"market"},
+  // ── iPad Air ─────────────────────────────────────────────────
+  {title:"Apple iPad Air 3rd Gen 64GB WiFi",keywords:["ipad air 3rd gen","a2152 64gb","ipad air 3 64gb"], price:130, source:"market"},
+  {title:"Apple iPad Air 4th Gen 64GB WiFi",keywords:["ipad air 4th gen","a2316 64gb","ipad air 4 64gb"], price:185, source:"market"},
+  {title:"Apple iPad Air 4th Gen 256GB WiFi",keywords:["ipad air 4th gen 256gb","a2316 256gb"], price:225, source:"market"},
+  {title:"Apple iPad Air 5th Gen 64GB WiFi",keywords:["ipad air 5th gen","a2588 64gb","ipad air 5 m1"], price:265, source:"market"},
+  {title:"Apple iPad Air 5th Gen 256GB WiFi",keywords:["ipad air 5 256gb","a2588 256gb"], price:310, source:"market"},
+  {title:"Apple iPad Air 11 M2 128GB WiFi",keywords:["ipad air 11 m2","ipad air 6th gen","a2902 128gb"], price:340, source:"market"},
+  {title:"Apple iPad Air 11 M2 256GB WiFi",keywords:["ipad air 11 m2 256gb","a2902 256gb"], price:385, source:"market"},
+  {title:"Apple iPad Air 13 M2 128GB WiFi",keywords:["ipad air 13 m2","ipad air 13 inch","a2898 128gb"], price:440, source:"market"},
+  // ── iPad Pro ─────────────────────────────────────────────────
+  {title:"Apple iPad Pro 11 1st Gen 64GB WiFi",keywords:["ipad pro 11 1st gen","a1980 64gb","ipad pro 11 2018"], price:185, source:"market"},
+  {title:"Apple iPad Pro 11 2nd Gen 128GB WiFi",keywords:["ipad pro 11 2nd gen","a2228 128gb","ipad pro 11 2020"], price:255, source:"market"},
+  {title:"Apple iPad Pro 11 M1 128GB WiFi",keywords:["ipad pro 11 m1","a2301 128gb","ipad pro 11 2021"], price:310, source:"market"},
+  {title:"Apple iPad Pro 11 M1 128GB WiFi+Cell",keywords:["ipad pro 11 m1 cellular","a2301 128gb cellular"], price:374.99, source:"sold"},
+  {title:"Apple iPad Pro 11 M2 128GB WiFi",keywords:["ipad pro 11 m2","a2759 128gb","ipad pro 11 2022"], price:380, source:"market"},
+  {title:"Apple iPad Pro 11 M2 256GB WiFi",keywords:["ipad pro 11 m2 256gb","a2759 256gb"], price:430, source:"market"},
+  {title:"Apple iPad Pro 11 M4 256GB WiFi",keywords:["ipad pro 11 m4","ipad pro 11 2024","a2879 256gb"], price:530, source:"market"},
+  {title:"Apple iPad Pro 12.9 3rd Gen 64GB",keywords:["ipad pro 12.9 3rd gen","a1876 64gb","ipad pro 12 2018"], price:252.97, source:"sold"},
+  {title:"Apple iPad Pro 12.9 4th Gen 128GB",keywords:["ipad pro 12.9 4th gen","a2229 128gb","ipad pro 12 2020"], price:340, source:"market"},
+  {title:"Apple iPad Pro 12.9 5th Gen M1 128GB",keywords:["ipad pro 12.9 5th gen","a2378 128gb","ipad pro 12 2021 m1"], price:430, source:"market"},
+  {title:"Apple iPad Pro 12.9 6th Gen M2 128GB",keywords:["ipad pro 12.9 6th gen","a2436 128gb","ipad pro 12 2022 m2"], price:540, source:"market"},
+  // ── Samsung Galaxy Tabs ───────────────────────────────────────
+  {title:"Samsung Galaxy Tab A7 Lite 32GB",keywords:["galaxy tab a7 lite","sm-t220 32gb","tab a7 lite"], price:39.99, source:"sold"},
+  {title:"Samsung Galaxy Tab A7 64GB",  keywords:["galaxy tab a7 64gb","sm-t500 64gb","tab a7"], price:75, source:"market"},
+  {title:"Samsung Galaxy Tab A8 64GB",  keywords:["galaxy tab a8 64gb","sm-x200 64gb","tab a8"], price:95, source:"market"},
+  {title:"Samsung Galaxy Tab A8 128GB", keywords:["galaxy tab a8 128gb","sm-x200 128gb"], price:115, source:"market"},
+  {title:"Samsung Galaxy Tab A9 128GB", keywords:["galaxy tab a9 128gb","sm-x110 128gb","tab a9"], price:130, source:"market"},
+  {title:"Samsung Galaxy Tab A9 Plus 64GB",keywords:["galaxy tab a9 plus","sm-x210 64gb"], price:150, source:"market"},
+  {title:"Samsung Galaxy Tab S6 Lite 64GB",keywords:["galaxy tab s6 lite","sm-p610 64gb","tab s6 lite"], price:120, source:"market"},
+  {title:"Samsung Galaxy Tab S7 128GB WiFi",keywords:["galaxy tab s7 128gb","sm-t870 128gb","tab s7"], price:185, source:"market"},
+  {title:"Samsung Galaxy Tab S7 Plus 128GB",keywords:["galaxy tab s7 plus","sm-t970 128gb"], price:235, source:"market"},
+  {title:"Samsung Galaxy Tab S8 128GB WiFi",keywords:["galaxy tab s8 128gb","sm-x700 128gb","tab s8"], price:265, source:"market"},
+  {title:"Samsung Galaxy Tab S8 Plus 128GB",keywords:["galaxy tab s8 plus","sm-x800 128gb"], price:330, source:"market"},
+  {title:"Samsung Galaxy Tab S8 Ultra 128GB",keywords:["galaxy tab s8 ultra","sm-x900 128gb"], price:400, source:"market"},
+  {title:"Samsung Galaxy Tab S9 128GB WiFi",keywords:["galaxy tab s9 128gb","sm-x710 128gb","tab s9"], price:340, source:"market"},
+  {title:"Samsung Galaxy Tab S9 Plus 256GB",keywords:["galaxy tab s9 plus","sm-x810 256gb"], price:430, source:"market"},
+  {title:"Samsung Galaxy Tab S9 Ultra 256GB",keywords:["galaxy tab s9 ultra","sm-x910 256gb"], price:540, source:"market"},
+  {title:"Samsung Galaxy Tab S9 FE 128GB",keywords:["galaxy tab s9 fe","sm-x510 128gb","tab s9 fe"], price:225, source:"market"},
+  // ── Microsoft Surface tablets ─────────────────────────────────
+  {title:"Microsoft Surface Pro 7 128GB i5",keywords:["surface pro 7 128gb","surface pro 7 i5"], price:245, source:"market"},
+  {title:"Microsoft Surface Pro 8 128GB i5",keywords:["surface pro 8 128gb","surface pro 8 i5"], price:310, source:"market"},
+  {title:"Microsoft Surface Pro 9 256GB i5",keywords:["surface pro 9 256gb","surface pro 9 i5"], price:420, source:"market"},
+  {title:"Microsoft Surface Go 3 64GB",  keywords:["surface go 3 64gb","surface go 3"], price:155, source:"market"},
+
+  // ══════════════════════════════════════════════════════════════
+  // CONSOLES — Full lineup home + handheld
+  // ══════════════════════════════════════════════════════════════
+  // ── Sony PlayStation ──────────────────────────────────────────
+  {title:"Sony PlayStation 1 (PS1)",    keywords:["playstation 1","ps1","psone","scph-1001","scph-5501","scph-7501"], price:55, source:"market"},
+  {title:"Sony PlayStation 2 Fat",      keywords:["ps2 fat","playstation 2 fat","scph-30001","scph-35001","ps2 original"], price:65, source:"market"},
+  {title:"Sony PlayStation 2 Slim",     keywords:["ps2 slim","playstation 2 slim","scph-70001","scph-75001","scph-77001","scph-79001","scph-90001"], price:80, source:"market"},
+  {title:"Sony PlayStation 3 Fat",      keywords:["ps3 fat","ps3 original","playstation 3 fat","cecha","cechb","cechc"], price:65, source:"market"},
+  {title:"Sony PlayStation 3 Slim",     keywords:["ps3 slim","playstation 3 slim","cech-2001","cech-3001","cech-3001a","cech-3001b"], price:79.99, source:"sold"},
+  {title:"Sony PlayStation 3 Super Slim",keywords:["ps3 super slim","playstation 3 super slim","cech-4001","cech-4201","cech-4301"], price:95, source:"market"},
+  {title:"Sony PlayStation 4 500GB",    keywords:["ps4 500gb","playstation 4 500gb","cuh-1001a","cuh-1115a"], price:100, source:"market"},
+  {title:"Sony PlayStation 4 1TB",      keywords:["ps4 1tb","playstation 4 1tb","cuh-1215a","cuh-1215b"], price:110, source:"market"},
+  {title:"Sony PlayStation 4 Slim 500GB",keywords:["ps4 slim 500gb","cuh-2015a","cuh-2115a 500gb"], price:105, source:"market"},
+  {title:"Sony PlayStation 4 Slim 1TB", keywords:["ps4 slim 1tb","playstation 4 slim","cuh-2115b","cuh-2215b"], price:119.99, source:"sold"},
+  {title:"Sony PlayStation 4 Pro 1TB",  keywords:["ps4 pro 1tb","playstation 4 pro","cuh-7015b","cuh-7115b","cuh-7215b"], price:155, source:"market"},
+  {title:"Sony PlayStation 5 Disc",     keywords:["ps5 disc","playstation 5 disc","cfi-1015a","cfi-1115a","cfi-1215a"], price:350, source:"market"},
+  {title:"Sony PlayStation 5 Digital",  keywords:["ps5 digital","playstation 5 digital","cfi-1015b","cfi-1115b","cfi-1215b"], price:300, source:"sold"},
+  {title:"Sony PS5 Slim Disc Edition",  keywords:["ps5 slim disc","cfi-2015 disc","cfi-2015a"], price:449.97, source:"sold"},
+  {title:"Sony PS5 Slim Digital Edition",keywords:["ps5 slim digital","cfi-2015b","cfi-2015 digital"], price:300, source:"sold"},
+  // ── Sony Handhelds ────────────────────────────────────────────
+  {title:"Sony PSP 1000",               keywords:["psp 1000","psp-1001","psp fat","playstation portable 1000"], price:65, source:"market"},
+  {title:"Sony PSP 2000 Slim",          keywords:["psp 2000","psp-2001","psp slim","psp slim lite"], price:75, source:"market"},
+  {title:"Sony PSP 3000",               keywords:["psp 3000","psp-3001","psp 3000 series"], price:85, source:"market"},
+  {title:"Sony PSP Go",                 keywords:["psp go","psp-n1000","psp n1001"], price:90, source:"market"},
+  {title:"Sony PS Vita 1000 8GB",       keywords:["ps vita 1000","pch-1001","vita fat","playstation vita 1000"], price:100, source:"market"},
+  {title:"Sony PS Vita 2000 Slim",      keywords:["ps vita 2000","pch-2001","vita slim","playstation vita slim"], price:120, source:"market"},
+  {title:"Sony PlayStation Portal",     keywords:["playstation portal","ps portal","cfi-y1001","ps5 remote player","ps portal remote"], price:134.99, source:"sold"},
+  {title:"Sony PlayStation VR Bundle",  keywords:["playstation vr","psvr","cuh-zvr1","cuh-zvr2","ps vr bundle"], price:110, source:"sold"},
+  {title:"Sony PlayStation VR2",        keywords:["psvr2","playstation vr2","cfj-zve1","ps vr2"], price:225, source:"market"},
+  // ── Microsoft Xbox ────────────────────────────────────────────
+  {title:"Microsoft Xbox Original",     keywords:["original xbox","xbox 2001","xbox first gen","xbox 2002","xbox classic"], price:65, source:"market"},
+  {title:"Microsoft Xbox 360 Arcade",   keywords:["xbox 360 arcade","xbox360 arcade","xbox 360 core"], price:45, source:"market"},
+  {title:"Microsoft Xbox 360 Slim 4GB", keywords:["xbox 360 slim 4gb","xbox 360 slim","1439 model","xbox 360 s"], price:55, source:"market"},
+  {title:"Microsoft Xbox 360 Slim 250GB",keywords:["xbox 360 slim 250gb","xbox 360 s 250gb"], price:65, source:"market"},
+  {title:"Microsoft Xbox 360 E 4GB",    keywords:["xbox 360 e","xbox 360e","xbox 360 e model"], price:50, source:"market"},
+  {title:"Microsoft Xbox One 500GB",    keywords:["xbox one 500gb","xbox one 1540","original xbox one 500gb"], price:64.99, source:"sold"},
+  {title:"Microsoft Xbox One 1TB",      keywords:["xbox one 1tb","xbox one 1540 1tb"], price:75, source:"market"},
+  {title:"Microsoft Xbox One S 500GB",  keywords:["xbox one s 500gb","xbox 1681 500gb","xbox one s 1681 500gb"], price:85, source:"market"},
+  {title:"Microsoft Xbox One S 1TB",    keywords:["xbox one s 1tb","xbox 1681 1tb","xbox one s bundle"], price:99.99, source:"market"},
+  {title:"Microsoft Xbox One S All-Digital",keywords:["xbox one s digital","xbox one s all-digital","xbox 1681 digital","xbox all digital edition"], price:85, source:"market"},
+  {title:"Microsoft Xbox One X 1TB",    keywords:["xbox one x 1tb","xbox 1787","xbox one x"], price:155, source:"market"},
+  {title:"Microsoft Xbox Series S 512GB",keywords:["xbox series s","series s 512gb","xbox 1883","xbox s 512"], price:239.99, source:"sold"},
+  {title:"Microsoft Xbox Series X 1TB", keywords:["xbox series x","series x 1tb","xbox 1882","xbox x 1tb"], price:439.99, source:"sold"},
+  // ── Nintendo Home Consoles ────────────────────────────────────
+  {title:"Nintendo NES",                keywords:["nintendo nes","nes console","nintendo entertainment system","nes-001"], price:65, source:"market"},
+  {title:"Nintendo SNES",               keywords:["super nintendo","snes","super nes","snes-001","super nintendo entertainment system"], price:75, source:"market"},
+  {title:"Nintendo 64",                 keywords:["nintendo 64","n64","nus-001","nintendo64"], price:80, source:"market"},
+  {title:"Nintendo GameCube",           keywords:["nintendo gamecube","gamecube","dol-001","gamecube console"], price:85, source:"market"},
+  {title:"Nintendo Wii",                keywords:["nintendo wii","wii console","rvl-001","wii rvl"], price:55, source:"market"},
+  {title:"Nintendo Wii Mini",           keywords:["wii mini","nintendo wii mini","rdoll-001"], price:45, source:"market"},
+  {title:"Nintendo Wii U 8GB Basic",    keywords:["wii u 8gb","wii u basic","wup-101 8gb"], price:85, source:"market"},
+  {title:"Nintendo Wii U 32GB Deluxe",  keywords:["wii u 32gb","wii u deluxe","wup-101 32gb","wii u premium"], price:110, source:"market"},
+  {title:"Nintendo Switch 2017",        keywords:["nintendo switch 2017","switch hac-001","switch v1","original switch"], price:155, source:"market"},
+  {title:"Nintendo Switch V2 2019",     keywords:["nintendo switch v2","switch hac-001-01","switch 2019","switch battery life"], price:160, source:"sold"},
+  {title:"Nintendo Switch Lite",        keywords:["switch lite","nintendo switch lite","hdh-001","switch lite yellow","switch lite coral"], price:130, source:"market"},
+  {title:"Nintendo Switch OLED",        keywords:["switch oled","nintendo switch oled","heg-001","switch oled white","switch oled neon"], price:200, source:"market"},
+  {title:"Nintendo Switch OLED Zelda",  keywords:["switch oled zelda","switch oled tears of kingdom","heg-001 zelda","switch oled totk"], price:179.99, source:"market"},
+  {title:"Nintendo Switch 2",           keywords:["switch 2","nintendo switch 2","heg-002","nintendo switch2"], price:390, source:"market"},
+  // ── Nintendo Handhelds ────────────────────────────────────────
+  {title:"Nintendo Game Boy Original",  keywords:["game boy original","gameboy dmg","dmg-001","original gameboy","game boy dmg"], price:55, source:"market"},
+  {title:"Nintendo Game Boy Pocket",    keywords:["game boy pocket","gameboy pocket","mgb-001"], price:60, source:"market"},
+  {title:"Nintendo Game Boy Color",     keywords:["game boy color","gameboy color","cgb-001","gbc"], price:65, source:"market"},
+  {title:"Nintendo Game Boy Advance",   keywords:["game boy advance","gba","agb-001","gameboy advance"], price:65, source:"market"},
+  {title:"Nintendo Game Boy Advance SP",keywords:["gba sp","game boy advance sp","ags-001","ags-101","gameboy advance sp"], price:85, source:"market"},
+  {title:"Nintendo Game Boy Micro",     keywords:["game boy micro","gameboy micro","ols-001"], price:95, source:"market"},
+  {title:"Nintendo DS Original",        keywords:["nintendo ds original","ds phat","nds-001","original nds","nintendo ds fat"], price:45, source:"market"},
+  {title:"Nintendo DS Lite",            keywords:["nintendo ds lite","ds lite","usg-001","nds lite"], price:55, source:"market"},
+  {title:"Nintendo DSi",                keywords:["nintendo dsi","dsi","twl-001"], price:60, source:"market"},
+  {title:"Nintendo DSi XL",             keywords:["nintendo dsi xl","dsi xl","utr-001"], price:70, source:"market"},
+  {title:"Nintendo 3DS Original",       keywords:["nintendo 3ds original","3ds ctr-001","ctr-001","original 3ds"], price:70, source:"market"},
+  {title:"Nintendo 3DS XL",             keywords:["nintendo 3ds xl","3ds xl","spr-001","3dsxl"], price:85, source:"market"},
+  {title:"Nintendo 2DS",                keywords:["nintendo 2ds","2ds","ftb-001","nintendo 2ds flat"], price:65, source:"market"},
+  {title:"Nintendo New 3DS",            keywords:["new nintendo 3ds","new 3ds","ktr-001","n3ds"], price:90, source:"market"},
+  {title:"Nintendo New 3DS XL",         keywords:["new 3ds xl","new nintendo 3ds xl","red-001","n3dsxl"], price:110, source:"market"},
+  {title:"Nintendo New 2DS XL",         keywords:["new 2ds xl","nintendo new 2ds xl","jans-001","n2dsxl"], price:90, source:"market"},
+  // ── Meta VR ───────────────────────────────────────────────────
+  {title:"Meta Quest 1 64GB",           keywords:["oculus quest 1","meta quest 1","quest 64gb","oculus quest 64gb"], price:85, source:"market"},
+  {title:"Meta Quest 2 64GB",           keywords:["meta quest 2 64gb","oculus quest 2 64gb","quest 2 64gb"], price:110, source:"market"},
+  {title:"Meta Quest 2 128GB",          keywords:["meta quest 2 128gb","oculus quest 2 128gb","quest 2 128gb"], price:130, source:"market"},
+  {title:"Meta Quest 2 256GB",          keywords:["meta quest 2 256gb","oculus quest 2 256gb","quest 2 256gb"], price:150, source:"market"},
+  {title:"Meta Quest 3 128GB",          keywords:["meta quest 3 128gb","quest 3 128gb"], price:199.99, source:"sold"},
+  {title:"Meta Quest 3 512GB",          keywords:["meta quest 3 512gb","quest 3 512gb"], price:240, source:"market"},
+  {title:"Meta Quest 3S 128GB",         keywords:["meta quest 3s 128gb","quest 3s","quest 3s 128"], price:199.99, source:"sold"},
+  {title:"Meta Quest Pro",              keywords:["meta quest pro","quest pro","oculus quest pro"], price:320, source:"market"},
+  // ── Sega consoles ────────────────────────────────────────────
+  {title:"Sega Genesis Model 1",        keywords:["sega genesis model 1","genesis 1601","sega genesis fat","genesis mk-1601"], price:55, source:"market"},
+  {title:"Sega Genesis Model 2",        keywords:["sega genesis model 2","genesis mk-1631","sega genesis slim"], price:50, source:"market"},
+  {title:"Sega Game Gear",              keywords:["sega game gear","game gear","gamegear"], price:55, source:"market"},
+  {title:"Sega Dreamcast",              keywords:["sega dreamcast","dreamcast","hkt-3020"], price:75, source:"market"},
+  {title:"Sega Saturn",                 keywords:["sega saturn","saturn console","hst-3200"], price:85, source:"market"},
+  // ── Other handhelds ──────────────────────────────────────────
+  {title:"Steam Deck 64GB",             keywords:["steam deck 64gb","steam deck lcd","valve steam deck 64"], price:235, source:"market"},
+  {title:"Steam Deck 256GB",            keywords:["steam deck 256gb","steam deck lcd 256"], price:270, source:"market"},
+  {title:"Steam Deck 512GB",            keywords:["steam deck 512gb","steam deck lcd 512"], price:300, source:"market"},
+  {title:"Steam Deck OLED 512GB",       keywords:["steam deck oled 512gb","steam deck oled"], price:370, source:"market"},
+  {title:"Steam Deck OLED 1TB",         keywords:["steam deck oled 1tb"], price:430, source:"market"},
+  {title:"Asus ROG Ally RC71L 512GB",   keywords:["asus rog ally","rog ally rc71l","rog ally z1 extreme"], price:310, source:"market"},
+  {title:"Asus ROG Ally X 1TB",         keywords:["rog ally x","rog ally x 1tb","rc72la"], price:420, source:"market"},
+  {title:"Lenovo Legion Go 512GB",      keywords:["lenovo legion go","legion go 512gb","legion go handheld"], price:340, source:"market"},
+  {title:"PlayStation Classic Mini",    keywords:["playstation classic","ps classic mini","scph-1000r","psclassic"], price:35, source:"market"},
+  {title:"Nintendo Classic Mini NES",   keywords:["nes classic","nes mini","clv-101","nintendo classic mini nes"], price:40, source:"market"},
+  {title:"Nintendo Classic Mini SNES",  keywords:["snes classic","snes mini","clv-301","super nintendo classic"], price:55, source:"market"},
+
+  // ══════════════════════════════════════════════════════════════
+  // EXISTING STORE DATA (kept from original — real SYG sold prices)
+  // ══════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════
+  // LAPTOPS — Full lineup Apple, Dell, Lenovo, HP, Asus, Acer,
+  // MSI, Razer, Microsoft, Samsung, LG, Toshiba, Google, Huawei
+  // ══════════════════════════════════════════════════════════════
+
+  // ── Apple MacBook Air ─────────────────────────────────────────
+  {title:"Apple MacBook Air 11 2015 i5 4GB 128GB",       keywords:["macbook air 11 2015","a1465 2015","macbook air 11 early 2015"], price:120, source:"market"},
+  {title:"Apple MacBook Air 13 2015 i5 4GB 128GB",       keywords:["macbook air 13 2015","a1466 2015","macbook air 13 early 2015"], price:130, source:"market"},
+  {title:"Apple MacBook Air 13 2017 i5 8GB 128GB",       keywords:["macbook air 2017","a1466 2017","macbook air 13 2017"], price:155, source:"market"},
+  {title:"Apple MacBook Air 13 2018 i5 8GB 128GB",       keywords:["macbook air 2018","a1932 128gb","macbook air 13 2018"], price:165, source:"market"},
+  {title:"Apple MacBook Air 13 2018 i5 8GB 256GB",       keywords:["macbook air 2018 256gb","a1932 256gb"], price:185, source:"market"},
+  {title:"Apple MacBook Air 13 2019 i5 8GB 256GB",       keywords:["macbook air 2019","macbook a1932","macbook air 13 2019"], price:190, source:"market"},
+  {title:"Apple MacBook Air 13 2020 i5 8GB 256GB",       keywords:["macbook air 2020 i5","a2179 i5","macbook air i5 2020"], price:244.99, source:"sold"},
+  {title:"Apple MacBook Air 13 2020 i7 8GB 512GB",       keywords:["macbook air 2020 i7","a2179 i7 512gb"], price:275, source:"market"},
+  {title:"Apple MacBook Air 13 M1 8GB 256GB",            keywords:["macbook air m1 256gb","a2337 256gb","macbook air m1 2020"], price:340, source:"market"},
+  {title:"Apple MacBook Air 13 M1 8GB 512GB",            keywords:["macbook air m1 512gb","a2337 512gb"], price:385, source:"market"},
+  {title:"Apple MacBook Air 13 M1 16GB 256GB",           keywords:["macbook air m1 16gb 256gb","a2337 16gb"], price:410, source:"market"},
+  {title:"Apple MacBook Air 13 M2 8GB 256GB",            keywords:["macbook air m2 256gb","a2681 256gb","macbook air m2 2022"], price:560, source:"market"},
+  {title:"Apple MacBook Air 13 M2 8GB 512GB",            keywords:["macbook air m2 512gb","a2681 512gb"], price:620, source:"market"},
+  {title:"Apple MacBook Air 13 M2 16GB 512GB",           keywords:["macbook air m2 16gb 512","a2681 16gb 512gb"], price:720, source:"market"},
+  {title:"Apple MacBook Air 15 M2 8GB 256GB",            keywords:["macbook air 15 m2 256gb","a2941 256gb","macbook air 15 2023"], price:750, source:"market"},
+  {title:"Apple MacBook Air 15 M2 8GB 512GB",            keywords:["macbook air 15 m2 512gb","a2941 512gb"], price:810, source:"market"},
+  {title:"Apple MacBook Air 13 M3 8GB 256GB",            keywords:["macbook air m3 256gb","a3113 256gb","macbook air m3 2024"], price:750, source:"market"},
+  {title:"Apple MacBook Air 13 M3 8GB 512GB",            keywords:["macbook air m3 512gb","a3113 512gb"], price:820, source:"market"},
+  {title:"Apple MacBook Air 13 M3 16GB 512GB",           keywords:["macbook air m3 16gb 512","a3113 16gb 512gb"], price:890, source:"market"},
+  {title:"Apple MacBook Air 15 M3 8GB 256GB",            keywords:["macbook air 15 m3 256gb","a3114 256gb","macbook air 15 m3 2024"], price:850, source:"market"},
+  {title:"Apple MacBook Air 15 M3 16GB 512GB",           keywords:["macbook air 15 m3 16gb","a3114 16gb 512gb"], price:980, source:"market"},
+
+  // ── Apple MacBook Pro ─────────────────────────────────────────
+  {title:"Apple MacBook Pro 13 2015 i5 8GB 256GB",       keywords:["macbook pro 13 2015","a1502 2015","macbook pro early 2015"], price:195, source:"market"},
+  {title:"Apple MacBook Pro 13 2017 i5 8GB 256GB",       keywords:["macbook pro 13 2017","a1708 2017","macbook pro 13 mid 2017"], price:215, source:"market"},
+  {title:"Apple MacBook Pro 13 2018 i5 8GB 256GB",       keywords:["macbook pro 13 2018","a1989 2018 256gb"], price:235, source:"market"},
+  {title:"Apple MacBook Pro 13 2018 i5 16GB 256GB",      keywords:["macbook pro 13 2018 16gb","a1989 16gb 256gb"], price:265, source:"market"},
+  {title:"Apple MacBook Pro 13 2019 i5 8GB 256GB",       keywords:["macbook pro 13 2019","a1989 2019","macbook pro 2019 256gb"], price:260, source:"market"},
+  {title:"Apple MacBook Pro 13 M1 8GB 256GB",            keywords:["macbook pro 13 m1 256gb","a2338 m1 256gb","macbook pro m1 2020"], price:440, source:"market"},
+  {title:"Apple MacBook Pro 13 M1 8GB 512GB",            keywords:["macbook pro 13 m1 512gb","a2338 m1 512gb"], price:490, source:"market"},
+  {title:"Apple MacBook Pro 13 M1 16GB 512GB",           keywords:["macbook pro 13 m1 16gb","a2338 m1 16gb 512gb"], price:540, source:"market"},
+  {title:"Apple MacBook Pro 13 M2 8GB 256GB",            keywords:["macbook pro 13 m2 256gb","a2686 m2 256gb","macbook pro m2 2022"], price:620, source:"market"},
+  {title:"Apple MacBook Pro 13 M2 8GB 512GB",            keywords:["macbook pro 13 m2 512gb","a2686 m2 512gb"], price:680, source:"market"},
+  {title:"Apple MacBook Pro 13 M2 16GB 256GB",           keywords:["macbook pro 13 m2 16gb 256","a2686 16gb 256gb"], price:730, source:"market"},
+  {title:"Apple MacBook Pro 14 M1 Pro 16GB 512GB",       keywords:["macbook pro 14 m1 pro 512gb","a2442 m1 pro 512gb","macbook pro 14 2021"], price:820, source:"market"},
+  {title:"Apple MacBook Pro 14 M1 Pro 16GB 1TB",         keywords:["macbook pro 14 m1 pro 1tb","a2442 m1 pro 1tb"], price:899, source:"market"},
+  {title:"Apple MacBook Pro 14 M1 Max 32GB 1TB",         keywords:["macbook pro 14 m1 max 32gb","a2442 m1 max 32gb"], price:1050, source:"market"},
+  {title:"Apple MacBook Pro 14 M2 Pro 16GB 512GB",       keywords:["macbook pro 14 m2 pro 512gb","a2779 m2 pro 512gb","macbook pro 14 2023"], price:1050, source:"market"},
+  {title:"Apple MacBook Pro 14 M2 Pro 16GB 1TB",         keywords:["macbook pro 14 m2 pro 1tb","a2779 m2 pro 1tb"], price:949.99, source:"market"},
+  {title:"Apple MacBook Pro 14 M2 Max 32GB 1TB",         keywords:["macbook pro 14 m2 max 32gb","a2779 m2 max 32gb"], price:1250, source:"market"},
+  {title:"Apple MacBook Pro 14 M3 8GB 512GB",            keywords:["macbook pro 14 m3 8gb","a3183 m3 8gb","macbook pro 14 m3 2023"], price:1100, source:"market"},
+  {title:"Apple MacBook Pro 14 M3 Pro 18GB 512GB",       keywords:["macbook pro 14 m3 pro 18gb","a3183 m3 pro 18gb"], price:1400, source:"market"},
+  {title:"Apple MacBook Pro 14 M4 Pro 24GB 512GB",       keywords:["macbook pro 14 m4 pro","macbook pro 14 m4 2024","m4 pro 14 inch"], price:1600, source:"market"},
+  {title:"Apple MacBook Pro 15 2018 i7 16GB 256GB",      keywords:["macbook pro 15 2018","a1990 2018 i7","macbook pro 15 mid 2018"], price:380, source:"market"},
+  {title:"Apple MacBook Pro 15 2019 i9 16GB 512GB",      keywords:["macbook pro 15 2019 i9","a1990 2019 i9 512gb"], price:490, source:"market"},
+  {title:"Apple MacBook Pro 16 M1 Pro 16GB 512GB",       keywords:["macbook pro 16 m1 pro 512gb","a2485 m1 pro 512gb","macbook pro 16 2021"], price:699.99, source:"market"},
+  {title:"Apple MacBook Pro 16 M2 Pro 16GB 1TB",         keywords:["macbook pro 16 m2 pro 1tb","a2780 m2 pro 1tb","macbook pro 16 m2 2023"], price:1200, source:"market"},
+  {title:"Apple MacBook Pro 16 M2 Max 32GB 1TB",         keywords:["macbook pro 16 m2 max 32gb","a2780 m2 max 32gb"], price:1500, source:"market"},
+  {title:"Apple MacBook Pro 16 M3 Pro 18GB 512GB",       keywords:["macbook pro 16 m3 pro 18gb","a3234 m3 pro","macbook pro 16 m3 2023"], price:1550, source:"market"},
+  {title:"Apple MacBook Pro 16 M4 Pro 24GB 512GB",       keywords:["macbook pro 16 m4 pro","macbook pro 16 m4 2024","m4 pro 16 inch"], price:1900, source:"market"},
+
+  // ── Dell XPS ──────────────────────────────────────────────────
+  {title:"Dell XPS 13 9300 i5 10th Gen 8GB 256GB",       keywords:["dell xps 13 9300","xps 13 9300 i5","xps 13 2020 i5"], price:275, source:"market"},
+  {title:"Dell XPS 13 9310 i5 11th Gen 8GB 256GB",       keywords:["dell xps 13 9310","xps 9310 i5 256gb"], price:320, source:"market"},
+  {title:"Dell XPS 13 9310 i7 11th Gen 16GB 512GB",      keywords:["dell xps 13 9310 i7","xps 9310 i7 512gb"], price:410, source:"market"},
+  {title:"Dell XPS 13 9320 i7 12th Gen 16GB 512GB",      keywords:["dell xps 13 9320","xps 9320 i7"], price:480, source:"market"},
+  {title:"Dell XPS 15 9500 i7 10th Gen 16GB 512GB",      keywords:["dell xps 15 9500 i7","xps 9500 i7 512gb"], price:550, source:"market"},
+  {title:"Dell XPS 15 9510 i7 11th Gen RTX 3050 Ti 16GB",keywords:["dell xps 15 9510","xps 9510 rtx 3050 ti"], price:650, source:"market"},
+  {title:"Dell XPS 15 9520 i7 12th Gen RTX 3050 Ti 16GB",keywords:["dell xps 15 9520","xps 9520 i7"], price:720, source:"market"},
+
+  // ── Dell Latitude ────────────────────────────────────────────
+  {title:"Dell Latitude 5490 i5 8th Gen 8GB 256GB",      keywords:["dell latitude 5490","latitude 5490 i5","latitude 5490 8th"], price:165, source:"market"},
+  {title:"Dell Latitude 5420 i5 11th Gen 8GB 256GB",     keywords:["dell latitude 5420","latitude 5420 i5"], price:200, source:"market"},
+  {title:"Dell Latitude 5420 i7 11th Gen 16GB 512GB",    keywords:["dell latitude 5420 i7","latitude 5420 i7 512gb"], price:250, source:"market"},
+  {title:"Dell Latitude 5430 i5 12th Gen 16GB 256GB",    keywords:["dell latitude 5430","latitude 5430 i5 12th"], price:230, source:"market"},
+  {title:"Dell Latitude 5440 i5 13th Gen 16GB 256GB",    keywords:["dell latitude 5440","latitude 5440 i5 13th"], price:265, source:"market"},
+  {title:"Dell Latitude 5540 i5 13th Gen 16GB 512GB",    keywords:["dell latitude 5540","latitude 5540 i5 13th"], price:295, source:"market"},
+  {title:"Dell Latitude 7420 i7 11th Gen 16GB 512GB",    keywords:["dell latitude 7420","latitude 7420 i7"], price:305, source:"market"},
+  {title:"Dell Latitude 7430 i7 12th Gen 16GB 512GB",    keywords:["dell latitude 7430","latitude 7430 i7"], price:340, source:"market"},
+  {title:"Dell Latitude 3420 i5 11th Gen 8GB 256GB",     keywords:["dell latitude 3420","latitude 3420 i5"], price:165, source:"market"},
+
+  // ── Dell Inspiron ────────────────────────────────────────────
+  {title:"Dell Inspiron 15 3000 i3 8GB 256GB",           keywords:["dell inspiron 15 3000 i3","inspiron 3511 i3","inspiron 15 i3"], price:120, source:"market"},
+  {title:"Dell Inspiron 15 3000 i5 8GB 256GB",           keywords:["dell inspiron 15 3000 i5","inspiron 3511 i5","inspiron 15 i5"], price:155, source:"market"},
+  {title:"Dell Inspiron 15 5000 i5 8GB 256GB",           keywords:["dell inspiron 15 5000","inspiron 5510 i5"], price:195, source:"market"},
+  {title:"Dell Inspiron 15 5000 i7 16GB 512GB",          keywords:["dell inspiron 15 5000 i7","inspiron 5510 i7"], price:265, source:"market"},
+
+  // ── Lenovo ThinkPad ──────────────────────────────────────────
+  {title:"Lenovo ThinkPad T460 i5 6th Gen 8GB 256GB",    keywords:["thinkpad t460 i5","lenovo t460 i5 8gb"], price:120, source:"market"},
+  {title:"Lenovo ThinkPad T470 i5 7th Gen 8GB 256GB",    keywords:["thinkpad t470 i5","lenovo t470 i5 8gb"], price:135, source:"market"},
+  {title:"Lenovo ThinkPad T470 i7 7th Gen 16GB 512GB",   keywords:["thinkpad t470 i7","lenovo t470 i7 16gb"], price:165, source:"market"},
+  {title:"Lenovo ThinkPad T480 i5 8th Gen 8GB 256GB",    keywords:["thinkpad t480 i5","lenovo t480 i5 8gb"], price:155, source:"market"},
+  {title:"Lenovo ThinkPad T480 i7 8th Gen 16GB 512GB",   keywords:["thinkpad t480 i7","lenovo t480 i7 16gb"], price:200, source:"market"},
+  {title:"Lenovo ThinkPad T490 i5 8th Gen 8GB 256GB",    keywords:["thinkpad t490 i5","lenovo t490 i5 8gb"], price:175, source:"market"},
+  {title:"Lenovo ThinkPad T490 i7 8th Gen 16GB 512GB",   keywords:["thinkpad t490 i7","lenovo t490 i7 16gb"], price:220, source:"market"},
+  {title:"Lenovo ThinkPad T14 Gen 1 i5 10th Gen 8GB",    keywords:["thinkpad t14 gen 1","lenovo t14 g1 i5"], price:200, source:"market"},
+  {title:"Lenovo ThinkPad T14 Gen 2 i5 11th Gen 8GB",    keywords:["thinkpad t14 gen 2","lenovo t14 g2 i5"], price:225, source:"market"},
+  {title:"Lenovo ThinkPad T14s AMD Ryzen 5 16GB",        keywords:["thinkpad t14s amd","t14s ryzen 5","thinkpad t14s"], price:245, source:"market"},
+  {title:"Lenovo ThinkPad X1 Carbon Gen 7 i7 16GB 512GB",keywords:["thinkpad x1 carbon gen 7","x1 carbon g7","x1 carbon 2019"], price:310, source:"market"},
+  {title:"Lenovo ThinkPad X1 Carbon Gen 8 i7 16GB 512GB",keywords:["thinkpad x1 carbon gen 8","x1 carbon g8","x1 carbon 2020"], price:340, source:"market"},
+  {title:"Lenovo ThinkPad X1 Carbon Gen 10 i7 16GB 512GB",keywords:["thinkpad x1 carbon gen 10","x1 carbon g10","x1 carbon 2022"], price:420, source:"market"},
+  {title:"Lenovo ThinkPad X1 Carbon Gen 11 i7 16GB 512GB",keywords:["thinkpad x1 carbon gen 11","x1 carbon g11","x1 carbon 2023"], price:500, source:"market"},
+  {title:"Lenovo ThinkPad E14 Gen 3 AMD Ryzen 5 8GB",    keywords:["thinkpad e14 gen 3","e14 g3 ryzen 5"], price:195, source:"market"},
+  {title:"Lenovo ThinkPad E14 Gen 4 i5 12th Gen 8GB",    keywords:["thinkpad e14 gen 4","e14 g4 i5 12th"], price:225, source:"market"},
+  {title:"Lenovo ThinkBook 14 i5 12th Gen 16GB 512GB",   keywords:["lenovo thinkbook 14 i5 12th","thinkbook 14 gen 4"], price:290, source:"market"},
+
+  // ── Lenovo IdeaPad ───────────────────────────────────────────
+  {title:"Lenovo IdeaPad 3 i5 10th Gen 8GB 256GB",       keywords:["lenovo ideapad 3 i5","ideapad 3 10th gen i5"], price:155, source:"market"},
+  {title:"Lenovo IdeaPad 3 Ryzen 5 8GB 256GB",           keywords:["lenovo ideapad 3 ryzen 5","ideapad 3 amd ryzen 5"], price:165, source:"market"},
+  {title:"Lenovo IdeaPad 5 i5 11th Gen 8GB 512GB",       keywords:["lenovo ideapad 5 i5","ideapad 5 82fe"], price:235, source:"market"},
+  {title:"Lenovo IdeaPad 5 Ryzen 5 16GB 512GB",          keywords:["lenovo ideapad 5 ryzen 5","ideapad 5 amd"], price:255, source:"market"},
+  {title:"Lenovo IdeaPad Flex 5 Ryzen 5 8GB 256GB",      keywords:["lenovo flex 5 ryzen","ideapad flex 5 amd"], price:215, source:"market"},
+
+  // ── Lenovo Legion ────────────────────────────────────────────
+  {title:"Lenovo Legion 5 Ryzen 5 RTX 3060 16GB",        keywords:["lenovo legion 5 ryzen 5 rtx 3060","legion 5 rtx 3060"], price:650, source:"market"},
+  {title:"Lenovo Legion 5i Gen 7 i7 RTX 3070 Ti 16GB",   keywords:["legion 5i gen 7","legion 5i rtx 3070 ti"], price:800, source:"market"},
+  {title:"Lenovo Legion Slim 5 Ryzen 7 RTX 4060 16GB",   keywords:["legion slim 5 ryzen 7","legion slim 5 rtx 4060"], price:750, source:"market"},
+
+  // ── HP ────────────────────────────────────────────────────────
+  {title:"HP Pavilion 15 i5 10th Gen 8GB 256GB",         keywords:["hp pavilion 15 i5 10th","pavilion 15 2020 i5"], price:160, source:"market"},
+  {title:"HP Pavilion 15 Ryzen 5 8GB 256GB",             keywords:["hp pavilion 15 ryzen 5","pavilion 15 amd ryzen 5"], price:175, source:"market"},
+  {title:"HP Envy 13 i5 10th Gen 8GB 256GB",             keywords:["hp envy 13 i5 10th","envy 13 2020 i5"], price:235, source:"market"},
+  {title:"HP Envy x360 Ryzen 5 8GB 256GB",               keywords:["hp envy x360 ryzen 5","envy x360 amd 2020"], price:250, source:"market"},
+  {title:"HP Envy x360 Ryzen 7 16GB 512GB",              keywords:["hp envy x360 ryzen 7","envy x360 amd ryzen 7"], price:320, source:"market"},
+  {title:"HP Spectre x360 13 i7 10th Gen 16GB 512GB",    keywords:["hp spectre x360 13 i7 10th","spectre 13 2020 i7"], price:460, source:"market"},
+  {title:"HP Spectre x360 14 i7 11th Gen 16GB 512GB",    keywords:["hp spectre x360 14 i7","spectre 14 2021"], price:520, source:"market"},
+  {title:"HP ProBook 450 G8 i5 11th Gen 8GB 256GB",      keywords:["hp probook 450 g8","probook 450 g8 i5"], price:210, source:"market"},
+  {title:"HP ProBook 450 G9 i5 12th Gen 8GB 256GB",      keywords:["hp probook 450 g9","probook 450 g9 i5"], price:240, source:"market"},
+  {title:"HP EliteBook 840 G7 i5 10th Gen 8GB 256GB",    keywords:["hp elitebook 840 g7","elitebook 840 g7 i5"], price:225, source:"market"},
+  {title:"HP EliteBook 840 G8 i5 11th Gen 8GB 256GB",    keywords:["hp elitebook 840 g8","elitebook 840 g8 i5"], price:255, source:"market"},
+  {title:"HP EliteBook 840 G9 i5 12th Gen 16GB 256GB",   keywords:["hp elitebook 840 g9","elitebook 840 g9 i5"], price:295, source:"market"},
+  {title:"HP EliteBook 840 G10 i5 13th Gen 16GB 256GB",  keywords:["hp elitebook 840 g10","elitebook 840 g10 i5"], price:340, source:"market"},
+  {title:"HP OMEN 15 i7 RTX 3070 16GB 512GB",            keywords:["hp omen 15 i7 rtx 3070","omen 15 rtx 3070"], price:750, source:"market"},
+  {title:"HP OMEN 16 i7 RTX 3060 16GB 512GB",            keywords:["hp omen 16 i7 rtx 3060","omen 16 rtx 3060"], price:650, source:"market"},
+  {title:"HP Chromebook 14 Celeron 4GB 32GB",            keywords:["hp chromebook 14","hp chromebook celeron"], price:70, source:"market"},
+
+  // ── Asus ─────────────────────────────────────────────────────
+  {title:"Asus VivoBook 15 i5 10th Gen 8GB 512GB",       keywords:["asus vivobook 15 i5 10th","vivobook 15 2020 i5"], price:195, source:"market"},
+  {title:"Asus VivoBook 15 Ryzen 5 8GB 512GB",           keywords:["asus vivobook 15 ryzen 5","vivobook 15 amd"], price:210, source:"market"},
+  {title:"Asus ZenBook 13 i5 10th Gen 8GB 512GB",        keywords:["asus zenbook 13 i5 10th","zenbook 13 ux325"], price:310, source:"market"},
+  {title:"Asus ZenBook 14 i7 10th Gen 16GB 512GB",       keywords:["asus zenbook 14 i7","zenbook 14 ux435"], price:390, source:"market"},
+  {title:"Asus ROG Zephyrus G14 Ryzen 9 RTX 3060 16GB",  keywords:["asus rog zephyrus g14 rtx 3060","g14 rtx 3060","ga401qm"], price:850, source:"market"},
+  {title:"Asus ROG Zephyrus G14 Ryzen 9 RTX 4060 16GB",  keywords:["asus rog zephyrus g14 rtx 4060","g14 rtx 4060","ga402nu"], price:1000, source:"market"},
+  {title:"Asus ROG Strix G15 Ryzen 7 RTX 3060 16GB",     keywords:["asus rog strix g15 rtx 3060","strix g15 rtx 3060"], price:720, source:"market"},
+  {title:"Asus TUF Gaming A15 Ryzen 7 RTX 3060 16GB",    keywords:["asus tuf a15 ryzen 7 rtx 3060","tuf a15 rtx 3060"], price:650, source:"market"},
+  {title:"Asus TUF Gaming F15 i7 RTX 3060 16GB",         keywords:["asus tuf f15 i7 rtx 3060","tuf f15 rtx 3060"], price:680, source:"market"},
+  {title:"Asus ExpertBook B9 i7 11th Gen 16GB 1TB",       keywords:["asus expertbook b9","expertbook b9 i7"], price:480, source:"market"},
+
+  // ── Acer ─────────────────────────────────────────────────────
+  {title:"Acer Aspire 5 i5 10th Gen 8GB 256GB",          keywords:["acer aspire 5 i5 10th","aspire 5 a515 i5 2020"], price:170, source:"market"},
+  {title:"Acer Aspire 5 i5 12th Gen 8GB 512GB",          keywords:["acer aspire 5 i5 12th","aspire 5 a515 i5 2022"], price:215, source:"market"},
+  {title:"Acer Aspire 5 Ryzen 5 8GB 256GB",              keywords:["acer aspire 5 ryzen 5","aspire 5 amd ryzen 5"], price:195, source:"market"},
+  {title:"Acer Aspire 7 i5 RTX 3050 8GB 512GB",          keywords:["acer aspire 7 i5 rtx 3050","aspire 7 a715 rtx 3050"], price:350, source:"market"},
+  {title:"Acer Swift 3 i5 10th Gen 8GB 512GB",           keywords:["acer swift 3 i5 10th","swift 3 sf314 i5 2020"], price:265, source:"market"},
+  {title:"Acer Swift 3 Ryzen 5 8GB 512GB",               keywords:["acer swift 3 ryzen 5","swift 3 amd ryzen 5"], price:255, source:"market"},
+  {title:"Acer Nitro 5 i5 RTX 3050 8GB 512GB",           keywords:["acer nitro 5 i5 rtx 3050","nitro 5 an515 rtx 3050"], price:540, source:"market"},
+  {title:"Acer Nitro 5 i7 RTX 3060 16GB 512GB",          keywords:["acer nitro 5 i7 rtx 3060","nitro 5 an515 rtx 3060"], price:650, source:"market"},
+  {title:"Acer Nitro 5 i5 RTX 4060 16GB 512GB",          keywords:["acer nitro 5 rtx 4060","nitro 5 an515 58 rtx 4060"], price:750, source:"market"},
+  {title:"Acer Predator Helios 300 i7 RTX 3070 Ti 16GB", keywords:["acer predator helios 300 rtx 3070 ti","predator helios 3070ti"], price:900, source:"market"},
+  {title:"Acer Chromebook Spin 713 i5 8GB 256GB",        keywords:["acer chromebook spin 713","chromebook spin 713 i5"], price:185, source:"market"},
+
+  // ── MSI ──────────────────────────────────────────────────────
+  {title:"MSI GF63 Thin i5 RTX 3050 8GB 512GB",          keywords:["msi gf63 thin i5 rtx 3050","gf63 rtx 3050"], price:520, source:"market"},
+  {title:"MSI GF63 Thin i7 RTX 3050 Ti 16GB",            keywords:["msi gf63 thin i7 rtx 3050 ti","gf63 rtx 3050 ti"], price:580, source:"market"},
+  {title:"MSI GL66 Pulse i7 RTX 3060 16GB 512GB",        keywords:["msi gl66 pulse rtx 3060","gl66 rtx 3060"], price:680, source:"market"},
+  {title:"MSI GS66 Stealth i7 RTX 3080 32GB 1TB",        keywords:["msi gs66 stealth rtx 3080","gs66 rtx 3080"], price:1250, source:"market"},
+  {title:"MSI Katana GF76 i7 RTX 3070 Ti 16GB",          keywords:["msi katana gf76 rtx 3070 ti","msi katana 3070 ti"], price:850, source:"market"},
+  {title:"MSI Prestige 14 i7 RTX 3050 Ti 16GB",          keywords:["msi prestige 14 i7 rtx 3050 ti","msi prestige 14"], price:780, source:"market"},
+
+  // ── Razer ────────────────────────────────────────────────────
+  {title:"Razer Blade 15 i7 RTX 2070 16GB 512GB",        keywords:["razer blade 15 rtx 2070","razer blade 15 2020"], price:800, source:"market"},
+  {title:"Razer Blade 15 i7 RTX 3070 16GB 512GB",        keywords:["razer blade 15 rtx 3070","razer blade 15 2021"], price:950, source:"market"},
+  {title:"Razer Blade 15 i9 RTX 3080 Ti 16GB 1TB",       keywords:["razer blade 15 rtx 3080 ti","razer blade 15 2022"], price:1300, source:"market"},
+  {title:"Razer Blade 14 Ryzen 9 RTX 3080 16GB 1TB",     keywords:["razer blade 14 ryzen 9 rtx 3080","razer blade 14 2021"], price:1100, source:"market"},
+  {title:"Razer Blade 14 Ryzen 9 RTX 4080 16GB 1TB",     keywords:["razer blade 14 rtx 4080","razer blade 14 2023"], price:1500, source:"market"},
+  {title:"Razer Blade Stealth 13 i7 16GB 512GB",         keywords:["razer blade stealth 13 i7","razer stealth 13 2021"], price:650, source:"market"},
+
+  // ── Microsoft Surface ─────────────────────────────────────────
+  {title:"Microsoft Surface Laptop 3 i5 8GB 128GB",      keywords:["surface laptop 3 i5 128gb","surface laptop 3 2019 i5"], price:250, source:"market"},
+  {title:"Microsoft Surface Laptop 3 i7 16GB 256GB",     keywords:["surface laptop 3 i7 256gb","surface laptop 3 i7"], price:330, source:"market"},
+  {title:"Microsoft Surface Laptop 4 i5 8GB 512GB",      keywords:["surface laptop 4 i5 512gb","surface laptop 4 intel i5"], price:385, source:"market"},
+  {title:"Microsoft Surface Laptop 4 Ryzen 5 8GB 256GB", keywords:["surface laptop 4 ryzen 5","surface laptop 4 amd"], price:340, source:"market"},
+  {title:"Microsoft Surface Laptop 5 i5 8GB 512GB",      keywords:["surface laptop 5 i5","surface laptop 5 intel"], price:450, source:"market"},
+  {title:"Microsoft Surface Laptop 5 i7 16GB 512GB",     keywords:["surface laptop 5 i7 16gb","surface laptop 5 i7"], price:560, source:"market"},
+  {title:"Microsoft Surface Laptop Go 3 i5 8GB 256GB",   keywords:["surface laptop go 3 i5","surface laptop go 3 256gb"], price:350, source:"market"},
+  {title:"Microsoft Surface Laptop Studio i7 RTX 3050 Ti",keywords:["surface laptop studio i7","surface laptop studio rtx"], price:950, source:"market"},
+  {title:"Microsoft Surface Book 3 i7 RTX 3000 32GB",    keywords:["surface book 3 i7 rtx 3000","surface book 3 32gb"], price:900, source:"market"},
+
+  // ── Samsung ───────────────────────────────────────────────────
+  {title:"Samsung Galaxy Book Pro 360 i7 16GB 512GB",    keywords:["samsung galaxy book pro 360","galaxy book pro 360 i7"], price:550, source:"market"},
+  {title:"Samsung Galaxy Book 2 Pro i7 16GB 512GB",      keywords:["samsung galaxy book 2 pro","galaxy book 2 pro i7"], price:600, source:"market"},
+  {title:"Samsung Galaxy Book 3 Ultra i9 RTX 4070 32GB", keywords:["samsung galaxy book 3 ultra","galaxy book 3 ultra rtx 4070"], price:1400, source:"market"},
+
+  // ── LG Gram ───────────────────────────────────────────────────
+  {title:"LG Gram 14 i5 11th Gen 16GB 512GB",            keywords:["lg gram 14 i5 11th","lg gram 14 2021 i5"], price:480, source:"market"},
+  {title:"LG Gram 15 i7 11th Gen 16GB 512GB",            keywords:["lg gram 15 i7 11th","lg gram 15 2021 i7"], price:580, source:"market"},
+  {title:"LG Gram 17 i7 12th Gen 16GB 512GB",            keywords:["lg gram 17 i7 12th","lg gram 17 2022 i7"], price:680, source:"market"},
+  {title:"LG Gram 16 i7 13th Gen 32GB 1TB",              keywords:["lg gram 16 i7 13th","lg gram 16 2023 i7"], price:780, source:"market"},
+
+  // ── Toshiba ───────────────────────────────────────────────────
+  {title:"Toshiba Satellite C55 i3 4GB HDD",             keywords:["toshiba satellite c55","toshiba c55 i3","toshiba laptop i3"], price:60, source:"market"},
+  {title:"Toshiba Tecra Z50 i7 8GB 256GB",               keywords:["toshiba tecra z50","tecra z50 i7","dynabook tecra z50"], price:140, source:"market"},
+
+  // ── Google Pixelbook ──────────────────────────────────────────
+  {title:"Google Pixelbook i5 8GB 128GB",                keywords:["google pixelbook i5","pixelbook 2017 i5"], price:155, source:"market"},
+  {title:"Google Pixelbook Go i5 8GB 64GB",              keywords:["google pixelbook go i5","pixelbook go 2019"], price:175, source:"market"},
+  {title:"Google Pixelbook Go i7 16GB 256GB",            keywords:["google pixelbook go i7","pixelbook go i7"], price:320, source:"market"},
+
+  // ── Huawei MateBook ───────────────────────────────────────────
+  {title:"Huawei MateBook D14 Ryzen 5 8GB 512GB",        keywords:["huawei matebook d14","matebook d14 ryzen 5"], price:290, source:"market"},
+  {title:"Huawei MateBook X Pro i7 16GB 1TB",            keywords:["huawei matebook x pro","matebook x pro i7"], price:680, source:"market"},
+
+  // ── Framework ────────────────────────────────────────────────
+  {title:"Framework Laptop 13 i5 12th Gen 8GB 256GB",    keywords:["framework laptop 13 i5","framework 13 12th gen i5"], price:380, source:"market"},
+  {title:"Framework Laptop 13 Ryzen 7 16GB 512GB",       keywords:["framework laptop 13 ryzen 7","framework 13 amd ryzen 7"], price:500, source:"market"},
+  {title:"Framework Laptop 16 Ryzen 9 RX 7700S 32GB",    keywords:["framework laptop 16","framework 16 ryzen 9"], price:950, source:"market"},
+
+  // ── Chromebooks ───────────────────────────────────────────────
+  {title:"Lenovo Chromebook Flex 5 i3 8GB 64GB",         keywords:["lenovo chromebook flex 5","chromebook flex 5 i3"], price:120, source:"market"},
+  {title:"Dell Chromebook 3100 Celeron 4GB 32GB",        keywords:["dell chromebook 3100","chromebook 3100 celeron"], price:60, source:"market"},
+  {title:"Acer Chromebook 315 Celeron 4GB 64GB",         keywords:["acer chromebook 315","chromebook 315 celeron"], price:75, source:"market"},
+
+  // ── Existing SYG sold laptop data ────────────────────────────
   {title:"Asus Zephyrus G16 Ultra 9 RTX 5070 Ti 32GB", keywords:["asus zephyrus g16","zephyrus g16 rtx 5070 ti","asus ultra 9 5070ti"], price:2090.00, source:"sold"},
   {title:"Acer Predator Helios Neo 14 RTX 5070 32GB",keywords:["acer predator helios","predator helios neo","rtx 5070 laptop"], price:1249.99, source:"sold"},
   {title:"Apple MacBook Pro 16 M1 Max 64GB 1TB",  keywords:["macbook pro 16 m1 max","macbook m1 max 64gb","a2485 m1 max"], price:1249.99, source:"sold"},
-  {title:"Apple MacBook Pro 14 M2 Pro 16GB 1TB",  keywords:["macbook pro 14 m2 pro","macbook m2 pro 14","a2279 m2 pro"], price:949.99, source:"active"},
-  {title:"Apple MacBook Pro 16 M1 Pro 16GB 512GB",keywords:["macbook pro 16 m1 pro","macbook m1 pro 512gb","a2485 m1 pro"], price:699.99, source:"active"},
+  {title:"Apple MacBook Pro 14 M2 Pro 16GB 1TB",  keywords:["macbook pro 14 m2 pro","macbook m2 pro 14","a2779 m2 pro"], price:949.99, source:"market"},
+  {title:"Apple MacBook Pro 16 M1 Pro 16GB 512GB",keywords:["macbook pro 16 m1 pro","macbook m1 pro 512gb","a2485 m1 pro"], price:699.99, source:"market"},
   {title:"Lenovo Legion 7i Core i9 RTX 4070 32GB",keywords:["lenovo legion 7i","legion 7i rtx 4070","legion i9 14900hx"], price:1399.99, source:"sold"},
-  {title:"ASUS TUF Gaming F16 i5 RTX 5050",      keywords:["asus tuf f16","tuf gaming f16","asus rtx 5050"], price:999.99, source:"active"},
+  {title:"ASUS TUF Gaming F16 i5 RTX 5050",      keywords:["asus tuf f16","tuf gaming f16","asus rtx 5050"], price:999.99, source:"market"},
   {title:"Lenovo ThinkPad X1 2-in-1 Gen 9 Core Ultra 5",keywords:["thinkpad x1 2-in-1","x1 2in1 gen 9","thinkpad 2 in 1"], price:825.97, source:"sold"},
   {title:"Dell Precision 5570 i7-12800H RTX A2000", keywords:["dell precision 5570","precision 5570 rtx","precision 5570 i7"], price:699.99, source:"sold"},
   {title:"Lenovo T14 Gen 3 i7 16GB 512GB",        keywords:["lenovo t14 gen 3","t14 g3","lenovo t14 i7"], price:359.99, source:"sold"},
@@ -4966,130 +6110,63 @@ const HAZ_STORE_PRICES = [
   {title:"Apple MacBook Pro 13 2016 TouchBar i5", keywords:["macbook pro touchbar 2016","a1706 2016"], price:159.99, source:"sold"},
   {title:"Apple MacBook Pro 13 2016 i5 8GB",      keywords:["macbook pro 13 2016","a1708 2016"], price:154.99, source:"sold"},
   {title:"Apple MacBook Air 2019 13 i5 8GB",      keywords:["macbook air 2019","macbook a1932"], price:170.00, source:"sold"},
-  {title:"Apple MacBook Pro 13 2020 For Parts",   keywords:["macbook pro 13 2020 parts","a2289 parts","macbook pro 2020 for parts"], price:84.99, source:"active"},
+  {title:"Apple MacBook Pro 13 2020 For Parts",   keywords:["macbook pro 13 2020 parts","a2289 parts","macbook pro 2020 for parts"], price:84.99, source:"market"},
   {title:"HP ProDesk 4 Mini G1i Core Ultra 5 16GB",keywords:["hp prodesk mini","prodesk g1i","hp mini desktop ultra"], price:509.99, source:"sold"},
   {title:"Dell Latitude 3550 i3 8GB 256GB",       keywords:["dell latitude 3550","latitude 3550 i3"], price:129.99, source:"sold"},
   {title:"HP Spectre 13 i7 8GB 256GB",            keywords:["hp spectre 13","spectre 13-4101","hp spectre i7 5500u"], price:100.99, source:"sold"},
   {title:"HP 15 Intel N200 4GB 128GB",            keywords:["hp 15 n200","hp laptop n200","hp 15-fd"], price:99.99, source:"sold"},
-  {title:"HP 15 Celeron 4GB 128GB",               keywords:["hp 15 celeron","hp 15 n4020","hp chromebook 11 parts"], price:35.99, source:"active"},
   {title:"Dell Precision M4600 i7 16GB",          keywords:["dell precision m4600","precision m4600"], price:82.97, source:"sold"},
-  {title:"Samsung NP470R5E i7 8GB HDD",           keywords:["samsung np470r5e","samsung laptop i7 3537u"], price:69.99, source:"sold"},
   {title:"Dell Latitude E5550 i5 12GB For Parts", keywords:["latitude e5550","dell e5550","latitude 5550 parts"], price:71.97, source:"sold"},
-  {title:"Dell Latitude 5480 For Parts",          keywords:["dell latitude 5480","latitude 5480 parts"], price:44.99, source:"sold"},
-  {title:"Dell Inspiron 15 3000 i3 For Parts",    keywords:["dell inspiron 15 parts","inspiron 3000 parts","dell i3 parts"], price:39.99, source:"active"},
-  {title:"HP 15 For Parts No Power",              keywords:["hp 15 no power","hp laptop for parts","hp 15-dy for parts"], price:64.99, source:"sold"},
-  {title:"Apple MacBook Pro 15 2018 Logic Board", keywords:["macbook pro 15 logic board","a1990 logic board","820-01041"], price:117.97, source:"sold"},
-  {title:"Lot 9 Mixed Chromebooks For Parts",     keywords:["chromebook lot","chromebook bulk","mixed chromebooks"], price:139.00, source:"sold"},
-  // ── DESKTOPS ─────────────────────────────────────────────────
+  // ── Desktops ─────────────────────────────────────────────────
   {title:"Custom Gaming Desktop i7-12700K RTX 3070 Ti", keywords:["gaming desktop 3070ti","gaming pc 12700k","custom gaming rtx 3070 ti"], price:775.00, source:"sold"},
   {title:"Custom Desktop Ryzen 7 2700X RX 6800 XT",keywords:["custom desktop ryzen 7","ryzen 7 2700x desktop","rx 6800xt desktop"], price:550.00, source:"sold"},
-  {title:"Acer N50-640 Desktop i5 RTX 3050 16GB", keywords:["acer n50 desktop","acer desktop i5 rtx 3050","acer n50-640"], price:585.97, source:"sold"},
-  {title:"Dell Inspiron 3030s SFF i5-14400 8GB",  keywords:["dell inspiron 3030s","dell sff i5 14400","inspiron 3030"], price:379.99, source:"active"},
   {title:"Dell OptiPlex 5080 Micro i7 16GB",      keywords:["dell optiplex 5080","optiplex 5080 i7"], price:189.99, source:"sold"},
   {title:"Dell OptiPlex 3050 Micro i5 8GB",       keywords:["dell optiplex 3050","optiplex 3050 micro","optiplex 3050 i5"], price:66.66, source:"sold"},
-  {title:"Dell OptiPlex 3070 Micro Untested",     keywords:["dell optiplex 3070","optiplex 3070 untested","optiplex 3070 no power"], price:54.97, source:"sold"},
   // ── GPUs ─────────────────────────────────────────────────────
   {title:"MSI RTX 4090 SUPRIM Liquid X 24GB",     keywords:["rtx 4090","msi rtx 4090","rtx 4090 suprim"], price:2499.99, source:"sold"},
-  {title:"ASRock RX 7900 XTX 24GB Damaged PCB",   keywords:["rx 7900 xtx damaged","7900 xtx pcb damage","asrock 7900 xtx"], price:559.99, source:"active"},
   {title:"EVGA RTX 2070 XC Ultra 8GB",            keywords:["rtx 2070","evga 2070","geforce rtx 2070"], price:159.99, source:"sold"},
-  {title:"Gigabyte GTX 1070 8GB For Parts",       keywords:["gtx 1070 parts","1070 for parts"], price:49.99, source:"sold"},
+  {title:"GTX 1070 8GB For Parts",                keywords:["gtx 1070 parts","1070 for parts","gtx 1070"], price:49.99, source:"sold"},
   {title:"NVIDIA Quadro M5000 8GB",               keywords:["quadro m5000","nvidia quadro m5000"], price:74.99, source:"sold"},
-  {title:"Intel Core i7-8700K Desktop Processor", keywords:["i7-8700k","intel i7 8700k","core i7 8700k"], price:69.99, source:"sold"},
-  // ── STORAGE — Samsung ────────────────────────────────────────
-  {title:"Samsung 870 EVO 2TB SATA 32% Health",   keywords:["870 evo 2tb low","samsung 870 evo 2tb 32%","mz-77e2t0 low"], price:129.99, source:"sold"},
-  {title:"Samsung 870 EVO 1TB SATA 94% Health",   keywords:["870 evo 1tb","samsung 870 evo","mz-77e1t0"], price:129.99, source:"sold"},
-  {title:"Samsung 870 EVO 1TB SATA 47% Health",   keywords:["870 evo 1tb 47%","samsung 870 evo 47","mz-77e1t0 47"], price:64.99, source:"sold"},
-  {title:"Samsung 870 QVO 1TB SATA 80%+",         keywords:["870 qvo 1tb","samsung 870 qvo","mz-77q1t0"], price:109.99, source:"sold"},
-  {title:"Samsung 860 EVO 1TB SATA 100%",         keywords:["860 evo 1tb","samsung 860 evo","mz-76e1t0"], price:109.99, source:"sold"},
-  {title:"Samsung 850 EVO 2TB For Parts",         keywords:["850 evo 2tb parts","samsung 850 evo 2tb","mz-75e2t0"], price:59.99, source:"sold"},
-  {title:"Samsung 990 Pro 2TB NVMe 47% Health",   keywords:["990 pro 2tb 47%","990 pro 47 health","mz-v9p2t0 47"], price:199.99, source:"sold"},
+  // ── Storage ──────────────────────────────────────────────────
+  {title:"Samsung 870 EVO 1TB SATA 94%",          keywords:["870 evo 1tb","samsung 870 evo","mz-77e1t0"], price:129.99, source:"sold"},
   {title:"Samsung 990 Pro 2TB NVMe For Parts",    keywords:["990 pro 2tb parts","990 pro for parts","990 pro low health"], price:59.99, source:"sold"},
-  {title:"Samsung 990 EVO Plus 4TB NVMe 100%",    keywords:["990 evo plus 4tb","mz-v9s4t0"], price:439.99, source:"sold"},
-  {title:"Samsung 980 Pro 2TB NVMe w/ Heatsink",  keywords:["980 pro 2tb heatsink","980 pro heatsink","mz-v8p2t0"], price:99.99, source:"sold"},
-  {title:"Samsung 970 EVO Plus 1TB NVMe 99%",     keywords:["970 evo plus 1tb","samsung 970 evo plus 1tb","mz-v7s1t0"], price:134.99, source:"sold"},
-  {title:"Samsung 970 EVO Plus 2TB NVMe 81%",     keywords:["970 evo plus 2tb","mz-v7s2t0"], price:84.99, source:"sold"},
-  {title:"Samsung PM883 1.92TB SATA 94%",         keywords:["pm883 1.92tb","mz-7lh1t90"], price:189.99, source:"sold"},
-  {title:"Samsung 16GB DDR5 5600MHz Lot of 13",   keywords:["samsung ddr5 5600 lot 13","samsung 16gb ddr5 lot","samsung ddr5 5600"], price:1249.97, source:"sold"},
-  // ── STORAGE — Kingston ───────────────────────────────────────
-  {title:"Kingston KC3000 1TB NVMe 100%",         keywords:["kc3000 1tb","skc3000s/1024g"], price:119.99, source:"sold"},
-  {title:"Kingston KC3000 1TB NVMe 89%",          keywords:["kc3000 1tb 89%","kc3000 89"], price:114.99, source:"sold"},
-  {title:"Kingston KC3000 4TB NVMe 100%",         keywords:["kc3000 4tb","skc3000d/4096g"], price:399.99, source:"sold"},
-  {title:"Kingston KC2500 1TB NVMe 100%",         keywords:["kc2500 1tb","skc2500m8/1000g"], price:109.99, source:"sold"},
-  {title:"Kingston DC500R 480GB SATA 58% Health", keywords:["dc500r 480gb 58%","sedc500r/480g 58"], price:27.99, source:"active"},
-  {title:"Kingston DC500R 480GB SATA 86-100%",    keywords:["dc500r 480gb","sedc500r/480g"], price:39.99, source:"sold"},
-  {title:"Kingston DC500R 960GB SATA 98%",        keywords:["dc500r 960gb","sedc500r/960g"], price:109.99, source:"active"},
-  {title:"Kingston DC500R 3.84TB SATA 96-99%",    keywords:["dc500r 3.84tb","sedc500r/3840g","dc500r 3840gb"], price:419.99, source:"active"},
-  {title:"Kingston DC500R 960GB SATA 77%",        keywords:["dc500r 960gb 77%","sedc500r/960g 77"], price:49.99, source:"sold"},
-  {title:"Kingston DC500R 1.92TB SATA 97%",       keywords:["dc500r 1.92tb","sedc500r/1920g"], price:189.99, source:"sold"},
-  {title:"Kingston DC600M 480GB SATA 100%",       keywords:["dc600m 480gb","sedc600m/480g"], price:79.99, source:"active"},
-  {title:"Kingston DC600M 960GB SATA 100%",       keywords:["dc600m 960gb","sedc600m/960g"], price:109.99, source:"sold"},
-  {title:"Kingston DC400 480GB SATA 85%",         keywords:["dc400 480gb","sedc400s37/480g"], price:26.99, source:"sold"},
-  {title:"Kingston 120GB SATA SSD 72%",           keywords:["kingston 120gb ssd","sv300s37a"], price:19.99, source:"sold"},
-  // ── STORAGE — Crucial ────────────────────────────────────────
-  {title:"Crucial MX500 2TB SATA 96-99% Health",  keywords:["crucial mx500 2tb","ct2000mx500ssd1","mx500 2tb good"], price:159.99, source:"sold"},
-  {title:"Crucial MX500 2TB SATA For Parts",      keywords:["crucial mx500 2tb parts","mx500 2tb for parts","ct2000mx500 parts"], price:59.99, source:"sold"},
-  {title:"Crucial MX500 4TB SATA For Parts",      keywords:["crucial mx500 4tb parts","ct4000mx500 parts","mx500 4tb parts"], price:109.99, source:"sold"},
-  {title:"Crucial MX200 1TB SATA Bad Health",     keywords:["crucial mx200 1tb","ct1000mx200ssd1","mx200 bad health"], price:59.99, source:"sold"},
-  {title:"Crucial P3 Plus 4TB NVMe 97%",          keywords:["crucial p3 plus 4tb","ct4000p3pssd8","p3 plus 4tb"], price:399.99, source:"sold"},
-  // ── STORAGE — Other ──────────────────────────────────────────
-  {title:"WD Blue SN550 1TB NVMe 99%",            keywords:["wd blue sn550 1tb","wds100t2b0c","sn550 1tb"], price:44.99, source:"sold"},
-  {title:"WD Blue SA510 4TB SATA 100%",           keywords:["wd blue sa510 4tb","sa510 4tb"], price:289.99, source:"sold"},
-  {title:"Intel 660p 1TB NVMe 53-54%",            keywords:["intel 660p 1tb","ssdpeknw010t8"], price:86.99, source:"sold"},
-  {title:"Micron 7450 3.84TB NVMe Enterprise",    keywords:["micron 7450 3.84tb","mtfdkbg3t8tfr"], price:699.99, source:"sold"},
-  {title:"Micron 7450 1.92TB NVMe Enterprise",    keywords:["micron 7450 1.92tb","mtfdkbg1t9tfr"], price:419.99, source:"sold"},
-  {title:"Seagate Barracuda 1TB 2.5 HDD New",     keywords:["barracuda 1tb","st1000lm049","seagate barracuda laptop"], price:59.99, source:"sold"},
-  {title:"Thinksystem 900GB 15K SAS HDD",         keywords:["thinksystem 900gb","al14sxb90ee","15k sas drive"], price:59.99, source:"sold"},
-  {title:"Lot of 29 Mixed 2TB NVMe For Parts",    keywords:["nvme lot 29","mixed nvme lot","2tb nvme lot"], price:2610.00, source:"sold"},
+  {title:"Samsung 980 Pro 2TB NVMe",              keywords:["980 pro 2tb","980 pro heatsink","mz-v8p2t0"], price:99.99, source:"sold"},
+  {title:"Samsung 970 EVO Plus 1TB NVMe",         keywords:["970 evo plus 1tb","samsung 970 evo plus 1tb","mz-v7s1t0"], price:134.99, source:"sold"},
+  {title:"Kingston KC3000 1TB NVMe",              keywords:["kc3000 1tb","skc3000s/1024g"], price:119.99, source:"sold"},
+  {title:"Kingston KC3000 4TB NVMe",              keywords:["kc3000 4tb","skc3000d/4096g"], price:399.99, source:"sold"},
+  {title:"Kingston KC2500 1TB NVMe",              keywords:["kc2500 1tb","skc2500m8/1000g"], price:109.99, source:"sold"},
+  {title:"Kingston DC500R 480GB SATA",            keywords:["dc500r 480gb","sedc500r/480g"], price:39.99, source:"sold"},
+  {title:"Kingston DC500R 3.84TB SATA",           keywords:["dc500r 3.84tb","sedc500r/3840g","dc500r 3840gb"], price:419.99, source:"market"},
+  {title:"Kingston DC600M 480GB SATA",            keywords:["dc600m 480gb","sedc600m/480g"], price:79.99, source:"market"},
+  {title:"Kingston DC600M 960GB SATA",            keywords:["dc600m 960gb","sedc600m/960g"], price:109.99, source:"sold"},
+  {title:"Crucial MX500 2TB SATA",                keywords:["crucial mx500 2tb","ct2000mx500ssd1","mx500 2tb"], price:159.99, source:"sold"},
+  {title:"WD Blue SN550 1TB NVMe",               keywords:["wd blue sn550 1tb","wds100t2b0c","sn550 1tb"], price:44.99, source:"sold"},
+  {title:"Micron 7450 3.84TB NVMe",              keywords:["micron 7450 3.84tb","mtfdkbg3t8tfr"], price:699.99, source:"sold"},
+  {title:"Micron 7450 1.92TB NVMe",              keywords:["micron 7450 1.92tb","mtfdkbg1t9tfr"], price:419.99, source:"sold"},
   // ── RAM ──────────────────────────────────────────────────────
-  {title:"SK Hynix 21x 16GB DDR5 4800MHz SODIMM Lot", keywords:["sk hynix ddr5 lot","hynix ddr5 21","hmcg78mebsa092n"], price:2449.99, source:"sold"},
-  {title:"Samsung 7x 16GB DDR5 4800MHz SODIMM Lot",keywords:["samsung ddr5 lot 7","samsung ddr5 16gb lot","m425r2ga3bb0"], price:799.99, source:"sold"},
-  {title:"TeamGroup 16GB DDR4 3200MHz 2x8GB Kit", keywords:["teamgroup 16gb ddr4","team group ddr4 3200","teamgroup ddr4 kit"], price:60.00, source:"sold"},
-  {title:"Micron 64GB (2x32GB) DDR4 PC4-3200AA",  keywords:["micron 64gb ddr4","pc4-3200aa 64gb"], price:59.99, source:"sold"},
+  {title:"Samsung 16GB DDR5 5600MHz Lot",         keywords:["samsung ddr5 5600 lot","samsung 16gb ddr5 lot","samsung ddr5 5600"], price:1249.97, source:"sold"},
   {title:"Corsair Vengeance DDR5 Light Kit",       keywords:["corsair ddr5 light kit","cmhlekit-d5"], price:9.99, source:"sold"},
-  // ── AUDIO / HEADPHONES ───────────────────────────────────────
-  {title:"Apple AirPods Max USB-C Midnight",      keywords:["airpods max usb-c","airpods max usbc","airpods max midnight"], price:239.99, source:"sold"},
-  {title:"Beats Solo 4 Wireless Headphones",      keywords:["beats solo 4","beats solo 4 wireless"], price:69.99, source:"sold"},
-  {title:"Crown DSi 6000 2-Channel Power Amp",    keywords:["crown dsi 6000","crown power amp","crown dsi6000"], price:699.99, source:"active"},
-  // ── WEARABLES ────────────────────────────────────────────────
-  {title:"Garmin Forerunner 970 47mm AMOLED GPS", keywords:["garmin forerunner 970","forerunner 970","garmin gps watch"], price:609.99, source:"sold"},
-  {title:"Garmin Fenix 8 Pro 51mm New",           keywords:["garmin fenix 8 pro","fenix 8 pro 51mm","garmin fenix 8"], price:899.99, source:"active"},
-  {title:"Garmin Fenix 8 47mm AMOLED New",        keywords:["garmin fenix 8 47mm","fenix 8 47","garmin fenix 8 amoled"], price:749.99, source:"active"},
+  // ── Audio / Wearables ────────────────────────────────────────
+  {title:"Apple AirPods Max USB-C",               keywords:["airpods max usb-c","airpods max usbc","airpods max midnight"], price:239.99, source:"sold"},
+  {title:"Beats Solo 4 Wireless",                 keywords:["beats solo 4","beats solo 4 wireless"], price:69.99, source:"sold"},
+  {title:"Garmin Forerunner 970",                 keywords:["garmin forerunner 970","forerunner 970"], price:609.99, source:"sold"},
+  {title:"Garmin Fenix 8 Pro 51mm",               keywords:["garmin fenix 8 pro","fenix 8 pro 51mm"], price:899.99, source:"market"},
   {title:"Ray-Ban Meta Wayfarer Smart Glasses",   keywords:["ray-ban meta wayfarer","ray ban meta smart glasses","rw4006"], price:189.99, source:"sold"},
-  {title:"Samsung Galaxy S23 Ultra Smartwatch",   keywords:["galaxy watch fe","samsung watch fe","galaxy watch"], price:54.97, source:"active"},
-  // ── GAMING ACCESSORIES ───────────────────────────────────────
-  {title:"Microsoft Xbox Series Wireless Controller Shock Blue", keywords:["xbox series controller blue","xbox wireless controller shock blue","1914 controller"], price:35.00, source:"sold"},
-  {title:"Sony PlayStation Portal PS5",           keywords:["playstation portal","ps portal","cfi-y1001","ps5 remote player"], price:134.99, source:"sold"},
-  {title:"Nintendo Switch Sports + Ring Fit Strap",keywords:["switch sports ring fit","nintendo switch sports game","ring fit strap"], price:29.99, source:"sold"},
-  // ── CAMERAS / AV ─────────────────────────────────────────────
-  {title:"Sony Handycam FDR-AX33 4K Camcorder",  keywords:["sony handycam fdr-ax33","sony 4k camcorder","fdr-ax33"], price:489.99, source:"sold"},
-  {title:"DJI Pocket 2 Creator Combo 4K",         keywords:["dji pocket 2","pocket 2 creator"], price:244.99, source:"sold"},
-  {title:"AXIS P1265 Network Security Camera",    keywords:["axis p1265","axis camera","axis network camera"], price:209.00, source:"sold"},
-  // ── APPLE ACCESSORIES ────────────────────────────────────────
-  {title:"Apple Pencil USB-C White",              keywords:["apple pencil usb-c","apple pencil usbc","a3085"], price:39.99, source:"sold"},
-  {title:"Apple Pencil 1st Gen White",            keywords:["apple pencil 1st gen","apple pencil a1603","mk0c2am"], price:29.99, source:"sold"},
-  // ── COMPUTER ACCESSORIES / NETWORKING ────────────────────────
-  {title:"HP USB-C G5 Essential Dock",            keywords:["hp usb-c dock","hp g5 dock"], price:46.00, source:"sold"},
-  {title:"TP-Link 16-Port Gigabit Switch",        keywords:["tp-link switch","tl-sg1016gd","gigabit switch 16 port"], price:29.99, source:"active"},
-  {title:"Google Nest Thermostat 4th Gen",        keywords:["google nest thermostat","nest thermostat 4th","g4cvz thermostat"], price:29.99, source:"active"},
-  // ── MOTHERBOARDS / COMPONENTS ────────────────────────────────
-  {title:"ASRock B460M PRO4 + i5-10400",         keywords:["asrock b460m","b460m pro4 i5"], price:179.99, source:"sold"},
-  {title:"ASUS Prime Z370-A Motherboard",         keywords:["asus prime z370","z370-a motherboard"], price:63.99, source:"sold"},
-  // ── POWER TOOLS ──────────────────────────────────────────────
-  {title:"Milwaukee M18 FUEL Impact Wrench",      keywords:["milwaukee m18 impact wrench","milwaukee 2767","m18 fuel 1/2 impact"], price:174.99, source:"sold"},
-  {title:"Milwaukee M18 Impact Driver",           keywords:["milwaukee m18 impact driver","milwaukee 2656","m18 impact driver"], price:80.00, source:"sold"},
-  {title:"Ryobi P519 18V Reciprocating Saw",      keywords:["ryobi reciprocating saw","ryobi p519","ryobi 18v saw"], price:39.99, source:"sold"},
-  {title:"DeWalt DCS355 20V Oscillating Tool",    keywords:["dewalt oscillating","dewalt dcs355","dewalt multi tool"], price:49.99, source:"sold"},
-  // ── HOME / OTHER ─────────────────────────────────────────────
-  {title:"Ninja BN751 1400W Blender New",         keywords:["ninja blender","ninja bn751","ninja 1400w blender"], price:120.00, source:"sold"},
-  {title:"Chamberlain myQ Garage Keypad",         keywords:["chamberlain myq","myq garage keypad","ch348"], price:33.87, source:"sold"},
-  {title:"dbx 263A De-Esser Studio Processor",    keywords:["dbx 263a","de-esser dbx"], price:69.99, source:"sold"},
-  {title:"LEGO Set Lot (5-13 sets)",              keywords:["lego lot","lego sets lot","lego bundle"], price:54.99, source:"active"},
-  // ── VIDEO GAMES ──────────────────────────────────────────────
-  {title:"PS4 Game",    keywords:["ps4 game","playstation 4 game","ps4 disc game"], price:10.00, source:"active"},
-  {title:"PS5 Game",    keywords:["ps5 game","playstation 5 game","ps5 disc"], price:25.00, source:"active"},
-  {title:"Switch Game", keywords:["switch game","nintendo switch game","switch cartridge"], price:25.00, source:"active"},
-  {title:"PS2 Game",    keywords:["ps2 game","playstation 2 game","ps2 disc"], price:8.00, source:"active"},
-  {title:"3DS Game",    keywords:["3ds game","nintendo 3ds game","3ds cartridge"], price:20.00, source:"active"},
+  // ── Game accessories ─────────────────────────────────────────
+  {title:"Xbox Series Wireless Controller",       keywords:["xbox series controller","xbox wireless controller","1914 controller"], price:35.00, source:"sold"},
+  // ── Video Games ──────────────────────────────────────────────
+  {title:"PS4 Game",    keywords:["ps4 game","playstation 4 game","ps4 disc game"], price:10.00, source:"market"},
+  {title:"PS5 Game",    keywords:["ps5 game","playstation 5 game","ps5 disc"], price:25.00, source:"market"},
+  {title:"Switch Game", keywords:["switch game","nintendo switch game","switch cartridge"], price:25.00, source:"market"},
+  {title:"PS2 Game",    keywords:["ps2 game","playstation 2 game","ps2 disc"], price:8.00, source:"market"},
+  {title:"3DS Game",    keywords:["3ds game","nintendo 3ds game","3ds cartridge"], price:20.00, source:"market"},
+  {title:"Xbox 360 Game",keywords:["xbox 360 game","360 disc","xbox 360 disc"], price:8.00, source:"market"},
+  {title:"Xbox One Game",keywords:["xbox one game","xbox one disc"], price:10.00, source:"market"},
+  {title:"Wii Game",    keywords:["wii game","nintendo wii game","wii disc"], price:8.00, source:"market"},
+  {title:"GameCube Game",keywords:["gamecube game","gamecube disc","gc game"], price:20.00, source:"market"},
+  {title:"N64 Game",    keywords:["n64 game","nintendo 64 game","n64 cartridge"], price:20.00, source:"market"},
+  {title:"GBA Game",    keywords:["gba game","game boy advance game","gba cartridge"], price:15.00, source:"market"},
+
 ];
 
 // ── Haz Inventory Velocity (days-to-sell from SYG order history) ──
@@ -5157,7 +6234,10 @@ function hazLocalMatch(text){
     if(score > bestScore){ bestScore = score; best = entry; }
   }
   // Require a score of at least 3 to avoid garbage matches
-  return bestScore >= 3 ? best : null;
+  if(bestScore < 3) return null;
+  // Map internal source tag to display label
+  const sourceLabel = best.source==='sold' ? 'SYG Sold' : best.source==='syg' ? 'SYG Listed' : 'Market Est';
+  return {...best, source: sourceLabel};
 }
 
 const HAZ_FEE_RATE   = 0.13;
@@ -6011,7 +7091,9 @@ function hazRenderChatResult(data, vibe){
     : ' <span style="font-size:9px;background:#FEF9C3;color:#92400E;padding:1px 5px;border-radius:4px;font-style:normal;">'+(data.confidence||'medium')+' confidence</span>';
   const sourceBadge = data.source
     ? ' <span style="font-size:9px;padding:1px 6px;border-radius:4px;font-style:normal;font-weight:700;'
-      + (data.source==='SYG Sold' ? 'background:#DCFCE7;color:#166534;">' : 'background:#DBEAFE;color:#1D4ED8;">')
+      + (data.source==='SYG Sold'   ? 'background:#DCFCE7;color:#166534;">'   // green  — confirmed store sale
+       : data.source==='SYG Listed' ? 'background:#DBEAFE;color:#1D4ED8;">'   // blue   — currently in our store
+       :                              'background:#F3F4F6;color:#6B7280;">')   // gray   — market estimate
       + data.source+'</span>'
     : '';
 
