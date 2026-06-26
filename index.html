@@ -2432,6 +2432,473 @@
     40%  { opacity: .4; }
     100% { transform: translateY(-110vh) translateX(var(--drift)) scale(3.5); opacity: 0; }
   }
+
+  /* ═══════════════════════════════════════════════════════
+     TEXT READABILITY FIXES — Code Lookup + Suggestions
+     ═══════════════════════════════════════════════════════ */
+
+  /* ── Search highlight marks — was yellow on dark, unreadable ── */
+  .wan-panel mark,
+  .wan-panel .highlight,
+  .outer mark,
+  .outer .highlight {
+    background: rgba(99,102,241,.35) !important;
+    color: #E8EBF8 !important;
+    border-radius: 3px !important;
+    padding: 0 2px !important;
+  }
+
+  /* ── Code list row text — main description ── */
+  .wan-panel .desc,
+  .outer .desc {
+    color: rgba(255,255,255,.75) !important;
+    font-size: 12.5px !important;
+    line-height: 1.45 !important;
+  }
+
+  /* ── Code pill (the SKU label on left of row) ── */
+  .wan-panel .code,
+  .outer .code {
+    color: #c7caff !important;
+    font-weight: 800 !important;
+    font-size: 12px !important;
+    background: rgba(99,102,241,.2) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    min-width: 60px !important;
+    text-align: center !important;
+    letter-spacing: .01em !important;
+  }
+
+  /* ── Copy hint text ── */
+  .wan-panel .copy-hint,
+  .outer .copy-hint {
+    color: rgba(255,255,255,.35) !important;
+    font-size: 10.5px !important;
+  }
+
+  /* ── Tag badges (1TB, 2TB etc) ── */
+  .wan-panel .tag,
+  .outer .tag {
+    background: rgba(99,102,241,.18) !important;
+    color: #a5b4fc !important;
+    font-weight: 700 !important;
+    font-size: 10px !important;
+    border: 1px solid rgba(99,102,241,.25) !important;
+    border-radius: 4px !important;
+    padding: 2px 6px !important;
+  }
+
+  /* ── "Wan thinks you mean" suggestion box ── */
+  .wan-panel .resolve,
+  .outer .resolve,
+  .wan-panel #logResolve,
+  .outer #logResolve,
+  .wan-panel .wanBanner,
+  .wan-panel #wanBanner,
+  .outer #wanBanner {
+    background: rgba(99,102,241,.12) !important;
+    border: 1px solid rgba(99,102,241,.3) !important;
+    border-radius: 10px !important;
+    padding: 10px 12px !important;
+    color: rgba(255,255,255,.7) !important;
+    font-size: 12.5px !important;
+  }
+
+  /* The "Wan thinks you mean:" label text */
+  .wan-panel .resolve b,
+  .outer .resolve b,
+  .wan-panel #wanBanner b {
+    color: #a5b4fc !important;
+  }
+
+  /* The resolved drive description line (green text) */
+  .wan-panel .resolve-desc,
+  .outer .dp-sku-resolved {
+    color: #6EE7B7 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+  }
+
+  /* ── "MPN was constructed from pattern" warning ── */
+  .wan-panel .resolve .warn-text,
+  .outer .warn-text,
+  .wan-panel [class*="warn"],
+  .outer [class*="warn"] {
+    color: #fbbf24 !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+  }
+
+  /* ── Accept / Edit / Dismiss buttons in suggestion box ── */
+  .wan-panel .accept-btn,
+  .outer .accept-btn,
+  .wan-panel .wanAccept,
+  .outer .wanAccept,
+  .wan-panel #wanAccept {
+    background: rgba(34,197,94,.2) !important;
+    border: 1px solid rgba(34,197,94,.35) !important;
+    color: #86efac !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    font-size: 11.5px !important;
+    padding: 5px 12px !important;
+  }
+  .wan-panel .wanEdit,
+  .outer .wanEdit,
+  .wan-panel #wanEdit {
+    background: rgba(255,255,255,.06) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    color: rgba(255,255,255,.55) !important;
+    border-radius: 6px !important;
+    font-size: 11.5px !important;
+    padding: 5px 12px !important;
+  }
+  .wan-panel .wanDismiss,
+  .outer .wanDismiss,
+  .wan-panel #wanDismiss {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    color: rgba(255,255,255,.3) !important;
+    border-radius: 6px !important;
+    font-size: 11.5px !important;
+    padding: 5px 12px !important;
+  }
+
+  /* ── Code recipe hint text ── */
+  .wan-panel .recipe,
+  .outer .recipe {
+    color: rgba(255,255,255,.5) !important;
+    font-size: 11.5px !important;
+    line-height: 1.5 !important;
+    background: rgba(255,255,255,.03) !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+    border: 1px solid rgba(255,255,255,.06) !important;
+  }
+  .wan-panel .recipe code,
+  .outer .recipe code {
+    color: #a5b4fc !important;
+    font-size: 11px !important;
+    background: rgba(99,102,241,.15) !important;
+    padding: 1px 4px !important;
+    border-radius: 3px !important;
+  }
+
+  /* ── Add a new code panel — input fields ── */
+  .wan-panel .addgrid input,
+  .outer .addgrid input {
+    color: #E8EBF8 !important;
+    font-size: 13px !important;
+    background: rgba(255,255,255,.05) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    border-radius: 8px !important;
+  }
+  .wan-panel .addgrid input::placeholder,
+  .outer .addgrid input::placeholder {
+    color: rgba(255,255,255,.28) !important;
+  }
+  .wan-panel .addgrid input:focus,
+  .outer .addgrid input:focus {
+    border-color: #6366F1 !important;
+    background: rgba(99,102,241,.08) !important;
+  }
+
+  /* ── Group header in code list (e.g. "Crucial") ── */
+  .wan-panel .group-head,
+  .outer .group-head,
+  .wan-panel .list-group-label,
+  .outer .list-group-label {
+    color: rgba(255,255,255,.35) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .1em !important;
+    padding: 10px 4px 5px !important;
+  }
+
+  /* ── Buttons inside rows (Edit, ×) ── */
+  .wan-panel .row .edit-btn,
+  .wan-panel .row button,
+  .outer .row button {
+    background: rgba(255,255,255,.07) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    color: rgba(255,255,255,.55) !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+  }
+  .wan-panel .row button:hover,
+  .outer .row button:hover {
+    background: rgba(255,255,255,.13) !important;
+    color: #fff !important;
+  }
+
+  /* ── "Format assist:" label and mode toggle ── */
+  .wan-panel .mode-toggle-label,
+  .outer .mode-toggle-label {
+    color: rgba(255,255,255,.38) !important;
+    font-size: 10.5px !important;
+  }
+
+  /* ── Section header text inside code lookup panel ── */
+  .wan-panel .add summary,
+  .outer .add summary {
+    color: rgba(255,255,255,.7) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+
+  /* ── Precise row element overrides (real class names) ── */
+  .wan-panel .copyhint,
+  .outer .copyhint {
+    color: rgba(255,255,255,.28) !important;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    letter-spacing: .06em !important;
+    font-weight: 600 !important;
+  }
+  .wan-panel .editbtn,
+  .outer .editbtn {
+    background: rgba(255,255,255,.07) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    color: rgba(255,255,255,.6) !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 4px 10px !important;
+    cursor: pointer !important;
+  }
+  .wan-panel .editbtn:hover,
+  .outer .editbtn:hover {
+    background: rgba(99,102,241,.2) !important;
+    color: #a5b4fc !important;
+    border-color: rgba(99,102,241,.4) !important;
+  }
+  .wan-panel .delbtn,
+  .outer .delbtn {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    color: rgba(255,255,255,.25) !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    cursor: pointer !important;
+  }
+  .wan-panel .delbtn:hover,
+  .outer .delbtn:hover {
+    background: rgba(239,68,68,.12) !important;
+    border-color: rgba(239,68,68,.3) !important;
+    color: #fca5a5 !important;
+  }
+  .wan-panel .badge,
+  .outer .badge {
+    background: rgba(99,102,241,.18) !important;
+    color: #a5b4fc !important;
+    border: 1px solid rgba(99,102,241,.25) !important;
+    border-radius: 4px !important;
+    font: 700 10px/1 var(--mono) !important;
+    padding: 3px 6px !important;
+  }
+  .wan-panel .ff,
+  .outer .ff {
+    color: rgba(255,255,255,.35) !important;
+    font-size: 10.5px !important;
+    font-style: italic !important;
+  }
+  .wan-panel .star,
+  .outer .star {
+    color: rgba(99,102,241,.6) !important;
+    font-weight: 700 !important;
+  }
+  /* ── wanBanner inner content — fix all text inside it ── */
+  .wan-panel #wanBanner *,
+  .outer #wanBanner * {
+    font-size: 12.5px !important;
+    line-height: 1.5 !important;
+  }
+  .wan-panel #wanBanner .warn,
+  .outer #wanBanner .warn,
+  .wan-panel #wanBanner [class*="warn"],
+  .outer #wanBanner [class*="warn"],
+  .wan-panel #wanBanner small,
+  .outer #wanBanner small {
+    color: #fbbf24 !important;
+    font-weight: 500 !important;
+    font-size: 11.5px !important;
+  }
+  /* Highlighted search match text — was yellow on dark */
+  .wan-panel b.hl,
+  .outer b.hl,
+  .wan-panel .hl,
+  .outer .hl {
+    color: #c7caff !important;
+    background: rgba(99,102,241,.25) !important;
+    font-weight: 700 !important;
+    border-radius: 2px !important;
+    padding: 0 1px !important;
+  }
+  /* ── "Wan" label in suggestion box ── */
+  .wan-panel #wanBanner .wan-label,
+  .outer #wanBanner .wan-label {
+    color: #818CF8 !important;
+    font-weight: 700 !important;
+  }
+
+  /* ── <mark> highlight from search — the real output of hl() ── */
+  .wan-panel mark,
+  .outer mark {
+    background: rgba(99,102,241,.3) !important;
+    color: #dde0ff !important;
+    border-radius: 3px !important;
+    padding: 0 2px !important;
+    font-weight: 700 !important;
+  }
+  /* Row overall — ensure text doesn't get washed out */
+  .wan-panel .row,
+  .outer .row {
+    color: rgba(255,255,255,.82) !important;
+  }
+  /* Desc specifically — full brightness readable text */
+  .wan-panel .desc,
+  .outer .desc {
+    color: rgba(255,255,255,.72) !important;
+    font-size: 12.5px !important;
+    line-height: 1.45 !important;
+  }
+  /* Code pill — bright indigo label */
+  .wan-panel .code,
+  .outer .code {
+    color: #c7caff !important;
+    font-weight: 800 !important;
+    font-size: 11.5px !important;
+    background: rgba(99,102,241,.22) !important;
+    border: 1px solid rgba(99,102,241,.3) !important;
+    border-radius: 7px !important;
+    padding: 5px 9px !important;
+    min-width: 64px !important;
+    text-align: center !important;
+    letter-spacing: .02em !important;
+    flex: none !important;
+  }
+
+  /* ══════════════════════════════════════════════
+     READABILITY FIXES v2
+     ══════════════════════════════════════════════ */
+
+  /* ── Kill blue tint on text — use neutral highlight ── */
+  .wan-panel mark,
+  .outer mark {
+    background: rgba(255,255,255,.18) !important;
+    color: #ffffff !important;
+    border-radius: 2px !important;
+    padding: 0 1px !important;
+    font-weight: 700 !important;
+  }
+
+  /* ── Wan suggestion banner — dark, no blue wash ── */
+  .wan-panel #wanBanner,
+  .outer #wanBanner {
+    background: #131628 !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    border-radius: 10px !important;
+    color: rgba(255,255,255,.82) !important;
+    font-size: 12.5px !important;
+    padding: 10px 12px !important;
+  }
+  .wan-panel #wanBanner *,
+  .outer #wanBanner * {
+    background: transparent !important;
+    color: rgba(255,255,255,.82) !important;
+  }
+  /* The resolved drive line — keep it visually distinct */
+  .wan-panel #wanBanner .resolve-preview,
+  .wan-panel #wanBanner b,
+  .outer #wanBanner b {
+    color: #a5b4fc !important;
+    font-weight: 700 !important;
+  }
+  /* Warning line inside banner */
+  .wan-panel #wanBanner small,
+  .wan-panel #wanBanner .warn,
+  .outer #wanBanner small {
+    color: #fbbf24 !important;
+    font-weight: 500 !important;
+    display: block !important;
+    margin-top: 4px !important;
+  }
+
+  /* ── Code recipe text — neutral, readable ── */
+  .wan-panel .recipe,
+  .outer .recipe {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255,255,255,.45) !important;
+    font-size: 11.5px !important;
+    padding: 4px 0 0 !important;
+  }
+  /* Code spans inside recipe — no blue tint */
+  .wan-panel .recipe b,
+  .outer .recipe b {
+    color: rgba(255,255,255,.7) !important;
+    background: transparent !important;
+  }
+
+  /* ── Storage/RAM seg toggle — fix light background ── */
+  .wan-panel .seg,
+  .outer .seg {
+    background: transparent !important;
+    border: none !important;
+    display: flex !important;
+    gap: 4px !important;
+  }
+  .wan-panel .seg button,
+  .outer .seg button {
+    background: rgba(255,255,255,.08) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    color: rgba(255,255,255,.5) !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 6px 16px !important;
+    transition: all .15s !important;
+  }
+  .wan-panel .seg button.on,
+  .outer .seg button.on {
+    background: #6366F1 !important;
+    border-color: #6366F1 !important;
+    color: #fff !important;
+    box-shadow: 0 2px 10px rgba(99,102,241,.35) !important;
+  }
+
+  /* ── Row description text — no blue background ── */
+  .wan-panel .desc,
+  .outer .desc {
+    color: rgba(255,255,255,.72) !important;
+    background: transparent !important;
+    font-size: 12.5px !important;
+  }
+
+  /* ── Code pill — cleaner, no blue wash on text inside ── */
+  .wan-panel .code,
+  .outer .code {
+    background: rgba(99,102,241,.2) !important;
+    color: #c7caff !important;
+    border: 1px solid rgba(99,102,241,.3) !important;
+    border-radius: 7px !important;
+    font-weight: 800 !important;
+    font-size: 11.5px !important;
+    padding: 5px 9px !important;
+    min-width: 64px !important;
+    text-align: center !important;
+  }
+  /* Text INSIDE code pill should never get the mark highlight */
+  .wan-panel .code mark,
+  .outer .code mark {
+    background: rgba(255,255,255,.25) !important;
+    color: #fff !important;
+    border-radius: 2px !important;
+  }
 </style>
 <body>
 
@@ -5698,7 +6165,18 @@ document.getElementById('blitzGenSlots').addEventListener('click',()=>{
 });
 
 document.getElementById('blitzCopyAll').addEventListener('click',()=>{
-  if(!LISTER_LOCKED){ toast('Lock in your name first'); return; }
+  // Allow if locked, or if name+batch are filled in toolbar
+  const tbName = document.getElementById('tbListerSelect')?.value || '';
+  const tbBatch = document.getElementById('tbListerBatch')?.value || '';
+  if(!LISTER_LOCKED && (!tbName || !tbBatch || tbBatch === 'RTL')) {
+    toast('Set your name and batch in the toolbar first'); return;
+  }
+  // Ensure LISTER_INITIAL and LISTER_BATCH are set even if lock wasn't formally hit
+  if(!LISTER_LOCKED && tbName && tbBatch) {
+    LISTER_INITIAL = tbName;
+    LISTER_BATCH = tbBatch;
+    LISTER_LOCKED = true;
+  }
   const code   = document.getElementById('blitzMasterCode').value.trim();
   const health = document.getElementById('blitzMasterHealth').value.trim();
   const notes  = document.getElementById('blitzMasterNotes').value.trim();
@@ -10656,6 +11134,9 @@ function syncToolbarToOriginal() {
     if (origBatch && tbBatch) origBatch.value = tbBatch.value;
     if (origGoal  && tbGoal)  { origGoal.value = tbGoal.value; origGoal.dispatchEvent(new Event('input')); }
     if (origPage  && tbPage)  { origPage.value = tbPage.value; origPage.dispatchEvent(new Event('change')); }
+    // Keep LISTER_INITIAL/BATCH in sync so Blitzting + dpLineFor always have them
+    if (tbName?.value)  { if(typeof LISTER_INITIAL !== 'undefined') LISTER_INITIAL = tbName.value; }
+    if (tbBatch?.value) { if(typeof LISTER_BATCH   !== 'undefined') LISTER_BATCH   = tbBatch.value; }
     updateHUD();
   }
 
@@ -10673,6 +11154,14 @@ function syncToolbarToOriginal() {
 
 // ── Lock in ────────────────────────────────────────────────────────
 document.getElementById('tbLockBtn')?.addEventListener('click', () => {
+  // Mirror toolbar values to original inputs before locking
+  const tbName  = document.getElementById('tbListerSelect');
+  const tbBatch = document.getElementById('tbListerBatch');
+  const origName  = document.getElementById('listerSelect');
+  const origBatch = document.getElementById('listerBatch');
+  if (tbName  && origName  && tbName.value)  origName.value  = tbName.value;
+  if (tbBatch && origBatch && tbBatch.value) origBatch.value = tbBatch.value;
+  // Trigger original lock
   document.getElementById('listerLockBtn')?.click();
   setTimeout(() => {
     const locked = document.getElementById('listerPillName')?.textContent;
