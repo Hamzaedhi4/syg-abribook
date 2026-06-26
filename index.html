@@ -12841,19 +12841,24 @@ function smoGetItems() {
 
 function smoRender() {
   const lister = smoGetLister();
+  console.log('[SMO] smoRender fired | lister:', JSON.stringify(lister));
   if (!lister) { smoRenderLockIn(); return; }
 
-  // Don't re-render if user is actively typing in the lock-in form
   const focused = document.activeElement;
   if (focused && focused.id === 'smo-batch-input') return;
+
+  const items  = smoGetItems();
+  console.log('[SMO] items:', items.length, JSON.stringify(items.map(x => x.sku)));
+
+  const overlay = document.getElementById('syg-mobile-overlay');
+  console.log('[SMO] overlay visible:', overlay?.classList.contains('visible'), '| display:', overlay?.style.display);
 
   const bottom = document.querySelector('.smo-bottom');
   if (bottom) bottom.style.display = '';
 
-  const items  = smoGetItems();
-  const done   = items.filter(x => x.photos.length > 0);
-  const total  = items.length;
-  const doneN  = done.length;
+  const done    = items.filter(x => x.photos.length > 0);
+  const total   = items.length;
+  const doneN   = done.length;
 
   const listerName = SMO_LISTERS.find(l => l.initial === lister.initial)?.name || lister.initial;
   document.getElementById('smo-batch-label').textContent =
