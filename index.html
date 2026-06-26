@@ -7666,96 +7666,79 @@ document.getElementById('promptCopyBtn').addEventListener('click', ()=>{
 
       <!-- Intro -->
       <div>
-        <p style="margin:0;color:var(--ink);">This tool was built to solve a real problem at SYG Elmwood Park: intake was slow, listings were inconsistent, and there was no single place to track what came in, what it was worth, and what got listed. Abribook fixes all three — it is the connective tissue between buying an item and it appearing correctly on Shopify.</p>
+        <p style="margin:0;color:var(--ink);">SYG already has a company platform that handles buying, inventory, and listings. Abribook sits on top of that — it's a speed layer built specifically for the buyer and lister at Elmwood Park. The goal is simple: get from item in hand to correct Shopify listing faster, with less back-and-forth, fewer mistakes, and no wasted steps in between.</p>
       </div>
 
       <!-- HAZ -->
       <div>
         <div style="font-size:12px;font-weight:800;color:var(--accent-ink);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:7px;"><span style="background:var(--accent-tint);padding:2px 8px;border-radius:20px;">⚡ Haz — Buying Assistant</span></div>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why it exists:</strong> Buyers need to make fast pricing decisions on used electronics without looking things up every time. Haz is a real-time price lookup engine trained on actual SYG sold data, current store listings, and general market estimates.</p>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">How it works:</strong> You type a device name and Haz searches its internal price database of <strong>974+ entries</strong> using keyword matching. Results are scored by how closely your query matches known keywords, then ranked by confidence. Every result is tagged with a source badge:</p>
+        <p style="margin:0 0 8px;">When a customer walks in with a device, a buyer needs to know what it's worth — fast. Looking it up every time slows the line down and opens the door to inconsistent offers. Haz gives you a price instantly based on what SYG has actually sold, what's currently listed in the store, and general market rates. You type the device name, you get a number, and you get a suggested offer range right there.</p>
         <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;display:flex;flex-direction:column;gap:5px;font-size:12.5px;">
-          <div><span style="display:inline-block;background:#DCFCE7;color:#166534;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">SYG Sold</span>Item was actually sold at this store. Most reliable signal.</div>
-          <div><span style="display:inline-block;background:#DBEAFE;color:#1D4ED8;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">SYG Listed</span>Currently priced in the store. Good directional reference.</div>
-          <div><span style="display:inline-block;background:#F3F4F6;color:#6B7280;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">Market Est</span>General used market estimate. Not from SYG — treat as a ceiling.</div>
+          <div><span style="display:inline-block;background:#DCFCE7;color:#166534;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">SYG Sold</span>What we actually sold it for — the most reliable number.</div>
+          <div><span style="display:inline-block;background:#DBEAFE;color:#1D4ED8;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">SYG Listed</span>What it's priced at in the store right now — a solid directional reference.</div>
+          <div><span style="display:inline-block;background:#F3F4F6;color:#6B7280;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">Market Est</span>General used market rate — not from SYG, so treat it as a rough ceiling.</div>
         </div>
-        <p style="margin:0;"><strong style="color:var(--ink);">Offer chips:</strong> Haz calculates a 🟢 Good / 🟡 Fair / 🔴 Low offer range automatically from the matched price, adjusted for typical SYG buy margins. Tap a chip to populate the Accepted At field. Haz stays in its lane — it is a buying tool only and does not touch listings.</p>
+        <p style="margin:0;">The 🟢 🟡 🔴 offer chips at the bottom do the math for you — tap one and the offer fills in automatically. Haz is strictly for buying. It doesn't touch the listing side.</p>
       </div>
 
       <!-- WAN -->
       <div>
         <div style="font-size:12px;font-weight:800;color:#7C3AED;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:20px;">📋 Wan — Intake &amp; Listing Engine</span></div>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why it exists:</strong> Listing refurbished electronics by hand is error-prone and slow. Wan standardizes how items are described so every listing that leaves this store has the same structure, the same HTML format, the same metafields. Consistency means fewer buyer questions, fewer returns, and better search visibility.</p>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Two modes, two item types:</strong></p>
+        <p style="margin:0 0 8px;">Once an item is bought, it needs to get listed — and listed correctly. The SYG platform generates a default listing, but those tend to be bare-bones: inconsistent descriptions, missing specs, no metafields. Wan is how we fix that. You log the item here, Claude takes those notes and rewrites the listing into the proper SYG format, with the right title, the right HTML table, and all the fields Shopify needs filled in.</p>
         <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;font-size:12.5px;display:flex;flex-direction:column;gap:8px;">
-          <div><strong style="color:var(--ink);">Batch mode</strong> (RAM / Storage) — You enter an Abribook code, health %, serial number, and notes. The code is a compact identifier like <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">S2990P</code> that maps to a full drive description. This keeps entries short and consistent. Each entry becomes a manifest line that feeds the <strong>/syg-listing-generator</strong> skill in Claude, which produces the final SEO title, HTML description, and metafields.</div>
-          <div><strong style="color:var(--ink);">Universal mode</strong> (CPUs, GPUs, Consoles, Laptops, Desktops, Phones, Motherboards) — You type the item's specs in plain English and fill structured fields. Wan generates a title preview, HTML table preview, and metafields in real time. These entries feed a separate <strong>listing-edit prompt</strong> in Claude that refines them for Shopify.</div>
+          <div><strong style="color:var(--ink);">Batch mode</strong> (RAM &amp; Storage) — For drives and RAM sticks, you just enter a short code like <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">S2990P</code>, the health %, and the serial number. The code already knows what the item is — you don't have to type it out every time. At the end of the session Claude turns those entries into complete, ready-to-post listings.</div>
+          <div><strong style="color:var(--ink);">Universal mode</strong> (Phones, Laptops, Consoles, GPUs, CPUs, Desktops, Motherboards) — For everything else, you describe what you're holding in plain English. Wan structures it into a clean manifest entry, and Claude uses that to overwrite the platform's default description with a proper one — consistent format, all specs filled in, nothing missing.</div>
         </div>
-        <p style="margin:0;"><strong style="color:var(--ink);">Why split?</strong> Storage and RAM are commodity items — they sell on health and model alone. The Abribook code system is purpose-built for that. Everything else (phones, laptops, consoles) needs richer per-unit detail that doesn't fit neatly into a code. Universal handles that free-form intake and structures it for Claude.</p>
+        <p style="margin:0;">The reason these two modes exist separately is because storage and RAM are straightforward commodity items — a short code captures everything. Phones, laptops, and consoles each have their own per-unit quirks that need more detail. Splitting them keeps each path clean and fast.</p>
       </div>
 
       <!-- BLITZTING -->
       <div>
-        <div style="font-size:12px;font-weight:800;color:#0891B2;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#CFFAFE;color:#0E7490;padding:2px 8px;border-radius:20px;">⚡ Blitzting — Fast Queue Feeder</span></div>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why it exists:</strong> When you receive a lot of the same model — say, 10 Kingston KC3000s from the same batch — filling each one out individually is repetitive and wastes time. Blitzting is the speed path for that scenario.</p>
+        <div style="font-size:12px;font-weight:800;color:#0891B2;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#CFFAFE;color:#0E7490;padding:2px 8px;border-radius:20px;">⚡ Blitzting — Speed Tools</span></div>
+        <p style="margin:0 0 8px;">Sometimes you're not logging one item — you're logging ten of the exact same drive. Blitzting has two tools built for that kind of volume.</p>
         <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;font-size:12.5px;display:flex;flex-direction:column;gap:8px;">
-          <div><strong style="color:var(--ink);">Template Clone</strong> — Enter the shared code, base health, and notes in the Master Entry. Check what differs per unit (health, serial, notes). Set quantity and hit Generate. Fill each slot's unique values — Wan will suggest the next serial number in hex sequence if it detects a pattern. Hit Add all to queue and every slot becomes a full Batch entry card in the queue, exactly as if you had logged each one manually.</div>
-          <div><strong style="color:var(--ink);">Speed Review</strong> — At the end of any session, switch here to flip through every entry in the queue (both Batch and Universal) one by one. Set the price and cost per item, adjust metafields, then Approve or Flag. Approved entries write their price and cost back to the source queue entry so the final exported prompt contains the confirmed values. Flagged entries stay in the list for a second pass.</div>
+          <div><strong style="color:var(--ink);">Template Clone</strong> — Fill in the shared info once (the model code, base health, notes), then generate slots for each unit. Each slot only asks for what's different — usually just the serial number and health. Hit Add all to queue and every unit lands in the queue as its own entry, just like if you'd logged each one by hand. Wan will even suggest the next serial number in sequence if the previous one follows a pattern.</div>
+          <div><strong style="color:var(--ink);">Speed Review</strong> — When you're done logging, flip through every entry in the queue one by one. Set the price, set the cost, fix anything that looks off, then approve it. Once you approve an entry its price and cost are locked in — so when you export to Claude, what you confirmed is what goes into the listing. Flag anything you're unsure about and come back to it.</div>
         </div>
-        <p style="margin:0;"><strong style="color:var(--ink);">Why Approve writes back:</strong> The queue is the source of truth. When you export the manifest prompt for Claude, it reads from the queue. If Speed Review edits stayed only in the review layer and not in the queue, the exported prompt would have stale data. Writeback ensures what you confirmed is what gets listed.</p>
+        <p style="margin:0;">Speed Review is the last checkpoint before the session goes to Claude. Catching a wrong price here is much better than catching it after the listing is already written.</p>
       </div>
 
-      <!-- QUEUE + PROMPT SPLIT -->
+      <!-- QUEUE + EXPORT -->
       <div>
-        <div style="font-size:12px;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:20px;">📤 The Queue &amp; Manifest Export</span></div>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why one queue for everything:</strong> Batch and Universal entries live in the same session queue so you can mix item types freely in one intake session without switching tools. The queue is entirely in-memory — it resets when you close the tab, which is intentional. Abribook is a session-based intake tool, not a database. The export to Claude is the handoff.</p>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">The prompt split:</strong> When you hit <strong>Copy Claude manifest-prep prompt</strong>, Abribook does something important — it splits the output by panel type:</p>
-        <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;font-size:12.5px;display:flex;flex-direction:column;gap:6px;">
-          <div><strong style="color:var(--ink);">Batch entries</strong> → go at the top with a header telling you to load the <strong>/syg-listing-generator skill</strong> first. The skill knows the SYG listing rules, condition grading, banned terms, and Shopify metafield schema for RAM and storage. It produces ready-to-use titles, HTML, and metafields.</div>
-          <div><strong style="color:var(--ink);">Universal entries</strong> → go as a structured JSON manifest under the <strong>listing-edit system prompt</strong>. Claude reads each entry's typed fields and returns a corrected title, final HTML description, and Shopify metafields per Website SKU.</div>
-        </div>
-        <p style="margin:0;"><strong style="color:var(--ink);">Why they're separate:</strong> The /syg-listing-generator skill is a purpose-built system for PC parts — it knows drive health tiers, storage-specific metafields, and the Abribook code format. The Universal listing-edit prompt is a different format entirely — it expects JSON with item type, typed fields, and a Website SKU to match against. Mixing them in one prompt would confuse Claude and produce wrong output for both.</p>
+        <div style="font-size:12px;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:20px;">📤 The Queue &amp; Exporting to Claude</span></div>
+        <p style="margin:0 0 8px;">Everything you log — whether from Batch, Universal, or Blitzting — lands in the same session queue. You can mix item types freely in one session without switching tools. When you're done, hit <strong>Copy Claude manifest-prep prompt</strong> and paste it into Claude.</p>
+        <p style="margin:0;">Abribook automatically separates RAM/storage entries from everything else in that export, so Claude knows exactly which listing process to use for each. You don't have to think about it — the right format goes to the right place automatically.</p>
       </div>
 
       <!-- SHOPIFY PUSH -->
       <div>
-        <div style="font-size:12px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:20px;">🛍 Shopify Integration</span></div>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why Claude pushes to Shopify directly:</strong> After Claude generates the title, HTML description, and metafields, someone has to paste that into Shopify manually — or not. The system is wired so Claude can call the Shopify Admin API directly to create or update draft products, set SKUs, write metafields, and set inventory tracking. This eliminates the copy-paste step entirely.</p>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Always DRAFT:</strong> New products are always created as drafts. Nothing goes live automatically. A human reviews and publishes. This is intentional — the system is a tool to accelerate intake, not to bypass quality control.</p>
-        <p style="margin:0;"><strong style="color:var(--ink);">Cost Per Item:</strong> The cost field set in Speed Review flows into Shopify's <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">inventoryItem.cost</code> — this is the internal cost of goods field Shopify uses for margin reporting. It never shows to customers and is only visible in the admin. Setting it during intake means your profit margins are tracked from day one without a separate step.</p>
+        <div style="font-size:12px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:20px;">🛍 Shopify</span></div>
+        <p style="margin:0 0 8px;">After Claude writes the listings, they go straight into Shopify as drafts — title, description, SKU, and all the product fields, without anyone having to copy and paste anything. Nothing gets published automatically. A person always reviews and publishes. The tool handles the tedious part; the human handles the final call.</p>
+        <p style="margin:0;">The cost you set in Speed Review also goes into Shopify's internal cost field — so your margin on every item is tracked from the moment it's logged, not added later as an afterthought.</p>
       </div>
 
       <!-- PO AUTOMATION -->
       <div>
         <div style="font-size:12px;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:20px;">📦 Fill PO — Purchase Order Automation</span></div>
-        <p style="margin:0 0 8px;"><strong style="color:var(--ink);">Why it exists:</strong> Creating a purchase order on buyer.sellyourgadgets.com is a multi-step form — category, make, model, condition, color, estimated value, offer. Doing this for every item you buy takes time and introduces typos. Fill PO generates a surgical prompt you paste into Claude in Chrome, which then fills the form for you.</p>
-        <p style="margin:0;"><strong style="color:var(--ink);">Why it uses Claude in Chrome instead of running directly:</strong> buyer.sellyourgadgets.com is a different domain. Abribook runs in your browser and cannot script another website's forms directly due to browser security restrictions. Claude in Chrome has direct page access and can interact with the Bubble.io form using precise coordinate-based clicking and the native input value setter trick required to make Bubble's framework recognize the change. The customer must be selected on the PO page before the automation runs — this is a required step, not an option to skip.</p>
+        <p style="margin:0 0 8px;">Logging a purchase order on the SYG platform is a multi-field form — category, make, model, condition, color, estimated value, offer amount. Doing that manually for every item you buy adds up fast. Fill PO generates a prompt you paste into Claude in Chrome, and Claude fills the form for you. Make sure the customer is already selected on the PO page before you run it — that step can't be automated.</p>
       </div>
 
       <!-- SKU FORMAT -->
       <div>
         <div style="font-size:12px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;"><span style="background:var(--surface-2);color:var(--ink-soft);padding:2px 8px;border-radius:20px;border:1px solid var(--line-2);">🏷 SKU Format</span></div>
-        <p style="margin:0 0 8px;">Every SKU generated by this tool follows the format <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">NJ02-[INITIAL]-[BATCH]-[ITEM#]</code>. For example: <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">NJ02-J-RTL0626-3</code>.</p>
+        <p style="margin:0 0 8px;">Every SKU this tool generates looks like <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">NJ02-J-RTL0626-3</code>. Each part means something:</p>
         <div style="background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;font-size:12.5px;display:flex;flex-direction:column;gap:5px;">
-          <div><code style="font-family:var(--mono);">NJ02</code> — Store code for SYG Elmwood Park, NJ. Distinguishes this location from other SYG stores.</div>
-          <div><code style="font-family:var(--mono);">J</code> — Lister initial. Every item is traceable back to the person who logged it.</div>
-          <div><code style="font-family:var(--mono);">RTL0626</code> — Batch ID, typically a date-stamped retail batch. Groups all items bought or processed together.</div>
-          <div><code style="font-family:var(--mono);">3</code> — Sequential item number within the batch. Resets each session.</div>
+          <div><code style="font-family:var(--mono);">NJ02</code> — Elmwood Park store code. Keeps our listings separate from other SYG locations.</div>
+          <div><code style="font-family:var(--mono);">J</code> — The lister's initial. Every item is traceable back to whoever logged it.</div>
+          <div><code style="font-family:var(--mono);">RTL0626</code> — The batch ID, usually tied to the date or retail run. Groups items that came in together.</div>
+          <div><code style="font-family:var(--mono);">3</code> — Item number within the batch. Resets each session.</div>
         </div>
       </div>
 
-      <!-- DESIGN PHILOSOPHY -->
+      <!-- PHILOSOPHY -->
       <div style="border-top:1px solid var(--line);padding-top:20px;">
-        <div style="font-size:12px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Design Philosophy</div>
-        <p style="margin:0 0 8px;">This system was designed around one principle: <strong style="color:var(--ink);">staff should never have to think about the tool — only about the item in their hand.</strong> Every decision in the UI reflects that:</p>
-        <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;">
-          <div>→ <strong style="color:var(--ink);">Abribook codes</strong> exist because typing "Samsung 990 Pro 2TB NVMe M.2 2280" every time is slow and inconsistent. <code style="font-family:var(--mono);background:var(--surface);padding:1px 4px;border-radius:3px;">S2990P</code> takes one second and resolves to the full description automatically.</div>
-          <div>→ <strong style="color:var(--ink);">Haz source badges</strong> exist because not all prices are equal. A price from a real SYG sale is worth more than a market estimate — staff need to know which they're looking at.</div>
-          <div>→ <strong style="color:var(--ink);">Blitzting</strong> exists because cloning 10 of the same drive into the queue one by one is busywork that a computer should do.</div>
-          <div>→ <strong style="color:var(--ink);">Speed Review</strong> exists because the time to catch a wrong price is before it reaches Claude, not after the listing is drafted.</div>
-          <div>→ <strong style="color:var(--ink);">The prompt split</strong> exists because giving Claude the wrong format produces wrong output. Routing is handled by the tool so staff don't have to think about which Claude prompt to use.</div>
-          <div>→ <strong style="color:var(--ink);">Drafts only</strong> exists because automation that skips human review is a liability in a resale business where every unit is unique.</div>
-        </div>
+        <div style="font-size:12px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">The Idea Behind It</div>
+        <p style="margin:0 0 10px;color:var(--ink);">Every feature in this tool was built to remove a step that didn't need to be manual. The buyer shouldn't have to look up prices in a spreadsheet. The lister shouldn't have to write the same description format from scratch every time. The person filling POs shouldn't have to click through the same form fields for every single item. The tool handles the repetitive parts so staff can focus on the judgment calls that actually matter.</p>
       </div>
 
     </div>
