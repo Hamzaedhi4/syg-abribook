@@ -11485,8 +11485,21 @@ function saveLayout() {
 
 function loadLayout() {
   try {
-    return JSON.parse(localStorage.getItem(LS_LAYOUT) || '{}');
-  } catch(e) { return {}; }
+    const raw = localStorage.getItem(LS_LAYOUT);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    for (const key of ['search','queue','cart','photos']) {
+      const p = parsed[key];
+      if (p && (isNaN(p.x) || isNaN(p.y) || p.w < 50 || p.h < 50)) {
+        localStorage.removeItem(LS_LAYOUT);
+        return {};
+      }
+    }
+    return parsed;
+  } catch(e) {
+    localStorage.removeItem(LS_LAYOUT);
+    return {};
+  }
 }
 
 // ── Save session snapshot on unload ───────────────────────────────
