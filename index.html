@@ -345,16 +345,51 @@
   .dp-tab.on{background:var(--accent);border-color:var(--accent);color:#fff;}
   .dp-tab-panel{display:none;}
   .dp-tab-panel.on{display:block;}
-  .uni-form{background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:12px 13px;margin-bottom:12px;}
-  .uni-select,.uni-textarea{width:100%;padding:8px 9px;border:1px solid var(--line-2);border-radius:var(--r-md);font-size:12.5px;font-family:var(--sans);color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;}
-  .uni-select{font-weight:650;}
-  .uni-textarea{min-height:70px;resize:vertical;line-height:1.45;}
-  .uni-textarea.big{min-height:105px;}
+  .uni-form{background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:14px;margin-bottom:12px;}
+  .uni-select,.uni-textarea{width:100%;padding:8px 9px;border:1px solid var(--line-2);border-radius:var(--r-md);font-size:13px;font-family:var(--sans);color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;}
+  .uni-select{font-weight:600;}
+  .uni-textarea{min-height:70px;resize:vertical;line-height:1.5;}
+  .uni-main-textarea{min-height:160px;font-size:13.5px;line-height:1.6;}
   .uni-select:focus,.uni-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,91,255,.13);}
   .uni-preview-shell{margin-top:10px;border:1px solid var(--line-2);border-radius:var(--r-lg);overflow:hidden;background:var(--surface);}
   .uni-preview-head{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface-2);border-bottom:1px solid var(--line);padding:8px 10px;}
   .uni-preview-head b{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;}
   .uni-preview-toggle{border:1px solid var(--line-2);background:transparent;color:var(--ink-soft);border-radius:var(--r-pill);padding:4px 9px;font:700 10.5px/1 var(--sans);cursor:pointer;}
+  .uni-top-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:10px;align-items:end;}
+  .uni-type-wrap{min-width:160px;}
+  .uni-sku-wrap{min-width:0;}
+  .uni-conf-strip{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:8px 10px;border:1px solid var(--line-2);border-radius:var(--r-md);background:var(--surface);}
+  .uni-conf-left{display:flex;align-items:center;gap:7px;flex:none;}
+  .conf-label{font:700 10px/1 var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);}
+  .conf-score{font:700 11px/1 var(--mono);color:var(--accent-ink);}
+  .conf-bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden;}
+  .conf-fill{height:100%;width:0%;border-radius:999px;background:var(--accent);transition:width .18s ease;}
+  .req-list{display:flex;flex-wrap:wrap;gap:4px;}
+  .req-chip{font:600 10px/1 var(--sans);border-radius:999px;padding:4px 7px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink-soft);}
+  .req-chip.ok{border-color:rgba(14,159,110,.32);background:var(--pass-tint);color:var(--pass-ink);}
+  .req-chip.miss{border-color:rgba(229,72,77,.25);background:var(--fail-tint);color:var(--fail-ink);}
+  .uni-desc-wrap{margin-bottom:10px;}
+  .uni-desc-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+  .uni-cheat-link{font-size:11px;color:var(--accent-ink);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+  .uni-cheat-box{background:var(--accent-tint);border:1px solid rgba(79,91,255,.2);border-radius:var(--r-md);padding:9px 11px;font-size:11.5px;color:var(--accent-ink);line-height:1.6;margin-bottom:8px;}
+  .uni-policy-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .uni-policy-item{min-width:0;}
+  .needs-research-box{border:1px solid rgba(181,118,10,.35);background:rgba(255,241,184,.32);border-radius:var(--r-lg);padding:10px 11px;margin:4px 0 10px;color:var(--warn);font-size:11.5px;line-height:1.5;}
+  .needs-research-box label{display:flex;align-items:center;gap:7px;font-weight:700;color:var(--warn);cursor:pointer;margin-bottom:4px;}
+  .needs-research-box input{accent-color:var(--warn);}
+  .universal-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-1);overflow:hidden;}
+  .universal-card-head{background:var(--header);color:var(--on-dark);padding:14px 18px;box-shadow:inset 0 -2px 0 var(--accent);}
+  .universal-card-head h2{margin:0;font-size:15px;font-weight:700;letter-spacing:-.02em;}
+  .universal-card-head p{margin:4px 0 0;color:var(--on-dark-soft);font-size:11px;line-height:1.5;}
+  .universal-card-body{padding:14px;}
+  .photo-reminder{display:flex;align-items:flex-start;gap:10px;margin:0 0 10px;padding:10px 12px;border-radius:var(--r-lg);border:1px solid rgba(79,91,255,.25);background:var(--accent-tint);color:var(--accent-ink);font-size:12px;line-height:1.5;}
+  .photo-reminder .photo-icon{font-size:16px;line-height:1;flex:none;margin-top:1px;}
+  .photo-reminder b{display:block;margin-bottom:2px;font-weight:800;}
+  .photo-reminder.wait{border-color:rgba(181,118,10,.28);background:rgba(255,241,184,.42);color:var(--warn);}
+  .photo-reminder.wait b{color:var(--warn);}
+  .photo-reminder.ready{border-color:rgba(14,159,110,.32);background:var(--pass-tint);color:var(--pass-ink);}
+  .photo-reminder.ready b{color:var(--pass-ink);}
+  .universal-card-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
   .uni-html-preview{padding:10px;background:#fff;max-height:220px;overflow:auto;}
   .uni-raw-html{display:none;padding:10px;background:var(--surface-2);font:600 10.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word;color:var(--accent-ink);max-height:220px;overflow:auto;}
   .uni-entry{background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:12px 13px;position:relative;margin-bottom:10px;}
@@ -1978,21 +2013,28 @@
 
   /* Universal inside panel */
   .wan-panel .universal-card { background: transparent !important; border: none !important; box-shadow: none !important; }
-  .wan-panel .universal-card-head { background: rgba(255,255,255,.02) !important; border-color: rgba(255,255,255,.07) !important; }
-  .wan-panel .universal-card-title-row h2 { color: #E4E6F0 !important; }
-  .wan-panel .universal-card-title-row p { color: rgba(255,255,255,.4) !important; }
-  .wan-panel .uni-qc-card { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; }
+  .wan-panel .universal-card-head { background: rgba(255,255,255,.03) !important; border-color: rgba(255,255,255,.08) !important; }
+  .wan-panel .universal-card-head h2 { color: #E4E6F0 !important; }
+  .wan-panel .universal-card-head p { color: rgba(255,255,255,.4) !important; }
+  .wan-panel .uni-form { background: rgba(255,255,255,.03) !important; border-color: rgba(255,255,255,.08) !important; }
+  .wan-panel .uni-conf-strip { background: rgba(255,255,255,.04) !important; border-color: rgba(255,255,255,.08) !important; }
   .wan-panel .conf-label { color: rgba(255,255,255,.3) !important; }
   .wan-panel .conf-score { color: #818CF8 !important; }
   .wan-panel .conf-bar { background: rgba(255,255,255,.08) !important; }
-  .wan-panel .conf-note { color: rgba(255,255,255,.35) !important; }
-  .wan-panel .needs-research-box { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; color: rgba(255,255,255,.4) !important; }
-  .wan-panel .uni-policy-card { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; }
+  .wan-panel .uni-cheat-box { background: rgba(99,108,255,.1) !important; border-color: rgba(99,108,255,.2) !important; color: #a5b4fc !important; }
+  .wan-panel .uni-cheat-link { color: #818CF8 !important; }
+  .wan-panel .needs-research-box { background: rgba(181,118,10,.12) !important; border-color: rgba(181,118,10,.3) !important; color: #fbbf24 !important; }
+  .wan-panel .needs-research-box label { color: #fbbf24 !important; }
+  .wan-panel .uni-preview-shell { background: rgba(255,255,255,.03) !important; border-color: rgba(255,255,255,.08) !important; }
+  .wan-panel .uni-preview-head { border-color: rgba(255,255,255,.07) !important; color: rgba(255,255,255,.35) !important; background: rgba(255,255,255,.04) !important; }
+  .wan-panel .photo-reminder.wait { background: rgba(181,118,10,.1) !important; border-color: rgba(181,118,10,.25) !important; color: #fbbf24 !important; }
+  .wan-panel .photo-reminder.wait b { color: #fbbf24 !important; }
+  .wan-panel .photo-reminder.ready { background: rgba(14,159,110,.1) !important; border-color: rgba(14,159,110,.25) !important; color: #4ade80 !important; }
+  .wan-panel .photo-reminder.ready b { color: #4ade80 !important; }
+  .wan-panel .req-chip { background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.1) !important; color: rgba(255,255,255,.4) !important; }
+  .wan-panel .req-chip.ok { background: rgba(14,159,110,.15) !important; border-color: rgba(14,159,110,.3) !important; color: #4ade80 !important; }
+  .wan-panel .req-chip.miss { background: rgba(229,72,77,.12) !important; border-color: rgba(229,72,77,.25) !important; color: #fca5a5 !important; }
   .wan-panel .uni-mini-note { color: rgba(255,255,255,.25) !important; }
-  .wan-panel .uni-preview-shell { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; }
-  .wan-panel .uni-preview-head { border-color: rgba(255,255,255,.07) !important; color: rgba(255,255,255,.35) !important; }
-  .wan-panel .photo-reminder { background: #1A1D2E !important; border-color: rgba(255,255,255,.13) !important; }
-  .wan-panel .req-list { color: rgba(255,255,255,.4) !important; }
 
   /* ═══════════════════════════════════════════════
      WAN CANVAS — SCROLL, TEXT & SCROLLBAR FIXES
@@ -3552,111 +3594,87 @@
       <div class="universal-card-head">
         <div class="universal-card-title-row">
           <div>
-            <h2>Universal Manifest Intake</h2>
-            <p>A separate Abribook page for CPUs, GPUs, consoles, laptops, desktops, phones, and motherboards. Store the website SKU and plain-English facts first, then prep everything in bulk at the end.</p>
+            <h2>Universal Intake</h2>
+            <p>Phones, laptops, consoles, GPUs, CPUs, desktops, motherboards. Describe everything in plain English — Abribook builds the listing from it.</p>
           </div>
-          <button class="uni-help-btn" id="uniTutOpenBtn" type="button">📘 Universal Tutorial</button>
+          <button class="uni-help-btn" id="uniTutOpenBtn" type="button">📘 Tutorial</button>
         </div>
       </div>
       <div class="universal-card-body">
-<div class="uni-form">
-        <div class="dp-row full">
-          <div>
-            <div class="dp-label">Website SKU #</div>
-            <input class="dp-input" id="uniWebsiteSku" placeholder="SKU from company website" autocomplete="off" spellcheck="false">
-          </div>
-        </div>
-        <div class="dp-row full">
-          <div>
-            <div class="dp-label">What's In My Hand Right Now?</div>
-            <select class="uni-select" id="uniItemType">
-              <option value="Laptop">Laptop</option>
-              <option value="Desktop">Desktop</option>
-              <option value="Phone">Phone</option>
-              <option value="Console">Console</option>
-              <option value="GPU">GPU</option>
-              <option value="CPU">CPU</option>
-              <option value="Motherboard">Motherboard</option>
-            </select>
-          </div>
-        </div>
+        <div class="uni-form">
 
-        <div class="uni-qc-grid">
-          <div class="uni-qc-card">
-            <div class="conf-head"><span class="conf-label">Listing Confidence</span><span class="conf-score" id="uniConfidenceScore">0%</span></div>
-            <div class="conf-bar"><div class="conf-fill" id="uniConfidenceFill"></div></div>
-            <div class="conf-note" id="uniConfidenceNote">Start with SKU, item type, description, testing, and condition.</div>
+          <div class="uni-top-row">
+            <div class="uni-sku-wrap">
+              <div class="dp-label">Website SKU</div>
+              <input class="dp-input" id="uniWebsiteSku" placeholder="SKU from company website" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="uni-type-wrap">
+              <div class="dp-label">Item type</div>
+              <select class="uni-select" id="uniItemType">
+                <option value="Phone">📱 Phone</option>
+                <option value="Laptop">💻 Laptop</option>
+                <option value="Console">🎮 Console</option>
+                <option value="Desktop">🖥️ Desktop</option>
+                <option value="GPU">🖼️ GPU</option>
+                <option value="CPU">⚡ CPU</option>
+                <option value="Motherboard">🔌 Motherboard</option>
+              </select>
+            </div>
           </div>
-          <div class="uni-qc-card">
-            <div class="conf-label">Required for this item</div>
-            <div class="req-list" id="uniReqList"></div>
-          </div>
-        </div>
 
-        <div class="photo-reminder wait" id="uniPhotoReminder"><span class="photo-icon">📸</span><div><b>Photos later — data first.</b><span>Fill the required facts, testing, and condition first. Abribook will tell you when this item is ready for photos.</span></div></div>
+          <div class="uni-conf-strip">
+            <div class="uni-conf-left">
+              <span class="conf-label">Confidence</span>
+              <span class="conf-score" id="uniConfidenceScore">Low · 0%</span>
+            </div>
+            <div class="conf-bar" style="flex:1;"><div class="conf-fill" id="uniConfidenceFill"></div></div>
+            <div class="req-list" id="uniReqList" style="flex:none;"></div>
+          </div>
 
-        <div id="uniDynamicFields" class="uni-dynamic-grid"></div>
+          <div class="photo-reminder wait" id="uniPhotoReminder">
+            <span class="photo-icon">📸</span>
+            <div><b>Photos later — data first.</b><span> Fill the description below, then Abribook will tell you when to photograph.</span></div>
+          </div>
 
-        <div class="dp-row full">
-          <div>
-            <div class="dp-label">Describe item + specs</div>
-            <textarea class="uni-textarea big" id="uniDesc" placeholder='Example: Dell Precision 5570 laptop, i7-12800H, 32GB RAM, 1TB SSD, RTX A2000, 15.6&quot; screen.'></textarea>
+          <div class="uni-desc-wrap">
+            <div class="uni-desc-label-row">
+              <div class="dp-label" id="uniDescLabel">Describe the item</div>
+              <span class="uni-cheat-link" id="uniCheatBtn">what to include ↓</span>
+            </div>
+            <div class="uni-cheat-box" id="uniCheatBox" style="display:none;"></div>
+            <textarea class="uni-textarea uni-main-textarea" id="uniDesc" placeholder="Describe everything here in plain English — model, specs, condition, what works, what doesn't, what's included..."></textarea>
           </div>
-        </div>
-        <div class="dp-row full">
-          <div>
-            <div class="dp-label">Testing notes</div>
-            <textarea class="uni-textarea" id="uniTesting" placeholder="Example: Boots to BIOS. Screen and keyboard work."></textarea>
+
+          <div class="uni-policy-row">
+            <div class="uni-policy-item">
+              <div class="dp-label">Returns</div>
+              <select class="uni-select" id="uniReturnPolicy">
+                <option value="30 Days Free Return">30 Days Free Return</option>
+                <option value="For parts or repair item. Returns are not accepted.">For parts / no returns</option>
+                <option value="Returns accepted according to the listing return policy.">Returns accepted</option>
+                <option value="No returns accepted for this item.">No returns</option>
+              </select>
+            </div>
+            <div class="uni-policy-item">
+              <div class="dp-label">Notes for Claude</div>
+              <input class="dp-input" id="uniClaudeNotes" placeholder="optional instruction" autocomplete="off">
+            </div>
           </div>
-        </div>
-        <div class="dp-row full">
-          <div>
-            <div class="dp-label">Condition notes</div>
-            <textarea class="uni-textarea" id="uniCondition" placeholder="Example: Used, minor lid scratches."></textarea>
+
+          <div class="needs-research-box">
+            <label><input type="checkbox" id="uniNeedsResearch"> Mark as Needs Research</label>
+            Use when specs are unknown, lock status unverified, or pricing needs comp verification before listing.
           </div>
-        </div>
-        <div class="dp-row full">
-          <div>
-            <div class="dp-label">Issues / missing parts</div>
-            <textarea class="uni-textarea" id="uniIssues" placeholder="Example: No charger included. Disc drive untested."></textarea>
+
+          <div class="uni-preview-shell">
+            <div class="uni-preview-head"><b>Description Preview</b><button class="uni-preview-toggle" id="uniToggleRaw" type="button">Raw HTML</button></div>
+            <div class="uni-html-preview" id="uniHtmlPreview"></div>
+            <div class="uni-raw-html" id="uniRawHtml"></div>
           </div>
+
+          <button class="dp-add-entry" id="uniAddEntry" style="margin:12px 0 0">+ Add to manifest queue</button>
+
         </div>
-        <div class="uni-policy-grid">
-          <div class="uni-policy-card">
-            <div class="dp-label">Shipping</div>
-            <select class="uni-select" id="uniShippingPolicy" disabled title="SYG uses free shipping by default">
-              <option value="Free Shipping" selected>Free Shipping</option>
-            </select>
-            <div class="uni-mini-note">Locked to Free Shipping because SYG uses free shipping by default.</div>
-          </div>
-          <div class="uni-policy-card">
-            <div class="dp-label">Returns</div>
-            <select class="uni-select" id="uniReturnPolicy">
-              <option value="Returns accepted according to the listing return policy.">Returns accepted</option>
-              <option value="No returns accepted for this item.">No returns accepted</option>
-              <option value="For parts or repair item. Returns are not accepted.">For parts / no returns</option>
-              <option value="Return eligibility depends on final listing terms. Please review before purchase.">Review listing terms</option>
-            </select>
-            <div class="uni-mini-note">Useful when some items keep returns on and others do not.</div>
-          </div>
-        </div>
-        <div class="needs-research-box">
-          <label><input type="checkbox" id="uniNeedsResearch"> Mark as Needs Research</label>
-          Use this when the item cannot be confidently identified, has unknown lock status, missing specs, unclear damage, or needs pricing/comp verification before Claude prepares final listing data.
-        </div>
-        <div class="dp-row full">
-          <div>
-            <div class="dp-label">Notes for Claude</div>
-            <input class="dp-input" id="uniClaudeNotes" placeholder="optional instruction" autocomplete="off">
-          </div>
-        </div>
-        <div class="uni-preview-shell">
-          <div class="uni-preview-head"><b>HTML Description Preview</b><button class="uni-preview-toggle" id="uniToggleRaw" type="button">Raw HTML</button></div>
-          <div class="uni-html-preview" id="uniHtmlPreview"></div>
-          <div class="uni-raw-html" id="uniRawHtml"></div>
-        </div>
-        <button class="dp-add-entry" id="uniAddEntry" style="margin:12px 0 0">+ Add universal entry</button>
-      </div>
       </div>
     </div>
   </div><!-- /#universalPage -->
@@ -5559,24 +5577,20 @@ function requiredValueFor(req, e){
   return typedFieldValue(typed, req);
 }
 function uniConfidenceFor(e){
-  const rule = UNIVERSAL_TYPE_RULES[e.itemType] || uniTypeRule();
   const checks = [
-    {name:'Code', ok:!!e.code},
-    {name:'Item Type', ok:!!e.itemType},
-    {name:'Description', ok:!!e.desc},
-    {name:'Testing Notes', ok:!!e.testing},
-    {name:'Condition Notes', ok:!!e.condition},
-    ...rule.required.map(r=>({name:r, ok:!!requiredValueFor(r,e)}))
+    {name:'Website SKU',    ok:!!e.websiteSku},
+    {name:'Item Type',      ok:!!e.itemType},
+    {name:'Description',    ok:!!(e.desc && e.desc.length > 10)},
+    {name:'Return Policy',  ok:!!e.returnPolicy},
   ];
-  const unique = [];
-  const seen = new Set();
-  checks.forEach(c=>{ const k=c.name.toLowerCase(); if(!seen.has(k)){ seen.add(k); unique.push(c); }});
-  const ok = unique.filter(c=>c.ok).length;
-  const score = unique.length ? Math.round((ok/unique.length)*100) : 0;
-  const missing = unique.filter(c=>!c.ok).map(c=>c.name);
-  let level = score >= 85 ? 'High' : score >= 55 ? 'Medium' : 'Low';
-  if(e.needsResearch) level = 'Needs Research';
-  return {score, level, missing, checks:unique};
+  if(e.needsResearch){
+    return {score:0, level:'Needs Research', missing:[], checks};
+  }
+  const ok = checks.filter(c=>c.ok).length;
+  const score = Math.round((ok/checks.length)*100);
+  const missing = checks.filter(c=>!c.ok).map(c=>c.name);
+  const level = score >= 75 ? 'High' : score >= 50 ? 'Medium' : 'Low';
+  return {score, level, missing, checks};
 }
 function updateUniConfidence(e){
   const data = e || uniMakePreviewObject();
@@ -5622,38 +5636,69 @@ function universalTitlePreview(e){
   return e.desc ? e.desc.slice(0,80) : type;
 }
 function compactTableHtml(entry){
-  const e = entry && entry.itemType ? entry : uniMakePreviewObject();
-  const f = e.typedFields || {};
-  const row = (label, value)=>`<tr><td style="width:34%;padding:8px 10px;font-weight:bold;background:#f7f7f7;border:1px solid #ddd;">${htmlEscapeLoose(label)}</td><td style="padding:8px 10px;border:1px solid #ddd;">${value ? nl2br(value) : '—'}</td></tr>`;
-  const baseRows = [row('Website SKU', e.websiteSku), row('Item Type', e.itemType)];
-  const typeRows = (UNIVERSAL_TYPE_RULES[e.itemType]?.fields || []).map(label=>row(label, typedFieldValue(f,label)));
-  const rows = baseRows.concat(typeRows).concat([
-    row('Item / Specs', e.desc),
-    row('Testing', e.testing),
-    row('Condition', e.condition),
-    row('Issues / Missing Parts', e.issues),
-    row('Shipping', e.shippingPolicy),
-    row('Returns', e.returnPolicy)
-  ]).join('');
-  const title = universalTitlePreview(e) || 'Item Details';
-  return `<div style="font-family:Arial,Helvetica,sans-serif;color:#222;max-width:720px;line-height:1.45;">
-  <h3 style="margin:0 0 10px;font-size:18px;color:#111;">${htmlEscapeLoose(title)}</h3>
-  <table style="width:100%;border-collapse:collapse;font-size:14px;border:1px solid #ddd;"><tbody>${rows}</tbody></table>
-  <p style="font-size:13px;color:#555;margin-top:12px;">Please review all item details, condition notes, shipping terms, return terms, and included accessories before purchasing.</p>
-</div>`;
+  const e = (entry && entry.itemType) ? entry : uniMakePreviewObject();
+  const desc = e.desc || '';
+  const type = e.itemType || 'Item';
+
+  // Per-type placeholder prompts shown in the textarea
+  const TYPE_PLACEHOLDERS = {
+    Phone:      'e.g. iPhone 13 Pro Max 256GB Silver, T-Mobile locked, 89% battery, works fully, minor scratches on back, includes cable only.',
+    Laptop:     'e.g. Dell XPS 15 9530, i7-13700H, 32GB RAM, 1TB SSD, RTX 4060, 15.6" 4K. Boots fine, keyboard and screen good. Lid has small dent. No charger.',
+    Console:    'e.g. PS5 Slim disc edition, 1TB, white. Includes 1 controller, HDMI, and power cable. Powers on, reads discs, all buttons work. Light scratches on top.',
+    Desktop:    'e.g. Custom build, i9-12900K, 32GB DDR5, 2TB NVMe, RTX 3080. Boots to Windows. GPU fans spin. No display/keyboard/mouse included.',
+    GPU:        'e.g. EVGA RTX 3070 Ti FTW3, 8GB GDDR6X. Fans spin, no artifacts, tested in gaming rig. Slight dust, no physical damage.',
+    CPU:        'e.g. Intel Core i9-12900K, LGA1700, pulled from working system. No bent pins, original box included.',
+    Motherboard:'e.g. ASUS ROG Strix Z690-F, LGA1700, ATX. I/O shield included. POST tested, all slots work. Minor scuff on PCB corner.',
+  };
+
+  // Per-type SYG navy table structure — each type shows what matters most
+  const TYPE_ROWS = {
+    Phone: ['Brand','Model','Storage','Color','Network / Carrier','Battery Health','IMEI Status','Condition','Included'],
+    Laptop: ['Brand','Model','Processor','RAM','Storage','GPU','Screen Size','Operating System','Condition','Included'],
+    Console: ['Brand','Model','Storage / Edition','Color','Controllers','Cables','Condition','Included'],
+    Desktop: ['Brand / Build','Processor','RAM','Storage','GPU','Operating System','Condition','Included'],
+    GPU: ['Brand','GPU Model','VRAM','Ports','Condition','Included'],
+    CPU: ['Brand','CPU Model','Socket','Condition','Included'],
+    Motherboard: ['Brand','Model','Socket','Chipset','Form Factor','Condition','Included'],
+  };
+
+  const rows = TYPE_ROWS[type] || TYPE_ROWS.Laptop;
+  const row = (label, value, idx) => {
+    const bg = idx % 2 === 0 ? '#ffffff' : '#f9f9f9';
+    return `<tr style="background-color:${bg};"><td style="padding:8px;border:1px solid #dddddd;font-weight:bold;width:35%;">${htmlEscapeLoose(label)}</td><td style="padding:8px;border:1px solid #dddddd;">${value ? nl2br(htmlEscapeLoose(value)) : '—'}</td></tr>`;
+  };
+
+  // Build table — spec rows show '—' since Claude fills them from plain English
+  // The full description goes in as the main content row
+  const specRows = rows.map((label, i) => row(label, '', i)).join('');
+
+  const tableRows = [
+    `<tr style="background-color:#1F4E79;color:#ffffff;"><th colspan="2" style="padding:8px;text-align:left;font-weight:bold;">Item Specifications</th></tr>`,
+    ...rows.map((label, i) => row(label, '', i)),
+    row('Description', desc, rows.length),
+    `<tr style="background-color:#1F4E79;color:#ffffff;"><th colspan="2" style="padding:8px;text-align:left;font-weight:bold;">Shipping &amp; Returns</th></tr>`,
+    row('Shipping', 'Free Shipping', 0),
+    row('Return Policy', e.returnPolicy || '30 Days Free Return', 1),
+  ].join('');
+
+  const title = universalTitlePreview(e) || type;
+
+  return `<table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;color:#333333;">
+<tbody>${tableRows}</tbody>
+</table>`;
 }
 function uniMakePreviewObject(){
   return {
     id: 0,
     websiteSku: document.getElementById('uniWebsiteSku')?.value.trim() || '',
     itemType: document.getElementById('uniItemType')?.value || 'Laptop',
-    typedFields: collectUniTypedFields(),
+    typedFields: {},
     desc: document.getElementById('uniDesc')?.value.trim() || '',
-    testing: document.getElementById('uniTesting')?.value.trim() || '',
-    condition: document.getElementById('uniCondition')?.value.trim() || '',
-    issues: document.getElementById('uniIssues')?.value.trim() || '',
-    shippingPolicy: document.getElementById('uniShippingPolicy')?.value || 'Free Shipping',
-    returnPolicy: document.getElementById('uniReturnPolicy')?.value || 'Returns accepted according to the listing return policy.',
+    testing: '',
+    condition: '',
+    issues: '',
+    shippingPolicy: 'Free Shipping',
+    returnPolicy: document.getElementById('uniReturnPolicy')?.value || '30 Days Free Return',
     claudeNotes: document.getElementById('uniClaudeNotes')?.value.trim() || '',
     needsResearch: !!document.getElementById('uniNeedsResearch')?.checked
   };
@@ -5690,10 +5735,7 @@ function uniStatusClass(e){
   return 'low';
 }
 function uniEntryLine(e, idx){
-  const fields = Object.entries(e.typedFields||{}).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join(' | ');
-  return `UNIVERSAL #${idx+1} | Website SKU: ${e.websiteSku||'MISSING'} | Type: ${e.itemType} | Confidence: ${e.confidence?.level||'—'} ${e.confidence?.score??''}% | Status: ${e.status}\nTitle Preview: ${e.titlePreview||'—'}\nTyped Fields: ${fields||'—'}\nDescription: ${e.desc||'—'}\nTesting: ${e.testing||'—'}\nCondition: ${e.condition||'—'}\nIssues/Missing: ${e.issues||'—'}
-Shipping: ${e.shippingPolicy||'—'}
-Returns: ${e.returnPolicy||'—'}${e.claudeNotes?'\nClaude Notes: '+e.claudeNotes:''}`;
+  return `UNIVERSAL #${idx+1} | Website SKU: ${e.websiteSku||'MISSING'} | Type: ${e.itemType} | Confidence: ${e.confidence?.level||'\u2014'} ${e.confidence?.score??''}% | Status: ${e.status}\nTitle Preview: ${e.titlePreview||'\u2014'}\nDescription: ${e.desc||'\u2014'}\nShipping: Free Shipping\nReturns: ${e.returnPolicy||'\u2014'}${e.claudeNotes?'\nNotes for Claude: '+e.claudeNotes:''}`;
 }
 function renderUniEntries(){
   const box = document.getElementById('uniEntries');
@@ -5709,9 +5751,9 @@ function renderUniEntries(){
   updateGoalCounter();
 }
 function clearUniForm(){
-  ['uniWebsiteSku','uniDesc','uniTesting','uniCondition','uniIssues','uniClaudeNotes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['uniWebsiteSku','uniDesc','uniClaudeNotes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const nr=document.getElementById('uniNeedsResearch'); if(nr) nr.checked=false;
-  document.querySelectorAll('[data-unifield]').forEach(el=>el.value='');
+  const rp=document.getElementById('uniReturnPolicy'); if(rp) rp.value='30 Days Free Return';
   uniTypedFields = {};
   updateUniPreview();
 }
@@ -5970,15 +6012,58 @@ renderUniTut();
 if(document.getElementById('workPageSelect')){
   document.getElementById('workPageSelect').addEventListener('change',e=>switchWorkPage(e.target.value));
 }
-['uniWebsiteSku','uniDesc','uniTesting','uniCondition','uniIssues','uniClaudeNotes','uniNeedsResearch','uniShippingPolicy','uniReturnPolicy'].forEach(id=>{
+
+// Per-type cheat box content
+const UNI_CHEAT = {
+  Phone:      'Include: brand, model, storage, color, carrier/lock status, battery %, IMEI status, what was tested, screen condition, cosmetic notes, what\'s in the box.',
+  Laptop:     'Include: brand, model, processor, RAM, storage (size + type), GPU if any, screen size, OS, charger included, battery info, what boots/works, cosmetic notes.',
+  Console:    'Include: brand, model, storage/edition, color, controllers included, cables included, power on test, disc test if applicable, cosmetic condition.',
+  Desktop:    'Include: brand or custom build, CPU, RAM, storage, GPU, OS, any missing parts (no display/keyboard/mouse?), power on test, POST result.',
+  GPU:        'Include: brand, exact chipset model, VRAM, display outputs, fan condition, artifact test result, any PCB damage, accessories included.',
+  CPU:        'Include: brand, exact model, socket, pin/pad condition, tested or untested, original box or not.',
+  Motherboard:'Include: brand, model, socket, chipset, form factor, I/O shield included, POST tested, socket damage, bent pins, any failed slots.',
+};
+const UNI_PLACEHOLDERS = {
+  Phone:      'e.g. iPhone 13 Pro Max 256GB Silver, T-Mobile locked, 89% battery health, screen good, back has hairline crack. Tested — all features work. Comes with cable only.',
+  Laptop:     'e.g. Dell XPS 15 9530 i7-13700H 32GB 1TB RTX 4060 15.6". Boots to Windows, keyboard and screen work. Lid has small dent. No charger included.',
+  Console:    'e.g. PS5 Slim disc edition 1TB white. Includes 1 DualSense controller, HDMI, power cable. Powers on, reads discs, all buttons work. Light scratches on top.',
+  Desktop:    'e.g. Custom PC i9-12900K 32GB DDR5 2TB NVMe RTX 3080. Boots to Windows. GPU fans spin. No display, keyboard, or mouse. Missing side panel.',
+  GPU:        'e.g. EVGA RTX 3070 Ti FTW3 8GB GDDR6X. Both fans spin. No artifacts on 3DMark. Slight dust. No damage to ports or PCB.',
+  CPU:        'e.g. Intel Core i9-12900K LGA1700. Pulled from working system. No bent pins. No original box.',
+  Motherboard:'e.g. ASUS ROG Strix Z690-F LGA1700 ATX. I/O shield included. POST tested successfully. All slots functional. Minor scuff on corner.',
+};
+
+function uniUpdateCheatAndPlaceholder(){
+  const type = document.getElementById('uniItemType')?.value || 'Laptop';
+  const cheatBox = document.getElementById('uniCheatBox');
+  const descEl   = document.getElementById('uniDesc');
+  const descLabel = document.getElementById('uniDescLabel');
+  if(cheatBox) cheatBox.textContent = UNI_CHEAT[type] || '';
+  if(descEl)   descEl.placeholder   = UNI_PLACEHOLDERS[type] || 'Describe the item...';
+  if(descLabel) descLabel.textContent = `Describe this ${type.toLowerCase()}`;
+}
+
+// Cheat toggle
+const cheatBtn = document.getElementById('uniCheatBtn');
+const cheatBox = document.getElementById('uniCheatBox');
+if(cheatBtn && cheatBox){
+  cheatBtn.addEventListener('click',()=>{
+    const visible = cheatBox.style.display !== 'none';
+    cheatBox.style.display = visible ? 'none' : '';
+    cheatBtn.textContent = visible ? 'what to include ↓' : 'hide ↑';
+  });
+}
+
+['uniWebsiteSku','uniDesc','uniClaudeNotes','uniNeedsResearch','uniReturnPolicy'].forEach(id=>{
   const el=document.getElementById(id); if(el) el.addEventListener('input', updateUniPreview);
   if(el) el.addEventListener('change', updateUniPreview);
 });
 if(document.getElementById('uniItemType')) document.getElementById('uniItemType').addEventListener('change',()=>{
   uniTypedFields = {};
-  renderUniDynamicFields();
+  uniUpdateCheatAndPlaceholder();
   updateUniPreview();
 });
+uniUpdateCheatAndPlaceholder();
 if(document.getElementById('dailyGoalInput')) document.getElementById('dailyGoalInput').addEventListener('input', updateGoalCounter);
 if(document.getElementById('uniToggleRaw')) document.getElementById('uniToggleRaw').addEventListener('click',()=>{
   uniRawMode = !uniRawMode;
