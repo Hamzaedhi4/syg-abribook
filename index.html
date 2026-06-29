@@ -6044,15 +6044,18 @@ function uniUpdateCheatAndPlaceholder(){
 }
 
 // Cheat toggle
-const cheatBtn = document.getElementById('uniCheatBtn');
-const cheatBox = document.getElementById('uniCheatBox');
-if(cheatBtn && cheatBox){
-  cheatBtn.addEventListener('click',()=>{
-    const visible = cheatBox.style.display !== 'none';
-    cheatBox.style.display = visible ? 'none' : '';
-    cheatBtn.textContent = visible ? 'what to include ↓' : 'hide ↑';
-  });
-}
+// Cheat toggle wiring
+(function(){
+  const _cheatBtn = document.getElementById('uniCheatBtn');
+  const _cheatBox = document.getElementById('uniCheatBox');
+  if(_cheatBtn && _cheatBox){
+    _cheatBtn.addEventListener('click',()=>{
+      const visible = _cheatBox.style.display !== 'none';
+      _cheatBox.style.display = visible ? 'none' : '';
+      _cheatBtn.textContent = visible ? 'what to include ↓' : 'hide ↑';
+    });
+  }
+})();
 
 ['uniWebsiteSku','uniDesc','uniClaudeNotes','uniNeedsResearch','uniReturnPolicy'].forEach(id=>{
   const el=document.getElementById(id); if(el) el.addEventListener('input', updateUniPreview);
@@ -6087,7 +6090,6 @@ if(document.getElementById('uniEntries')) document.getElementById('uniEntries').
   renderUniEntries();
 });
 if(document.getElementById('dpSyncAll')) document.getElementById('dpSyncAll').addEventListener('click', syncManifestEntries);
-renderUniDynamicFields();
 updateUniPreview();
 renderUniEntries();
 updateGoalCounter();
