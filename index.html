@@ -356,6 +356,8 @@
   .uni-preview-head b{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;}
   .uni-preview-toggle{border:1px solid var(--line-2);background:transparent;color:var(--ink-soft);border-radius:var(--r-pill);padding:4px 9px;font:700 10.5px/1 var(--sans);cursor:pointer;}
   .uni-top-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:10px;align-items:end;}
+  .uni-edit-banner{margin:0 0 10px;padding:9px 11px;border-radius:var(--r-lg);border:1px solid rgba(181,118,10,.3);background:rgba(255,241,184,.4);color:var(--warn);font-size:11.5px;line-height:1.55;}
+  .uni-edit-banner b{font-weight:800;}
   .uni-type-wrap{min-width:160px;}
   .uni-sku-wrap{min-width:0;}
   .uni-conf-strip{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:8px 10px;border:1px solid var(--line-2);border-radius:var(--r-md);background:var(--surface);}
@@ -2028,6 +2030,7 @@
   .wan-panel .uni-preview-shell { background: rgba(255,255,255,.03) !important; border-color: rgba(255,255,255,.08) !important; }
   .wan-panel .uni-preview-head { border-color: rgba(255,255,255,.07) !important; color: rgba(255,255,255,.35) !important; background: rgba(255,255,255,.04) !important; }
   .wan-panel .photo-reminder.wait { background: rgba(181,118,10,.1) !important; border-color: rgba(181,118,10,.25) !important; color: #fbbf24 !important; }
+  .wan-panel .uni-edit-banner { background: rgba(181,118,10,.1) !important; border-color: rgba(181,118,10,.25) !important; color: #fbbf24 !important; }
   .wan-panel .photo-reminder.wait b { color: #fbbf24 !important; }
   .wan-panel .photo-reminder.ready { background: rgba(14,159,110,.1) !important; border-color: rgba(14,159,110,.25) !important; color: #4ade80 !important; }
   .wan-panel .photo-reminder.ready b { color: #4ade80 !important; }
@@ -3618,8 +3621,14 @@
                 <option value="GPU">🖼️ GPU</option>
                 <option value="CPU">⚡ CPU</option>
                 <option value="Motherboard">🔌 Motherboard</option>
+                <option value="Storage">💾 Storage (SKU edit)</option>
+                <option value="RAM">🧠 RAM (SKU edit)</option>
               </select>
             </div>
+          </div>
+
+          <div class="uni-edit-banner" id="uniEditBanner" style="display:none;">
+            ✏️ <b>Surgical edit mode</b> — paste the Website SKU below, describe the drive/RAM in the same format you'd use in Batch. Title, description, and metafields are rewritten to match the SYG format. Nothing is created from scratch.
           </div>
 
           <div class="uni-conf-strip">
@@ -5542,6 +5551,18 @@ const UNIVERSAL_TYPE_RULES = {
     fields:['Brand','Model','Socket','Chipset','Form Factor','I/O Shield','CPU Support Notes','Accessories'],
     required:['Brand','Model','Socket','Chipset','Testing Notes','Condition Notes'],
     cheat:'Include socket/chipset/form factor, I/O shield, socket damage, bent pins, and power/POST test if available.'
+  },
+  Storage: {
+    fields:['Brand','Model','MPN','Capacity','Form Factor','Drive Health','Serial Number','Condition'],
+    required:['Brand','Model','Capacity','Drive Health'],
+    cheat:'Same format as Batch SSD entries. Include brand, model, MPN, capacity, form factor (M.2/SATA/NVMe), drive health %, serial number.',
+    editMode: true
+  },
+  RAM: {
+    fields:['Brand','Model','Capacity','Speed / Spec','Form Factor','Rank','Test Result','Quantity'],
+    required:['Brand','Capacity','Test Result'],
+    cheat:'Same format as Batch RAM entries. Include brand, capacity, speed/spec (e.g. PC4-3200AA), form factor (UDIMM/SODIMM/RDIMM), rank, pass/fail result.',
+    editMode: true
   }
 };
 
@@ -5649,6 +5670,8 @@ function compactTableHtml(entry){
     GPU:        'e.g. EVGA RTX 3070 Ti FTW3, 8GB GDDR6X. Fans spin, no artifacts, tested in gaming rig. Slight dust, no physical damage.',
     CPU:        'e.g. Intel Core i9-12900K, LGA1700, pulled from working system. No bent pins, original box included.',
     Motherboard:'e.g. ASUS ROG Strix Z690-F, LGA1700, ATX. I/O shield included. POST tested, all slots work. Minor scuff on PCB corner.',
+    Storage:    'e.g. Kingston KC2500 SKC2500M8/500G NVMe M.2 2280 500GB, 84% health, SN 50026B76840409A0. Same format as a Batch entry — paste the code line or describe in plain English.',
+    RAM:        'e.g. Kingston 8GB 1RX8 PC4-2400T-ED2-11 ECC Server Memory, RDIMM, qty 2, both pass. Same format as a Batch RAM entry.',
   };
 
   // Per-type SYG navy table structure — each type shows what matters most
@@ -5660,6 +5683,8 @@ function compactTableHtml(entry){
     GPU: ['Brand','GPU Model','VRAM','Ports','Condition','Included'],
     CPU: ['Brand','CPU Model','Socket','Condition','Included'],
     Motherboard: ['Brand','Model','Socket','Chipset','Form Factor','Condition','Included'],
+    Storage: ['Brand','Model','MPN','Capacity','Form Factor','Drive Health','Serial Number','Condition'],
+    RAM: ['Brand','Model','Capacity','Speed / Spec','Form Factor','Rank','Test Result','Quantity'],
   };
 
   const rows = TYPE_ROWS[type] || TYPE_ROWS.Laptop;
@@ -6022,6 +6047,8 @@ const UNI_CHEAT = {
   GPU:        'Include: brand, exact chipset model, VRAM, display outputs, fan condition, artifact test result, any PCB damage, accessories included.',
   CPU:        'Include: brand, exact model, socket, pin/pad condition, tested or untested, original box or not.',
   Motherboard:'Include: brand, model, socket, chipset, form factor, I/O shield included, POST tested, socket damage, bent pins, any failed slots.',
+  Storage:    'Edit mode — paste the Website SKU of the existing listing, then describe brand/model/MPN/capacity/form factor/health %/serial like a Batch entry. Title, description, and metafields update to match SYG SSD format.',
+  RAM:        'Edit mode — paste the Website SKU of the existing listing, then describe brand/capacity/speed/form factor/rank/pass-fail like a Batch RAM entry. Title, description, and metafields update to match SYG RAM format.',
 };
 const UNI_PLACEHOLDERS = {
   Phone:      'e.g. iPhone 13 Pro Max 256GB Silver, T-Mobile locked, 89% battery health, screen good, back has hairline crack. Tested — all features work. Comes with cable only.',
@@ -6031,6 +6058,8 @@ const UNI_PLACEHOLDERS = {
   GPU:        'e.g. EVGA RTX 3070 Ti FTW3 8GB GDDR6X. Both fans spin. No artifacts on 3DMark. Slight dust. No damage to ports or PCB.',
   CPU:        'e.g. Intel Core i9-12900K LGA1700. Pulled from working system. No bent pins. No original box.',
   Motherboard:'e.g. ASUS ROG Strix Z690-F LGA1700 ATX. I/O shield included. POST tested successfully. All slots functional. Minor scuff on corner.',
+  Storage:    'e.g. Kingston KC2500 SKC2500M8/500G NVMe M.2 2280 500GB, 84% health, SN 50026B76840409A0. Paste the Batch code line or describe in plain English.',
+  RAM:        'e.g. Kingston 8GB 1RX8 PC4-2400T-ED2-11 ECC Server Memory RDIMM, qty 2, both pass. Paste the Batch RAM line or describe in plain English.',
 };
 
 function uniUpdateCheatAndPlaceholder(){
@@ -6038,9 +6067,14 @@ function uniUpdateCheatAndPlaceholder(){
   const cheatBox = document.getElementById('uniCheatBox');
   const descEl   = document.getElementById('uniDesc');
   const descLabel = document.getElementById('uniDescLabel');
+  const editBanner = document.getElementById('uniEditBanner');
+  const isEditMode = (UNIVERSAL_TYPE_RULES[type]?.editMode === true);
   if(cheatBox) cheatBox.textContent = UNI_CHEAT[type] || '';
   if(descEl)   descEl.placeholder   = UNI_PLACEHOLDERS[type] || 'Describe the item...';
-  if(descLabel) descLabel.textContent = `Describe this ${type.toLowerCase()}`;
+  if(descLabel) descLabel.textContent = isEditMode
+    ? `Paste the ${type} entry (Batch code line or plain English)`
+    : `Describe this ${type.toLowerCase()}`;
+  if(editBanner) editBanner.style.display = isEditMode ? '' : 'none';
 }
 
 // Cheat toggle
