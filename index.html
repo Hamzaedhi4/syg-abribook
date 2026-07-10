@@ -3700,13 +3700,59 @@
         <div class="universal-card-title-row">
           <div>
             <h2>🗣️ BhaiMode</h2>
-            <p>Any item, any category — write it in plain English on the right and it stacks in the queue. Leave Website SKU blank to draft a brand-new listing, or paste an existing one to edit that product in place. Claude figures out what kind of item it is — no category picker.</p>
+            <p>Any item, any category. Describe it in plain English — no category picker. Leave Website SKU blank to draft a brand-new listing, or paste an existing one to edit that product in place. Claude classifies the type itself when you copy the manifest-prep prompt.</p>
           </div>
         </div>
       </div>
       <div class="universal-card-body">
-        <div class="manifest-warning" style="margin:0">
-          Entries live in the <b>BhaiMode Queue</b> panel on the right — click <b>+ Add entry</b> there to start stacking items. No item-type selection needed; Claude classifies each one from the description when you copy the manifest-prep prompt.
+        <div class="uni-form">
+
+          <div class="uni-top-row">
+            <div class="uni-sku-wrap" style="flex:1;">
+              <div class="dp-label">Website SKU <span style="opacity:.6;font-weight:400">(optional — blank = new listing, filled = edit that product)</span></div>
+              <input class="dp-input" id="bhaiWebsiteSku" placeholder="Existing Shopify SKU, or leave blank to create new" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="uni-edit-banner" id="bhaiActionBanner" style="display:none;">
+            ✏️ <b>Edit mode</b> — this Website SKU will be matched to an existing product. Only title, description, metafields, vendor, tags, and price will change. Quantity is never touched.
+          </div>
+
+          <div class="uni-desc-wrap">
+            <div class="uni-desc-label-row">
+              <div class="dp-label">Describe the item — any type, plain English</div>
+            </div>
+            <textarea class="uni-textarea uni-main-textarea" id="bhaiDesc" placeholder="e.g. This is a Corsair TX650 650W power supply, Hi-Pot tested OK, model 75-001315, SN 121871160000005961209..."></textarea>
+          </div>
+
+          <div class="uni-policy-row">
+            <div class="uni-policy-item">
+              <div class="dp-label">Returns</div>
+              <select class="uni-select" id="bhaiReturnPolicy">
+                <option value="30 Days Free Return">30 Days Free Return</option>
+                <option value="For parts or repair item. Returns are not accepted.">For parts / no returns</option>
+                <option value="Returns accepted according to the listing return policy.">Returns accepted</option>
+                <option value="No returns accepted for this item.">No returns</option>
+              </select>
+            </div>
+            <div class="uni-policy-item">
+              <div class="dp-label">Notes for Claude</div>
+              <input class="dp-input" id="bhaiClaudeNotes" placeholder="optional instruction" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="needs-research-box">
+            <label><input type="checkbox" id="bhaiNeedsResearch"> Mark as Needs Research</label>
+            Use when specs are unknown, condition unverified, or pricing needs comp verification before listing.
+          </div>
+
+          <div class="uni-preview-shell">
+            <div class="uni-preview-head"><b>Entry Preview</b><span class="bhai-action-badge create" id="bhaiPreviewBadge">CREATE</span></div>
+            <div class="uni-html-preview" id="bhaiPreview" style="white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;padding:12px;"></div>
+          </div>
+
+          <button class="dp-add-entry" id="bhaiAddEntry" style="margin:12px 0 0">+ Add to manifest queue</button>
+
         </div>
       </div>
     </div>
@@ -3890,9 +3936,8 @@
     </div>
 
     <div class="dp-tab-panel" id="dpPanelBhai" style="display:none">
-      <div class="manifest-warning">BhaiMode — plain English, any item type. Leave Website SKU blank to create a new draft; paste one to edit that product. Claude classifies the type automatically.</div>
+      <div class="manifest-warning">BhaiMode — fill out the form on the left, then click <b>+ Add to manifest queue</b>. Entries stack here for review before copying the Claude manifest-prep prompt.</div>
       <div class="dp-entries" id="bhaiEntries"></div>
-      <button class="dp-add-entry" id="bhaiAddEntry">+ Add BhaiMode entry</button>
     </div>
 
   </div>
@@ -5498,45 +5543,22 @@ document.getElementById('dpClear').addEventListener('click', ()=>{
 
 
 // ── BhaiMode Queue ────────────────────────────────────────────────
-// Same stacking-card UX as the Batch queue (#dpEntries), but every
-// card is one freeform item of any type. No category picker: Claude
+// Same shape as Universal Intake: one form on the main page, an
+// "+ Add to manifest queue" button, entries stack as read-only
+// summary cards in the sidebar. No category picker — Claude
 // classifies the type from the description when the manifest-prep
 // prompt is copied. Website SKU is optional — blank means "create a
 // new draft listing"; filled means "edit this existing product."
 let bhaiEntriesData = [];
 let bhaiNextId = 1;
-let bhaiActiveId = null;
 
-function bhaiSetActive(id){
-  if(bhaiActiveId === id) return;
-  bhaiActiveId = id;
-  bhaiApplyDim();
-}
-function bhaiClearActive(){
-  bhaiActiveId = null;
-  bhaiApplyDim();
-}
-function bhaiApplyDim(){
-  const all = document.querySelectorAll('.bhai-entry');
-  if(bhaiActiveId === null || bhaiEntriesData.length <= 1){
-    all.forEach(el => el.classList.remove('dp-dim'));
-    return;
-  }
-  all.forEach(el => {
-    const isActive = el.id === 'bhai-e-' + bhaiActiveId;
-    el.classList.toggle('dp-dim', !isActive);
-  });
-}
+function bhaiAction(e){ return e.websiteSku ? 'EDIT' : 'CREATE'; }
 
-function bhaiMakeEntry(){
-  return {id: bhaiNextId++, websiteSku:'', desc:'', claudeNotes:'', returnPolicy:'30 Days Free Return', needsResearch:false};
-}
 function bhaiEntrySkuLabel(e){
   const pos = bhaiEntriesData.findIndex(x=>x.id===e.id);
   const num = pos === -1 ? e.id : dpEntries.length + uniEntriesData.length + pos + 1;
   return listerSKU(num);
 }
-function bhaiAction(e){ return e.websiteSku ? 'EDIT' : 'CREATE'; }
 
 function bhaiLineFor(e, idx){
   const action = bhaiAction(e);
@@ -5551,178 +5573,78 @@ function bhaiLineFor(e, idx){
   return line;
 }
 
-function bhaiUpdatePreviewAll(){
-  bhaiEntriesData.forEach((e,i)=>{
-    const skuEl = document.getElementById('bhai-sku-'+e.id);
-    if(skuEl) skuEl.textContent = bhaiEntrySkuLabel(e);
-    const badgeEl = document.getElementById('bhai-badge-'+e.id);
-    if(badgeEl){
-      badgeEl.textContent = bhaiAction(e);
-      badgeEl.className = 'bhai-action-badge ' + (bhaiAction(e)==='EDIT' ? 'edit' : 'create');
-    }
-  });
-  dpUpdatePreviewAll();
+function bhaiMakeFromForm(){
+  return {
+    id: 0,
+    websiteSku: document.getElementById('bhaiWebsiteSku')?.value.trim() || '',
+    desc: document.getElementById('bhaiDesc')?.value.trim() || '',
+    claudeNotes: document.getElementById('bhaiClaudeNotes')?.value.trim() || '',
+    returnPolicy: document.getElementById('bhaiReturnPolicy')?.value || '30 Days Free Return',
+    needsResearch: !!document.getElementById('bhaiNeedsResearch')?.checked
+  };
 }
 
-function bhaiBuildEntryHTML(e){
-  return `<div class="dp-entry bhai-entry" id="bhai-e-${e.id}">
+function bhaiUpdatePreview(){
+  const e = bhaiMakeFromForm();
+  const previewEl = document.getElementById('bhaiPreview');
+  const badgeEl = document.getElementById('bhaiPreviewBadge');
+  const bannerEl = document.getElementById('bhaiActionBanner');
+  if(previewEl) previewEl.textContent = e.desc ? bhaiLineFor(e, null) : 'Start typing a description to see the preview…';
+  const action = bhaiAction(e);
+  if(badgeEl){ badgeEl.textContent = action; badgeEl.className = 'bhai-action-badge ' + (action==='EDIT' ? 'edit' : 'create'); }
+  if(bannerEl) bannerEl.style.display = action==='EDIT' ? '' : 'none';
+}
+
+function clearBhaiForm(){
+  ['bhaiWebsiteSku','bhaiDesc','bhaiClaudeNotes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const nr=document.getElementById('bhaiNeedsResearch'); if(nr) nr.checked=false;
+  const rp=document.getElementById('bhaiReturnPolicy'); if(rp) rp.value='30 Days Free Return';
+  bhaiUpdatePreview();
+}
+
+function bhaiStatusClass(e){ return e.desc ? 'high' : 'low'; }
+
+function renderBhaiEntries(){
+  const box = document.getElementById('bhaiEntries');
+  if(!box) return;
+  if(!bhaiEntriesData.length){ box.innerHTML = '<div class="empty" style="padding:16px 8px">No BhaiMode entries yet.</div>'; dpUpdatePreviewAll(); updateGoalCounter(); return; }
+  box.innerHTML = bhaiEntriesData.map((e, i)=>{
+    const action = bhaiAction(e);
+    return `<div class="dp-entry" id="bhai-e-${e.id}">
     <div class="dp-entry-head">
-      <span class="dp-drag-handle" title="Drag to reorder" data-bhaiid="${e.id}">⠿</span>
-      <span class="dp-sku" id="bhai-sku-${e.id}">${bhaiEntrySkuLabel(e)}</span>
-      <span class="bhai-action-badge ${bhaiAction(e)==='EDIT'?'edit':'create'}" id="bhai-badge-${e.id}">${bhaiAction(e)}</span>
+      <span class="dp-sku">${htmlEscapeLoose(bhaiEntrySkuLabel(e))}</span>
+      <span class="bhai-action-badge ${action==='EDIT'?'edit':'create'}">${action}</span>
+      <span class="uni-status ${bhaiStatusClass(e)}">${e.desc ? 'Ready for Claude' : 'Missing Info'}</span>
       <button class="dp-rmv" data-bhaiid="${e.id}" title="Remove entry">×</button>
     </div>
-    <div class="dp-row">
-      <div style="grid-column:1/-1">
-        <div class="dp-label">Website SKU <span style="opacity:.6;font-weight:400">(optional — blank = new listing, filled = edit that product)</span></div>
-        <input class="dp-input" placeholder="Existing Shopify SKU, or leave blank to create new" data-bhaiid="${e.id}" data-bhaifield="websiteSku" value="${esc(e.websiteSku)}" autocomplete="off" spellcheck="false">
-      </div>
-    </div>
-    <div class="dp-label" style="margin-top:6px">Describe the item — plain English, any type</div>
-    <textarea class="dp-input" style="min-height:74px;resize:vertical" placeholder="e.g. This is a Corsair TX650 650W power supply, Hi-Pot tested OK, model 75-001315..." data-bhaiid="${e.id}" data-bhaifield="desc">${esc(e.desc)}</textarea>
-    <div class="dp-row" style="margin-top:7px">
-      <div>
-        <div class="dp-label">Notes for Claude</div>
-        <input class="dp-input" placeholder="optional instruction" data-bhaiid="${e.id}" data-bhaifield="claudeNotes" value="${esc(e.claudeNotes)}" autocomplete="off">
-      </div>
-      <div>
-        <div class="dp-label">Returns</div>
-        <select class="dp-input" data-bhaiid="${e.id}" data-bhaifield="returnPolicy">
-          <option value="30 Days Free Return" ${e.returnPolicy==='30 Days Free Return'?'selected':''}>30 Days Free Return</option>
-          <option value="For parts or repair item. Returns are not accepted." ${e.returnPolicy==='For parts or repair item. Returns are not accepted.'?'selected':''}>For parts / no returns</option>
-          <option value="Returns accepted according to the listing return policy." ${e.returnPolicy==='Returns accepted according to the listing return policy.'?'selected':''}>Returns accepted</option>
-          <option value="No returns accepted for this item." ${e.returnPolicy==='No returns accepted for this item.'?'selected':''}>No returns</option>
-        </select>
-      </div>
-    </div>
-    <label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11.5px;font-weight:600;color:var(--ink-soft);cursor:pointer">
-      <input type="checkbox" data-bhaiid="${e.id}" data-bhaifield="needsResearch" ${e.needsResearch?'checked':''} style="cursor:pointer;width:14px;height:14px;accent-color:var(--accent)">
-      Needs Research
-    </label>
-    <div class="dp-label" style="margin-top:6px">Preview</div>
-    <div class="dp-preview">—</div>
+    <div class="dp-label">Website SKU</div><div class="dp-preview" style="margin-bottom:8px">${htmlEscapeLoose(e.websiteSku||'(none — creates new draft)')}</div>
+    <div class="dp-label">Preview</div><div class="dp-preview">${htmlEscapeLoose(bhaiLineFor(e,i))}</div>
   </div>`;
+  }).join('');
+  dpUpdatePreviewAll();
+  updateGoalCounter();
 }
 
-function bhaiRenderEntry(e){
-  const wrap = document.getElementById('bhai-e-'+e.id);
-  if(!wrap) return;
-  const previewEl = wrap.querySelector('.dp-preview');
-  if(previewEl) previewEl.textContent = bhaiLineFor(e, bhaiEntriesData.findIndex(x=>x.id===e.id));
-  bhaiUpdatePreviewAll();
-}
+['bhaiWebsiteSku','bhaiDesc','bhaiClaudeNotes','bhaiNeedsResearch','bhaiReturnPolicy'].forEach(id=>{
+  const el=document.getElementById(id); if(el) el.addEventListener('input', bhaiUpdatePreview);
+  if(el) el.addEventListener('change', bhaiUpdatePreview);
+});
 
-function bhaiAddEntry(){
-  const e = bhaiMakeEntry();
+if(document.getElementById('bhaiAddEntry')) document.getElementById('bhaiAddEntry').addEventListener('click', ()=>{
+  const e = bhaiMakeFromForm();
+  if(!e.desc){ toast('Describe the item first'); return; }
+  e.id = bhaiNextId++;
   bhaiEntriesData.push(e);
-  const container = document.getElementById('bhaiEntries');
-  const div = document.createElement('div');
-  div.innerHTML = bhaiBuildEntryHTML(e);
-  container.appendChild(div.firstElementChild);
-  bhaiRenderEntry(e);
-  bhaiSetActive(e.id);
-  updateGoalCounter && updateGoalCounter();
-  const el = document.querySelector(`#bhai-e-${e.id} input, #bhai-e-${e.id} textarea`);
-  if(el) el.focus();
-}
-
-function bhaiRemoveEntry(id){
-  bhaiEntriesData = bhaiEntriesData.filter(x=>x.id!==id);
-  const el = document.getElementById('bhai-e-'+id);
-  if(el) el.remove();
-  if(bhaiActiveId === id) bhaiClearActive();
-  else bhaiApplyDim();
-  bhaiUpdatePreviewAll();
-  updateGoalCounter && updateGoalCounter();
-}
-
-function bhaiHandleInput(ev){
-  const el = ev.target;
-  const id = parseInt(el.dataset.bhaiid);
-  const field = el.dataset.bhaifield;
-  if(!id || !field) return;
-  const e = bhaiEntriesData.find(x=>x.id===id);
-  if(!e) return;
-  e[field] = (el.type === 'checkbox') ? el.checked : el.value.trim();
-  bhaiRenderEntry(e);
-}
-
-if(document.getElementById('bhaiEntries')){
-  document.getElementById('bhaiEntries').addEventListener('input', bhaiHandleInput);
-  document.getElementById('bhaiEntries').addEventListener('change', bhaiHandleInput);
-
-  document.getElementById('bhaiEntries').addEventListener('focusin', ev=>{
-    const entry = ev.target.closest('.bhai-entry');
-    if(entry){ const id = parseInt(entry.id.replace('bhai-e-','')); bhaiSetActive(id); }
-  }, true);
-  document.getElementById('bhaiEntries').addEventListener('focusout', ev=>{
-    setTimeout(()=>{
-      const panel = document.getElementById('bhaiEntries');
-      if(panel && !panel.contains(document.activeElement)) bhaiClearActive();
-    }, 50);
-  }, true);
-  document.getElementById('bhaiEntries').addEventListener('click', ev=>{
-    const btn = ev.target.closest('.dp-rmv');
-    if(btn) bhaiRemoveEntry(parseInt(btn.dataset.bhaiid));
-  });
-
-  // Drag to reorder — identical pattern to the Batch queue
-  let _bhaiDragId = null;
-  document.getElementById('bhaiEntries').addEventListener('mousedown', ev=>{
-    const handle = ev.target.closest('.dp-drag-handle');
-    if(!handle) return;
-    const entry = handle.closest('.bhai-entry');
-    if(!entry) return;
-    entry.setAttribute('draggable', 'true');
-    entry.addEventListener('dragend', ()=> entry.removeAttribute('draggable'), {once:true});
-  });
-  document.getElementById('bhaiEntries').addEventListener('dragstart', ev=>{
-    const entry = ev.target.closest('.bhai-entry');
-    if(!entry || !entry.getAttribute('draggable')) return;
-    _bhaiDragId = parseInt(entry.id.replace('bhai-e-',''));
-    entry.classList.add('dp-dragging');
-    ev.dataTransfer.effectAllowed = 'move';
-    ev.dataTransfer.setData('text/plain', String(_bhaiDragId));
-  });
-  document.getElementById('bhaiEntries').addEventListener('dragend', ev=>{
-    const entry = ev.target.closest('.bhai-entry');
-    if(entry){ entry.classList.remove('dp-dragging'); entry.removeAttribute('draggable'); }
-    document.querySelectorAll('.dp-drag-over').forEach(el=>el.classList.remove('dp-drag-over'));
-    _bhaiDragId = null;
-  });
-  document.getElementById('bhaiEntries').addEventListener('dragover', ev=>{
-    ev.preventDefault();
-    ev.dataTransfer.dropEffect = 'move';
-    const entry = ev.target.closest('.bhai-entry');
-    document.querySelectorAll('.dp-drag-over').forEach(el=>el.classList.remove('dp-drag-over'));
-    if(entry && entry.id !== 'bhai-e-'+_bhaiDragId) entry.classList.add('dp-drag-over');
-  });
-  document.getElementById('bhaiEntries').addEventListener('dragleave', ev=>{
-    const entry = ev.target.closest('.bhai-entry');
-    if(entry) entry.classList.remove('dp-drag-over');
-  });
-  document.getElementById('bhaiEntries').addEventListener('drop', ev=>{
-    ev.preventDefault();
-    const targetEntry = ev.target.closest('.bhai-entry');
-    if(!targetEntry || !_bhaiDragId) return;
-    targetEntry.classList.remove('dp-drag-over');
-    const targetId = parseInt(targetEntry.id.replace('bhai-e-',''));
-    if(targetId === _bhaiDragId) return;
-    const fromIdx = bhaiEntriesData.findIndex(e=>e.id===_bhaiDragId);
-    const toIdx   = bhaiEntriesData.findIndex(e=>e.id===targetId);
-    if(fromIdx===-1 || toIdx===-1) return;
-    const [moved] = bhaiEntriesData.splice(fromIdx, 1);
-    bhaiEntriesData.splice(toIdx, 0, moved);
-    const container = document.getElementById('bhaiEntries');
-    const dragEl    = document.getElementById('bhai-e-'+_bhaiDragId);
-    const targetEl  = document.getElementById('bhai-e-'+targetId);
-    if(fromIdx < toIdx) container.insertBefore(dragEl, targetEl.nextSibling);
-    else                container.insertBefore(dragEl, targetEl);
-    bhaiUpdatePreviewAll();
-  });
-}
-
-if(document.getElementById('bhaiAddEntry')) document.getElementById('bhaiAddEntry').addEventListener('click', bhaiAddEntry);
+  renderBhaiEntries();
+  clearBhaiForm();
+  toast('BhaiMode entry added — Action: ' + bhaiAction(e));
+});
+if(document.getElementById('bhaiEntries')) document.getElementById('bhaiEntries').addEventListener('click', ev=>{
+  const btn = ev.target.closest('[data-bhaiid]'); if(!btn) return;
+  const id = parseInt(btn.dataset.bhaiid);
+  bhaiEntriesData = bhaiEntriesData.filter(e=>e.id!==id);
+  renderBhaiEntries();
+});
 
 function bhaiEntryObject(e, idx){
   return {
@@ -5735,6 +5657,7 @@ function bhaiEntryObject(e, idx){
     entry_line: bhaiLineFor(e, idx)
   };
 }
+
 
 
 // ── Universal Manifest MVP ───────────────────────────────────────
@@ -6456,6 +6379,8 @@ if(document.getElementById('uniEntries')) document.getElementById('uniEntries').
 if(document.getElementById('dpSyncAll')) document.getElementById('dpSyncAll').addEventListener('click', syncManifestEntries);
 updateUniPreview();
 renderUniEntries();
+bhaiUpdatePreview();
+renderBhaiEntries();
 updateGoalCounter();
 
 // ── Universal: auto-fill Condition Notes from Describe field ─────
