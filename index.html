@@ -1089,6 +1089,40 @@
   .dp-header h2 { color: var(--wan-ink) !important; }
   .dp-header p { display: none; } /* remove explanation paragraph */
   .dp-body { background: transparent !important; }
+  /* Fix: .draft-panel's sticky/100vh sizing was built for a full-page
+     sidebar. Once reparented into a small floating wan-panel window,
+     those rules break its layout invisibly (position:sticky fighting
+     the panel's own scroll container, percentage heights not reliably
+     cascading through the flex chain). Force it to absolutely fill its
+     container instead — this doesn't depend on flex/height inheritance
+     working correctly, so it can't silently collapse to zero height. */
+  .wan-panel-body { position: relative !important; }
+  #wp-body-queue { overflow: hidden !important; }
+  .wan-panel-body .draft-panel {
+    position: absolute !important;
+    inset: 0 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+  }
+  /* Fix: .draft-panel's sticky/100vh sizing was built for a full-page
+     sidebar. Once reparented into a small floating wan-panel window,
+     those rules break its layout invisibly (position:sticky fighting
+     the panel's own scroll container). Neutralize them here so the
+     panel actually renders its content instead of collapsing/clipping. */
+  .wan-panel-body .draft-panel {
+    min-height: 0 !important;
+    max-height: none !important;
+    height: 100% !important;
+    position: static !important;
+    max-width: none !important;
+  }
   .dp-tab { background: var(--wan-card) !important; border-color: var(--wan-border) !important; color: var(--wan-faint) !important; }
   .dp-tab.on { background: var(--wan-accent) !important; border-color: var(--wan-accent) !important; color: #fff !important; }
   .manifest-warning { color: rgba(251,191,36,.6) !important; }
@@ -5612,6 +5646,7 @@ function renderBhaiEntries(){
     const action = bhaiAction(e);
     return `<div class="dp-entry" id="bhai-e-${e.id}">
     <div class="dp-entry-head">
+      <span class="dp-drag-handle" title="Drag to reorder" data-bhaiid="${e.id}">⠿</span>
       <span class="dp-sku">${htmlEscapeLoose(bhaiEntrySkuLabel(e))}</span>
       <span class="bhai-action-badge ${action==='EDIT'?'edit':'create'}">${action}</span>
       <span class="uni-status ${bhaiStatusClass(e)}">${e.desc ? 'Ready for Claude' : 'Missing Info'}</span>
@@ -5641,10 +5676,65 @@ if(document.getElementById('bhaiAddEntry')) document.getElementById('bhaiAddEntr
 });
 if(document.getElementById('bhaiEntries')) document.getElementById('bhaiEntries').addEventListener('click', ev=>{
   const btn = ev.target.closest('[data-bhaiid]'); if(!btn) return;
+  if(btn.classList.contains('dp-drag-handle')) return;
   const id = parseInt(btn.dataset.bhaiid);
   bhaiEntriesData = bhaiEntriesData.filter(e=>e.id!==id);
   renderBhaiEntries();
 });
+
+// Drag to reorder — identical pattern to the Batch queue
+(function(){
+  const box = document.getElementById('bhaiEntries');
+  if(!box) return;
+  let _bhaiDragId = null;
+  box.addEventListener('mousedown', ev=>{
+    const handle = ev.target.closest('.dp-drag-handle');
+    if(!handle) return;
+    const entry = handle.closest('.dp-entry');
+    if(!entry) return;
+    entry.setAttribute('draggable', 'true');
+    entry.addEventListener('dragend', ()=> entry.removeAttribute('draggable'), {once:true});
+  });
+  box.addEventListener('dragstart', ev=>{
+    const entry = ev.target.closest('.dp-entry');
+    if(!entry || !entry.getAttribute('draggable')) return;
+    _bhaiDragId = parseInt(entry.id.replace('bhai-e-',''));
+    entry.classList.add('dp-dragging');
+    ev.dataTransfer.effectAllowed = 'move';
+    ev.dataTransfer.setData('text/plain', String(_bhaiDragId));
+  });
+  box.addEventListener('dragend', ev=>{
+    const entry = ev.target.closest('.dp-entry');
+    if(entry){ entry.classList.remove('dp-dragging'); entry.removeAttribute('draggable'); }
+    box.querySelectorAll('.dp-drag-over').forEach(el=>el.classList.remove('dp-drag-over'));
+    _bhaiDragId = null;
+  });
+  box.addEventListener('dragover', ev=>{
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = 'move';
+    const entry = ev.target.closest('.dp-entry');
+    box.querySelectorAll('.dp-drag-over').forEach(el=>el.classList.remove('dp-drag-over'));
+    if(entry && entry.id !== 'bhai-e-'+_bhaiDragId) entry.classList.add('dp-drag-over');
+  });
+  box.addEventListener('dragleave', ev=>{
+    const entry = ev.target.closest('.dp-entry');
+    if(entry) entry.classList.remove('dp-drag-over');
+  });
+  box.addEventListener('drop', ev=>{
+    ev.preventDefault();
+    const targetEntry = ev.target.closest('.dp-entry');
+    if(!targetEntry || !_bhaiDragId) return;
+    targetEntry.classList.remove('dp-drag-over');
+    const targetId = parseInt(targetEntry.id.replace('bhai-e-',''));
+    if(targetId === _bhaiDragId) return;
+    const fromIdx = bhaiEntriesData.findIndex(e=>e.id===_bhaiDragId);
+    const toIdx   = bhaiEntriesData.findIndex(e=>e.id===targetId);
+    if(fromIdx===-1 || toIdx===-1) return;
+    const [moved] = bhaiEntriesData.splice(fromIdx, 1);
+    bhaiEntriesData.splice(toIdx, 0, moved);
+    renderBhaiEntries();
+  });
+})();
 
 function bhaiEntryObject(e, idx){
   return {
@@ -5695,11 +5785,18 @@ function switchWorkPage(page){
     switchManifestTab('batch');
   }
 
-  // Toggle which sidebar queue panel is visible
+  // Toggle which sidebar queue panel is visible.
+  // NOTE: visibility here is controlled by the .on class (.dp-tab-panel{display:none} /
+  // .dp-tab-panel.on{display:block}), not inline styles — clearing an inline style
+  // just falls back to that class-based default, which is display:none unless .on
+  // is present. Must toggle the class itself, not style.display.
   const dpBatchPanel = document.getElementById('dpPanelBatch');
   const dpBhaiPanel  = document.getElementById('dpPanelBhai');
-  if(dpBatchPanel) dpBatchPanel.style.display = (page==='bhai') ? 'none' : '';
-  if(dpBhaiPanel)  dpBhaiPanel.style.display  = (page==='bhai') ? '' : 'none';
+  if(dpBatchPanel) dpBatchPanel.classList.toggle('on', page!=='bhai');
+  if(dpBhaiPanel)  dpBhaiPanel.classList.toggle('on', page==='bhai');
+  // Clear any leftover inline display overrides from the old (buggy) toggle logic
+  if(dpBatchPanel) dpBatchPanel.style.display = '';
+  if(dpBhaiPanel)  dpBhaiPanel.style.display = '';
 
   const h = document.querySelector('#draftPanel .dp-header h2');
   const p = document.querySelector('#draftPanel .dp-header p');
@@ -6133,7 +6230,7 @@ function buildClaudePrepPrompt(){
     parts.push(
       `You are preparing SYG listings from plain-English BhaiMode entries. Each entry may be ANY item type — you classify it yourself, no category was pre-selected.\n\n` +
       `STEP 1 — CLASSIFY.\nRead raw_item_description and pick exactly one type from this fixed list:\n` +
-      `  CPU, GPU, Motherboard, PSU, Storage, RAM, Laptop, Desktop, Console, Phone\n` +
+      `  CPU, GPU, Motherboard, PSU, Storage, RAM, Laptop, Desktop, Console, Phone, Power Tools, Test Equipment\n` +
       `If nothing on this list clearly fits, output TYPE: NEEDS_CATEGORY for that entry, explain what's ambiguous, and skip steps 2-4 for it. Do not force-fit an item into the wrong type.\n\n` +
       `STEP 2 — ROUTE.\nCheck the "action" field:\n` +
       `- action = "EDIT" → this is a surgical edit of an EXISTING Shopify product matched by website_sku. Only title, description, metafields, vendor, tags, and price may change. Never touch quantity unless explicitly instructed. website_sku is the matching key — never change it.\n` +
@@ -6152,7 +6249,9 @@ function buildClaudePrepPrompt(){
       `- Motherboard: type, brand, model, model_number, platform, features, mpn\n` +
       `- PSU:         type, brand, model, model_number, features, mpn  (put wattage/certification/modularity in features, e.g. "650W, 80 PLUS Bronze, Non-Modular")\n` +
       `- Storage:     type, brand, model, model_number, storage_capacity, mpn\n` +
-      `- RAM:         type, brand, model, model_number, ram, mpn\n\n` +
+      `- RAM:         type, brand, model, model_number, ram, mpn\n` +
+      `- Power Tools: type, brand, model, model_number, features, mpn  (put voltage/battery/chuck size/drive type in features, e.g. "20V Max, 1/2\\" chuck, includes 1x 3Ah battery model DCB230")\n` +
+      `- Test Equipment: type, brand, model, model_number, features, mpn  (put measurement type/range/accuracy and included accessories in features, e.g. "True RMS, includes 2x test leads and carrying case")\n\n` +
       `Do NOT invent keys outside this list. Do not invent values — if a spec isn't in the description, mark that field MISSING rather than guessing.\n\n` +
       `STEP 4 — TITLE + HTML DESCRIPTION (flexible, not templated).\n` +
       `Write a natural SEO-appropriate title for the item. Build an "Item Specifications" HTML table using whatever rows are actually relevant to THIS item — don't force irrelevant fields in, don't omit relevant ones. Use judgment: a PSU naturally gets Wattage/Certification rows, a motherboard gets Socket/Chipset rows, a bundled combo gets an "Included" row listing what's mounted. Keep the same visual style used elsewhere (navy header row #1F4E79, alternating white/#f9f9f9 row shading, 35% label column). Always end the specs table with Condition, then Included, then Description rows, followed by a Shipping & Returns block using: Shipping = "Free Shipping", Return Policy = the value in notes_for_claude (default "30 Days Free Return" if not stated).\n\n` +
