@@ -66,6 +66,15 @@
   .dp-input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,91,255,.13);}
   .dp-preview{font:600 12px/1.5 var(--mono); color:var(--accent-ink); background:var(--accent-tint); border:1px solid var(--accent-tint-2);
     border-radius:var(--r-md); padding:8px 10px; word-break:break-all; min-height:32px;}
+  .sku-assign-box{border:1px solid var(--line-2); border-radius:var(--r-lg); background:var(--surface-2); padding:0; margin-top:8px; overflow:hidden;}
+  .sku-assign-box summary{cursor:pointer; padding:9px 12px; font-size:11.5px; font-weight:700; color:var(--ink-soft); list-style:none; display:flex; align-items:center; gap:8px;}
+  .sku-assign-box summary::-webkit-details-marker{display:none;}
+  .sku-assign-box[open] summary{border-bottom:1px solid var(--line-2);}
+  .sku-assign-box > div, .sku-assign-box > .dp-label, .sku-assign-box > .dp-preview{padding-left:12px; padding-right:12px;}
+  .sku-assign-box > .dp-preview{margin-bottom:12px;}
+  .sku-assign-ready{font:700 10px/1 var(--mono); color:#0E7490; background:#CFFAFE; border:1px solid #A5F3FC; border-radius:6px; padding:3px 7px;}
+  .sku-assign-empty{font:600 10px/1 var(--sans); color:var(--ink-faint); background:var(--surface); border:1px solid var(--line-2); border-radius:6px; padding:3px 7px;}
+  .sku-assign-preview{font:700 12px/1.4 var(--mono);}
   .dp-add-entry{width:100%; padding:10px; border:1px dashed var(--line-2); border-radius:var(--r-lg); background:transparent;
     color:var(--ink-soft); font:600 12.5px/1 var(--sans); cursor:pointer; transition:all .15s; margin-bottom:12px;}
   .dp-add-entry:hover{border-color:var(--accent); color:var(--accent-ink); background:var(--accent-tint);}
@@ -1126,6 +1135,46 @@
   .dp-tab { background: var(--wan-card) !important; border-color: var(--wan-border) !important; color: var(--wan-faint) !important; }
   .dp-tab.on { background: var(--wan-accent) !important; border-color: var(--wan-accent) !important; color: #fff !important; }
   .manifest-warning { color: rgba(251,191,36,.6) !important; }
+  .sku-assign-box {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border2) !important;
+  }
+  .sku-assign-box summary {
+    color: var(--wan-soft) !important;
+  }
+  .sku-assign-box[open] summary {
+    border-color: var(--wan-border) !important;
+  }
+  .sku-assign-box .dp-label {
+    color: var(--wan-faint) !important;
+  }
+  .sku-assign-box .dp-input {
+    background: var(--wan-surface) !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-ink) !important;
+  }
+  .sku-assign-box .dp-input::placeholder {
+    color: var(--wan-faint) !important;
+  }
+  .sku-assign-box .dp-input:disabled {
+    background: rgba(255,255,255,.04) !important;
+    color: var(--wan-soft) !important;
+  }
+  .sku-assign-preview {
+    background: var(--wan-surface) !important;
+    color: var(--wan-ink) !important;
+    border-color: var(--wan-border2) !important;
+  }
+  .sku-assign-ready {
+    color: #67E8F9 !important;
+    background: rgba(103,232,249,.12) !important;
+    border-color: rgba(103,232,249,.3) !important;
+  }
+  .sku-assign-empty {
+    color: var(--wan-faint) !important;
+    background: var(--wan-surface) !important;
+    border-color: var(--wan-border2) !important;
+  }
   .dp-add-entry {
     border-color: var(--wan-border2) !important;
     color: var(--wan-soft) !important;
@@ -3557,6 +3606,8 @@
     <div class="strip-divider"></div>
     <div class="strip-stat">🗣️ BhaiMode <span class="strip-stat-num" id="stripBhai">0</span></div>
     <div class="strip-divider"></div>
+    <div class="strip-stat">📖 Registry <span class="strip-stat-num" id="abribookCodeCount">0 codes</span></div>
+    <div class="strip-divider"></div>
     <div class="strip-stat">🎯 Goal <span class="strip-stat-num" id="stripGoal">—</span></div>
     <div style="margin-left:auto;font-size:10.5px;opacity:.5;">session only · resets on close</div>
   </div>
@@ -3671,6 +3722,39 @@
             ✏️ <b>Surgical edit mode</b> — paste the Website SKU below, describe the drive/RAM in the same format you'd use in Batch. Title, description, and metafields are rewritten to match the SYG format. Nothing is created from scratch.
           </div>
 
+          <details class="sku-assign-box">
+            <summary>🏷️ SKU Assignment <span class="sku-assign-empty" id="uniSkuAssignBadge">not assigned yet</span></summary>
+            <div class="dp-row" style="margin-top:8px">
+              <div>
+                <div class="dp-label">PO Number</div>
+                <input class="dp-input" id="uniPoNumber" placeholder="e.g. 4821" autocomplete="off" spellcheck="false">
+              </div>
+              <div>
+                <div class="dp-label">Unit Number <span style="opacity:.6;font-weight:400">(auto)</span></div>
+                <input class="dp-input" id="uniUnitNumber" disabled style="opacity:.6;cursor:not-allowed">
+              </div>
+            </div>
+            <div class="dp-row" style="margin-top:7px">
+              <div style="grid-column:1/-1">
+                <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet)</span></div>
+                <input class="dp-input" id="uniInvLocation" placeholder="e.g. A12" autocomplete="off" spellcheck="false">
+              </div>
+            </div>
+            <div class="dp-label" style="margin-top:7px">Generated SKU</div>
+            <div class="dp-preview sku-assign-preview" id="uniSkuAssignPreview">Enter a PO Number to generate</div>
+          </details>
+
+          <div class="dp-row" style="margin-top:8px">
+            <div>
+              <div class="dp-label">Cost <span style="opacity:.6;font-weight:400">(per item)</span></div>
+              <input class="dp-input" id="uniCost" placeholder="e.g. 12.50" autocomplete="off" inputmode="decimal">
+            </div>
+            <div>
+              <div class="dp-label">Price <span style="opacity:.6;font-weight:400">(optional)</span></div>
+              <input class="dp-input" id="uniPrice" placeholder="e.g. 39.99" autocomplete="off" inputmode="decimal">
+            </div>
+          </div>
+
           <div class="uni-conf-strip">
             <div class="uni-conf-left">
               <span class="conf-label">Confidence</span>
@@ -3750,6 +3834,39 @@
 
           <div class="uni-edit-banner" id="bhaiActionBanner" style="display:none;">
             ✏️ <b>Edit mode</b> — this Website SKU will be matched to an existing product. Only title, description, metafields, vendor, tags, and price will change. Quantity is never touched.
+          </div>
+
+          <details class="sku-assign-box">
+            <summary>🏷️ SKU Assignment <span class="sku-assign-empty" id="bhaiSkuAssignBadge">not assigned yet</span></summary>
+            <div class="dp-row" style="margin-top:8px">
+              <div>
+                <div class="dp-label">PO Number</div>
+                <input class="dp-input" id="bhaiPoNumber" placeholder="e.g. 4821" autocomplete="off" spellcheck="false">
+              </div>
+              <div>
+                <div class="dp-label">Unit Number <span style="opacity:.6;font-weight:400">(auto)</span></div>
+                <input class="dp-input" id="bhaiUnitNumber" disabled style="opacity:.6;cursor:not-allowed">
+              </div>
+            </div>
+            <div class="dp-row" style="margin-top:7px">
+              <div style="grid-column:1/-1">
+                <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet)</span></div>
+                <input class="dp-input" id="bhaiInvLocation" placeholder="e.g. A12" autocomplete="off" spellcheck="false">
+              </div>
+            </div>
+            <div class="dp-label" style="margin-top:7px">Generated SKU</div>
+            <div class="dp-preview sku-assign-preview" id="bhaiSkuAssignPreview">Enter a PO Number to generate</div>
+          </details>
+
+          <div class="dp-row" style="margin-top:8px">
+            <div>
+              <div class="dp-label">Cost <span style="opacity:.6;font-weight:400">(per item)</span></div>
+              <input class="dp-input" id="bhaiCost" placeholder="e.g. 12.50" autocomplete="off" inputmode="decimal">
+            </div>
+            <div>
+              <div class="dp-label">Price <span style="opacity:.6;font-weight:400">(optional)</span></div>
+              <input class="dp-input" id="bhaiPrice" placeholder="e.g. 39.99" autocomplete="off" inputmode="decimal">
+            </div>
           </div>
 
           <div class="uni-desc-wrap">
@@ -5247,8 +5364,74 @@ function dpApplyDim(){
 let dpNextId = 1;
 
 function dpMakeEntry(){
-  return {id: dpNextId++, code:'', result:'', sn:'', notes:'', pairs:'', pairsOn:false};
+  return {id: dpNextId++, code:'', result:'', sn:'', notes:'', pairs:'', pairsOn:false, cost:'', price:'', poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
 }
+
+// ── SKU Assignment (PO Number + Unit Number + Inventory Location) ──
+// Format: NJ02-[BATCH]-PO[number]-[unit]-[location]
+// Unit Number auto-increments per PO Number and is shared across
+// Batch, Universal, and BhaiMode so the same PO never collides no
+// matter which mode an item gets logged from.
+let poUnitCounters = {};
+function assignSkuUnit(e){
+  const po = (e.poNumber||'').trim();
+  if(!po){ e.unitNumber = ''; e._lastAssignedPo = ''; return; }
+  if(po === e._lastAssignedPo && e.unitNumber) return; // unchanged, keep existing assignment
+  poUnitCounters[po] = (poUnitCounters[po]||0) + 1;
+  e.unitNumber = poUnitCounters[po];
+  e._lastAssignedPo = po;
+}
+function computeAssignedSku(e){
+  if(!e.poNumber || !e.unitNumber) return '';
+  const base = 'NJ02-' + (LISTER_BATCH || 'BATCH');
+  let sku = `${base}-PO${e.poNumber}-${e.unitNumber}`;
+  if((e.invLocation||'').trim()) sku += '-' + e.invLocation.trim();
+  return sku;
+}
+function skuAssignmentBlockHTML(e, idPrefix){
+  const assigned = computeAssignedSku(e);
+  return `<details class="sku-assign-box">
+    <summary>🏷️ SKU Assignment ${assigned ? '<span class="sku-assign-ready">'+esc(assigned)+'</span>' : '<span class="sku-assign-empty">not assigned yet</span>'}</summary>
+    <div class="dp-row" style="margin-top:8px">
+      <div>
+        <div class="dp-label">PO Number</div>
+        <input class="dp-input" placeholder="e.g. 4821" data-${idPrefix}id="${e.id}" data-${idPrefix}field="poNumber" value="${esc(e.poNumber)}" autocomplete="off" spellcheck="false">
+      </div>
+      <div>
+        <div class="dp-label">Unit Number <span style="opacity:.6;font-weight:400">(auto)</span></div>
+        <input class="dp-input" data-unit-display="${e.id}" value="${esc(String(e.unitNumber||''))}" disabled style="opacity:.6;cursor:not-allowed">
+      </div>
+    </div>
+    <div class="dp-row" style="margin-top:7px">
+      <div style="grid-column:1/-1">
+        <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet)</span></div>
+        <input class="dp-input" placeholder="e.g. A12" data-${idPrefix}id="${e.id}" data-${idPrefix}field="invLocation" value="${esc(e.invLocation)}" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="dp-label" style="margin-top:7px">Generated SKU</div>
+    <div class="dp-preview sku-assign-preview">${assigned ? esc(assigned) : 'Enter a PO Number to generate'}</div>
+  </details>
+  <div class="dp-row" style="margin-top:8px">
+    <div>
+      <div class="dp-label">Cost <span style="opacity:.6;font-weight:400">(per item)</span></div>
+      <input class="dp-input" placeholder="e.g. 12.50" data-${idPrefix}id="${e.id}" data-${idPrefix}field="cost" value="${esc(e.cost)}" autocomplete="off" inputmode="decimal">
+    </div>
+    <div>
+      <div class="dp-label">Price <span style="opacity:.6;font-weight:400">(optional)</span></div>
+      <input class="dp-input" placeholder="e.g. 39.99" data-${idPrefix}id="${e.id}" data-${idPrefix}field="price" value="${esc(e.price)}" autocomplete="off" inputmode="decimal">
+    </div>
+  </div>`;
+}
+
+// ── Abribook code registry counter ──────────────────────────────
+function abribookCodeCount(){
+  return (BUILTIN.storage||[]).length + (BUILTIN.ram||[]).length;
+}
+function updateAbribookCodeCounter(){
+  const el = document.getElementById('abribookCodeCount');
+  if(el) el.textContent = abribookCodeCount() + ' codes';
+}
+
 function dpEntrySkuLabel(e){
   const pos = dpEntries.findIndex(x=>x.id===e.id);
   const num = pos === -1 ? e.id : pos + 1;
@@ -5282,6 +5465,11 @@ function dpLineFor(e){
   }
   if(e.notes) line += ' ' + e.notes;
   if(e.sn)    line += ' SN: ' + e.sn;
+  const assigned = computeAssignedSku(e);
+  if(assigned) line += ' | Assigned SKU: ' + assigned;
+  if((e.invLocation||'').trim() && !assigned) line += ' | Location: ' + e.invLocation;
+  if(e.cost)  line += ' | Cost: $' + e.cost;
+  if(e.price) line += ' | Price: $' + e.price;
   // Append lister SKU
   line += ' | SKU: ' + dpEntrySkuLabel(e);
   // Append lister HTML comment (visible in code view)
@@ -5357,7 +5545,14 @@ function dpRenderEntry(e){
     ? `<span class="dp-sku-resolved">✓ ${esc(hit.desc.slice(0,38)+(hit.desc.length>38?'…':''))}</span>`
     : (e.code ? `<span style="font-size:10px;color:var(--warn);font-weight:600;margin-left:4px">unknown code</span>` : '');
   wrap.querySelector('.dp-resolved').innerHTML = resolvedHtml;
-  wrap.querySelector('.dp-preview').textContent = dpLineFor(e) || '—';
+  wrap.querySelector('.entry-main-preview').textContent = dpLineFor(e) || '—';
+  const skuPreview = wrap.querySelector('.sku-assign-preview');
+  const assigned = computeAssignedSku(e);
+  if(skuPreview) skuPreview.textContent = assigned || 'Enter a PO Number to generate';
+  const unitDisplay = wrap.querySelector('[data-unit-display]');
+  if(unitDisplay) unitDisplay.value = e.unitNumber || '';
+  const summaryEl = wrap.querySelector('.sku-assign-box summary');
+  if(summaryEl) summaryEl.innerHTML = '🏷️ SKU Assignment ' + (assigned ? '<span class="sku-assign-ready">'+esc(assigned)+'</span>' : '<span class="sku-assign-empty">not assigned yet</span>');
   dpUpdatePreviewAll();
 }
 
@@ -5399,8 +5594,9 @@ function dpBuildEntryHTML(e){
         <input class="dp-input" placeholder="optional" data-dpid="${e.id}" data-dpfield="notes" value="${esc(e.notes)}" autocomplete="off">
       </div>
     </div>
+    ${skuAssignmentBlockHTML(e, 'dp')}
     <div class="dp-label" style="margin-top:4px">Preview</div>
-    <div class="dp-preview">—</div>
+    <div class="dp-preview entry-main-preview">—</div>
   </div>`;
 }
 
@@ -5442,10 +5638,16 @@ function dpHandleInput(ev){
 
 function dpHandleBlur(ev){
   const el = ev.target;
-  if(el.dataset.dpfield !== 'result') return;
   const id = parseInt(el.dataset.dpid);
   const e = dpEntries.find(x=>x.id===id);
-  if(!e || dpIsRam(e.code)) return; // RAM: leave as-is (Pass/Fail text)
+  if(!e) return;
+  if(el.dataset.dpfield === 'poNumber'){
+    assignSkuUnit(e);
+    dpRenderEntry(e);
+    return;
+  }
+  if(el.dataset.dpfield !== 'result') return;
+  if(dpIsRam(e.code)) return; // RAM: leave as-is (Pass/Fail text)
   const fmt = dpFmtHealth(e.result);
   if(fmt){ el.value = fmt; e.result = fmt; dpRenderEntry(e); }
 }
@@ -5600,6 +5802,9 @@ function bhaiLineFor(e, idx){
   line += ' | Website SKU: ' + (e.websiteSku || '(none — creates new draft)');
   line += ' | SKU: ' + bhaiEntrySkuLabel(e);
   if(LISTER_INITIAL) line += ' ' + listerComment();
+  if(e.assignedSku) line += ' | Assigned SKU: ' + e.assignedSku;
+  if(e.cost) line += ' | Cost: $' + e.cost;
+  if(e.price) line += ' | Price: $' + e.price;
   line += '\nDescription: ' + (e.desc || '—');
   line += '\nShipping: Free Shipping | Returns: ' + (e.returnPolicy || '30 Days Free Return');
   if(e.claudeNotes) line += '\nNotes for Claude: ' + e.claudeNotes;
@@ -5607,14 +5812,41 @@ function bhaiLineFor(e, idx){
   return line;
 }
 
+// ── BhaiMode SKU Assignment (persists PO/unit across form edits
+// until the entry is actually added to the queue) ──────────────
+let bhaiFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
+function bhaiSkuAssignBlur(){
+  bhaiFormSkuState.poNumber = document.getElementById('bhaiPoNumber')?.value.trim() || '';
+  assignSkuUnit(bhaiFormSkuState);
+  const unitEl = document.getElementById('bhaiUnitNumber');
+  if(unitEl) unitEl.value = bhaiFormSkuState.unitNumber || '';
+  bhaiRefreshSkuPreview();
+}
+function bhaiRefreshSkuPreview(){
+  bhaiFormSkuState.invLocation = document.getElementById('bhaiInvLocation')?.value.trim() || '';
+  const assigned = computeAssignedSku(bhaiFormSkuState);
+  const prevEl = document.getElementById('bhaiSkuAssignPreview');
+  const badgeEl = document.getElementById('bhaiSkuAssignBadge');
+  if(prevEl) prevEl.textContent = assigned || 'Enter a PO Number to generate';
+  if(badgeEl){ badgeEl.textContent = assigned || 'not assigned yet'; badgeEl.className = assigned ? 'sku-assign-ready' : 'sku-assign-empty'; }
+}
+document.getElementById('bhaiPoNumber')?.addEventListener('blur', bhaiSkuAssignBlur);
+document.getElementById('bhaiInvLocation')?.addEventListener('input', bhaiRefreshSkuPreview);
+
 function bhaiMakeFromForm(){
   return {
     id: 0,
-    websiteSku: document.getElementById('bhaiWebsiteSku')?.value.trim() || '',
+    websiteSku: document.getElementById('bhaiWebsiteSku')?.value.trim() || computeAssignedSku(bhaiFormSkuState) || '',
     desc: document.getElementById('bhaiDesc')?.value.trim() || '',
     claudeNotes: document.getElementById('bhaiClaudeNotes')?.value.trim() || '',
     returnPolicy: document.getElementById('bhaiReturnPolicy')?.value || '30 Days Free Return',
-    needsResearch: !!document.getElementById('bhaiNeedsResearch')?.checked
+    needsResearch: !!document.getElementById('bhaiNeedsResearch')?.checked,
+    cost: document.getElementById('bhaiCost')?.value.trim() || '',
+    price: document.getElementById('bhaiPrice')?.value.trim() || '',
+    poNumber: bhaiFormSkuState.poNumber || '',
+    unitNumber: bhaiFormSkuState.unitNumber || '',
+    invLocation: document.getElementById('bhaiInvLocation')?.value.trim() || '',
+    assignedSku: computeAssignedSku(bhaiFormSkuState)
   };
 }
 
@@ -5630,9 +5862,12 @@ function bhaiUpdatePreview(){
 }
 
 function clearBhaiForm(){
-  ['bhaiWebsiteSku','bhaiDesc','bhaiClaudeNotes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['bhaiWebsiteSku','bhaiDesc','bhaiClaudeNotes','bhaiPoNumber','bhaiInvLocation','bhaiCost','bhaiPrice'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const unitEl = document.getElementById('bhaiUnitNumber'); if(unitEl) unitEl.value='';
   const nr=document.getElementById('bhaiNeedsResearch'); if(nr) nr.checked=false;
   const rp=document.getElementById('bhaiReturnPolicy'); if(rp) rp.value='30 Days Free Return';
+  bhaiFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
+  bhaiRefreshSkuPreview();
   bhaiUpdatePreview();
 }
 
@@ -5740,8 +5975,9 @@ function bhaiEntryObject(e, idx){
   return {
     panel:'BhaiMode', item_type:'', action: bhaiAction(e), website_sku:e.websiteSku||'', abribook_code:'', serial_number:'', health_test_result:'',
     raw_item_description:e.desc||'', testing_notes:'', condition_notes:'', known_issues:'',
-    notes_for_claude:[e.claudeNotes||'', 'Shipping: Free Shipping', e.returnPolicy ? ('Returns: '+e.returnPolicy) : ''].filter(Boolean).join(' | '),
-    price:'', cost:'',
+    notes_for_claude:[e.claudeNotes||'', 'Shipping: Free Shipping', e.returnPolicy ? ('Returns: '+e.returnPolicy) : '', e.price ? ('Price: $'+e.price) : '', e.cost ? ('Cost: $'+e.cost) : ''].filter(Boolean).join(' | '),
+    price: e.price||'', cost: e.cost||'',
+    po_number: e.poNumber||'', unit_number: e.unitNumber||'', inventory_location: e.invLocation||'', assigned_sku: e.assignedSku||'',
     title_preview:'', html_description_preview:'', metafields_preview:'',
     status: e.desc ? 'Ready for Claude' : 'Missing Info', needs_research: e.needsResearch?'Yes':'',
     entry_line: bhaiLineFor(e, idx)
@@ -6019,7 +6255,7 @@ function compactTableHtml(entry){
 function uniMakePreviewObject(){
   return {
     id: 0,
-    websiteSku: document.getElementById('uniWebsiteSku')?.value.trim() || '',
+    websiteSku: document.getElementById('uniWebsiteSku')?.value.trim() || computeAssignedSku(uniFormSkuState) || '',
     itemType: document.getElementById('uniItemType')?.value || 'Laptop',
     typedFields: {},
     desc: document.getElementById('uniDesc')?.value.trim() || '',
@@ -6029,9 +6265,37 @@ function uniMakePreviewObject(){
     shippingPolicy: 'Free Shipping',
     returnPolicy: document.getElementById('uniReturnPolicy')?.value || '30 Days Free Return',
     claudeNotes: document.getElementById('uniClaudeNotes')?.value.trim() || '',
-    needsResearch: !!document.getElementById('uniNeedsResearch')?.checked
+    needsResearch: !!document.getElementById('uniNeedsResearch')?.checked,
+    cost: document.getElementById('uniCost')?.value.trim() || '',
+    price: document.getElementById('uniPrice')?.value.trim() || '',
+    poNumber: uniFormSkuState.poNumber || '',
+    unitNumber: uniFormSkuState.unitNumber || '',
+    invLocation: document.getElementById('uniInvLocation')?.value.trim() || '',
+    assignedSku: computeAssignedSku(uniFormSkuState)
   };
 }
+
+// ── Universal SKU Assignment (persists PO/unit across form edits
+// until the entry is actually added to the queue) ──────────────
+let uniFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
+function uniSkuAssignBlur(){
+  uniFormSkuState.poNumber = document.getElementById('uniPoNumber')?.value.trim() || '';
+  assignSkuUnit(uniFormSkuState);
+  const unitEl = document.getElementById('uniUnitNumber');
+  if(unitEl) unitEl.value = uniFormSkuState.unitNumber || '';
+  uniRefreshSkuPreview();
+}
+function uniRefreshSkuPreview(){
+  uniFormSkuState.invLocation = document.getElementById('uniInvLocation')?.value.trim() || '';
+  const assigned = computeAssignedSku(uniFormSkuState);
+  const prevEl = document.getElementById('uniSkuAssignPreview');
+  const badgeEl = document.getElementById('uniSkuAssignBadge');
+  if(prevEl) prevEl.textContent = assigned || 'Enter a PO Number to generate';
+  if(badgeEl){ badgeEl.textContent = assigned || 'not assigned yet'; badgeEl.className = assigned ? 'sku-assign-ready' : 'sku-assign-empty'; }
+}
+document.getElementById('uniPoNumber')?.addEventListener('blur', uniSkuAssignBlur);
+document.getElementById('uniInvLocation')?.addEventListener('input', uniRefreshSkuPreview);
+
 function updateUniPreview(){
   const e = uniMakePreviewObject();
   const html = compactTableHtml(e);
@@ -6064,7 +6328,11 @@ function uniStatusClass(e){
   return 'low';
 }
 function uniEntryLine(e, idx){
-  return `UNIVERSAL #${idx+1} | Website SKU: ${e.websiteSku||'MISSING'} | Type: ${e.itemType} | Confidence: ${e.confidence?.level||'\u2014'} ${e.confidence?.score??''}% | Status: ${e.status}\nTitle Preview: ${e.titlePreview||'\u2014'}\nDescription: ${e.desc||'\u2014'}\nShipping: Free Shipping\nReturns: ${e.returnPolicy||'\u2014'}${e.claudeNotes?'\nNotes for Claude: '+e.claudeNotes:''}`;
+  const extras = [];
+  if(e.assignedSku) extras.push('Assigned SKU: '+e.assignedSku);
+  if(e.cost) extras.push('Cost: $'+e.cost);
+  if(e.price) extras.push('Price: $'+e.price);
+  return `UNIVERSAL #${idx+1} | Website SKU: ${e.websiteSku||'MISSING'} | Type: ${e.itemType} | Confidence: ${e.confidence?.level||'\u2014'} ${e.confidence?.score??''}% | Status: ${e.status}${extras.length ? ' | '+extras.join(' | ') : ''}\nTitle Preview: ${e.titlePreview||'\u2014'}\nDescription: ${e.desc||'\u2014'}\nShipping: Free Shipping\nReturns: ${e.returnPolicy||'\u2014'}${e.claudeNotes?'\nNotes for Claude: '+e.claudeNotes:''}`;
 }
 function renderUniEntries(){
   const box = document.getElementById('uniEntries');
@@ -6080,20 +6348,25 @@ function renderUniEntries(){
   updateGoalCounter();
 }
 function clearUniForm(){
-  ['uniWebsiteSku','uniDesc','uniClaudeNotes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['uniWebsiteSku','uniDesc','uniClaudeNotes','uniPoNumber','uniInvLocation','uniCost','uniPrice'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const unitEl = document.getElementById('uniUnitNumber'); if(unitEl) unitEl.value='';
   const nr=document.getElementById('uniNeedsResearch'); if(nr) nr.checked=false;
   const rp=document.getElementById('uniReturnPolicy'); if(rp) rp.value='30 Days Free Return';
   uniTypedFields = {};
+  uniFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
+  uniRefreshSkuPreview();
   updateUniPreview();
 }
 function batchEntryObject(e, idx){
   const ram = dpIsRam(e.code);
   const hit = resolveCode(e.code);
+  const assignedSku = computeAssignedSku(e);
   return {
-    panel:'Batch', item_type: ram ? 'RAM' : 'Storage', website_sku:'', abribook_code:e.code||'', serial_number:e.sn||'', health_test_result:e.result||'',
+    panel:'Batch', item_type: ram ? 'RAM' : 'Storage', website_sku: assignedSku||'', abribook_code:e.code||'', serial_number:e.sn||'', health_test_result:e.result||'',
     raw_item_description: hit ? hit.desc : '', testing_notes: ram ? (e.result||'') : (e.result ? 'Drive health: '+e.result : ''), condition_notes:e.notes||'', known_issues:'',
     notes_for_claude: [e.pairsOn && e.pairs ? ('Qty: '+e.pairs+' pairs') : '', e.price ? ('Price: $'+e.price) : '', e.cost ? ('Cost: $'+e.cost) : ''].filter(Boolean).join(' | '),
     price: e.price||'', cost: e.cost||'',
+    po_number: e.poNumber||'', unit_number: e.unitNumber||'', inventory_location: e.invLocation||'', assigned_sku: assignedSku||'',
     title_preview:'', html_description_preview:'', metafields_preview:'',
     status: e.code ? 'Ready for Claude' : 'Missing Info', entry_line: dpLineFor(e)
   };
@@ -6174,6 +6447,7 @@ function universalEntryObject(e){
     raw_item_description:e.desc||'', testing_notes:e.testing||'', condition_notes:e.condition||'', known_issues:e.issues||'',
     notes_for_claude:[e.claudeNotes||'', e.shippingPolicy ? ('Shipping: '+e.shippingPolicy) : '', e.returnPolicy ? ('Returns: '+e.returnPolicy) : '', e.price ? ('Price: $'+e.price) : '', e.cost ? ('Cost: $'+e.cost) : ''].filter(Boolean).join(' | '),
     price: e.price||'', cost: e.cost||'',
+    po_number: e.poNumber||'', unit_number: e.unitNumber||'', inventory_location: e.invLocation||'', assigned_sku: e.assignedSku||'',
     title_preview:e.titlePreview||'', html_description_preview:e.htmlPreview||compactTableHtml(e), metafields_preview:JSON.stringify(uniMapMetafields(e)), status:e.status||'Draft',
     needs_research:e.needsResearch?'Yes':'', entry_line: uniEntryLine(e,0)
   };
@@ -6202,6 +6476,9 @@ function buildClaudePrepPrompt(){
       `// BATCH ENTRIES (RAM / Storage)\n` +
       `// Use the /syg-listing-generator skill — load it first, then paste these lines.\n` +
       `// DO NOT use the Universal listing-edit prompt for these.\n` +
+      `// If a line includes "Assigned SKU: ...", use that as the Website SKU.\n` +
+      `// If a line includes "Cost: $...", set that as the product's per-unit cost\n` +
+      `// (Shopify inventory item cost) in addition to any price.\n` +
       `// ═══════════════════════════════════════════════════════════\n\n` +
       batchLines.join('\n')
     );
@@ -6213,10 +6490,11 @@ function buildClaudePrepPrompt(){
       entry_number:i+1, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister, website_sku:e.website_sku, panel:e.panel, item_type:e.item_type,
       abribook_code:e.abribook_code, serial_number:e.serial_number, health_test_result:e.health_test_result, raw_item_description:e.raw_item_description,
       testing_notes:e.testing_notes, condition_notes:e.condition_notes, known_issues_missing_parts:e.known_issues, notes_for_claude:e.notes_for_claude,
+      cost:e.cost, price:e.price, po_number:e.po_number, unit_number:e.unit_number, inventory_location:e.inventory_location, assigned_sku:e.assigned_sku,
       title_preview:e.title_preview, html_description_preview:e.html_description_preview, metafields_preview:e.metafields_preview, needs_research:e.needs_research||'', status:e.status
     }));
     parts.push(
-      `You are preparing the SYG manifest for bulk listing edits.\n\nRules:\n- Website SKU is the matching key. Do not change it.\n- Do not invent missing specs. Mark missing info as MISSING.\n- For Universal entries, use the item type and typed fields to generate category-correct title, compact HTML description, and metafields.\n- Every final HTML description must include Shipping and Returns rows using the provided policy values.\n- Respect Needs Research. If an entry is Needs Research, explain what must be verified before listing.\n- If an entry is ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- Universal item types are CPU, GPU, Console, Laptop, Desktop, Phone, Motherboard.\n\nSHOPIFY METAFIELD KEYS (namespace: custom) — use ONLY these exact keys, no others:\n  type, brand, model, model_number, features, screen_size, color, connectivity,\n  processor, storage_capacity, operating_system, ram, gpu, mpn, network,\n  platform, release_year, game_name, upc\n\nPer item type, fill only the relevant keys:\n- Console:     type, brand, model, model_number, storage_capacity, color, network, mpn\n- Phone:       type, brand, model, model_number, storage_capacity, color, network, operating_system, screen_size, mpn, upc\n- Laptop:      type, brand, model, model_number, processor, ram, storage_capacity, gpu, operating_system, screen_size, mpn\n- Desktop:     type, brand, model, processor, ram, storage_capacity, gpu, operating_system, mpn\n- GPU:         type, brand, model, model_number, gpu, features, mpn\n- CPU:         type, brand, model, model_number, processor, platform, mpn\n- Motherboard: type, brand, model, model_number, platform, features, mpn\n\nDo NOT output keys like console_model, edition_storage, controller_included, cables_included, shipping, returns, or any other freeform keys not in the list above.\n\nReturn one completed row per Website SKU with these columns:\nWebsite SKU | Internal SKU | Item Type | Corrected Title | Final HTML Description | Final Metafields | Missing Info Warnings | Photo Reminder | Status\n\nUniversal manifest data:\n${JSON.stringify(payload,null,2)}`
+      `You are preparing the SYG manifest for bulk listing edits.\n\nRules:\n- Website SKU is the matching key. Do not change it.\n- Do not invent missing specs. Mark missing info as MISSING.\n- For Universal entries, use the item type and typed fields to generate category-correct title, compact HTML description, and metafields.\n- Every final HTML description must include Shipping and Returns rows using the provided policy values.\n- Respect Needs Research. If an entry is Needs Research, explain what must be verified before listing.\n- If an entry is ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- Universal item types are CPU, GPU, Console, Laptop, Desktop, Phone, Motherboard.\n- If assigned_sku is present and website_sku is blank, use assigned_sku as the Website SKU. po_number, unit_number, and inventory_location are internal tracking metadata only — never output them as metafields.\n- If cost is provided, set/update the product's per-unit cost (Shopify inventory item cost) alongside price — cost and price are different fields, do not conflate them.\n\nSHOPIFY METAFIELD KEYS (namespace: custom) — use ONLY these exact keys, no others:\n  type, brand, model, model_number, features, screen_size, color, connectivity,\n  processor, storage_capacity, operating_system, ram, gpu, mpn, network,\n  platform, release_year, game_name, upc\n\nPer item type, fill only the relevant keys:\n- Console:     type, brand, model, model_number, storage_capacity, color, network, mpn\n- Phone:       type, brand, model, model_number, storage_capacity, color, network, operating_system, screen_size, mpn, upc\n- Laptop:      type, brand, model, model_number, processor, ram, storage_capacity, gpu, operating_system, screen_size, mpn\n- Desktop:     type, brand, model, processor, ram, storage_capacity, gpu, operating_system, mpn\n- GPU:         type, brand, model, model_number, gpu, features, mpn\n- CPU:         type, brand, model, model_number, processor, platform, mpn\n- Motherboard: type, brand, model, model_number, platform, features, mpn\n\nDo NOT output keys like console_model, edition_storage, controller_included, cables_included, shipping, returns, or any other freeform keys not in the list above.\n\nReturn one completed row per Website SKU with these columns:\nWebsite SKU | Internal SKU | Item Type | Corrected Title | Final HTML Description | Final Metafields | Missing Info Warnings | Photo Reminder | Status\n\nUniversal manifest data:\n${JSON.stringify(payload,null,2)}`
     );
   }
 
@@ -6225,6 +6503,7 @@ function buildClaudePrepPrompt(){
     const payload = bhaiEntries.map((e, i)=>({
       entry_number:i+1, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister,
       action:e.action, website_sku:e.website_sku, raw_item_description:e.raw_item_description,
+      cost:e.cost, price:e.price, po_number:e.po_number, unit_number:e.unit_number, inventory_location:e.inventory_location, assigned_sku:e.assigned_sku,
       notes_for_claude:e.notes_for_claude, needs_research:e.needs_research||'', status:e.status
     }));
     parts.push(
@@ -6255,7 +6534,7 @@ function buildClaudePrepPrompt(){
       `Do NOT invent keys outside this list. Do not invent values — if a spec isn't in the description, mark that field MISSING rather than guessing.\n\n` +
       `STEP 4 — TITLE + HTML DESCRIPTION (flexible, not templated).\n` +
       `Write a natural SEO-appropriate title for the item. Build an "Item Specifications" HTML table using whatever rows are actually relevant to THIS item — don't force irrelevant fields in, don't omit relevant ones. Use judgment: a PSU naturally gets Wattage/Certification rows, a motherboard gets Socket/Chipset rows, a bundled combo gets an "Included" row listing what's mounted. Keep the same visual style used elsewhere (navy header row #1F4E79, alternating white/#f9f9f9 row shading, 35% label column). Always end the specs table with Condition, then Included, then Description rows, followed by a Shipping & Returns block using: Shipping = "Free Shipping", Return Policy = the value in notes_for_claude (default "30 Days Free Return" if not stated).\n\n` +
-      `GUARDRAILS.\n- Do not invent missing specs — mark them MISSING.\n- If needs_research is "Yes", explain what must be verified before listing instead of finalizing it.\n- If ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- If raw_item_description conflicts with something already on file (e.g. a registry code mislabeled), flag it explicitly rather than silently propagating the error.\n\n` +
+      `GUARDRAILS.\n- Do not invent missing specs — mark them MISSING.\n- If needs_research is "Yes", explain what must be verified before listing instead of finalizing it.\n- If ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- If raw_item_description conflicts with something already on file (e.g. a registry code mislabeled), flag it explicitly rather than silently propagating the error.\n- If assigned_sku is present and website_sku is blank, use assigned_sku as the Website SKU. po_number, unit_number, and inventory_location are internal tracking metadata only — never output them as metafields.\n- If cost is provided, set/update the product's per-unit cost (Shopify inventory item cost) alongside price — these are different fields, do not conflate them.\n\n` +
       `Return one completed row per entry with these columns:\n` +
       `Internal SKU | Action (CREATE/EDIT) | Website SKU | Classified Type | Title | Final HTML Description | Final Metafields | Missing Info Warnings | Photo Reminder | Status\n\n` +
       `BhaiMode entries:\n${JSON.stringify(payload,null,2)}`
@@ -6480,6 +6759,7 @@ updateUniPreview();
 renderUniEntries();
 bhaiUpdatePreview();
 renderBhaiEntries();
+updateAbribookCodeCounter();
 updateGoalCounter();
 
 // ── Universal: auto-fill Condition Notes from Describe field ─────
