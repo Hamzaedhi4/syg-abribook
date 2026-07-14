@@ -57,6 +57,10 @@
   .dp-rmv{margin-left:auto; background:none; border:none; color:var(--ink-faint); font-size:16px; cursor:pointer; padding:0 2px; line-height:1;
     border-radius:4px; transition:color .12s;}
   .dp-rmv:hover{color:var(--fail);}
+  .dp-card-icon-btn{background:none; border:none; color:var(--ink-faint); font-size:13px; cursor:pointer; padding:0 3px; line-height:1;
+    border-radius:4px; transition:color .12s;}
+  .dp-card-icon-btn:first-of-type{margin-left:auto;}
+  .dp-card-icon-btn:hover{color:var(--accent-ink);}
   .dp-row{display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:7px;}
   .dp-row.full{grid-template-columns:1fr;}
   .dp-label{font-size:10px; font-weight:600; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.07em; margin-bottom:3px;}
@@ -73,6 +77,8 @@
   .sku-assign-box > div, .sku-assign-box > .dp-label, .sku-assign-box > .dp-preview{padding-left:12px; padding-right:12px;}
   .sku-assign-box > .dp-preview{margin-bottom:12px;}
   .sku-assign-ready{font:700 10px/1 var(--mono); color:#0E7490; background:#CFFAFE; border:1px solid #A5F3FC; border-radius:6px; padding:3px 7px;}
+  .smart-flags{margin-top:8px; display:flex; flex-direction:column; gap:5px;}
+  .smart-flag-item{font:600 11px/1.4 var(--sans); color:#B45309; background:#FEF3C7; border:1px solid #FDE68A; border-radius:8px; padding:6px 9px;}
   .sku-assign-empty{font:600 10px/1 var(--sans); color:var(--ink-faint); background:var(--surface); border:1px solid var(--line-2); border-radius:6px; padding:3px 7px;}
   .sku-assign-preview{font:700 12px/1.4 var(--mono);}
   .dp-add-entry{width:100%; padding:10px; border:1px dashed var(--line-2); border-radius:var(--r-lg); background:transparent;
@@ -87,6 +93,19 @@
     font:700 13.5px/1 var(--sans); cursor:pointer; box-shadow:var(--shadow-1); transition:background .15s, transform .05s; letter-spacing:-.01em;}
   .dp-copy-all:hover{background:var(--accent-press);}
   .dp-copy-all:active{transform:translateY(1px);}
+  .dp-copy-all:disabled{background:var(--line-2); color:var(--ink-faint); cursor:not-allowed; box-shadow:none;}
+  .guided-row{display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:11.5px;}
+  .guided-toggle-label{display:flex; align-items:center; gap:5px; color:var(--ink-soft); font-weight:600; cursor:pointer; white-space:nowrap;}
+  #exportScopeSelect{flex:1; padding:6px 8px; border:1px solid var(--line-2); border-radius:var(--r-md); background:var(--surface); color:var(--ink); font:600 11px var(--sans);}
+  .eos-modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .eos-modal{background:var(--surface); border-radius:var(--r-lg); max-width:520px; width:100%; max-height:80vh; overflow-y:auto; padding:22px; box-shadow:0 20px 60px rgba(0,0,0,.4);}
+  .eos-modal h2{margin:0 0 14px; font-size:17px; color:var(--ink);}
+  .eos-stat-row{display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line-2); font-size:13px; color:var(--ink-soft);}
+  .eos-stat-row b{color:var(--ink);}
+  .eos-modal-actions{display:flex; gap:8px; margin-top:16px;}
+  .eos-modal-actions button{flex:1; padding:10px; border-radius:var(--r-md); font:700 12.5px var(--sans); cursor:pointer;}
+  .eos-btn-confirm{background:var(--accent); color:#fff; border:none;}
+  .eos-btn-cancel{background:transparent; border:1px solid var(--line-2); color:var(--ink-soft);}
   .dp-clear{width:100%; margin-top:7px; padding:8px; border:1px solid var(--line-2); border-radius:var(--r-md); background:transparent;
     color:var(--ink-soft); font:600 12px/1 var(--sans); cursor:pointer; transition:all .15s;}
   .dp-clear:hover{border-color:var(--fail); color:var(--fail-ink); background:var(--fail-tint);}
@@ -1175,6 +1194,11 @@
     background: var(--wan-surface) !important;
     border-color: var(--wan-border2) !important;
   }
+  .smart-flag-item {
+    color: #FCD34D !important;
+    background: rgba(252,211,77,.1) !important;
+    border-color: rgba(252,211,77,.3) !important;
+  }
   .dp-add-entry {
     border-color: var(--wan-border2) !important;
     color: var(--wan-soft) !important;
@@ -1982,6 +2006,25 @@
     box-shadow: 0 6px 28px rgba(99,102,241,.6) !important;
     transform: translateY(-1px) !important;
   }
+  .wan-panel .dp-copy-all:disabled {
+    background: var(--wan-card) !important;
+    color: var(--wan-faint) !important;
+    box-shadow: none !important;
+  }
+  .wan-panel .guided-toggle-label { color: var(--wan-soft) !important; }
+  .wan-panel #exportScopeSelect {
+    background: var(--wan-card) !important;
+    border-color: var(--wan-border2) !important;
+    color: var(--wan-ink) !important;
+  }
+  .eos-modal {
+    background: var(--wan-card) !important;
+    color: var(--wan-ink) !important;
+  }
+  .eos-modal h2 { color: var(--wan-ink) !important; }
+  .eos-stat-row { color: var(--wan-soft) !important; border-color: var(--wan-border2) !important; }
+  .eos-stat-row b { color: var(--wan-ink) !important; }
+  .eos-btn-cancel { border-color: var(--wan-border2) !important; color: var(--wan-soft) !important; }
   .wan-panel .dp-sync-all {
     background: transparent !important;
     border: 1px solid rgba(255,255,255,.1) !important;
@@ -3582,9 +3625,9 @@
     <input class="lister-batch" id="listerBatch" value="RTL" placeholder="Batch e.g. RTL0623" autocomplete="off" spellcheck="false" maxlength="12">
     <span class="lister-label" style="margin-left:4px">Abribook Page</span>
     <select class="work-select" id="workPageSelect" title="Choose the active Abribook page">
+      <option value="bhai">🗣️ BhaiMode</option>
       <option value="batch">Batch — RAM/Storage</option>
       <option value="universal">Universal — Other Items</option>
-      <option value="bhai">🗣️ BhaiMode</option>
       <option value="blitzting">⚡ Blitzting</option>
     </select>
     <div class="goal-wrap" title="Personal daily manifest goal">
@@ -3689,7 +3732,7 @@
         <div class="universal-card-title-row">
           <div>
             <h2>Universal Intake</h2>
-            <p>Phones, laptops, consoles, GPUs, CPUs, desktops, motherboards. Describe everything in plain English — Abribook builds the listing from it.</p>
+            <p><strong>You pick the category, Claude fills it in.</strong> Phones, laptops, consoles, GPUs, CPUs, desktops, motherboards — select the item type below, then describe it in plain English. More structured than BhaiMode; use this when you already know exactly what category the item belongs to.</p>
           </div>
           <button class="uni-help-btn" id="uniTutOpenBtn" type="button">📘 Tutorial</button>
         </div>
@@ -3754,6 +3797,7 @@
               <input class="dp-input" id="uniPrice" placeholder="e.g. 39.99" autocomplete="off" inputmode="decimal">
             </div>
           </div>
+          <button type="button" class="dp-add-entry" id="uniSuggestPrice" style="margin-top:7px;padding:7px;font-size:11.5px;">💡 Suggest Price (Pricing Memory)</button>
 
           <div class="uni-conf-strip">
             <div class="uni-conf-left">
@@ -3804,6 +3848,7 @@
             <div class="uni-html-preview" id="uniHtmlPreview"></div>
             <div class="uni-raw-html" id="uniRawHtml"></div>
           </div>
+          <div class="entry-flags" id="uniFlags"></div>
 
           <button class="dp-add-entry" id="uniAddEntry" style="margin:12px 0 0">+ Add to manifest queue</button>
 
@@ -3818,7 +3863,7 @@
         <div class="universal-card-title-row">
           <div>
             <h2>🗣️ BhaiMode</h2>
-            <p>Any item, any category. Describe it in plain English — no category picker. Leave Website SKU blank to draft a brand-new listing, or paste an existing one to edit that product in place. Claude classifies the type itself when you copy the manifest-prep prompt.</p>
+            <p><strong>Universal picks the category, BhaiMode figures it out.</strong> Describe any item in plain English — no category picker — and Claude classifies it for you when you copy the manifest-prep prompt. Best for a mixed grab-bag of item types, or when you don't want to think about which form to open. Leave Website SKU blank to draft a brand-new listing, or paste an existing one to edit that product in place.</p>
           </div>
         </div>
       </div>
@@ -3868,6 +3913,7 @@
               <input class="dp-input" id="bhaiPrice" placeholder="e.g. 39.99" autocomplete="off" inputmode="decimal">
             </div>
           </div>
+          <button type="button" class="dp-add-entry" id="bhaiSuggestPrice" style="margin-top:7px;padding:7px;font-size:11.5px;">💡 Suggest Price (Pricing Memory)</button>
 
           <div class="uni-desc-wrap">
             <div class="uni-desc-label-row">
@@ -3901,6 +3947,7 @@
             <div class="uni-preview-head"><b>Entry Preview</b><span class="bhai-action-badge create" id="bhaiPreviewBadge">CREATE</span></div>
             <div class="uni-html-preview" id="bhaiPreview" style="white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;padding:12px;"></div>
           </div>
+          <div class="entry-flags" id="bhaiFlags"></div>
 
           <button class="dp-add-entry" id="bhaiAddEntry" style="margin:12px 0 0">+ Add to manifest queue</button>
 
@@ -4091,10 +4138,25 @@
       <div class="dp-entries" id="bhaiEntries"></div>
     </div>
 
+    <div class="dp-tab-panel" id="dpPanelUniversal" style="display:none">
+      <div class="manifest-warning">Universal — pick the category and describe it on the left, then click <b>+ Add to manifest queue</b>. Entries stack here for review before copying the Claude manifest-prep prompt.</div>
+      <div class="dp-entries" id="uniEntries"></div>
+    </div>
+
   </div>
   <div class="dp-footer">
     <div class="dp-label" style="margin-bottom:6px">All manifest entries</div>
     <div class="dp-preview-all" id="dpPreviewAll"></div>
+
+    <div class="guided-row">
+      <label class="guided-toggle-label"><input type="checkbox" id="guidedModeToggle"> Guided mode</label>
+      <select id="exportScopeSelect" title="Which entries to include when exporting">
+        <option value="all">Export: All modes</option>
+        <option value="current">Export: This mode only</option>
+      </select>
+    </div>
+    <button class="dp-add-entry" id="reviewSessionBtn" style="display:none;margin-bottom:7px;">🗂️ Review Session</button>
+
     <button class="dp-copy-all" id="dpCopyAll">Copy Claude manifest-prep prompt</button>
     <button class="dp-sync-all" id="dpSyncAll">Sync entries to Universal Sheet</button>
     <button class="dp-clear" id="dpClear">Clear all entries</button>
@@ -4103,6 +4165,9 @@
 
 </div><!-- /.outer -->
 <div class="toast" id="toast"></div>
+<div class="eos-modal-backdrop" id="eosModalBackdrop" style="display:none;">
+  <div class="eos-modal" id="eosModal"></div>
+</div>
 
 <script>
 const BUILTIN = {
@@ -4318,6 +4383,23 @@ function setCategory(cat){
 let toastT;
 function toast(html){ const t=document.getElementById('toast'); t.innerHTML=html; t.classList.add('show');
   clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1900); }
+
+// ── Undo on delete ───────────────────────────────────────────────
+// Cheap insurance against fat-fingering a remove button on real work.
+let _lastDeleted = null; // {type, entry, index}
+function undoableToast(message, undoFn){
+  const t=document.getElementById('toast');
+  t.innerHTML = `${esc(message)} <a href="#" id="toastUndoLink" style="color:#67E8F9;text-decoration:underline;margin-left:8px;">Undo</a>`;
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),5000);
+  const link = document.getElementById('toastUndoLink');
+  if(link) link.addEventListener('click', (ev)=>{
+    ev.preventDefault();
+    undoFn();
+    t.classList.remove('show');
+  }, {once:true});
+}
 function copyText(text,cb){
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(cb).catch(()=>fallbackCopy(text,cb));
@@ -5364,7 +5446,7 @@ function dpApplyDim(){
 let dpNextId = 1;
 
 function dpMakeEntry(){
-  return {id: dpNextId++, code:'', result:'', sn:'', notes:'', pairs:'', pairsOn:false, cost:'', price:'', poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
+  return {id: dpNextId++, code:'', result:'', sn:'', notes:'', pairs:'', pairsOn:false, cost:'', price:'', poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:'', trackNumber: nextTrackNumber()};
 }
 
 // ── SKU Assignment (PO Number + Unit Number + Inventory Location) ──
@@ -5373,6 +5455,15 @@ function dpMakeEntry(){
 // Batch, Universal, and BhaiMode so the same PO never collides no
 // matter which mode an item gets logged from.
 let poUnitCounters = {};
+
+// ── Track # ──────────────────────────────────────────────────────
+// A single always-increasing number, separate from PO/Unit/SKU entirely.
+// Assigned the moment an entry lands in the queue, in queue order, across
+// ALL modes (Batch/Universal/BhaiMode) — never derived from anything else.
+// This is what physical tracking and later PDF sorting key off, so sorting
+// never again requires guessing which part of a SKU is the "real" order.
+let trackNumberCounter = 1;
+function nextTrackNumber(){ return trackNumberCounter++; }
 function assignSkuUnit(e){
   const po = (e.poNumber||'').trim();
   if(!po){ e.unitNumber = ''; e._lastAssignedPo = ''; return; }
@@ -5381,6 +5472,143 @@ function assignSkuUnit(e){
   e.unitNumber = poUnitCounters[po];
   e._lastAssignedPo = po;
 }
+// ── Pricing Memory ("Wan, using Haz's knowledge") ──────────────────
+// Seeded from actual Shopify sold+active data (Jun 15 – Jul 14, 2026 pull).
+// This is a real dataset, not a placeholder — but it only covers a partial
+// window of the last 60 days, so confidence is deliberately conservative.
+// Refresh this periodically as prices drift or more data gets pulled.
+const PRICING_MEMORY = {
+  updated: '2026-07-14',
+  coverage: 'Jun 15 – Jul 14, 2026 (partial — full 60-day pull not yet complete)',
+  models: [
+    // Storage — high-confidence flat/consistent sellers
+    {match:['toshiba','8tb'], category:'Storage', price:159.99, confidence:'High', basis:'Sold 4x at this exact flat price, zero variance'},
+    {match:['kingston','kc2500','500gb'], category:'Storage', price:29.99, confidence:'High', basis:'Flat $29.99 across health 35-100%, sold 6+ times'},
+    {match:['crucial','p1','500gb'], category:'Storage', price:29.99, confidence:'High', basis:'Same flat-price pattern as KC2500, sold 5+ times'},
+    {match:['samsung','870 qvo','1tb'], category:'Storage', price:104.99, confidence:'High', basis:'Consistent $99.99-$109.99 across sales'},
+    {match:['kingston','dc500r','480gb'], category:'Storage', price:36.99, confidence:'High', basis:'Consistent $32-$40 regardless of health 58-100%'},
+    {match:['crucial','mx500'], category:'Storage', price:null, confidence:'Low', basis:'⚠ Inconsistent — same capacity/health sold anywhere from $110 to $184. Do not auto-price, review manually.'},
+    {match:['samsung','980 pro','2tb'], category:'Storage', price:null, confidence:'Medium', basis:'Health-dependent: $59.99 (11% health, parts) up to $199.99 (64% health). Match health tier, don\u2019t use a flat number.'},
+    {match:['samsung','990 pro','2tb'], category:'Storage', price:null, confidence:'Medium', basis:'Health-dependent: $59.99 (6% health) up to $639.99 (New In Box, 4TB variant). Match health tier.'},
+    {match:['samsung','990 evo plus','4tb'], category:'Storage', price:439.99, confidence:'Medium', basis:'One data point at 100% health'},
+    {match:['micron','7450'], category:'Storage', price:500, confidence:'Medium', basis:'Enterprise NVMe, $419.99 (1.92TB) to $699.99 (3.84TB New) — capacity-scaled'},
+
+    // Phones — Apple, battery-health-dependent (strongest signal in the dataset)
+    {match:['iphone','13 pro max'], category:'Phone', price:300, confidence:'Medium', basis:'$264.99 (86% BH) to $349.99 (100% BH) — scale with battery health'},
+    {match:['iphone','14 pro max'], category:'Phone', price:350, confidence:'Medium', basis:'$279.99-$419.99 depending on BH% (73-79%) and For Parts status'},
+    {match:['iphone','14 pro'], category:'Phone', price:300, confidence:'Medium', basis:'$264.99-$354.99, BH 77-81% — For Parts drops it toward the low end'},
+    {match:['iphone','15 pro max'], category:'Phone', price:630, confidence:'Medium', basis:'One recent sale at $629.99'},
+    {match:['iphone','15 pro'], category:'Phone', price:350, confidence:'Medium', basis:'$214.99 (89% BH, For Parts) to $474.99 (87% BH, working)'},
+    {match:['iphone','16 pro max'], category:'Phone', price:660, confidence:'Medium', basis:'$574.99-$749.99, BH 90-94%'},
+    {match:['iphone','16 pro'], category:'Phone', price:600, confidence:'Medium', basis:'One recent sale at $599.99, 93% BH'},
+    {match:['iphone','17 pro max'], category:'Phone', price:860, confidence:'Low', basis:'One sale, New In Box only — no used-condition data yet'},
+
+    // Laptops — the cleanest repeat-sale data point in the whole set
+    {match:['dell','latitude','7430'], category:'Laptop', price:339.99, confidence:'High', basis:'Sold 6+ times at exactly this price, same config (i7-1265U/32GB/1TB)'},
+    {match:['lenovo','thinkpad','x1 carbon','gen 9'], category:'Laptop', price:340, confidence:'Medium', basis:'$244.99 (parts) to $359.99 (working), i5/i7 configs'},
+
+    // Console
+    {match:['playstation portal'], category:'Console', price:135, confidence:'High', basis:'Very consistent $130.99-$139.99 across many sales'},
+    {match:['playstation 5','slim'], category:'Console', price:430, confidence:'Medium', basis:'$414.99-$449.99 working, drops to ~$220-300 if broken/parts'},
+    {match:['playstation 4','slim'], category:'Console', price:110, confidence:'Medium', basis:'$89.99-$129.99 depending on accessory bundle'},
+
+    // RAM — per-stick pricing is remarkably consistent
+    {match:['32gb','ddr4'], category:'RAM', price:115, confidence:'Medium', basis:'~$100-135/stick for 32GB DDR4 across brands'},
+    {match:['16gb','ddr5','sodimm'], category:'RAM', price:117, confidence:'Medium', basis:'~$115-120/stick in bulk-lot DDR5 SODIMM sales'}
+  ],
+  categoryBaselines: {
+    'Storage':    {note:'Too varied for one flat number — match by model first. Enterprise-tier (Kingston DC-series, Samsung PM-series) commands a real premium over consumer drives at the same capacity.'},
+    'GPU':        {note:'Thin data this window — treat any suggestion here as low-confidence.'},
+    'CPU':        {note:'Very thin data (4 points total) — treat as low-confidence.'},
+    'Phone':      {note:'Strongly battery-health dependent — always check the model\u2019s BH curve rather than a flat category price.'},
+    'Laptop':     {note:'Wide range by config/condition — match by exact model where possible.'},
+    'Console':    {note:'Match by model/config — accessory bundle changes price a lot.'},
+    'Motherboard':{note:'Usually sold bundled with CPU/RAM — price the combo, not the board alone.'},
+    'RAM':        {note:'~$100-135/stick 32GB DDR4, ~$115-120/stick DDR5 SODIMM bulk.'},
+    'Audio Equipment': {note:'Wide range by item type, thin data per model.'}
+  }
+};
+
+function suggestPriceFor(description, category){
+  const text = (description||'').toLowerCase();
+  if(!text.trim()){
+    return {price:null, confidence:'None', basis:'Type a description first.', source:'none'};
+  }
+  const hit = PRICING_MEMORY.models.find(m => m.match.every(kw => text.includes(kw)));
+  if(hit){
+    return {price:hit.price, confidence:hit.confidence, basis:hit.basis, category:hit.category, source:'model'};
+  }
+  if(category && PRICING_MEMORY.categoryBaselines[category]){
+    const cb = PRICING_MEMORY.categoryBaselines[category];
+    return {price:cb.price||null, confidence:'Low', basis:cb.note, category, source:'category'};
+  }
+  return {price:null, confidence:'None', basis:'No match in Pricing Memory (data covers '+PRICING_MEMORY.coverage+'). Use your own judgment or research comps.', source:'none'};
+}
+
+function showPriceSuggestion(description, category, targetInputId){
+  const s = suggestPriceFor(description, category);
+  const badge = s.confidence === 'High' ? '🟢 High confidence' : s.confidence === 'Medium' ? '🟡 Medium confidence' : s.confidence === 'Low' ? '🟠 Low confidence' : '⚪ No data';
+  const priceStr = s.price ? '$'+s.price.toFixed(2) : 'no number to suggest';
+  toast(`💡 ${priceStr} — ${badge} — ${s.basis}`);
+  if(s.price && targetInputId){
+    const input = document.getElementById(targetInputId);
+    if(input && !input.value) input.value = s.price.toFixed(2);
+  }
+  return s;
+}
+
+// ── Smart Flags ──────────────────────────────────────────────────
+// Catches the exact category of mistakes made manually multiple times
+// today: missing serials, For-Parts items with a health% still set or
+// a 30-day return policy, and duplicate SKUs across the whole session.
+function checkSkuCollision(sku, excludeId, excludeType){
+  if(!sku) return false;
+  const hits = [];
+  (typeof dpEntries!=='undefined'?dpEntries:[]).forEach(e=>{
+    if(excludeType==='batch' && e.id===excludeId) return;
+    const s = computeAssignedSku(e); if(s===sku) hits.push('Batch');
+  });
+  (typeof uniEntriesData!=='undefined'?uniEntriesData:[]).forEach(e=>{
+    if(excludeType==='uni' && e.id===excludeId) return;
+    if(e.websiteSku===sku) hits.push('Universal');
+  });
+  (typeof bhaiEntriesData!=='undefined'?bhaiEntriesData:[]).forEach(e=>{
+    if(excludeType==='bhai' && e.id===excludeId) return;
+    if(e.websiteSku===sku) hits.push('BhaiMode');
+  });
+  return hits.length ? hits : false;
+}
+
+function checkEntrySmartFlags({desc, condition, returnPolicy, serial, sku, entryId, entryType}){
+  const flags = [];
+  const descLower = (desc||'').toLowerCase();
+  const condLower = (condition||'').toLowerCase();
+  const combined = descLower + ' ' + condLower;
+  const soundsForParts = /for parts|does not read|does not initialize|bricked|not working|no power|dead|non.?functional/.test(combined);
+  const soundsNew = /\bnew\b|sealed|unopened|new in box/.test(combined);
+  const hasNonZeroHealthPct = /\b([1-9][0-9]?|100)%/.test(combined) && !/\b0%/.test(combined);
+
+  if(!soundsNew && combined.trim() && !(serial||'').trim()){
+    flags.push('⚠ No serial number — used items should have one for tracking.');
+  }
+  if(soundsForParts && hasNonZeroHealthPct){
+    flags.push('⚠ Marked "For Parts" but has a non-zero health % — double check that\u2019s intentional.');
+  }
+  if(soundsForParts && /30.?day/.test((returnPolicy||'').toLowerCase())){
+    flags.push('⚠ "For Parts" item with a 30-day return policy — usually these use "no returns".');
+  }
+  if(sku){
+    const collision = checkSkuCollision(sku, entryId, entryType);
+    if(collision) flags.push('⚠ SKU already used elsewhere in this session (' + collision.join(', ') + ').');
+  }
+  return flags;
+}
+
+function renderFlagsHTML(flags){
+  if(!flags.length) return '';
+  return `<div class="smart-flags">${flags.map(f=>`<div class="smart-flag-item">${esc(f)}</div>`).join('')}</div>`;
+}
+
 function computeAssignedSku(e){
   if(!e.poNumber || !e.unitNumber) return '';
   const base = 'NJ02-' + (LISTER_BATCH || 'BATCH');
@@ -5472,6 +5700,7 @@ function dpLineFor(e){
   if(e.price) line += ' | Price: $' + e.price;
   // Append lister SKU
   line += ' | SKU: ' + dpEntrySkuLabel(e);
+  if(e.trackNumber) line += ' | Track #' + e.trackNumber;
   // Append lister HTML comment (visible in code view)
   if(LISTER_INITIAL) line += ' ' + listerComment();
   const hit = resolveCode(e.code);
@@ -5553,6 +5782,14 @@ function dpRenderEntry(e){
   if(unitDisplay) unitDisplay.value = e.unitNumber || '';
   const summaryEl = wrap.querySelector('.sku-assign-box summary');
   if(summaryEl) summaryEl.innerHTML = '🏷️ SKU Assignment ' + (assigned ? '<span class="sku-assign-ready">'+esc(assigned)+'</span>' : '<span class="sku-assign-empty">not assigned yet</span>');
+  const flagsBox = wrap.querySelector('.entry-flags');
+  if(flagsBox){
+    const flags = checkEntrySmartFlags({
+      desc: (hit?hit.desc:'') + ' ' + (e.notes||''), condition: e.result||'', returnPolicy: '', serial: e.sn||'',
+      sku: assigned, entryId: e.id, entryType: 'batch'
+    });
+    flagsBox.innerHTML = renderFlagsHTML(flags);
+  }
   dpUpdatePreviewAll();
 }
 
@@ -5597,6 +5834,7 @@ function dpBuildEntryHTML(e){
     ${skuAssignmentBlockHTML(e, 'dp')}
     <div class="dp-label" style="margin-top:4px">Preview</div>
     <div class="dp-preview entry-main-preview">—</div>
+    <div class="entry-flags"></div>
   </div>`;
 }
 
@@ -5616,6 +5854,8 @@ function dpAddEntry(){
 }
 
 function dpRemoveEntry(id){
+  const idx = dpEntries.findIndex(x=>x.id===id);
+  const removed = idx!==-1 ? dpEntries[idx] : null;
   dpEntries = dpEntries.filter(x=>x.id!==id);
   const el = document.getElementById('dp-e-'+id);
   if(el) el.remove();
@@ -5623,6 +5863,22 @@ function dpRemoveEntry(id){
   else dpApplyDim();
   dpUpdatePreviewAll();
   updateGoalCounter && updateGoalCounter();
+  if(removed){
+    const label = removed.code || 'entry';
+    undoableToast('Removed ' + label, ()=>{
+      dpEntries.splice(Math.min(idx, dpEntries.length), 0, removed);
+      const container = document.getElementById('dpEntries');
+      const div = document.createElement('div');
+      div.innerHTML = dpBuildEntryHTML(removed);
+      const newEl = div.firstElementChild;
+      const refNode = container.children[Math.min(idx, container.children.length)] || null;
+      container.insertBefore(newEl, refNode);
+      dpRenderEntry(removed);
+      dpUpdatePreviewAll();
+      updateGoalCounter && updateGoalCounter();
+      toast('Restored ' + label);
+    });
+  }
 }
 
 function dpHandleInput(ev){
@@ -5754,11 +6010,97 @@ document.getElementById('dpEntries').addEventListener('drop', ev=>{
   dpUpdatePreviewAll();
 });
 
+// ── Guided Mode / Review checkpoint / EOS Summary / Export scope ───
+let GUIDED_MODE = (function(){ try{ return localStorage.getItem('abribook:guidedMode')==='1'; }catch(e){ return false; } })();
+let _lastReviewedSnapshot = null;
+
+function entriesSnapshot(){
+  // Cheap fingerprint of current session state — used to detect "has anything
+  // changed since the last Review Session" without hooking every mutation point.
+  const all = allManifestObjects ? allManifestObjects() : [];
+  return all.map(e => (e.internal_sku||'') + ':' + (e.status||'') + ':' + (e.price||'')).join('|');
+}
+
+function computeEosSummary(){
+  const all = allManifestObjects ? allManifestObjects() : [];
+  const byPanel = {};
+  let flagged = 0, missing = 0, totalValue = 0;
+  all.forEach(e=>{
+    byPanel[e.panel] = (byPanel[e.panel]||0) + 1;
+    if(e.needs_research === 'Yes') flagged++;
+    if(e.status === 'Missing Info') missing++;
+    const p = parseFloat(e.price);
+    if(!isNaN(p)) totalValue += p;
+  });
+  return {total: all.length, byPanel, flagged, missing, totalValue};
+}
+
+function showEosSummary(){
+  const s = computeEosSummary();
+  const backdrop = document.getElementById('eosModalBackdrop');
+  const modal = document.getElementById('eosModal');
+  if(!backdrop || !modal) return;
+  const panelRows = Object.entries(s.byPanel).map(([k,v])=>`<div class="eos-stat-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('');
+  modal.innerHTML = `
+    <h2>🗂️ End of Session Summary</h2>
+    <div class="eos-stat-row"><span>Total entries</span><b>${s.total}</b></div>
+    ${panelRows}
+    <div class="eos-stat-row"><span>Flagged (Needs Research)</span><b>${s.flagged}</b></div>
+    <div class="eos-stat-row"><span>Missing Info</span><b>${s.missing}</b></div>
+    <div class="eos-stat-row"><span>Rough total value logged</span><b>$${s.totalValue.toFixed(2)}</b></div>
+    <div class="eos-modal-actions">
+      <button class="eos-btn-cancel" id="eosCancelBtn">Close</button>
+      <button class="eos-btn-confirm" id="eosConfirmBtn">✓ Mark Session Reviewed</button>
+    </div>`;
+  backdrop.style.display = 'flex';
+  document.getElementById('eosCancelBtn').addEventListener('click', ()=>{ backdrop.style.display='none'; });
+  document.getElementById('eosConfirmBtn').addEventListener('click', ()=>{
+    _lastReviewedSnapshot = entriesSnapshot();
+    backdrop.style.display = 'none';
+    toast('Session marked reviewed — export unlocked');
+    updateCopyButtonGate();
+  });
+}
+
+function updateCopyButtonGate(){
+  const btn = document.getElementById('dpCopyAll');
+  if(!btn) return;
+  if(!GUIDED_MODE){ btn.disabled = false; btn.title = ''; return; }
+  const reviewed = _lastReviewedSnapshot !== null && _lastReviewedSnapshot === entriesSnapshot();
+  btn.disabled = !reviewed;
+  btn.title = reviewed ? '' : 'Guided mode is on — click "Review Session" first (entries have changed since your last review)';
+}
+
+if(document.getElementById('guidedModeToggle')){
+  document.getElementById('guidedModeToggle').checked = GUIDED_MODE;
+  document.getElementById('reviewSessionBtn').style.display = GUIDED_MODE ? '' : 'none';
+  document.getElementById('guidedModeToggle').addEventListener('change', (ev)=>{
+    GUIDED_MODE = ev.target.checked;
+    try{ localStorage.setItem('abribook:guidedMode', GUIDED_MODE ? '1' : '0'); }catch(e){}
+    document.getElementById('reviewSessionBtn').style.display = GUIDED_MODE ? '' : 'none';
+    updateCopyButtonGate();
+    toast(GUIDED_MODE ? 'Guided mode on — the queue stays visible, only export is gated behind Review Session' : 'Everything mode — export is always available');
+  });
+}
+if(document.getElementById('reviewSessionBtn')){
+  document.getElementById('reviewSessionBtn').addEventListener('click', showEosSummary);
+}
+
 document.getElementById('dpCopyAll').addEventListener('click', ()=>{
   if(!LISTER_LOCKED){ toast('Select and lock your name first (Step 1)'); return; }
-  const entries = allManifestObjects ? allManifestObjects() : dpEntries.map(batchEntryObject);
+  let entries = allManifestObjects ? allManifestObjects() : dpEntries.map(batchEntryObject);
   if(!entries.length){ toast('No entries to copy yet'); return; }
-  const prompt = buildClaudePrepPrompt ? buildClaudePrepPrompt() : dpEntries.map(dpLineFor).filter(Boolean).join('\n');
+  if(GUIDED_MODE){
+    const reviewed = _lastReviewedSnapshot !== null && _lastReviewedSnapshot === entriesSnapshot();
+    if(!reviewed){ toast('Guided mode is on — click "🗂️ Review Session" first'); showEosSummary(); return; }
+  }
+  const scope = document.getElementById('exportScopeSelect')?.value || 'all';
+  if(scope === 'current'){
+    const panelForPage = CURRENT_WORK_PAGE === 'universal' ? 'Universal' : CURRENT_WORK_PAGE === 'bhai' ? 'BhaiMode' : 'Batch';
+    entries = entries.filter(e => e.panel === panelForPage);
+    if(!entries.length){ toast('No entries in the current mode to export'); return; }
+  }
+  const prompt = buildClaudePrepPrompt ? buildClaudePrepPrompt(entries) : dpEntries.map(dpLineFor).filter(Boolean).join('\n');
   copyText(prompt, ()=>toast('Copied Claude manifest-prep prompt for '+entries.length+' entr'+(entries.length===1?'y':'ies')));
 });
 
@@ -5787,6 +6129,7 @@ document.getElementById('dpClear').addEventListener('click', ()=>{
 // new draft listing"; filled means "edit this existing product."
 let bhaiEntriesData = [];
 let bhaiNextId = 1;
+let bhaiEditingId = null; // set while editing an existing queued entry via the ✎ button
 
 function bhaiAction(e){ return e.websiteSku ? 'EDIT' : 'CREATE'; }
 
@@ -5801,6 +6144,7 @@ function bhaiLineFor(e, idx){
   let line = `BHAI #${(idx!=null?idx+1:'?')} | Action: ${action}`;
   line += ' | Website SKU: ' + (e.websiteSku || '(none — creates new draft)');
   line += ' | SKU: ' + bhaiEntrySkuLabel(e);
+  if(e.trackNumber) line += ' | Track #' + e.trackNumber;
   if(LISTER_INITIAL) line += ' ' + listerComment();
   if(e.assignedSku) line += ' | Assigned SKU: ' + e.assignedSku;
   if(e.cost) line += ' | Cost: $' + e.cost;
@@ -5859,6 +6203,14 @@ function bhaiUpdatePreview(){
   const action = bhaiAction(e);
   if(badgeEl){ badgeEl.textContent = action; badgeEl.className = 'bhai-action-badge ' + (action==='EDIT' ? 'edit' : 'create'); }
   if(bannerEl) bannerEl.style.display = action==='EDIT' ? '' : 'none';
+  const flagsBox = document.getElementById('bhaiFlags');
+  if(flagsBox){
+    const flags = e.desc ? checkEntrySmartFlags({
+      desc: e.desc, condition: e.desc, returnPolicy: e.returnPolicy||'', serial: /serial|sn:/i.test(e.desc) ? 'present' : '',
+      sku: e.websiteSku, entryId: null, entryType: 'bhai'
+    }) : [];
+    flagsBox.innerHTML = renderFlagsHTML(flags);
+  }
 }
 
 function clearBhaiForm(){
@@ -5885,6 +6237,8 @@ function renderBhaiEntries(){
       <span class="dp-sku">${htmlEscapeLoose(bhaiEntrySkuLabel(e))}</span>
       <span class="bhai-action-badge ${action==='EDIT'?'edit':'create'}">${action}</span>
       <span class="uni-status ${bhaiStatusClass(e)}">${e.desc ? 'Ready for Claude' : 'Missing Info'}</span>
+      <button class="dp-card-icon-btn" data-bhaieditid="${e.id}" title="Edit entry">✎</button>
+      <button class="dp-card-icon-btn" data-bhaidupid="${e.id}" title="Duplicate entry">⧉</button>
       <button class="dp-rmv" data-bhaiid="${e.id}" title="Remove entry">×</button>
     </div>
     <div class="dp-label">Website SKU</div><div class="dp-preview" style="margin-bottom:8px">${htmlEscapeLoose(e.websiteSku||'(none — creates new draft)')}</div>
@@ -5900,21 +6254,88 @@ function renderBhaiEntries(){
   if(el) el.addEventListener('change', bhaiUpdatePreview);
 });
 
+if(document.getElementById('bhaiSuggestPrice')) document.getElementById('bhaiSuggestPrice').addEventListener('click', ()=>{
+  const desc = document.getElementById('bhaiDesc')?.value.trim() || '';
+  showPriceSuggestion(desc, null, 'bhaiPrice');
+});
 if(document.getElementById('bhaiAddEntry')) document.getElementById('bhaiAddEntry').addEventListener('click', ()=>{
   const e = bhaiMakeFromForm();
   if(!e.desc){ toast('Describe the item first'); return; }
+  if(bhaiEditingId !== null){
+    const idx = bhaiEntriesData.findIndex(x=>x.id===bhaiEditingId);
+    if(idx !== -1){
+      e.id = bhaiEditingId;
+      e.trackNumber = bhaiEntriesData[idx].trackNumber; // keep original queue position/track #
+      bhaiEntriesData[idx] = e;
+      renderBhaiEntries();
+      clearBhaiForm();
+      bhaiEditingId = null;
+      const addBtn = document.getElementById('bhaiAddEntry');
+      if(addBtn) addBtn.textContent = '+ Add to manifest queue';
+      toast('Entry updated');
+      return;
+    }
+    bhaiEditingId = null;
+  }
   e.id = bhaiNextId++;
+  e.trackNumber = nextTrackNumber();
   bhaiEntriesData.push(e);
   renderBhaiEntries();
   clearBhaiForm();
   toast('BhaiMode entry added — Action: ' + bhaiAction(e));
 });
 if(document.getElementById('bhaiEntries')) document.getElementById('bhaiEntries').addEventListener('click', ev=>{
+  const dupBtn = ev.target.closest('[data-bhaidupid]');
+  if(dupBtn){
+    const id = parseInt(dupBtn.dataset.bhaidupid);
+    const src = bhaiEntriesData.find(e=>e.id===id);
+    if(src){
+      const clone = {...src, id: bhaiNextId++, trackNumber: nextTrackNumber(), websiteSku: '', assignedSku: ''};
+      bhaiEntriesData.push(clone);
+      renderBhaiEntries();
+      toast('Duplicated — edit the new copy\u2019s details before exporting');
+    }
+    return;
+  }
+  const editBtn = ev.target.closest('[data-bhaieditid]');
+  if(editBtn){
+    const id = parseInt(editBtn.dataset.bhaieditid);
+    const src = bhaiEntriesData.find(e=>e.id===id);
+    if(src){
+      document.getElementById('bhaiWebsiteSku').value = src.websiteSku||'';
+      document.getElementById('bhaiDesc').value = src.desc||'';
+      document.getElementById('bhaiClaudeNotes').value = src.claudeNotes||'';
+      document.getElementById('bhaiReturnPolicy').value = src.returnPolicy||'30 Days Free Return';
+      document.getElementById('bhaiNeedsResearch').checked = !!src.needsResearch;
+      document.getElementById('bhaiCost').value = src.cost||'';
+      document.getElementById('bhaiPrice').value = src.price||'';
+      bhaiFormSkuState = {poNumber: src.poNumber||'', unitNumber: src.unitNumber||'', invLocation: src.invLocation||'', _lastAssignedPo: src.poNumber||''};
+      document.getElementById('bhaiPoNumber').value = src.poNumber||'';
+      document.getElementById('bhaiInvLocation').value = src.invLocation||'';
+      const unitEl = document.getElementById('bhaiUnitNumber'); if(unitEl) unitEl.value = src.unitNumber||'';
+      bhaiRefreshSkuPreview();
+      bhaiUpdatePreview();
+      bhaiEditingId = id;
+      const addBtn = document.getElementById('bhaiAddEntry');
+      if(addBtn) addBtn.textContent = '✎ Update entry';
+      toast('Editing entry — change fields, then hit Update entry');
+    }
+    return;
+  }
   const btn = ev.target.closest('[data-bhaiid]'); if(!btn) return;
   if(btn.classList.contains('dp-drag-handle')) return;
   const id = parseInt(btn.dataset.bhaiid);
+  const idx = bhaiEntriesData.findIndex(e=>e.id===id);
+  const removed = idx!==-1 ? bhaiEntriesData[idx] : null;
   bhaiEntriesData = bhaiEntriesData.filter(e=>e.id!==id);
   renderBhaiEntries();
+  if(removed){
+    undoableToast('Removed ' + (removed.desc ? removed.desc.slice(0,30) : 'entry'), ()=>{
+      bhaiEntriesData.splice(Math.min(idx, bhaiEntriesData.length), 0, removed);
+      renderBhaiEntries();
+      toast('Restored entry');
+    });
+  }
 });
 
 // Drag to reorder — identical pattern to the Batch queue
@@ -5978,6 +6399,7 @@ function bhaiEntryObject(e, idx){
     notes_for_claude:[e.claudeNotes||'', 'Shipping: Free Shipping', e.returnPolicy ? ('Returns: '+e.returnPolicy) : '', e.price ? ('Price: $'+e.price) : '', e.cost ? ('Cost: $'+e.cost) : ''].filter(Boolean).join(' | '),
     price: e.price||'', cost: e.cost||'',
     po_number: e.poNumber||'', unit_number: e.unitNumber||'', inventory_location: e.invLocation||'', assigned_sku: e.assignedSku||'',
+    track_number: e.trackNumber||'',
     title_preview:'', html_description_preview:'', metafields_preview:'',
     status: e.desc ? 'Ready for Claude' : 'Missing Info', needs_research: e.needsResearch?'Yes':'',
     entry_line: bhaiLineFor(e, idx)
@@ -5989,6 +6411,7 @@ function bhaiEntryObject(e, idx){
 // ── Universal Manifest MVP ───────────────────────────────────────
 let uniEntriesData = [];
 let uniNextId = 1;
+let uniEditingId = null; // set while editing an existing queued entry via the ✎ button
 let uniRawMode = false;
 
 function switchManifestTab(tab){
@@ -6028,11 +6451,14 @@ function switchWorkPage(page){
   // is present. Must toggle the class itself, not style.display.
   const dpBatchPanel = document.getElementById('dpPanelBatch');
   const dpBhaiPanel  = document.getElementById('dpPanelBhai');
-  if(dpBatchPanel) dpBatchPanel.classList.toggle('on', page!=='bhai');
+  const dpUniPanel   = document.getElementById('dpPanelUniversal');
+  if(dpBatchPanel) dpBatchPanel.classList.toggle('on', page!=='bhai' && page!=='universal');
   if(dpBhaiPanel)  dpBhaiPanel.classList.toggle('on', page==='bhai');
+  if(dpUniPanel)   dpUniPanel.classList.toggle('on', page==='universal');
   // Clear any leftover inline display overrides from the old (buggy) toggle logic
   if(dpBatchPanel) dpBatchPanel.style.display = '';
   if(dpBhaiPanel)  dpBhaiPanel.style.display = '';
+  if(dpUniPanel)   dpUniPanel.style.display = '';
 
   const h = document.querySelector('#draftPanel .dp-header h2');
   const p = document.querySelector('#draftPanel .dp-header p');
@@ -6304,6 +6730,14 @@ function updateUniPreview(){
   if(prev) prev.innerHTML = html;
   if(raw) raw.textContent = html;
   updateUniConfidence(e);
+  const flagsBox = document.getElementById('uniFlags');
+  if(flagsBox){
+    const flags = e.desc ? checkEntrySmartFlags({
+      desc: e.desc, condition: e.condition||e.desc, returnPolicy: e.returnPolicy||'', serial: /serial|sn:/i.test(e.desc) ? 'present' : '',
+      sku: e.websiteSku, entryId: null, entryType: 'uni'
+    }) : [];
+    flagsBox.innerHTML = renderFlagsHTML(flags);
+  }
 }
 function uniStatusFor(e){
   const c = uniConfidenceFor(e);
@@ -6332,6 +6766,7 @@ function uniEntryLine(e, idx){
   if(e.assignedSku) extras.push('Assigned SKU: '+e.assignedSku);
   if(e.cost) extras.push('Cost: $'+e.cost);
   if(e.price) extras.push('Price: $'+e.price);
+  if(e.trackNumber) extras.push('Track #'+e.trackNumber);
   return `UNIVERSAL #${idx+1} | Website SKU: ${e.websiteSku||'MISSING'} | Type: ${e.itemType} | Confidence: ${e.confidence?.level||'\u2014'} ${e.confidence?.score??''}% | Status: ${e.status}${extras.length ? ' | '+extras.join(' | ') : ''}\nTitle Preview: ${e.titlePreview||'\u2014'}\nDescription: ${e.desc||'\u2014'}\nShipping: Free Shipping\nReturns: ${e.returnPolicy||'\u2014'}${e.claudeNotes?'\nNotes for Claude: '+e.claudeNotes:''}`;
 }
 function renderUniEntries(){
@@ -6339,7 +6774,7 @@ function renderUniEntries(){
   if(!box) return;
   if(!uniEntriesData.length){ box.innerHTML = '<div class="empty" style="padding:16px 8px">No universal entries yet.</div>'; dpUpdatePreviewAll(); updateGoalCounter(); return; }
   box.innerHTML = uniEntriesData.map((e, i)=>`<div class="uni-entry" id="uni-e-${e.id}">
-    <div class="uni-entry-head"><span class="dp-sku">${htmlEscapeLoose(listerSKU(dpEntries.length+i+1))}</span><span class="uni-type">${htmlEscapeLoose(e.itemType)}</span><span class="uni-status ${uniStatusClass(e)}">${htmlEscapeLoose(e.status)}</span><button class="dp-rmv" data-uniid="${e.id}" title="Remove universal entry">×</button></div>
+    <div class="uni-entry-head"><span class="dp-sku">${htmlEscapeLoose(listerSKU(dpEntries.length+i+1))}</span><span class="uni-type">${htmlEscapeLoose(e.itemType)}</span><span class="uni-status ${uniStatusClass(e)}">${htmlEscapeLoose(e.status)}</span><button class="dp-card-icon-btn" data-unieditid="${e.id}" title="Edit entry">✎</button><button class="dp-card-icon-btn" data-unidupid="${e.id}" title="Duplicate entry">⧉</button><button class="dp-rmv" data-uniid="${e.id}" title="Remove universal entry">×</button></div>
     <div class="dp-label">Website SKU</div><div class="dp-preview" style="margin-bottom:8px">${htmlEscapeLoose(e.websiteSku||'MISSING')}</div>
     <div class="dp-label">Confidence</div><div class="dp-preview" style="margin-bottom:8px">${htmlEscapeLoose((e.confidence?.level||'—')+' · '+(e.confidence?.score??0)+'%'+(e.confidence?.missing?.length?' | Missing: '+e.confidence.missing.join(', '):''))}</div>
     <div class="dp-label">Preview</div><div class="dp-preview">${htmlEscapeLoose(uniEntryLine(e,i))}</div>
@@ -6367,6 +6802,7 @@ function batchEntryObject(e, idx){
     notes_for_claude: [e.pairsOn && e.pairs ? ('Qty: '+e.pairs+' pairs') : '', e.price ? ('Price: $'+e.price) : '', e.cost ? ('Cost: $'+e.cost) : ''].filter(Boolean).join(' | '),
     price: e.price||'', cost: e.cost||'',
     po_number: e.poNumber||'', unit_number: e.unitNumber||'', inventory_location: e.invLocation||'', assigned_sku: assignedSku||'',
+    track_number: e.trackNumber||'',
     title_preview:'', html_description_preview:'', metafields_preview:'',
     status: e.code ? 'Ready for Claude' : 'Missing Info', entry_line: dpLineFor(e)
   };
@@ -6448,6 +6884,7 @@ function universalEntryObject(e){
     notes_for_claude:[e.claudeNotes||'', e.shippingPolicy ? ('Shipping: '+e.shippingPolicy) : '', e.returnPolicy ? ('Returns: '+e.returnPolicy) : '', e.price ? ('Price: $'+e.price) : '', e.cost ? ('Cost: $'+e.cost) : ''].filter(Boolean).join(' | '),
     price: e.price||'', cost: e.cost||'',
     po_number: e.poNumber||'', unit_number: e.unitNumber||'', inventory_location: e.invLocation||'', assigned_sku: e.assignedSku||'',
+    track_number: e.trackNumber||'',
     title_preview:e.titlePreview||'', html_description_preview:e.htmlPreview||compactTableHtml(e), metafields_preview:JSON.stringify(uniMapMetafields(e)), status:e.status||'Draft',
     needs_research:e.needsResearch?'Yes':'', entry_line: uniEntryLine(e,0)
   };
@@ -6458,8 +6895,8 @@ function allManifestObjects(){
   const bhai = bhaiEntriesData.filter(e=>e.desc).map(bhaiEntryObject);
   return batch.concat(uni).concat(bhai).map((e, i)=>({...e, entry_id: e.entry_id || '', batch_id: LISTER_BATCH || '', lister: LISTER_INITIAL || '', internal_sku: listerSKU(i+1)}));
 }
-function buildClaudePrepPrompt(){
-  const entries = allManifestObjects();
+function buildClaudePrepPrompt(entriesOverride){
+  const entries = entriesOverride || allManifestObjects();
 
   // Split by panel type
   const batchEntries = entries.filter(e => e.panel === 'Batch');
@@ -6487,7 +6924,7 @@ function buildClaudePrepPrompt(){
   // ── Universal → listing-edit system prompt ───────────────────
   if(uniEntries.length){
     const payload = uniEntries.map((e, i)=>({
-      entry_number:i+1, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister, website_sku:e.website_sku, panel:e.panel, item_type:e.item_type,
+      entry_number:i+1, track_number:e.track_number, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister, website_sku:e.website_sku, panel:e.panel, item_type:e.item_type,
       abribook_code:e.abribook_code, serial_number:e.serial_number, health_test_result:e.health_test_result, raw_item_description:e.raw_item_description,
       testing_notes:e.testing_notes, condition_notes:e.condition_notes, known_issues_missing_parts:e.known_issues, notes_for_claude:e.notes_for_claude,
       cost:e.cost, price:e.price, po_number:e.po_number, unit_number:e.unit_number, inventory_location:e.inventory_location, assigned_sku:e.assigned_sku,
@@ -6501,7 +6938,7 @@ function buildClaudePrepPrompt(){
   // ── BhaiMode → classify-then-route system prompt ──────────────
   if(bhaiEntries.length){
     const payload = bhaiEntries.map((e, i)=>({
-      entry_number:i+1, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister,
+      entry_number:i+1, track_number:e.track_number, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister,
       action:e.action, website_sku:e.website_sku, raw_item_description:e.raw_item_description,
       cost:e.cost, price:e.price, po_number:e.po_number, unit_number:e.unit_number, inventory_location:e.inventory_location, assigned_sku:e.assigned_sku,
       notes_for_claude:e.notes_for_claude, needs_research:e.needs_research||'', status:e.status
@@ -6509,7 +6946,7 @@ function buildClaudePrepPrompt(){
     parts.push(
       `You are preparing SYG listings from plain-English BhaiMode entries. Each entry may be ANY item type — you classify it yourself, no category was pre-selected.\n\n` +
       `STEP 1 — CLASSIFY.\nRead raw_item_description and pick exactly one type from this fixed list:\n` +
-      `  CPU, GPU, Motherboard, PSU, Storage, RAM, Laptop, Desktop, Console, Phone, Power Tools, Test Equipment\n` +
+      `  CPU, GPU, Motherboard, PSU, Storage, RAM, Laptop, Desktop, Console, Phone, Power Tools, Test Equipment, Audio Equipment, Gaming Accessories, Computer Peripherals\n` +
       `If nothing on this list clearly fits, output TYPE: NEEDS_CATEGORY for that entry, explain what's ambiguous, and skip steps 2-4 for it. Do not force-fit an item into the wrong type.\n\n` +
       `STEP 2 — ROUTE.\nCheck the "action" field:\n` +
       `- action = "EDIT" → this is a surgical edit of an EXISTING Shopify product matched by website_sku. Only title, description, metafields, vendor, tags, and price may change. Never touch quantity unless explicitly instructed. website_sku is the matching key — never change it.\n` +
@@ -6530,7 +6967,10 @@ function buildClaudePrepPrompt(){
       `- Storage:     type, brand, model, model_number, storage_capacity, mpn\n` +
       `- RAM:         type, brand, model, model_number, ram, mpn\n` +
       `- Power Tools: type, brand, model, model_number, features, mpn  (put voltage/battery/chuck size/drive type in features, e.g. "20V Max, 1/2\\" chuck, includes 1x 3Ah battery model DCB230")\n` +
-      `- Test Equipment: type, brand, model, model_number, features, mpn  (put measurement type/range/accuracy and included accessories in features, e.g. "True RMS, includes 2x test leads and carrying case")\n\n` +
+      `- Test Equipment: type, brand, model, model_number, features, mpn  (put measurement type/range/accuracy and included accessories in features, e.g. "True RMS, includes 2x test leads and carrying case")\n` +
+      `- Audio Equipment: type, brand, model, model_number, features, connectivity, mpn  (features = power rating/driver size/format, e.g. "Powered subwoofer, 10-inch driver"; connectivity = wired/wireless sync info, e.g. "Wireless subwoofer, syncs to compatible soundbar")\n` +
+      `- Gaming Accessories: type, brand, model, model_number, connectivity, color, features, mpn  (controllers, headsets, and other console/PC gaming peripherals — connectivity = wired/wireless/Bluetooth; color = specific color or "Varies / Assorted" for mixed lots; features = compatibility, lot size, and condition notes, e.g. "PS5-compatible, lot of 14, tested and functional")\n` +
+      `- Computer Peripherals: type, brand, model, model_number, connectivity, color, features, mpn  (non-gaming PC peripherals — keyboards, mice, webcams, hubs, etc. — connectivity = wired/wireless/Bluetooth; features = combo contents, new/sealed status, condition notes, e.g. "New sealed, keyboard + mouse combo, box has cosmetic flaws")\n\n` +
       `Do NOT invent keys outside this list. Do not invent values — if a spec isn't in the description, mark that field MISSING rather than guessing.\n\n` +
       `STEP 4 — TITLE + HTML DESCRIPTION (flexible, not templated).\n` +
       `Write a natural SEO-appropriate title for the item. Build an "Item Specifications" HTML table using whatever rows are actually relevant to THIS item — don't force irrelevant fields in, don't omit relevant ones. Use judgment: a PSU naturally gets Wattage/Certification rows, a motherboard gets Socket/Chipset rows, a bundled combo gets an "Included" row listing what's mounted. Keep the same visual style used elsewhere (navy header row #1F4E79, alternating white/#f9f9f9 row shading, 35% label column). Always end the specs table with Condition, then Included, then Description rows, followed by a Shipping & Returns block using: Shipping = "Free Shipping", Return Policy = the value in notes_for_claude (default "30 Days Free Return" if not stated).\n\n` +
@@ -6739,20 +7179,89 @@ if(document.getElementById('uniToggleRaw')) document.getElementById('uniToggleRa
   document.getElementById('uniRawHtml').style.display = uniRawMode ? 'block' : 'none';
   document.getElementById('uniToggleRaw').textContent = uniRawMode ? 'Preview' : 'Raw HTML';
 });
+if(document.getElementById('uniSuggestPrice')) document.getElementById('uniSuggestPrice').addEventListener('click', ()=>{
+  const desc = document.getElementById('uniDesc')?.value.trim() || '';
+  const cat = document.getElementById('uniItemType')?.value || null;
+  showPriceSuggestion(desc, cat, 'uniPrice');
+});
 if(document.getElementById('uniAddEntry')) document.getElementById('uniAddEntry').addEventListener('click',()=>{
   const e = uniMakeFromForm();
   if(!e.websiteSku){ toast('Universal entry needs the website SKU'); return; }
   if(!e.desc){ toast('Describe the item/specs first'); return; }
+  if(uniEditingId !== null){
+    const idx = uniEntriesData.findIndex(x=>x.id===uniEditingId);
+    if(idx !== -1){
+      e.id = uniEditingId;
+      e.trackNumber = uniEntriesData[idx].trackNumber; // keep original queue position/track #
+      uniEntriesData[idx] = e;
+      renderUniEntries();
+      clearUniForm();
+      uniEditingId = null;
+      const addBtn = document.getElementById('uniAddEntry');
+      if(addBtn) addBtn.textContent = '+ Add to manifest queue';
+      toast('Entry updated');
+      return;
+    }
+    uniEditingId = null;
+  }
+  e.trackNumber = nextTrackNumber();
   uniEntriesData.push(e);
   renderUniEntries();
   clearUniForm();
   toast('Universal entry added');
 });
 if(document.getElementById('uniEntries')) document.getElementById('uniEntries').addEventListener('click',ev=>{
+  const dupBtn = ev.target.closest('[data-unidupid]');
+  if(dupBtn){
+    const id = parseInt(dupBtn.dataset.unidupid);
+    const src = uniEntriesData.find(e=>e.id===id);
+    if(src){
+      const clone = {...src, id: uniNextId++, trackNumber: nextTrackNumber(), websiteSku: '', assignedSku: ''};
+      uniEntriesData.push(clone);
+      renderUniEntries();
+      toast('Duplicated — edit the new copy\u2019s Website SKU before exporting');
+    }
+    return;
+  }
+  const editBtn = ev.target.closest('[data-unieditid]');
+  if(editBtn){
+    const id = parseInt(editBtn.dataset.unieditid);
+    const src = uniEntriesData.find(e=>e.id===id);
+    if(src){
+      document.getElementById('uniWebsiteSku').value = src.websiteSku||'';
+      document.getElementById('uniItemType').value = src.itemType||'Laptop';
+      document.getElementById('uniDesc').value = src.desc||'';
+      document.getElementById('uniClaudeNotes').value = src.claudeNotes||'';
+      document.getElementById('uniReturnPolicy').value = src.returnPolicy||'30 Days Free Return';
+      document.getElementById('uniNeedsResearch').checked = !!src.needsResearch;
+      document.getElementById('uniCost').value = src.cost||'';
+      document.getElementById('uniPrice').value = src.price||'';
+      uniFormSkuState = {poNumber: src.poNumber||'', unitNumber: src.unitNumber||'', invLocation: src.invLocation||'', _lastAssignedPo: src.poNumber||''};
+      document.getElementById('uniPoNumber').value = src.poNumber||'';
+      document.getElementById('uniInvLocation').value = src.invLocation||'';
+      const unitEl = document.getElementById('uniUnitNumber'); if(unitEl) unitEl.value = src.unitNumber||'';
+      uniRefreshSkuPreview();
+      updateUniPreview();
+      uniEditingId = id;
+      const addBtn = document.getElementById('uniAddEntry');
+      if(addBtn) addBtn.textContent = '✎ Update entry';
+      toast('Editing entry — note: category-specific typed fields aren\u2019t restored, only the core fields. Change what\u2019s needed, then hit Update entry');
+    }
+    return;
+  }
   const btn = ev.target.closest('[data-uniid]'); if(!btn) return;
   const id = parseInt(btn.dataset.uniid);
+  const idx = uniEntriesData.findIndex(e=>e.id===id);
+  const removed = idx!==-1 ? uniEntriesData[idx] : null;
   uniEntriesData = uniEntriesData.filter(e=>e.id!==id);
   renderUniEntries();
+  if(removed){
+    undoableToast('Removed ' + (removed.websiteSku||'entry'), ()=>{
+      uniEntriesData.splice(Math.min(idx, uniEntriesData.length), 0, removed);
+      renderUniEntries();
+      toast('Restored ' + (removed.websiteSku||'entry'));
+    });
+  }
 });
 if(document.getElementById('dpSyncAll')) document.getElementById('dpSyncAll').addEventListener('click', syncManifestEntries);
 updateUniPreview();
@@ -6760,6 +7269,7 @@ renderUniEntries();
 bhaiUpdatePreview();
 renderBhaiEntries();
 updateAbribookCodeCounter();
+updateCopyButtonGate();
 updateGoalCounter();
 
 // ── Universal: auto-fill Condition Notes from Describe field ─────
@@ -11526,9 +12036,9 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
 
   <span class="tb-label">Page</span>
   <select id="tbWorkPage" class="tb-page-select">
+    <option value="bhai">🗣️ BhaiMode</option>
     <option value="batch">📋 Batch — RAM/Storage</option>
     <option value="universal">📱 Universal</option>
-    <option value="bhai">🗣️ BhaiMode</option>
     <option value="blitzting">⚡ Blitzting</option>
   </select>
 
