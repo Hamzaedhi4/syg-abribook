@@ -4162,6 +4162,7 @@
     <button class="dp-add-entry" id="reviewSessionBtn" style="display:none;margin-bottom:7px;">🗂️ Review Session</button>
 
     <button class="dp-copy-all" id="dpCopyAll">Copy Claude manifest-prep prompt</button>
+    <button class="dp-copy-all" id="dpSendDesktop" style="margin-top:7px;background:linear-gradient(135deg,#8B5CF6,#A78BFA);">🚀 Send to Claude Desktop</button>
     <button class="dp-sync-all" id="dpSyncAll">Sync entries to Universal Sheet</button>
     <button class="dp-clear" id="dpClear">Clear all entries</button>
   </div>
@@ -6118,22 +6119,50 @@ if(document.getElementById('reviewSessionBtn')){
   document.getElementById('reviewSessionBtn').addEventListener('click', showEosSummary);
 }
 
-document.getElementById('dpCopyAll').addEventListener('click', ()=>{
-  if(!LISTER_LOCKED){ toast('Select and lock your name first (Step 1)'); return; }
+// Shared prep for both "Copy" and "Send to Claude Desktop" — same gates
+// (lister locked, Guided mode review, export scope), different delivery.
+function prepareExportPrompt(){
+  if(!LISTER_LOCKED){ toast('Select and lock your name first (Step 1)'); return null; }
   let entries = allManifestObjects ? allManifestObjects() : dpEntries.map(batchEntryObject);
-  if(!entries.length){ toast('No entries to copy yet'); return; }
+  if(!entries.length){ toast('No entries to copy yet'); return null; }
   if(GUIDED_MODE){
     const reviewed = _lastReviewedSnapshot !== null && _lastReviewedSnapshot === entriesSnapshot();
-    if(!reviewed){ toast('Guided mode is on — click "🗂️ Review Session" first'); showEosSummary(); return; }
+    if(!reviewed){ toast('Guided mode is on — click "🗂️ Review Session" first'); showEosSummary(); return null; }
   }
   const scope = document.getElementById('exportScopeSelect')?.value || 'all';
   if(scope === 'current'){
     const panelForPage = CURRENT_WORK_PAGE === 'universal' ? 'Universal' : CURRENT_WORK_PAGE === 'bhai' ? 'BhaiMode' : 'Batch';
     entries = entries.filter(e => e.panel === panelForPage);
-    if(!entries.length){ toast('No entries in the current mode to export'); return; }
+    if(!entries.length){ toast('No entries in the current mode to export'); return null; }
   }
   const prompt = buildClaudePrepPrompt ? buildClaudePrepPrompt(entries) : dpEntries.map(dpLineFor).filter(Boolean).join('\n');
-  copyText(prompt, ()=>toast('Copied Claude manifest-prep prompt for '+entries.length+' entr'+(entries.length===1?'y':'ies')));
+  return {entries, prompt};
+}
+
+document.getElementById('dpCopyAll').addEventListener('click', ()=>{
+  const prep = prepareExportPrompt();
+  if(!prep) return;
+  copyText(prep.prompt, ()=>toast('Copied Claude manifest-prep prompt for '+prep.entries.length+' entr'+(prep.entries.length===1?'y':'ies')));
+});
+
+// ── Send to Claude Desktop ──────────────────────────────────────
+// claude://claude.ai/new?q=... launches Desktop (if installed) with the
+// prompt pre-filled, ready to review and hit Enter. It does NOT auto-send —
+// that's deliberate, same reasoning as everywhere else: a person looks at
+// it before it goes anywhere. Desktop truncates q around ~14,000 characters,
+// so large sessions get a warning instead of a silently cut-off prompt.
+const CLAUDE_DESKTOP_CHAR_LIMIT = 14000;
+if(document.getElementById('dpSendDesktop')) document.getElementById('dpSendDesktop').addEventListener('click', ()=>{
+  const prep = prepareExportPrompt();
+  if(!prep) return;
+  if(prep.prompt.length > CLAUDE_DESKTOP_CHAR_LIMIT){
+    toast('Prompt is '+prep.prompt.length+' characters — over the ~'+CLAUDE_DESKTOP_CHAR_LIMIT+' limit Claude Desktop truncates at. Copying instead so nothing gets cut off.');
+    copyText(prep.prompt, ()=>{});
+    return;
+  }
+  const url = 'claude://claude.ai/new?q=' + encodeURIComponent(prep.prompt);
+  window.location.href = url;
+  toast('Opening Claude Desktop with '+prep.entries.length+' entr'+(prep.entries.length===1?'y':'ies')+' pre-filled — review, then hit Enter');
 });
 
 document.getElementById('dpClear').addEventListener('click', ()=>{
