@@ -2018,13 +2018,13 @@
     color: var(--wan-ink) !important;
   }
   .eos-modal {
-    background: var(--wan-card) !important;
-    color: var(--wan-ink) !important;
+    background: #13161F !important;
+    color: #E8EAF0 !important;
   }
-  .eos-modal h2 { color: var(--wan-ink) !important; }
-  .eos-stat-row { color: var(--wan-soft) !important; border-color: var(--wan-border2) !important; }
-  .eos-stat-row b { color: var(--wan-ink) !important; }
-  .eos-btn-cancel { border-color: var(--wan-border2) !important; color: var(--wan-soft) !important; }
+  .eos-modal h2 { color: #E8EAF0 !important; }
+  .eos-stat-row { color: rgba(255,255,255,.45) !important; border-color: rgba(255,255,255,.12) !important; }
+  .eos-stat-row b { color: #E8EAF0 !important; }
+  .eos-btn-cancel { border-color: rgba(255,255,255,.12) !important; color: rgba(255,255,255,.45) !important; }
   .wan-panel .dp-sync-all {
     background: transparent !important;
     border: 1px solid rgba(255,255,255,.1) !important;
@@ -3950,6 +3950,8 @@
           <div class="entry-flags" id="bhaiFlags"></div>
 
           <button class="dp-add-entry" id="bhaiAddEntry" style="margin:12px 0 0">+ Add to manifest queue</button>
+          <button class="dp-add-entry" id="bhaiOpenSpeedReview" style="margin-top:7px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔎 Review Prices in Speed Review</button>
+          <button class="dp-add-entry" id="bhaiOpenSpeedReview" style="margin-top:7px;background:transparent;border:1px solid var(--line-2);">🔎 Speed Review this session</button>
 
         </div>
       </div>
@@ -6040,6 +6042,12 @@ function showEosSummary(){
   const backdrop = document.getElementById('eosModalBackdrop');
   const modal = document.getElementById('eosModal');
   if(!backdrop || !modal) return;
+  // Force this to be a direct child of <body> with maximum z-index every time it's
+  // shown — the Wan canvas has complex transformed/floating-panel contexts, and a
+  // modal declared once in static HTML can end up trapped inside one of them.
+  // Re-appending + re-asserting styles at show-time sidesteps that entirely.
+  if(backdrop.parentElement !== document.body) document.body.appendChild(backdrop);
+  backdrop.style.cssText = 'position:fixed !important; inset:0 !important; background:rgba(0,0,0,.6) !important; z-index:2147483647 !important; display:flex !important; align-items:center !important; justify-content:center !important; padding:20px !important;';
   const panelRows = Object.entries(s.byPanel).map(([k,v])=>`<div class="eos-stat-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('');
   modal.innerHTML = `
     <h2>🗂️ End of Session Summary</h2>
@@ -6052,7 +6060,6 @@ function showEosSummary(){
       <button class="eos-btn-cancel" id="eosCancelBtn">Close</button>
       <button class="eos-btn-confirm" id="eosConfirmBtn">✓ Mark Session Reviewed</button>
     </div>`;
-  backdrop.style.display = 'flex';
   document.getElementById('eosCancelBtn').addEventListener('click', ()=>{ backdrop.style.display='none'; });
   document.getElementById('eosConfirmBtn').addEventListener('click', ()=>{
     _lastReviewedSnapshot = entriesSnapshot();
@@ -6254,6 +6261,20 @@ function renderBhaiEntries(){
   if(el) el.addEventListener('change', bhaiUpdatePreview);
 });
 
+if(document.getElementById('bhaiOpenSpeedReview')) document.getElementById('bhaiOpenSpeedReview').addEventListener('click', ()=>{
+  const tbSel = document.getElementById('tbWorkPage');
+  if(tbSel){ tbSel.value = 'blitzting'; tbSel.dispatchEvent(new Event('change')); }
+  document.getElementById('blitzTabReview')?.click();
+});
+if(document.getElementById('bhaiOpenSpeedReview')) document.getElementById('bhaiOpenSpeedReview').addEventListener('click', ()=>{
+  if(!bhaiEntriesData.length){ toast('No BhaiMode entries in the queue yet'); return; }
+  switchWorkPage('blitzting');
+  const tbSel = document.getElementById('tbWorkPage'); if(tbSel) tbSel.value = 'blitzting';
+  document.getElementById('blitzTabReview')?.click();
+  // Jump straight to the first BhaiMode-sourced card rather than wherever the queue starts
+  const firstBhaiIdx = _brQueue.findIndex(e => e.panel === 'BhaiMode');
+  if(firstBhaiIdx !== -1){ _brIdx = firstBhaiIdx; blitzRenderReview(); }
+});
 if(document.getElementById('bhaiSuggestPrice')) document.getElementById('bhaiSuggestPrice').addEventListener('click', ()=>{
   const desc = document.getElementById('bhaiDesc')?.value.trim() || '';
   showPriceSuggestion(desc, null, 'bhaiPrice');
@@ -7769,7 +7790,7 @@ async function blitzLoadShopify(){
 }
 
 function blitzReviewInit(){
-  // Build queue from BOTH Batch (dpEntries) and Universal (uniEntriesData)
+  // Build queue from Batch (dpEntries), Universal (uniEntriesData), AND BhaiMode (bhaiEntriesData)
   const batchQ = dpEntries
     .filter(e => e.code || e.websiteSku)
     .map((e,i)=>({
@@ -7796,7 +7817,20 @@ function blitzReviewInit(){
     flagged: false,
     approved: false,
   }));
-  _brQueue = batchQ.concat(uniQ);
+  const bhaiQ = (bhaiEntriesData||[]).filter(e=>e.desc).map((e,i)=>({
+    id: 'bhai-'+e.id,
+    sku: e.websiteSku || bhaiEntrySkuLabel(e),
+    title: (e.desc||'BhaiMode entry').slice(0,60),
+    price: e.price || '',
+    cost: e.cost || '',
+    qty: 1,
+    metafields: {},
+    desc: bhaiLineFor ? bhaiLineFor(e,i) : e.desc,
+    panel: 'BhaiMode',
+    flagged: false,
+    approved: false,
+  }));
+  _brQueue = batchQ.concat(uniQ).concat(bhaiQ);
   _brIdx = 0;
   _brFlagged = [];
   blitzRenderReview();
@@ -7875,6 +7909,7 @@ function blitzRenderReview(){
         <button class="blitz-action approve" id="brApprove">✓ Approve</button>
         <button class="blitz-action flag" id="brFlag">⚑ Flag</button>
         <button class="blitz-action edit" id="brEdit">✎ Save edits</button>
+        ${e.panel==='BhaiMode' ? '<button class="blitz-action edit" id="brEditFull">↩ Edit full entry in BhaiMode</button>' : ''}
       </div>
     </div>
     <div class="blitz-kbd-legend">
@@ -7889,6 +7924,35 @@ function blitzRenderReview(){
   document.getElementById('brApprove').addEventListener('click', brApprove);
   document.getElementById('brFlag').addEventListener('click', brFlag);
   document.getElementById('brEdit').addEventListener('click', brSaveEdits);
+  const editFullBtn = document.getElementById('brEditFull');
+  if(editFullBtn) editFullBtn.addEventListener('click', ()=>brEditFullInBhai(e));
+}
+
+function brEditFullInBhai(qe){
+  // Route back to BhaiMode's real form so the full description/return policy/etc.
+  // can be edited — Speed Review itself only ever touches price/cost/qty/metafields.
+  const srcId = parseInt(String(qe.id).replace('bhai-',''));
+  const src = bhaiEntriesData.find(e=>e.id===srcId);
+  if(!src){ toast('Could not find the source entry'); return; }
+  switchWorkPage('bhai');
+  const tbSel = document.getElementById('tbWorkPage'); if(tbSel) tbSel.value = 'bhai';
+  document.getElementById('bhaiWebsiteSku').value = src.websiteSku||'';
+  document.getElementById('bhaiDesc').value = src.desc||'';
+  document.getElementById('bhaiClaudeNotes').value = src.claudeNotes||'';
+  document.getElementById('bhaiReturnPolicy').value = src.returnPolicy||'30 Days Free Return';
+  document.getElementById('bhaiNeedsResearch').checked = !!src.needsResearch;
+  document.getElementById('bhaiCost').value = src.cost||'';
+  document.getElementById('bhaiPrice').value = src.price||'';
+  bhaiFormSkuState = {poNumber: src.poNumber||'', unitNumber: src.unitNumber||'', invLocation: src.invLocation||'', _lastAssignedPo: src.poNumber||''};
+  document.getElementById('bhaiPoNumber').value = src.poNumber||'';
+  document.getElementById('bhaiInvLocation').value = src.invLocation||'';
+  const unitEl = document.getElementById('bhaiUnitNumber'); if(unitEl) unitEl.value = src.unitNumber||'';
+  bhaiRefreshSkuPreview();
+  bhaiUpdatePreview();
+  bhaiEditingId = srcId;
+  const addBtn = document.getElementById('bhaiAddEntry');
+  if(addBtn) addBtn.textContent = '✎ Update entry';
+  toast('Editing this entry\u2019s full content — hit Update entry when done, then head back to Speed Review');
 }
 
 function brSaveEdits(){
@@ -7919,6 +7983,13 @@ function brWriteBack(qe){
   } else if(qe.panel === 'Universal'){
     const srcId = parseInt(String(qe.id).replace('uni-',''));
     const src = (uniEntriesData||[]).find(e=>e.id===srcId);
+    if(src){
+      if(qe.price) src.price = qe.price;
+      if(qe.cost)  src.cost  = qe.cost;
+    }
+  } else if(qe.panel === 'BhaiMode'){
+    const srcId = parseInt(String(qe.id).replace('bhai-',''));
+    const src = (bhaiEntriesData||[]).find(e=>e.id===srcId);
     if(src){
       if(qe.price) src.price = qe.price;
       if(qe.cost)  src.cost  = qe.cost;
