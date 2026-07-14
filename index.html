@@ -3798,6 +3798,7 @@
             </div>
           </div>
           <button type="button" class="dp-add-entry" id="uniSuggestPrice" style="margin-top:7px;padding:7px;font-size:11.5px;">💡 Suggest Price (Pricing Memory)</button>
+          <button type="button" class="dp-add-entry" id="uniEbayLookup" style="margin-top:7px;padding:7px;font-size:11.5px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔍 Check Sold Prices on eBay</button>
 
           <div class="uni-conf-strip">
             <div class="uni-conf-left">
@@ -3914,6 +3915,7 @@
             </div>
           </div>
           <button type="button" class="dp-add-entry" id="bhaiSuggestPrice" style="margin-top:7px;padding:7px;font-size:11.5px;">💡 Suggest Price (Pricing Memory)</button>
+          <button type="button" class="dp-add-entry" id="bhaiEbayLookup" style="margin-top:7px;padding:7px;font-size:11.5px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔍 Check Sold Prices on eBay</button>
 
           <div class="uni-desc-wrap">
             <div class="uni-desc-label-row">
@@ -5547,6 +5549,18 @@ function suggestPriceFor(description, category){
   return {price:null, confidence:'None', basis:'No match in Pricing Memory (data covers '+PRICING_MEMORY.coverage+'). Use your own judgment or research comps.', source:'none'};
 }
 
+// ── eBay quick lookup ────────────────────────────────────────────
+// Opens eBay pre-filtered to Sold + Completed listings — matching the
+// "sold comps are ground truth" pricing approach used throughout.
+function openEbaySoldSearch(query){
+  const q = (query||'').trim();
+  if(!q){ toast('Nothing to search yet — fill in the item first'); return; }
+  // Keep the query reasonably tight; very long freeform text returns few/no results.
+  const trimmed = q.length > 90 ? q.slice(0,90) : q;
+  const url = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(trimmed) + '&LH_Sold=1&LH_Complete=1';
+  window.open(url, '_blank', 'noopener');
+}
+
 function showPriceSuggestion(description, category, targetInputId){
   const s = suggestPriceFor(description, category);
   const badge = s.confidence === 'High' ? '🟢 High confidence' : s.confidence === 'Medium' ? '🟡 Medium confidence' : s.confidence === 'Low' ? '🟠 Low confidence' : '⚪ No data';
@@ -5650,7 +5664,8 @@ function skuAssignmentBlockHTML(e, idPrefix){
       <div class="dp-label">Price <span style="opacity:.6;font-weight:400">(optional)</span></div>
       <input class="dp-input" placeholder="e.g. 39.99" data-${idPrefix}id="${e.id}" data-${idPrefix}field="price" value="${esc(e.price)}" autocomplete="off" inputmode="decimal">
     </div>
-  </div>`;
+  </div>
+  <button type="button" class="dp-add-entry" data-${idPrefix}ebayid="${e.id}" style="margin-top:7px;padding:7px;font-size:11px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔍 Check Sold Prices on eBay</button>`;
 }
 
 // ── Abribook code registry counter ──────────────────────────────
@@ -5936,6 +5951,16 @@ document.getElementById('dpEntries').addEventListener('change', ev=>{
   dpRebuildEntry(e);
 });
 document.getElementById('dpEntries').addEventListener('click', ev=>{
+  const ebayBtn = ev.target.closest('[data-dpebayid]');
+  if(ebayBtn){
+    const id = parseInt(ebayBtn.dataset.dpebayid);
+    const src = dpEntries.find(x=>x.id===id);
+    if(src){
+      const hit = src.code ? resolveCode(src.code) : null;
+      openEbaySoldSearch(hit ? hit.desc : src.code);
+    }
+    return;
+  }
   const btn = ev.target.closest('.dp-rmv');
   if(btn) dpRemoveEntry(parseInt(btn.dataset.dpid));
 });
@@ -6278,6 +6303,10 @@ if(document.getElementById('bhaiOpenSpeedReview')) document.getElementById('bhai
 if(document.getElementById('bhaiSuggestPrice')) document.getElementById('bhaiSuggestPrice').addEventListener('click', ()=>{
   const desc = document.getElementById('bhaiDesc')?.value.trim() || '';
   showPriceSuggestion(desc, null, 'bhaiPrice');
+});
+if(document.getElementById('bhaiEbayLookup')) document.getElementById('bhaiEbayLookup').addEventListener('click', ()=>{
+  const desc = document.getElementById('bhaiDesc')?.value.trim() || '';
+  openEbaySoldSearch(desc);
 });
 if(document.getElementById('bhaiAddEntry')) document.getElementById('bhaiAddEntry').addEventListener('click', ()=>{
   const e = bhaiMakeFromForm();
@@ -7204,6 +7233,11 @@ if(document.getElementById('uniSuggestPrice')) document.getElementById('uniSugge
   const desc = document.getElementById('uniDesc')?.value.trim() || '';
   const cat = document.getElementById('uniItemType')?.value || null;
   showPriceSuggestion(desc, cat, 'uniPrice');
+});
+if(document.getElementById('uniEbayLookup')) document.getElementById('uniEbayLookup').addEventListener('click', ()=>{
+  const e = uniMakePreviewObject();
+  const query = e.titlePreview && e.titlePreview !== e.itemType ? e.titlePreview : (e.desc || e.itemType || '');
+  openEbaySoldSearch(query);
 });
 if(document.getElementById('uniAddEntry')) document.getElementById('uniAddEntry').addEventListener('click',()=>{
   const e = uniMakeFromForm();
