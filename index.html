@@ -6161,8 +6161,20 @@ if(document.getElementById('dpSendDesktop')) document.getElementById('dpSendDesk
     return;
   }
   const url = 'claude://claude.ai/new?q=' + encodeURIComponent(prep.prompt);
-  window.location.href = url;
-  toast('Opening Claude Desktop with '+prep.entries.length+' entr'+(prep.entries.length===1?'y':'ies')+' pre-filled — review, then hit Enter');
+  // A real anchor click tends to be handled far more reliably by browsers for
+  // custom protocol schemes than a scripted window.location.href assignment —
+  // some browsers silently swallow the latter with no visible error at all.
+  const a = document.createElement('a');
+  a.href = url;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // Also copy as a safety net — if the OS has no claude:// handler registered
+  // (Desktop not installed, or link blocked), nothing visibly happens, so the
+  // person isn't left with literally nothing to fall back on.
+  copyText(prep.prompt, ()=>{});
+  toast('Opening Claude Desktop with '+prep.entries.length+' entr'+(prep.entries.length===1?'y':'ies')+' pre-filled — also copied to clipboard as a backup in case Desktop doesn\u2019t open');
 });
 
 document.getElementById('dpClear').addEventListener('click', ()=>{
