@@ -84,6 +84,10 @@
   .dp-add-entry{width:100%; padding:10px; border:1px dashed var(--line-2); border-radius:var(--r-lg); background:transparent;
     color:var(--ink-soft); font:600 12.5px/1 var(--sans); cursor:pointer; transition:all .15s; margin-bottom:12px;}
   .dp-add-entry:hover{border-color:var(--accent); color:var(--accent-ink); background:var(--accent-tint);}
+  .shovo-price-chip{display:flex; align-items:flex-start; gap:7px; padding:8px 10px; border-radius:10px; font:500 11.5px/1.4 var(--sans); margin:-2px 0 8px;}
+  .shovo-price-chip.suggest{background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.25); color:#4F46E5;}
+  .shovo-price-chip.flag{background:rgba(220,38,38,.08); border:1px solid rgba(220,38,38,.3); color:#B91C1C;}
+  .shovo-price-chip .chip-icon{flex:none;}
   .dp-footer{padding:12px 16px 16px; border-top:1px solid var(--line); background:var(--surface); flex:none; position:sticky; bottom:0;}
   .dp-preview-all{background:var(--surface-2); border:1px solid var(--line-2); border-radius:var(--r-md); padding:10px 12px;
     font:600 11.5px/1.6 var(--mono); color:var(--ink); word-break:break-word; white-space:pre-wrap; min-height:40px;
@@ -845,29 +849,58 @@
   @keyframes hazTyping{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
   .haz-reset{width:100%;padding:9px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);font:600 12px/1 var(--sans);color:#6B7280;cursor:pointer;flex:none;}
   .haz-reset:hover{border-color:#9CA3AF;color:var(--ink);}
-  .haz-customer-view{position:fixed;inset:0;background:#0D1A12;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+  /* ── SYG brand tokens (Haz customer-facing screen) ── */
+  .haz-customer-view{
+    --syg-blue:#0092FF;
+    --syg-blue-dark:#0077D6;
+    --syg-bg:#F7F8FA;
+    --syg-card:#FFFFFF;
+    --syg-border:#E4E7EC;
+    --syg-text:#0B1330;
+    --syg-muted:#6B7280;
+    position:fixed;inset:0;background:var(--syg-bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;transition:background .25s ease;
+  }
+  .haz-customer-view.dark{
+    --syg-bg:#0B1330;
+    --syg-card:#111A3D;
+    --syg-border:#22294B;
+    --syg-text:#F2F4F8;
+    --syg-muted:#8B93B0;
+  }
   .haz-customer-view.hidden{display:none;}
-  .haz-customer-card{background:#fff;border-radius:20px;width:100%;max-width:440px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5);}
-  .haz-customer-head{background:#0D1A12;padding:28px 24px 22px;text-align:center;flex:none;border-bottom:3px solid #22C55E;}
-  .haz-customer-logo{font-size:26px;font-weight:900;color:#fff;letter-spacing:-.04em;}
-  .haz-customer-logo span{color:#4ADE80;}
-  .haz-customer-sub{font-size:12px;color:#4ADE80;margin-top:5px;opacity:.7;letter-spacing:.05em;text-transform:uppercase;}
-  .haz-customer-body{flex:1;padding:24px;overflow-y:auto;}
-  .haz-customer-item{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:4px;letter-spacing:-.02em;}
-  .haz-customer-condition{font-size:12.5px;color:#6B7280;margin-bottom:20px;}
-  .haz-customer-section{margin-bottom:20px;}
-  .haz-customer-section-label{font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;}
-  .haz-customer-row{display:flex;justify-content:space-between;font-size:13.5px;padding:8px 0;border-bottom:1px solid #F3F4F6;color:#374151;}
-  .haz-customer-row:last-child{border:none;}
-  .haz-customer-row span:last-child{font-weight:600;color:var(--ink);}
-  .haz-customer-offer{background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:2px solid #86EFAC;border-radius:16px;padding:24px 20px;text-align:center;margin-top:4px;}
-  .haz-customer-offer-label{font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;}
-  .haz-customer-offer-amount{font-size:52px;font-weight:900;color:#15803D;font-family:var(--mono);line-height:1;}
-  .haz-customer-offer-note{font-size:12px;color:#166534;margin-top:10px;line-height:1.5;opacity:.8;}
-  .haz-customer-disclaimer{font-size:11px;color:#9CA3AF;text-align:center;margin-top:16px;line-height:1.6;padding:0 4px;}
-  .haz-customer-footer{padding:16px 20px;border-top:1px solid #F3F4F6;flex:none;background:#FAFAFA;}
-  .haz-customer-back{width:100%;padding:11px;background:transparent;border:1px solid #E5E7EB;border-radius:var(--r-md);font:600 12px/1 var(--sans);color:#9CA3AF;cursor:pointer;transition:all .15s;}
-  .haz-customer-back:hover{border-color:#9CA3AF;color:var(--ink);}
+  .haz-customer-mode-toggle{position:absolute;top:20px;right:20px;display:flex;align-items:center;gap:8px;background:var(--syg-card);border:1px solid var(--syg-border);padding:6px;border-radius:999px;z-index:2;}
+  .haz-customer-mode-toggle button{border:none;background:transparent;padding:6px 14px;border-radius:999px;font:600 12px/1 var(--sans);cursor:pointer;color:var(--syg-muted);transition:all .15s;}
+  .haz-customer-mode-toggle button.active{background:var(--syg-blue);color:#fff;}
+  .haz-customer-card{background:var(--syg-card);border:1px solid var(--syg-border);border-radius:20px;width:100%;max-width:420px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(11,19,48,.16);transition:background .25s ease,border-color .25s ease;}
+  .haz-customer-head{padding:26px 24px 8px;text-align:center;flex:none;}
+  .haz-customer-logo-mark{width:48px;height:48px;border-radius:13px;background:var(--syg-blue);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+  .haz-customer-logo-mark svg{width:26px;height:26px;}
+  .haz-customer-logo{font-size:12.5px;font-weight:700;letter-spacing:.03em;color:var(--syg-muted);text-transform:uppercase;}
+  .haz-customer-sub{font-size:11px;color:var(--syg-muted);margin-top:4px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;opacity:.8;}
+  .haz-customer-body{flex:1;padding:8px 24px 24px;overflow-y:auto;text-align:center;}
+  .haz-customer-item{font-size:18px;font-weight:700;color:var(--syg-text);margin-bottom:2px;letter-spacing:-.01em;}
+  .haz-customer-condition{font-size:13px;color:var(--syg-muted);margin-bottom:22px;}
+  .haz-customer-offer{background:var(--syg-blue);border-radius:16px;padding:22px 20px;text-align:center;margin-bottom:4px;}
+  .haz-customer-offer-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;}
+  .haz-customer-offer-amount{font-size:44px;font-weight:800;color:#fff;font-family:var(--mono);line-height:1;letter-spacing:-.02em;}
+  .haz-customer-offer-note{font-size:12px;color:rgba(255,255,255,.75);margin-top:8px;line-height:1.5;}
+  .haz-customer-breakdown-toggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:transparent;border:none;padding:14px 0 4px;font:600 12.5px/1 var(--sans);color:var(--syg-muted);cursor:pointer;}
+  .haz-customer-breakdown-toggle svg{width:10px;height:10px;transition:transform .2s ease;}
+  .haz-customer-breakdown-toggle.open svg{transform:rotate(180deg);}
+  .haz-customer-section{text-align:left;max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .haz-customer-section.open{max-height:220px;margin:10px 0 4px;}
+  .haz-customer-row{display:flex;justify-content:space-between;font-size:13.5px;padding:9px 0;color:var(--syg-muted);}
+  .haz-customer-row+.haz-customer-row{border-top:1px solid var(--syg-border);}
+  .haz-customer-row span:last-child{font-weight:600;color:var(--syg-text);}
+  .haz-customer-disclaimer{font-size:11px;color:var(--syg-muted);text-align:center;margin-top:18px;line-height:1.6;padding:0 4px;}
+  .haz-customer-footer{padding:16px 20px;border-top:1px solid var(--syg-border);flex:none;}
+  .haz-customer-footer-actions{display:flex;gap:10px;margin-bottom:10px;}
+  .haz-customer-accept{flex:1;padding:13px;background:var(--syg-blue);border:none;border-radius:12px;font:700 14px/1 var(--sans);color:#fff;cursor:pointer;transition:background .15s;}
+  .haz-customer-accept:hover{background:var(--syg-blue-dark);}
+  .haz-customer-decline{flex:1;padding:13px;background:transparent;border:1px solid var(--syg-border);border-radius:12px;font:600 14px/1 var(--sans);color:var(--syg-muted);cursor:pointer;transition:all .15s;}
+  .haz-customer-decline:hover{border-color:var(--syg-muted);color:var(--syg-text);}
+  .haz-customer-back{width:100%;padding:9px;background:transparent;border:none;font:600 11.5px/1 var(--sans);color:var(--syg-muted);cursor:pointer;transition:color .15s;}
+  .haz-customer-back:hover{color:var(--syg-text);}
   .haz-mode-toggle{display:flex;border:1px solid rgba(74,222,128,.25);border-radius:var(--r-pill);overflow:hidden;margin-right:4px;}
   .haz-mode-btn{padding:5px 11px;font:600 11px/1 var(--sans);border:none;cursor:pointer;background:transparent;color:#6B7280;transition:all .15s;}
   .haz-mode-btn.on{background:#166534;color:#4ADE80;}
@@ -3316,13 +3349,24 @@
     <div class="haz-right">
       <!-- Customer-facing view -->
       <div class="haz-customer-view hidden" id="hazCustomerView">
+        <div class="haz-customer-mode-toggle">
+          <button id="hazCustLightBtn" class="active" onclick="hazCustomerSetMode(false)">Light</button>
+          <button id="hazCustDarkBtn" onclick="hazCustomerSetMode(true)">Dark</button>
+        </div>
         <div class="haz-customer-card">
           <div class="haz-customer-head">
-            <div class="haz-customer-logo">SYG <span>Elmwood Park</span></div>
-            <div class="haz-customer-sub">Item Evaluation</div>
+            <div class="haz-customer-logo-mark">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 14L10 6L14 10L20 4" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="4" r="2" fill="#fff"/></svg>
+            </div>
+            <div class="haz-customer-logo">Sell Your Gadgets</div>
+            <div class="haz-customer-sub">Elmwood Park</div>
           </div>
           <div class="haz-customer-body" id="hazCustomerBody"></div>
           <div class="haz-customer-footer">
+            <div class="haz-customer-footer-actions">
+              <button class="haz-customer-decline" id="hazCustomerDecline">Decline</button>
+              <button class="haz-customer-accept" id="hazCustomerAccept">Accept Offer</button>
+            </div>
             <button class="haz-customer-back" id="hazCustomerBack">← Back to staff view</button>
           </div>
         </div>
@@ -3797,6 +3841,7 @@
               <input class="dp-input" id="uniPrice" placeholder="e.g. 39.99" autocomplete="off" inputmode="decimal">
             </div>
           </div>
+          <div id="uniShovoPriceChip" class="shovo-price-chip" style="display:none"></div>
           <button type="button" class="dp-add-entry" id="uniSuggestPrice" style="margin-top:7px;padding:7px;font-size:11.5px;">💡 Suggest Price (Pricing Memory)</button>
           <button type="button" class="dp-add-entry" id="uniEbayLookup" style="margin-top:7px;padding:7px;font-size:11.5px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔍 Check Sold Prices on eBay</button>
 
@@ -3914,6 +3959,7 @@
               <input class="dp-input" id="bhaiPrice" placeholder="e.g. 39.99" autocomplete="off" inputmode="decimal">
             </div>
           </div>
+          <div id="bhaiShovoPriceChip" class="shovo-price-chip" style="display:none"></div>
           <button type="button" class="dp-add-entry" id="bhaiSuggestPrice" style="margin-top:7px;padding:7px;font-size:11.5px;">💡 Suggest Price (Pricing Memory)</button>
           <button type="button" class="dp-add-entry" id="bhaiEbayLookup" style="margin-top:7px;padding:7px;font-size:11.5px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔍 Check Sold Prices on eBay</button>
 
@@ -5574,6 +5620,64 @@ function showPriceSuggestion(description, category, targetInputId){
   return s;
 }
 
+// ── Shovo Price Advisor — lives inline on the intake price field ──
+// Fires on description/category blur (shows a suggestion) and on price
+// blur (flags if the typed price is way off what Pricing Memory expects).
+// Static PRICING_MEMORY table is the primary source (instant, offline);
+// this never calls out to Shopify live — that stays a fallback for later.
+const SHOVO_FLAG_THRESHOLD = 0.30; // 30%+ off suggestion triggers a flag instead of a suggestion
+
+function shovoRenderPriceChip(chipId, mode, html){
+  const chip = document.getElementById(chipId);
+  if(!chip) return;
+  chip.className = 'shovo-price-chip ' + mode;
+  chip.innerHTML = html;
+  chip.style.display = 'flex';
+}
+
+function shovoClearPriceChip(chipId){
+  const chip = document.getElementById(chipId);
+  if(!chip) return;
+  chip.style.display = 'none';
+  chip.innerHTML = '';
+}
+
+// descId/catId can point to a textarea (Universal/BhaiMode single description)
+// and catId may be null (BhaiMode auto-detects category, nothing to read yet).
+function shovoAdvisePrice(descId, catId, priceId, chipId){
+  const desc = document.getElementById(descId)?.value.trim() || '';
+  const cat = catId ? (document.getElementById(catId)?.value || null) : null;
+  const priceInput = document.getElementById(priceId);
+  const typedPrice = priceInput ? parseFloat(priceInput.value) : NaN;
+
+  if(!desc){ shovoClearPriceChip(chipId); return; }
+  const s = suggestPriceFor(desc, cat);
+
+  if(!s.price){
+    // No data to advise on — stay quiet rather than guess blind
+    shovoClearPriceChip(chipId);
+    return;
+  }
+
+  if(!isNaN(typedPrice) && typedPrice > 0){
+    const diff = Math.abs(typedPrice - s.price) / s.price;
+    if(diff >= SHOVO_FLAG_THRESHOLD){
+      shovoRenderPriceChip(chipId, 'flag',
+        '<span class="chip-icon">🚩</span><span>Shovo: $'+typedPrice.toFixed(2)+' looks off — Pricing Memory suggests ~$'+s.price.toFixed(2)+' ('+s.confidence+' confidence). '+esc(s.basis)+'</span>');
+      shovoSayLine('flagPrice');
+      return;
+    }
+    // Typed price is in a reasonable range — quiet confirmation, no flag
+    shovoRenderPriceChip(chipId, 'suggest',
+      '<span class="chip-icon">✅</span><span>Shovo: in line with Pricing Memory (~$'+s.price.toFixed(2)+', '+s.confidence+' confidence)</span>');
+    return;
+  }
+
+  // No price typed yet — proactive suggestion, doesn't fill anything automatically
+  shovoRenderPriceChip(chipId, 'suggest',
+    '<span class="chip-icon">💡</span><span>Shovo suggests ~$'+s.price.toFixed(2)+' ('+s.confidence+' confidence) — '+esc(s.basis)+'</span>');
+}
+
 // ── Smart Flags ──────────────────────────────────────────────────
 // Catches the exact category of mistakes made manually multiple times
 // today: missing serials, For-Parts items with a health% still set or
@@ -6142,7 +6246,10 @@ function prepareExportPrompt(){
 document.getElementById('dpCopyAll').addEventListener('click', ()=>{
   const prep = prepareExportPrompt();
   if(!prep) return;
-  copyText(prep.prompt, ()=>toast('Copied Claude manifest-prep prompt for '+prep.entries.length+' entr'+(prep.entries.length===1?'y':'ies')));
+  copyText(prep.prompt, ()=>{
+    toast('Copied Claude manifest-prep prompt for '+prep.entries.length+' entr'+(prep.entries.length===1?'y':'ies'));
+    if(prep.entries.length >= 8) shovoSayLine('bigPush');
+  });
 });
 
 // ── Send to Claude Desktop ──────────────────────────────────────
@@ -6344,6 +6451,13 @@ if(document.getElementById('bhaiOpenSpeedReview')) document.getElementById('bhai
 if(document.getElementById('bhaiSuggestPrice')) document.getElementById('bhaiSuggestPrice').addEventListener('click', ()=>{
   const desc = document.getElementById('bhaiDesc')?.value.trim() || '';
   showPriceSuggestion(desc, null, 'bhaiPrice');
+});
+// Shovo Price Advisor — inline, live version of the same Pricing Memory lookup
+if(document.getElementById('bhaiDesc')) document.getElementById('bhaiDesc').addEventListener('blur', ()=>{
+  shovoAdvisePrice('bhaiDesc', null, 'bhaiPrice', 'bhaiShovoPriceChip');
+});
+if(document.getElementById('bhaiPrice')) document.getElementById('bhaiPrice').addEventListener('blur', ()=>{
+  shovoAdvisePrice('bhaiDesc', null, 'bhaiPrice', 'bhaiShovoPriceChip');
 });
 if(document.getElementById('bhaiEbayLookup')) document.getElementById('bhaiEbayLookup').addEventListener('click', ()=>{
   const desc = document.getElementById('bhaiDesc')?.value.trim() || '';
@@ -7274,6 +7388,16 @@ if(document.getElementById('uniSuggestPrice')) document.getElementById('uniSugge
   const desc = document.getElementById('uniDesc')?.value.trim() || '';
   const cat = document.getElementById('uniItemType')?.value || null;
   showPriceSuggestion(desc, cat, 'uniPrice');
+});
+// Shovo Price Advisor — inline, live version of the same Pricing Memory lookup
+if(document.getElementById('uniDesc')) document.getElementById('uniDesc').addEventListener('blur', ()=>{
+  shovoAdvisePrice('uniDesc', 'uniItemType', 'uniPrice', 'uniShovoPriceChip');
+});
+if(document.getElementById('uniItemType')) document.getElementById('uniItemType').addEventListener('change', ()=>{
+  shovoAdvisePrice('uniDesc', 'uniItemType', 'uniPrice', 'uniShovoPriceChip');
+});
+if(document.getElementById('uniPrice')) document.getElementById('uniPrice').addEventListener('blur', ()=>{
+  shovoAdvisePrice('uniDesc', 'uniItemType', 'uniPrice', 'uniShovoPriceChip');
 });
 if(document.getElementById('uniEbayLookup')) document.getElementById('uniEbayLookup').addEventListener('click', ()=>{
   const e = uniMakePreviewObject();
@@ -10119,6 +10243,10 @@ document.getElementById('hazReset').addEventListener('click', hazReset);
 document.getElementById('hazCustomerBack').addEventListener('click',()=>{
   document.getElementById('hazCustomerView').classList.add('hidden');
 });
+document.getElementById('hazCustomerDecline').addEventListener('click',()=>{
+  document.getElementById('hazCustomerView').classList.add('hidden');
+});
+document.getElementById('hazCustomerAccept').addEventListener('click', hazCustomerAcceptOffer);
 
 // hazChatSend defined below in price input handler section
 
@@ -11040,6 +11168,25 @@ function hazRenderChatResult(data, vibe){
   hazBoardAddCard({item, condition, value, fees, net, openOff, midOff, maxOff, vibe, category: hazDetectCategory(item+' '+condition)});
 }
 
+function hazCustomerSetMode(dark){
+  const view = document.getElementById('hazCustomerView');
+  if(view) view.classList.toggle('dark', dark);
+  const lb = document.getElementById('hazCustLightBtn'), db = document.getElementById('hazCustDarkBtn');
+  if(lb) lb.classList.toggle('active', !dark);
+  if(db) db.classList.toggle('active', dark);
+  try{ localStorage.setItem('haz_customer_dark_mode', dark ? '1' : '0'); }catch(e){}
+}
+
+function hazCustomerToggleBreakdown(){
+  const el = document.getElementById('hazCustomerBreakdown');
+  const btn = document.getElementById('hazCustomerBreakdownBtn');
+  const label = document.getElementById('hazCustomerBreakdownLabel');
+  if(!el || !btn || !label) return;
+  const isOpen = el.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  label.textContent = isOpen ? 'Hide details' : 'How we calculated this';
+}
+
 function hazShowCustomer(){
   if(!_hazLastResult) return;
   const d = _hazLastResult;
@@ -11050,20 +11197,31 @@ function hazShowCustomer(){
   document.getElementById('hazCustomerBody').innerHTML =
     '<div class="haz-customer-item">'+esc(d.item)+'</div>'
     +'<div class="haz-customer-condition">'+esc(d.condition)+'</div>'
-    +'<div class="haz-customer-section">'
-    +'<div class="haz-customer-section-label">How we price items</div>'
-    +'<div class="haz-customer-row"><span>Current market value</span><span>$'+d.value+'</span></div>'
-    +'<div class="haz-customer-row"><span>Platform selling fees</span><span>&minus;$'+Math.round(d.fees)+'</span></div>'
-    +'<div class="haz-customer-row"><span>Shipping &amp; handling</span><span>&minus;$'+Math.round(d.value*0.05)+'</span></div>'
-    +'<div class="haz-customer-row"><span>Processing &amp; reconditioning</span><span>&minus;$'+Math.round(d.value*0.08)+'</span></div>'
-    +'</div>'
     +'<div class="haz-customer-offer">'
     +'<div class="haz-customer-offer-label">Our offer</div>'
     +'<div class="haz-customer-offer-amount">$'+shownOffer+'</div>'
     +'<div class="haz-customer-offer-note">Cash offer &middot; Based on current resale market data</div>'
     +'</div>'
+    +'<button class="haz-customer-breakdown-toggle" id="hazCustomerBreakdownBtn" onclick="hazCustomerToggleBreakdown()">'
+    +'<span id="hazCustomerBreakdownLabel">How we calculated this</span>'
+    +'<svg viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    +'</button>'
+    +'<div class="haz-customer-section" id="hazCustomerBreakdown">'
+    +'<div class="haz-customer-row"><span>Current market value</span><span>$'+d.value+'</span></div>'
+    +'<div class="haz-customer-row"><span>Platform selling fees</span><span>&minus;$'+Math.round(d.fees)+'</span></div>'
+    +'<div class="haz-customer-row"><span>Shipping &amp; handling</span><span>&minus;$'+Math.round(d.value*0.05)+'</span></div>'
+    +'<div class="haz-customer-row"><span>Processing &amp; reconditioning</span><span>&minus;$'+Math.round(d.value*0.08)+'</span></div>'
+    +'</div>'
     +'<div class="haz-customer-disclaimer">Prices are based on recent sold listings and account for all costs of reselling your item. This offer is valid today only.</div>';
+  // Restore persisted light/dark preference for the customer screen
+  let dark = false;
+  try{ dark = localStorage.getItem('haz_customer_dark_mode') === '1'; }catch(e){}
+  hazCustomerSetMode(dark);
   document.getElementById('hazCustomerView').classList.remove('hidden');
+}
+
+function hazCustomerAcceptOffer(){
+  window.location.href = 'https://buyer.sellyourgadgets.com/dashboard/purchase-orders/new-order?tab=customer';
 }
 
 function hazReset(){
@@ -13189,6 +13347,7 @@ document.getElementById('tbLockBtn')?.addEventListener('click', () => {
         <span style="font:400 11.5px/1 var(--sans);color:rgba(255,255,255,.35);letter-spacing:.01em;">Listing Assistant</span>
       </div>
       <button id="shovoCmdMapBtn" title="Custom command shortcuts" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:5px 12px;font:600 11px/1 var(--sans);color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='rgba(99,102,241,.18)';this.style.color='#a5b4fc';this.style.borderColor='rgba(99,102,241,.35)'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.4)';this.style.borderColor='rgba(255,255,255,.1)'">⌘ My shortcuts</button>
+      <button id="shovoPersonalityBtn" title="Toggle Shovo's ambient personality lines" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:5px 12px;font:600 11px/1 var(--sans);color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;" onclick="shovoTogglePersonality()">🎭 <span id="shovoPersonalityBtnLabel">Personality: off</span></button>
     </div>
 
     <!-- Command Map Panel (hidden by default) -->
@@ -13254,6 +13413,88 @@ document.getElementById('tbLockBtn')?.addEventListener('click', () => {
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHOVO — eBay Fulfillment Matcher (full-screen takeover)
+     ══════════════════════════════════════════════════════════════ -->
+<div id="shovoFulfillOverlay" class="hidden">
+  <!-- Shipping animation (brief, plays on open) -->
+  <div id="shovoFulfillAnim" class="shovo-fulfill-anim">
+    <div class="shovo-fulfill-route">
+      <div class="shovo-fulfill-truck">📦</div>
+    </div>
+    <div class="shovo-fulfill-anim-label">Shovo is getting things ready…</div>
+  </div>
+
+  <!-- Main panel (shown after animation) -->
+  <div id="shovoFulfillPanel" class="shovo-fulfill-panel hidden">
+    <div class="shovo-fulfill-head">
+      <div class="shovo-fulfill-title">🧿 Shovo — Fulfillment Matcher</div>
+      <button class="shovo-fulfill-close" id="shovoFulfillCloseBtn" title="Back to canvas (Esc)">×</button>
+    </div>
+
+    <!-- Step 1: upload -->
+    <div id="shovoFulfillUploadStep">
+      <div class="shovo-fulfill-dropzone" id="shovoFulfillDropzone">
+        <div class="shovo-fulfill-drop-icon">⬆️</div>
+        <div class="shovo-fulfill-drop-title">Drop your eBay orders CSV here</div>
+        <div class="shovo-fulfill-drop-sub">or click to browse — Order Number, Custom Label, and Tracking Number columns are all Shovo needs</div>
+        <input type="file" id="shovoFulfillFileInput" accept=".csv" style="display:none">
+      </div>
+    </div>
+
+    <!-- Step 2: results -->
+    <div id="shovoFulfillResultsStep" class="hidden">
+      <div class="shovo-fulfill-summary" id="shovoFulfillSummary"></div>
+      <div class="shovo-fulfill-buckets" id="shovoFulfillBuckets"></div>
+      <div class="shovo-fulfill-actions">
+        <button class="shovo-fulfill-btn secondary" id="shovoFulfillRestartBtn">↺ Upload a different file</button>
+        <button class="shovo-fulfill-btn primary" id="shovoFulfillCopyBtn">📋 Copy Fulfillment Prompt for Claude</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #shovoFulfillOverlay{position:fixed;inset:0;z-index:700;background:#05070f;display:flex;align-items:center;justify-content:center;}
+  #shovoFulfillOverlay.hidden{display:none;}
+
+  .shovo-fulfill-anim{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;}
+  .shovo-fulfill-route{position:relative;width:min(70vw,520px);height:2px;background:rgba(99,102,241,.25);border-radius:2px;}
+  .shovo-fulfill-truck{position:absolute;top:50%;left:0;transform:translateY(-50%);font-size:30px;animation:shovoTruckMove 1.6s cubic-bezier(.4,0,.2,1) forwards;}
+  @keyframes shovoTruckMove{ from{left:0;} to{left:calc(100% - 30px);} }
+  .shovo-fulfill-anim-label{font:600 13px/1 var(--sans);color:rgba(165,180,252,.65);letter-spacing:.02em;}
+
+  .shovo-fulfill-panel{width:min(640px,92vw);max-height:86vh;overflow-y:auto;background:rgba(13,15,28,.98);border:1px solid rgba(99,102,241,.25);border-radius:20px;padding:22px 24px 26px;}
+  .shovo-fulfill-panel.hidden{display:none;}
+  .shovo-fulfill-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .shovo-fulfill-title{font:700 14px/1 var(--sans);color:#a5b4fc;letter-spacing:.02em;}
+  .shovo-fulfill-close{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;line-height:1;}
+  .shovo-fulfill-close:hover{background:rgba(255,255,255,.12);color:#fff;}
+
+  .shovo-fulfill-dropzone{border:2px dashed rgba(99,102,241,.35);border-radius:16px;padding:44px 24px;text-align:center;cursor:pointer;transition:all .15s;}
+  .shovo-fulfill-dropzone:hover, .shovo-fulfill-dropzone.dragover{border-color:#6366F1;background:rgba(99,102,241,.06);}
+  .shovo-fulfill-drop-icon{font-size:28px;margin-bottom:10px;}
+  .shovo-fulfill-drop-title{font:700 14px/1 var(--sans);color:#E8EBF8;margin-bottom:6px;}
+  .shovo-fulfill-drop-sub{font:400 12px/1.5 var(--sans);color:rgba(255,255,255,.4);max-width:380px;margin:0 auto;}
+
+  .shovo-fulfill-summary{font:600 13px/1.6 var(--sans);color:rgba(255,255,255,.8);margin-bottom:14px;padding:12px 14px;background:rgba(255,255,255,.04);border-radius:12px;}
+  .shovo-fulfill-bucket{margin-bottom:14px;}
+  .shovo-fulfill-bucket-head{font:700 11.5px/1 var(--sans);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .shovo-fulfill-bucket.ok .shovo-fulfill-bucket-head{color:#4ADE80;}
+  .shovo-fulfill-bucket.warn .shovo-fulfill-bucket-head{color:#FBBF24;}
+  .shovo-fulfill-bucket.pending .shovo-fulfill-bucket-head{color:#93C5FD;}
+  .shovo-fulfill-bucket.err .shovo-fulfill-bucket-head{color:#F87171;}
+  .shovo-fulfill-row{font:500 12px/1.5 var(--mono);color:rgba(255,255,255,.6);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:4px;word-break:break-word;}
+  .shovo-fulfill-more{font:500 11.5px/1 var(--sans);color:rgba(255,255,255,.35);padding:4px 10px;}
+
+  .shovo-fulfill-actions{display:flex;gap:10px;margin-top:6px;}
+  .shovo-fulfill-btn{flex:1;border:none;border-radius:12px;padding:12px;font:700 13px/1 var(--sans);cursor:pointer;transition:all .15s;}
+  .shovo-fulfill-btn.primary{background:#6366F1;color:#fff;}
+  .shovo-fulfill-btn.primary:hover{background:#4F52D0;}
+  .shovo-fulfill-btn.secondary{background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.1);}
+  .shovo-fulfill-btn.secondary:hover{background:rgba(255,255,255,.1);color:#fff;}
+</style>
 
 <style>
   #gModeAI.open { pointer-events: all; }
@@ -13592,6 +13833,14 @@ function buildFallback(q) {
 
 // ── Action engine ─────────────────────────────────────────────────
 const ACTIONS = [
+  // ── eBay Fulfillment Matcher ───────────────────────────────────
+  { keys: ['fulfill orders','match tracking','ebay fulfillment','upload csv fulfillment','fulfillment matcher','match orders','bulk fulfillment','fulfill ebay orders','tracking matcher','upload tracking'],
+    label: '📦 Opening Fulfillment Matcher',
+    run() {
+      setTimeout(()=>{ closeGModeAI(); shovoOpenFulfillment(); }, 10);
+      return 'Opening the fulfillment matcher…';
+    }
+  },
   // ── Panel: Code Lookup ────────────────────────────────────────
   { keys: ['open code lookup','show code lookup','code lookup','pull up code','open search','show search panel','code panel','search panel','pull up search'],
     label: '🔍 Opening Code Lookup',
@@ -13800,6 +14049,316 @@ function findAction(q) {
   });
   return bestScore >= 3 ? best : null;
 }
+
+// ══════════════════════════════════════════════════════════════════
+//  SHOVO PERSONALITY — toggleable ambient one-liners
+// ══════════════════════════════════════════════════════════════════
+const SHOVO_PERSONALITY_KEY = 'shovo_personality_v1';
+let shovoPersonalityOn = false;
+let shovoIdleTimer = null;
+
+const SHOVO_LINES = {
+  idle:      ['ulala', 'uffffff', 'hmm...', 'still here', 'okay okay', '...', 'waiting on you'],
+  bigPush:   ['ufff, that was a lot', 'done done done', 'okay that\'s a wrap', 'phew'],
+  flagPrice: ['uhh...', 'wait, hold on', 'that number looks off', 'hmm let me flag that'],
+  fulfillDone: ['shipped it', 'okay, all set', 'batch is out the door']
+};
+
+function shovoLoadPersonalityPref(){
+  try { shovoPersonalityOn = localStorage.getItem(SHOVO_PERSONALITY_KEY) === '1'; } catch(e) { shovoPersonalityOn = false; }
+  const lbl = document.getElementById('shovoPersonalityBtnLabel');
+  if(lbl) lbl.textContent = 'Personality: ' + (shovoPersonalityOn ? 'on' : 'off');
+  shovoResetIdleTimer();
+}
+
+function shovoTogglePersonality(){
+  shovoPersonalityOn = !shovoPersonalityOn;
+  try { localStorage.setItem(SHOVO_PERSONALITY_KEY, shovoPersonalityOn ? '1' : '0'); } catch(e) {}
+  const lbl = document.getElementById('shovoPersonalityBtnLabel');
+  if(lbl) lbl.textContent = 'Personality: ' + (shovoPersonalityOn ? 'on' : 'off');
+  toast(shovoPersonalityOn ? 'Shovo personality on' : 'Shovo personality off');
+  shovoResetIdleTimer();
+}
+
+function shovoSayLine(pool){
+  if(!shovoPersonalityOn) return;
+  const lines = SHOVO_LINES[pool] || SHOVO_LINES.idle;
+  const line = lines[Math.floor(Math.random() * lines.length)];
+  shovoRenderAmbientLine(line);
+}
+
+function shovoRenderAmbientLine(text){
+  let el = document.getElementById('shovoAmbientLine');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'shovoAmbientLine';
+    el.style.cssText = 'position:fixed;bottom:22px;right:24px;z-index:650;background:rgba(13,15,28,.92);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;font:600 12.5px/1 var(--sans);padding:8px 14px;border-radius:16px;opacity:0;transition:opacity .4s ease,transform .4s ease;transform:translateY(6px);pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  requestAnimationFrame(()=>{ el.style.opacity='1'; el.style.transform='translateY(0)'; });
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(()=>{
+    el.style.opacity='0'; el.style.transform='translateY(6px)';
+  }, 3200);
+}
+
+// Idle ambient line — fires roughly every 4-7 min of no interaction, only when personality is on
+function shovoResetIdleTimer(){
+  clearTimeout(shovoIdleTimer);
+  if(!shovoPersonalityOn) return;
+  const delay = (4 + Math.random()*3) * 60 * 1000;
+  shovoIdleTimer = setTimeout(()=>{
+    shovoSayLine('idle');
+    shovoResetIdleTimer();
+  }, delay);
+}
+['click','keydown','mousemove'].forEach(evt=>{
+  document.addEventListener(evt, ()=>{ /* throttled reset, cheap enough at this frequency */ shovoResetIdleTimer(); }, {passive:true});
+});
+document.addEventListener('DOMContentLoaded', shovoLoadPersonalityPref);
+// In case DOMContentLoaded already fired before this script ran
+if(document.readyState !== 'loading') shovoLoadPersonalityPref();
+
+// ══════════════════════════════════════════════════════════════════
+//  SHOVO — eBay Fulfillment Matcher
+//  Parses the real eBay "Orders Report" CSV export, groups multi-item
+//  orders under a single tracking number, and produces a copy-able
+//  prompt for Claude to resolve against live Shopify orders and run
+//  the batched fulfillment mutation. This tool never calls Shopify
+//  directly (no API key in the browser) — matching against live
+//  order state happens when Claude receives the prompt.
+// ══════════════════════════════════════════════════════════════════
+let _shovoFulfillParsed = null;
+
+function shovoOpenFulfillment(){
+  const overlay = document.getElementById('shovoFulfillOverlay');
+  const anim = document.getElementById('shovoFulfillAnim');
+  const panel = document.getElementById('shovoFulfillPanel');
+  if(!overlay) return;
+  overlay.classList.remove('hidden');
+  anim.classList.remove('hidden');
+  panel.classList.add('hidden');
+  // Reset to upload step every time it opens
+  document.getElementById('shovoFulfillUploadStep').classList.remove('hidden');
+  document.getElementById('shovoFulfillResultsStep').classList.add('hidden');
+  _shovoFulfillParsed = null;
+  // Restart the truck animation
+  const truck = overlay.querySelector('.shovo-fulfill-truck');
+  if(truck){ truck.style.animation = 'none'; void truck.offsetWidth; truck.style.animation = null; }
+  setTimeout(()=>{
+    anim.classList.add('hidden');
+    panel.classList.remove('hidden');
+  }, 1700);
+}
+
+function shovoCloseFulfillment(){
+  document.getElementById('shovoFulfillOverlay')?.classList.add('hidden');
+}
+
+// ── CSV parsing, tuned to the real eBay Orders Report format ──────
+// Handles: leading blank filler row, blank row-3 under the header,
+// a trailing "N,record(s) downloaded," + seller-ID footer, and quoted
+// fields containing commas.
+function shovoParseCsvRow(line){
+  const out = [];
+  let cur = '', inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const c = line[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(line[i+1] === '"'){ cur += '"'; i++; }
+        else inQuotes = false;
+      } else cur += c;
+    } else {
+      if(c === '"') inQuotes = true;
+      else if(c === ','){ out.push(cur); cur=''; }
+      else cur += c;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+function shovoParseFulfillmentCsv(rawText){
+  const lines = rawText.split(/\r?\n/);
+  if(lines.length < 3){
+    return {error:'This file doesn\u2019t look like an eBay orders export — too few rows.'};
+  }
+  // Header is expected on row index 1 (row 0 is the blank filler row eBay includes)
+  let headerIdx = 1;
+  let header = shovoParseCsvRow(lines[headerIdx]).map(h=>h.trim());
+  if(!header.includes('Order Number')){
+    // Fall back to scanning the first few rows for the real header
+    headerIdx = lines.findIndex(l => l.includes('Order Number') && l.includes('Tracking Number'));
+    if(headerIdx === -1) return {error:'Couldn\u2019t find an "Order Number" / "Tracking Number" header row in this file.'};
+    header = shovoParseCsvRow(lines[headerIdx]).map(h=>h.trim());
+  }
+
+  const rows = [];
+  let declaredCount = null;
+  for(let i=headerIdx+1;i<lines.length;i++){
+    const line = lines[i];
+    if(!line || !line.trim()) continue;
+    // Footer line, e.g. "166,record(s) downloaded,"
+    if(/record\(s\) downloaded/i.test(line)){
+      const m = line.match(/(\d+)\s*,?\s*record\(s\) downloaded/i);
+      if(m) declaredCount = parseInt(m[1],10);
+      continue;
+    }
+    if(/^Seller ID\s*:/i.test(line)) continue;
+    const cells = shovoParseCsvRow(line);
+    if(cells.every(c=>!c || !c.trim())) continue; // blank spacer row
+    const row = {};
+    header.forEach((h,idx)=>{ row[h] = (cells[idx]||'').trim(); });
+    if(!row['Order Number']) continue;
+    rows.push(row);
+  }
+
+  return { rows, declaredCount };
+}
+
+function shovoGroupFulfillmentRows(rows){
+  const orders = {};
+  rows.forEach(r=>{
+    const orderNum = r['Order Number'];
+    if(!orders[orderNum]){
+      orders[orderNum] = {
+        orderNumber: orderNum,
+        items: [],
+        trackingNumbers: new Set(),
+        shipService: r['Shipping Service']||'',
+        shipToName: r['Ship To Name']||''
+      };
+    }
+    orders[orderNum].items.push({
+      sku: r['Custom Label']||'',
+      title: r['Item Title']||''
+    });
+    if(r['Tracking Number'] && r['Tracking Number'].trim()) orders[orderNum].trackingNumbers.add(r['Tracking Number'].trim());
+  });
+  return Object.values(orders);
+}
+
+function shovoRunFulfillmentMatch(rawText){
+  const parsed = shovoParseFulfillmentCsv(rawText);
+  if(parsed.error){ toast(parsed.error); return; }
+  const grouped = shovoGroupFulfillmentRows(parsed.rows);
+
+  const ready = [];      // ✅ one tracking number, order + SKUs all present
+  const noTracking = []; // ⏳ not shipped yet
+  const dupTracking = []; // ❌ same tracking on 2+ different orders — flagged separately below
+  const multiTracking = []; // ⚠️ order has more than one distinct tracking number — needs a human look
+
+  const trackingSeen = {}; // tracking# -> [orderNumbers]
+
+  grouped.forEach(o=>{
+    const tns = Array.from(o.trackingNumbers);
+    if(tns.length === 0){ noTracking.push(o); return; }
+    if(tns.length > 1){ multiTracking.push(o); return; }
+    const tn = tns[0];
+    (trackingSeen[tn] = trackingSeen[tn] || []).push(o.orderNumber);
+    ready.push({ ...o, trackingNumber: tn });
+  });
+
+  Object.entries(trackingSeen).forEach(([tn, orderNums])=>{
+    if(orderNums.length > 1) dupTracking.push({ trackingNumber: tn, orders: orderNums });
+  });
+  const dupOrderSet = new Set(dupTracking.flatMap(d=>d.orders));
+  const cleanReady = ready.filter(o=>!dupOrderSet.has(o.orderNumber));
+  const flaggedForDup = ready.filter(o=>dupOrderSet.has(o.orderNumber));
+
+  const countCheck = parsed.declaredCount != null && parsed.declaredCount !== grouped.length
+    ? {declared: parsed.declaredCount, parsedOrders: grouped.length}
+    : null;
+
+  return { ready: cleanReady, noTracking, multiTracking, dupTracking, flaggedForDup, countCheck, totalOrders: grouped.length };
+}
+
+function shovoRenderFulfillmentRow(text){
+  return '<div class="shovo-fulfill-row">'+esc(text)+'</div>';
+}
+
+function shovoRenderFulfillmentResults(result){
+  document.getElementById('shovoFulfillUploadStep').classList.add('hidden');
+  document.getElementById('shovoFulfillResultsStep').classList.remove('hidden');
+
+  const summaryEl = document.getElementById('shovoFulfillSummary');
+  let summaryHtml = `Parsed <b>${result.totalOrders}</b> order${result.totalOrders===1?'':'s'} — `
+    + `<b style="color:#4ADE80">${result.ready.length} ready</b>, `
+    + `<b style="color:#93C5FD">${result.noTracking.length} not shipped yet</b>, `
+    + `<b style="color:#FBBF24">${result.multiTracking.length + result.dupTracking.length} need a look</b>.`;
+  if(result.countCheck){
+    summaryHtml += `<br><span style="color:#F87171">⚠ File says ${result.countCheck.declared} records but Shovo only found ${result.countCheck.parsedOrders} distinct orders — double-check this export wasn't cut off.</span>`;
+  }
+  summaryEl.innerHTML = summaryHtml;
+
+  const bucketsEl = document.getElementById('shovoFulfillBuckets');
+  const maxShown = 8;
+  const bucketHtml = (label, cls, items, renderFn) => {
+    if(!items.length) return '';
+    const shown = items.slice(0, maxShown).map(renderFn).join('');
+    const more = items.length > maxShown ? `<div class="shovo-fulfill-more">+ ${items.length - maxShown} more</div>` : '';
+    return `<div class="shovo-fulfill-bucket ${cls}"><div class="shovo-fulfill-bucket-head">${label} (${items.length})</div>${shown}${more}</div>`;
+  };
+
+  bucketsEl.innerHTML =
+    bucketHtml('✅ Ready to fulfill', 'ok', result.ready, o=>shovoRenderFulfillmentRow(o.orderNumber+' → '+o.trackingNumber+' ('+o.items.length+' item'+(o.items.length===1?'':'s')+')')) +
+    bucketHtml('⏳ Not shipped yet — skipped', 'pending', result.noTracking, o=>shovoRenderFulfillmentRow(o.orderNumber+' — no tracking number in export')) +
+    bucketHtml('⚠️ Multiple tracking numbers on one order', 'warn', result.multiTracking, o=>shovoRenderFulfillmentRow(o.orderNumber+' — '+Array.from(o.trackingNumbers).join(', '))) +
+    bucketHtml('⚠️ Duplicate tracking number across orders', 'warn', result.dupTracking, d=>shovoRenderFulfillmentRow(d.trackingNumber+' → '+d.orders.join(', ')));
+
+  // Wire copy button
+  const copyBtn = document.getElementById('shovoFulfillCopyBtn');
+  copyBtn.onclick = () => {
+    const lines = result.ready.map(o=>`${o.orderNumber} | tracking: ${o.trackingNumber} | ${o.shipService} | SKUs: ${o.items.map(i=>i.sku).join(', ')}`);
+    const prompt = `Fulfill these eBay orders in Shopify. Match by Order Number (Codisto-synced attribute) and cross-check the SKU(s) listed against that order's line items before fulfilling — flag anything that doesn't match rather than pushing it. Skip any order already marked fulfilled. Run as one batched fulfillment mutation.\n\n${lines.join('\n')}`;
+    copyText(prompt, ()=>{
+      toast('Copied fulfillment prompt for '+result.ready.length+' order'+(result.ready.length===1?'':'s')+' — paste into chat');
+      shovoSayLine('fulfillDone');
+    });
+  };
+}
+
+// Wire dropzone: click-to-browse and drag-and-drop
+document.addEventListener('DOMContentLoaded', shovoWireFulfillment);
+if(document.readyState !== 'loading') shovoWireFulfillment();
+function shovoWireFulfillment(){
+  const dz = document.getElementById('shovoFulfillDropzone');
+  const fileInput = document.getElementById('shovoFulfillFileInput');
+  const closeBtn = document.getElementById('shovoFulfillCloseBtn');
+  const restartBtn = document.getElementById('shovoFulfillRestartBtn');
+  if(!dz || dz._shovoWired) return;
+  dz._shovoWired = true;
+
+  const handleFile = (file) => {
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = shovoRunFulfillmentMatch(e.target.result);
+      if(result) { _shovoFulfillParsed = result; shovoRenderFulfillmentResults(result); }
+    };
+    reader.readAsText(file);
+  };
+
+  dz.addEventListener('click', ()=>fileInput.click());
+  fileInput.addEventListener('change', ()=>handleFile(fileInput.files[0]));
+  dz.addEventListener('dragover', (e)=>{ e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', ()=>dz.classList.remove('dragover'));
+  dz.addEventListener('drop', (e)=>{
+    e.preventDefault(); dz.classList.remove('dragover');
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  if(closeBtn) closeBtn.addEventListener('click', shovoCloseFulfillment);
+  if(restartBtn) restartBtn.addEventListener('click', shovoOpenFulfillment);
+}
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){
+    const overlay = document.getElementById('shovoFulfillOverlay');
+    if(overlay && !overlay.classList.contains('hidden')) shovoCloseFulfillment();
+  }
+});
 
 // ══════════════════════════════════════════════════════════════════
 //  CUSTOM COMMAND MAP
