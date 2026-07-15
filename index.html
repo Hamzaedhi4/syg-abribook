@@ -14312,7 +14312,24 @@ function shovoRenderFulfillmentResults(result){
   const copyBtn = document.getElementById('shovoFulfillCopyBtn');
   copyBtn.onclick = () => {
     const lines = result.ready.map(o=>`${o.orderNumber} | tracking: ${o.trackingNumber} | ${o.shipService} | SKUs: ${o.items.map(i=>i.sku).join(', ')}`);
-    const prompt = `Fulfill these eBay orders in Shopify. Match by Order Number (Codisto-synced attribute) and cross-check the SKU(s) listed against that order's line items before fulfilling — flag anything that doesn't match rather than pushing it. Skip any order already marked fulfilled. Run as one batched fulfillment mutation.\n\n${lines.join('\n')}`;
+    const prompt = `Fulfill these ${result.ready.length} eBay orders in Shopify. Follow this exact recipe:
+
+1. MATCH: sourceIdentifier is NOT filterable via query: syntax (Shopify silently ignores unknown fields and returns everything) — use free-text search instead: orders(query: "orderNum1 OR orderNum2 OR ..."), batched ~15 order numbers per call. Pull id, name, sourceIdentifier, displayFulfillmentStatus, lineItems{sku}, fulfillmentOrders{id status} for each.
+
+2. SKIP ALREADY FULFILLED: if displayFulfillmentStatus is FULFILLED, skip it — do not re-push. This is expected and common on a rerun; report the count, don't treat it as an error.
+
+3. CROSS-CHECK SKUs: compare the SKU(s) listed below against that order's actual line-item SKUs from Shopify. If they don't match, flag it — don't fulfill blind on Order Number alone.
+
+4. CARRIER NAME — IMPORTANT GOTCHA: derive the carrier from the Shipping Service text below ("USPS Ground Advantage" → company: "USPS", "UPS Ground" → company: "UPS"), NOT from the tracking number's format. USPS Ground Advantage sometimes issues UPS-formatted tracking numbers (1Z...) via a partner carrier program, so guessing from the number pattern gets the carrier wrong.
+
+5. MULTI-ITEM ORDERS: one fulfillmentOrderId + one tracking number fulfills the WHOLE order at once — never split by line item or fulfill the same order multiple times.
+
+6. EXECUTE: use fulfillmentCreate via lineItemsByFulfillmentOrder + trackingInfo{number, company}. Batch multiple orders into one GraphQL call using aliases (f1:, f2:, ...) — about 8 per call — rather than one mutation call per order, to keep tool-call count sane on large runs. Validate with validate_graphql_codeblocks before executing.
+
+7. REPORT: give counts (fulfilled / already-fulfilled-skipped / SKU-mismatch-flagged), not a raw JSON dump.
+
+Orders:
+${lines.join('\n')}`;
     copyText(prompt, ()=>{
       toast('Copied fulfillment prompt for '+result.ready.length+' order'+(result.ready.length===1?'':'s')+' — paste into chat');
       shovoSayLine('fulfillDone');
@@ -14435,7 +14452,13 @@ function initCmdMap() {
 
   // Shovo personality toggle — wired here (not inline onclick) since this
   // whole script runs inside an IIFE and shovoTogglePersonality isn't global.
-  document.getElementById('shovoPersonalityBtn')?.addEventListener('click', shovoTogglePersonality);
+  // Guarded so repeated initCmdMap() calls (once per spotlight open) don't
+  // stack duplicate listeners on the same button.
+  const personalityBtn = document.getElementById('shovoPersonalityBtn');
+  if (personalityBtn && !personalityBtn._shovoWired) {
+    personalityBtn.addEventListener('click', shovoTogglePersonality);
+    personalityBtn._shovoWired = true;
+  }
 
   addBtn?.addEventListener('click', addCmd);
   targetInp?.addEventListener('keydown', e => { if (e.key === 'Enter') addCmd(); });
