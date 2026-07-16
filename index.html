@@ -1928,6 +1928,15 @@
   .wan-panel-body::-webkit-scrollbar { width: 4px; }
   .wan-panel-body::-webkit-scrollbar-track { background: transparent; }
   .wan-panel-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+  .wan-welcome-overlay{
+    position:absolute; inset:0; z-index:20;
+    background:rgba(13,15,28,.97);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px; gap:8px;
+  }
+  .wan-welcome-overlay .wan-welcome-icon{ font-size:26px; opacity:.7; margin-bottom:2px; }
+  .wan-welcome-overlay .wan-welcome-title{ font:700 13px/1.4 var(--sans); color:rgba(255,255,255,.85); }
+  .wan-welcome-overlay .wan-welcome-sub{ font:500 11.5px/1.5 var(--sans); color:rgba(255,255,255,.4); max-width:220px; }
 
   /* ── Resize handle ── */
   .wan-panel-resize {
@@ -5480,6 +5489,9 @@ document.getElementById('listerLockBtn').addEventListener('click', ()=>{
   dpUpdatePreviewAll();
   if(typeof bhaiRefreshSkuPreview === 'function') bhaiRefreshSkuPreview();
   if(typeof uniRefreshSkuPreview === 'function') uniRefreshSkuPreview();
+  // Hide any panel welcome overlays directly via DOM — createPanel() lives in a
+  // separate <script> tag, so it can't reliably see this LISTER_LOCKED variable.
+  document.querySelectorAll('.wan-welcome-overlay').forEach(el => el.style.display = 'none');
 });
 
 // ── Draft Panel ──────────────────────────────────────────────────
@@ -5932,7 +5944,12 @@ function dpLineFor(e){
   if(e.notes) line += ' ' + e.notes;
   if(e.sn)    line += ' SN: ' + e.sn;
   const assigned = computeAssignedSku(e);
-  if(assigned) line += ' | Assigned SKU: ' + assigned;
+  const isRename = e.skuMode === 'existing' && e.originalExistingSku && e.existingSku && e.originalExistingSku !== e.existingSku;
+  if(isRename){
+    line += ' | Match SKU: ' + e.originalExistingSku + ' | Rename To: ' + e.existingSku;
+  } else if(assigned){
+    line += ' | Assigned SKU: ' + assigned;
+  }
   if((e.invLocation||'').trim() && !assigned) line += ' | Location: ' + e.invLocation;
   if(e.cost)  line += ' | Cost: $' + e.cost;
   if(e.price) line += ' | Price: $' + e.price;
@@ -7499,6 +7516,9 @@ function buildClaudePrepPrompt(entriesOverride){
       `// Use the /syg-listing-generator skill — load it first, then paste these lines.\n` +
       `// DO NOT use the Universal listing-edit prompt for these.\n` +
       `// If a line includes "Assigned SKU: ...", use that as the Website SKU.\n` +
+      `// If a line includes "Match SKU: X | Rename To: Y" instead, X is the SKU to\n` +
+      `// find the existing product with — use X for matching, never Y. Do every\n` +
+      `// other edit first, then as the LAST step rename that product's SKU to Y.\n` +
       `// If a line includes "Cost: $...", set that as the product's per-unit cost\n` +
       `// (Shopify inventory item cost) in addition to any price.\n` +
       `// ═══════════════════════════════════════════════════════════\n\n` +
@@ -7509,7 +7529,7 @@ function buildClaudePrepPrompt(entriesOverride){
   // ── Universal → listing-edit system prompt ───────────────────
   if(uniEntries.length){
     const payload = uniEntries.map((e, i)=>({
-      entry_number:i+1, track_number:e.track_number, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister, website_sku:e.website_sku, panel:e.panel, item_type:e.item_type,
+      entry_number:i+1, track_number:e.track_number, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister, website_sku:e.website_sku, sku_rename_to:e.sku_rename_to||'', panel:e.panel, item_type:e.item_type,
       abribook_code:e.abribook_code, serial_number:e.serial_number, health_test_result:e.health_test_result, raw_item_description:e.raw_item_description,
       testing_notes:e.testing_notes, condition_notes:e.condition_notes, known_issues_missing_parts:e.known_issues, notes_for_claude:e.notes_for_claude,
       cost:e.cost, price:e.price, po_number:e.po_number, unit_number:e.unit_number, inventory_location:e.inventory_location, assigned_sku:e.assigned_sku,
@@ -7524,7 +7544,7 @@ function buildClaudePrepPrompt(entriesOverride){
   if(bhaiEntries.length){
     const payload = bhaiEntries.map((e, i)=>({
       entry_number:i+1, track_number:e.track_number, internal_sku:e.internal_sku, batch_id:e.batch_id, lister:e.lister,
-      action:e.action, website_sku:e.website_sku, raw_item_description:e.raw_item_description,
+      action:e.action, website_sku:e.website_sku, sku_rename_to:e.sku_rename_to||'', raw_item_description:e.raw_item_description,
       cost:e.cost, price:e.price, po_number:e.po_number, unit_number:e.unit_number, inventory_location:e.inventory_location, assigned_sku:e.assigned_sku,
       notes_for_claude:e.notes_for_claude, needs_research:e.needs_research||'', status:e.status
     }));
@@ -8267,6 +8287,7 @@ document.getElementById('blitzCopyAll').addEventListener('click',()=>{
     LISTER_INITIAL = tbName;
     LISTER_BATCH = tbBatch;
     LISTER_LOCKED = true;
+    document.querySelectorAll('.wan-welcome-overlay').forEach(el => el.style.display = 'none');
   }
   const code   = document.getElementById('blitzMasterCode').value.trim();
   const health = document.getElementById('blitzMasterHealth').value.trim();
@@ -12883,6 +12904,22 @@ function initCanvas() {
 // ══════════════════════════════════════════════════════════════════
 //  PANEL CREATION
 // ══════════════════════════════════════════════════════════════════
+// Per-panel welcome copy, shown until the lister locks in — replaces empty
+// panels with a clear "start here" cue instead of looking broken/blank.
+const WAN_WELCOME_COPY = {
+  search: { icon:'👋', title:'Welcome', sub:'Select your name and lock in a batch above to start looking up codes.' },
+  queue:  { icon:'👋', title:'Welcome', sub:'Lock in your name and batch to start building today\'s manifest.' },
+  cart:   { icon:'👋', title:'Welcome', sub:'Your logged items will show up here once you\'re locked in.' },
+  photos: { icon:'👋', title:'Welcome', sub:'Photo Mirror activates once you\'re locked in for the day.' },
+  default:{ icon:'👋', title:'Welcome', sub:'Select your name and lock in a batch above to get started.' }
+};
+function wanUpdateWelcomeOverlays(){
+  Object.keys(WAN_WELCOME_COPY).forEach(id=>{
+    if(id === 'default') return;
+    const el = document.getElementById('wp-welcome-'+id);
+    if(el) el.style.display = LISTER_LOCKED ? 'none' : 'flex';
+  });
+}
 function createPanel(id, title, sourceEl, pos) {
   if (!sourceEl) return;
 
@@ -12906,6 +12943,17 @@ function createPanel(id, title, sourceEl, pos) {
   const body = document.createElement('div');
   body.className = 'wan-panel-body';
   body.id = 'wp-body-' + id;
+
+  const welcome = document.createElement('div');
+  welcome.className = 'wan-welcome-overlay';
+  welcome.id = 'wp-welcome-' + id;
+  const welcomeCopy = WAN_WELCOME_COPY[id] || WAN_WELCOME_COPY.default;
+  welcome.innerHTML = `<div class="wan-welcome-icon">${welcomeCopy.icon}</div><div class="wan-welcome-title">${welcomeCopy.title}</div><div class="wan-welcome-sub">${welcomeCopy.sub}</div>`;
+  // Check the lock pill's visible state rather than the LISTER_LOCKED variable —
+  // that variable lives in a different <script> tag and isn't reliably readable here.
+  const alreadyLocked = document.getElementById('listerPill')?.classList.contains('show');
+  welcome.style.display = alreadyLocked ? 'none' : 'flex';
+  body.appendChild(welcome);
   body.appendChild(sourceEl);
 
   const resize = document.createElement('div');
@@ -13968,6 +14016,12 @@ document.getElementById('tbLockBtn')?.addEventListener('click', () => {
 // Each entry: { keys: [...match terms], title, answer (HTML), related: [...topic keys] }
 const KB = [
 
+  // ── SPECS LOOKUP (DELL SERVICE TAG) ────────────────────────────────
+  { keys: ['specs command','dell specs','service tag lookup','specs tag','how specs works','dell service tag','specs st','look up dell','dell specs command'],
+    title: 'Specs lookup — "specs {tag}"',
+    answer: `<h3>What it does</h3>Type <code>specs</code> followed by a Dell Service Tag (e.g. <code>specs 4X7YZ12</code>) and Shovo opens Dell's support page in a new tab and copies the tag to your clipboard. Dell's site doesn't auto-fill its own search box, so paste (Ctrl+V) into the "Service tag" field and hit the arrow — no retyping.<h3>Format</h3><code>specs {tag}</code> — the tag has to come right after the word, nothing else in between.<h3>Note</h3>This only covers Dell for now. If you want the same shortcut for HP, Lenovo, or another brand's service/serial lookup, that can be added the same way.`,
+    related: ['log drive','abribook codes'] },
+
   // ── LOGGING A DRIVE ──────────────────────────────────────────────
   { keys: ['log drive','log storage','log ssd','log nvme','log sata','batch entry','add entry','how to log','log item','log a drive','logging drives','log device','log disk','add a drive','add batch'],
     title: 'How to log a drive (Batch mode)',
@@ -14918,6 +14972,30 @@ function renderAnswer(q) {
   // ── 1. Check custom shortcuts first ────────────────────────────
   const customMatch = resolveCustomCmd(q);
   if (customMatch) { renderCustomCmd(customMatch, q); return; }
+
+  // ── 1b. Specs lookup command — "specs {tag}" opens Dell's support
+  // page and copies the Service Tag to the clipboard. The ?servicetag=
+  // URL param DOES reach the page (confirmed) but does NOT auto-fill
+  // the visible "Service tag" search box or auto-run the search — so
+  // instead of pretending it's one-click, we hand you the tag ready to
+  // paste the instant the page loads.
+  // Anchored to the start of the query so it only fires as a real
+  // command, not when "specs" shows up inside an ordinary question
+  // like "what are the specs of the RTX 3090".
+  const specsMatch = q.trim().match(/^(?:dell\s+)?specs?\s+([A-Za-z0-9-]{4,})$/i);
+  if (specsMatch) {
+    const tag = specsMatch[1].toUpperCase();
+    const url = 'https://www.dell.com/support/home/en-us?servicetag=' + encodeURIComponent(tag);
+    window.open(url, '_blank');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(tag).catch(()=>{});
+    }
+    if (labelEl) labelEl.textContent = 'Opening Dell specs lookup';
+    bodyEl.innerHTML = '<div style="color:#86efac;font-weight:600;font-size:13px;margin-bottom:10px;">✓ Opened</div>'
+      + '<div style="color:rgba(255,255,255,.72);line-height:1.7;">Dell support opened in a new tab. The page doesn\'t auto-fill the search box, so <b>'+esc(tag)+'</b> is already copied to your clipboard — paste it (Ctrl+V) into the "Service tag" box and hit the arrow to search.</div>'
+      + '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:11.5px;color:rgba(255,255,255,.3);">Press Escape to close and get back to work.</div>';
+    return;
+  }
 
   // ── 2. Check for action intent ─────────────────────────────────
   const action = findAction(q);
