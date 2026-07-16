@@ -3785,11 +3785,7 @@
         <div class="uni-form">
 
           <div class="uni-top-row">
-            <div class="uni-sku-wrap">
-              <div class="dp-label">Website SKU</div>
-              <input class="dp-input" id="uniWebsiteSku" placeholder="SKU from company website" autocomplete="off" spellcheck="false">
-            </div>
-            <div class="uni-type-wrap">
+            <div class="uni-type-wrap" style="flex:1;">
               <div class="dp-label">Item type</div>
               <select class="uni-select" id="uniItemType">
                 <option value="Phone">📱 Phone</option>
@@ -3809,26 +3805,37 @@
             ✏️ <b>Surgical edit mode</b> — paste the Website SKU below, describe the drive/RAM in the same format you'd use in Batch. Title, description, and metafields are rewritten to match the SYG format. Nothing is created from scratch.
           </div>
 
-          <details class="sku-assign-box">
+          <details class="sku-assign-box" open>
             <summary>🏷️ SKU Assignment <span class="sku-assign-empty" id="uniSkuAssignBadge">not assigned yet</span></summary>
+            <div class="dp-row" style="margin-top:8px;gap:6px;">
+              <button type="button" class="dp-add-entry" id="uniSkuModeNew" style="margin:0;padding:6px;font-size:11px;">🆕 New</button>
+              <button type="button" class="dp-add-entry" id="uniSkuModeExisting" style="margin:0;padding:6px;font-size:11px;">📋 Existing</button>
+            </div>
+            <div id="uniSkuNewFields">
             <div class="dp-row" style="margin-top:8px">
-              <div>
-                <div class="dp-label">PO Number</div>
-                <input class="dp-input" id="uniPoNumber" placeholder="e.g. 4821" autocomplete="off" spellcheck="false">
+              <div style="grid-column:1/-1">
+                <div class="dp-label">PO Number <span style="opacity:.6;font-weight:400">(optional — swap in anytime)</span></div>
+                <input class="dp-input" id="uniPoNumber" placeholder="leave blank to use today's RTL code" autocomplete="off" spellcheck="false">
               </div>
+            </div>
+            <div class="dp-row" style="margin-top:7px">
               <div>
                 <div class="dp-label">Unit Number <span style="opacity:.6;font-weight:400">(auto)</span></div>
                 <input class="dp-input" id="uniUnitNumber" disabled style="opacity:.6;cursor:not-allowed">
               </div>
-            </div>
-            <div class="dp-row" style="margin-top:7px">
-              <div style="grid-column:1/-1">
-                <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet)</span></div>
+              <div>
+                <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet — changeable)</span></div>
                 <input class="dp-input" id="uniInvLocation" placeholder="e.g. A12" autocomplete="off" spellcheck="false">
               </div>
             </div>
+            </div>
+            <div id="uniSkuExistingFields" style="display:none;margin-top:8px;">
+              <div class="dp-label">Paste Existing Website SKU <span style="opacity:.6;font-weight:400">(edits this exact product, no rebuilding)</span></div>
+              <input class="dp-input" id="uniWebsiteSku" placeholder="e.g. NJ02-65-59559-2-K5" autocomplete="off" spellcheck="false">
+              <div id="uniSkuBreakdown"></div>
+            </div>
             <div class="dp-label" style="margin-top:7px">Generated SKU</div>
-            <div class="dp-preview sku-assign-preview" id="uniSkuAssignPreview">Enter a PO Number to generate</div>
+            <div class="dp-preview sku-assign-preview" id="uniSkuAssignPreview">Fill in above to generate — SKU is optional, Shovo will flag missing ones before you copy the prompt</div>
           </details>
 
           <div class="dp-row" style="margin-top:8px">
@@ -3916,37 +3923,41 @@
       <div class="universal-card-body">
         <div class="uni-form">
 
-          <div class="uni-top-row">
-            <div class="uni-sku-wrap" style="flex:1;">
-              <div class="dp-label">Website SKU <span style="opacity:.6;font-weight:400">(optional — blank = new listing, filled = edit that product)</span></div>
-              <input class="dp-input" id="bhaiWebsiteSku" placeholder="Existing Shopify SKU, or leave blank to create new" autocomplete="off" spellcheck="false">
-            </div>
-          </div>
-
           <div class="uni-edit-banner" id="bhaiActionBanner" style="display:none;">
             ✏️ <b>Edit mode</b> — this Website SKU will be matched to an existing product. Only title, description, metafields, vendor, tags, and price will change. Quantity is never touched.
           </div>
 
-          <details class="sku-assign-box">
+          <details class="sku-assign-box" id="bhaiSkuAssignBox" open>
             <summary>🏷️ SKU Assignment <span class="sku-assign-empty" id="bhaiSkuAssignBadge">not assigned yet</span></summary>
+            <div class="dp-row" style="margin-top:8px;gap:6px;">
+              <button type="button" class="dp-add-entry" id="bhaiSkuModeNew" style="margin:0;padding:6px;font-size:11px;">🆕 New</button>
+              <button type="button" class="dp-add-entry" id="bhaiSkuModeExisting" style="margin:0;padding:6px;font-size:11px;">📋 Existing</button>
+            </div>
+            <div id="bhaiSkuNewFields">
             <div class="dp-row" style="margin-top:8px">
-              <div>
-                <div class="dp-label">PO Number</div>
-                <input class="dp-input" id="bhaiPoNumber" placeholder="e.g. 4821" autocomplete="off" spellcheck="false">
+              <div style="grid-column:1/-1">
+                <div class="dp-label">PO Number <span style="opacity:.6;font-weight:400">(optional — swap in anytime)</span></div>
+                <input class="dp-input" id="bhaiPoNumber" placeholder="leave blank to use today's RTL code" autocomplete="off" spellcheck="false">
               </div>
+            </div>
+            <div class="dp-row" style="margin-top:7px">
               <div>
                 <div class="dp-label">Unit Number <span style="opacity:.6;font-weight:400">(auto)</span></div>
                 <input class="dp-input" id="bhaiUnitNumber" disabled style="opacity:.6;cursor:not-allowed">
               </div>
-            </div>
-            <div class="dp-row" style="margin-top:7px">
-              <div style="grid-column:1/-1">
-                <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet)</span></div>
+              <div>
+                <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet — changeable)</span></div>
                 <input class="dp-input" id="bhaiInvLocation" placeholder="e.g. A12" autocomplete="off" spellcheck="false">
               </div>
             </div>
+            </div>
+            <div id="bhaiSkuExistingFields" style="display:none;margin-top:8px;">
+              <div class="dp-label">Paste Existing Website SKU <span style="opacity:.6;font-weight:400">(edits this exact product, no rebuilding)</span></div>
+              <input class="dp-input" id="bhaiWebsiteSku" placeholder="e.g. NJ02-65-59559-2-K5" autocomplete="off" spellcheck="false">
+              <div id="bhaiSkuBreakdown"></div>
+            </div>
             <div class="dp-label" style="margin-top:7px">Generated SKU</div>
-            <div class="dp-preview sku-assign-preview" id="bhaiSkuAssignPreview">Enter a PO Number to generate</div>
+            <div class="dp-preview sku-assign-preview" id="bhaiSkuAssignPreview">Fill in above to generate — SKU is optional, Shovo will flag missing ones before you copy the prompt</div>
           </details>
 
           <div class="dp-row" style="margin-top:8px">
@@ -5467,6 +5478,8 @@ document.getElementById('listerLockBtn').addEventListener('click', ()=>{
   document.getElementById('skuExample').textContent = listerSKU(1);
   toast('Locked in as '+sel.options[sel.selectedIndex].text+' — batch '+batch);
   dpUpdatePreviewAll();
+  if(typeof bhaiRefreshSkuPreview === 'function') bhaiRefreshSkuPreview();
+  if(typeof uniRefreshSkuPreview === 'function') uniRefreshSkuPreview();
 });
 
 // ── Draft Panel ──────────────────────────────────────────────────
@@ -5497,7 +5510,7 @@ function dpApplyDim(){
 let dpNextId = 1;
 
 function dpMakeEntry(){
-  return {id: dpNextId++, code:'', result:'', sn:'', notes:'', pairs:'', pairsOn:false, cost:'', price:'', poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:'', trackNumber: nextTrackNumber()};
+  return {id: dpNextId++, code:'', result:'', sn:'', notes:'', pairs:'', pairsOn:false, cost:'', price:'', poNumber:'', unitNumber:'', invLocation:'', externalCode:'', existingSku:'', skuMode:'new', _lastAssignedPo:'', trackNumber: nextTrackNumber()};
 }
 
 // ── SKU Assignment (PO Number + Unit Number + Inventory Location) ──
@@ -5517,11 +5530,13 @@ let trackNumberCounter = 1;
 function nextTrackNumber(){ return trackNumberCounter++; }
 function assignSkuUnit(e){
   const po = (e.poNumber||'').trim();
-  if(!po){ e.unitNumber = ''; e._lastAssignedPo = ''; return; }
-  if(po === e._lastAssignedPo && e.unitNumber) return; // unchanged, keep existing assignment
-  poUnitCounters[po] = (poUnitCounters[po]||0) + 1;
-  e.unitNumber = poUnitCounters[po];
-  e._lastAssignedPo = po;
+  // No real PO yet — bucket the unit counter under today's RTL batch code instead,
+  // so CREATE entries (no company PO assigned yet) still get a valid, incrementing SKU.
+  const bucket = po || (LISTER_BATCH || 'RTL0000');
+  if(bucket === e._lastAssignedPo && e.unitNumber) return; // unchanged, keep existing assignment
+  poUnitCounters[bucket] = (poUnitCounters[bucket]||0) + 1;
+  e.unitNumber = poUnitCounters[bucket];
+  e._lastAssignedPo = bucket;
 }
 // ── Pricing Memory ("Wan, using Haz's knowledge") ──────────────────
 // Seeded from actual Shopify sold+active data (Jun 15 – Jul 14, 2026 pull).
@@ -5730,35 +5745,105 @@ function renderFlagsHTML(flags){
   return `<div class="smart-flags">${flags.map(f=>`<div class="smart-flag-item">${esc(f)}</div>`).join('')}</div>`;
 }
 
+// Pure/read-only — never mutates state, so simply previewing a SKU (typing in
+// any panel, even without adding the entry) can never consume a counter slot.
+// A real slot only gets consumed by ensureSkuUnitAssigned(), called explicitly
+// from field-blur handlers and right before an entry is actually committed.
 function computeAssignedSku(e){
-  if(!e.poNumber || !e.unitNumber) return '';
-  const base = 'NJ02-' + (LISTER_BATCH || 'BATCH');
-  let sku = `${base}-PO${e.poNumber}-${e.unitNumber}`;
-  if((e.invLocation||'').trim()) sku += '-' + e.invLocation.trim();
-  return sku;
+  // Existing mode — paste an already-assigned SKU directly, no reconstruction needed.
+  if(e.skuMode === 'existing') return (e.existingSku||'').trim();
+  if(!e.unitNumber) return '';
+  const parts = ['NJ02'];
+  // Lister initial + physical intake order (trackNumber), so barcodes printed
+  // in entry order match the order items are actually laid out on the table.
+  if(LISTER_INITIAL && e.trackNumber) parts.push(LISTER_INITIAL+e.trackNumber);
+  else if(e.trackNumber) parts.push('P'+e.trackNumber); // fallback if lister isn't locked in yet
+  // Cost — pulled from the item's actual Cost field (per-unit cost you already
+  // enter elsewhere in this form), not a separate duplicate input. Defaults to
+  // 0 rather than being omitted, so the SKU shape stays consistent either way.
+  const costVal = (e.cost||'').trim() || '0';
+  parts.push(costVal);
+  // PO segment: a real PO number if one exists yet, otherwise today's RTL batch code.
+  // Stays swappable — this field can be edited later to replace RTL with a real PO
+  // once the company site issues one, without needing to reassign the whole SKU.
+  const poSeg = (e.poNumber||'').trim() || (LISTER_BATCH || 'RTL0000');
+  parts.push(poSeg);
+  // Differential position within this PO/RTL batch.
+  parts.push(String(e.unitNumber));
+  if((e.invLocation||'').trim()) parts.push(e.invLocation.trim());
+  return parts.join('-');
+}
+// Explicitly consumes a counter slot (mutates state) — call this only from
+// genuine commit points: field blur, or right before an entry is finalized.
+// Safe to call unconditionally from any commit point — existing-mode entries
+// (pasted SKU, nothing to build) are skipped automatically.
+function ensureSkuUnitAssigned(e){
+  if(e.skuMode === 'existing') return;
+  assignSkuUnit(e);
+}
+// Best-effort labels for a pasted SKU's hyphen-separated segments — imperfect
+// by nature since SKU eras vary, but every segment stays directly editable
+// regardless of whether the label guessed right, so a wrong label never
+// blocks fixing the actual value.
+function skuPartLabel(part, idx, total){
+  if(idx === 0) return 'Store';
+  if(/^[A-Za-z]{1,3}\d+$/.test(part)) return 'Lister + Track #';
+  if(/^RTL\d+$/i.test(part)) return 'RTL Batch';
+  if(/^PO?\d{3,}$/i.test(part)) return 'PO Number';
+  if(idx === total-1) return 'Location';
+  if(/^\d+$/.test(part)) return 'Number';
+  return 'Part '+(idx+1);
+}
+function skuBreakdownHTML(sku, idPrefix, entryId){
+  if(!sku) return `<div id="${idPrefix}-skubreak-${entryId}"></div>`;
+  const parts = sku.split('-');
+  return `<div id="${idPrefix}-skubreak-${entryId}">
+  <div class="dp-label" style="margin-top:9px">Breakdown <span style="opacity:.6;font-weight:400">(edit any piece directly)</span></div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+    ${parts.map((p,i)=>`<div style="min-width:70px;flex:1;">
+      <div style="font:600 9.5px/1 var(--sans);color:var(--ink-soft);opacity:.7;margin-bottom:2px;">${esc(skuPartLabel(p,i,parts.length))}</div>
+      <input class="dp-input" style="padding:5px 7px;font-size:11.5px;" data-${idPrefix}id="${entryId}" data-${idPrefix}skupart="${i}" value="${esc(p)}" autocomplete="off" spellcheck="false">
+    </div>`).join('')}
+  </div>
+  </div>`;
 }
 function skuAssignmentBlockHTML(e, idPrefix){
   const assigned = computeAssignedSku(e);
-  return `<details class="sku-assign-box">
+  const mode = e.skuMode === 'existing' ? 'existing' : 'new';
+  return `<details class="sku-assign-box" ${mode==='existing'?'open':''}>
     <summary>🏷️ SKU Assignment ${assigned ? '<span class="sku-assign-ready">'+esc(assigned)+'</span>' : '<span class="sku-assign-empty">not assigned yet</span>'}</summary>
+    <div class="dp-row" style="margin-top:8px;gap:6px;">
+      <button type="button" class="dp-add-entry" data-${idPrefix}id="${e.id}" data-${idPrefix}skumode="new" style="margin:0;padding:6px;font-size:11px;${mode==='new'?'border-color:var(--accent);color:var(--accent-ink);background:var(--accent-tint);':''}">🆕 New</button>
+      <button type="button" class="dp-add-entry" data-${idPrefix}id="${e.id}" data-${idPrefix}skumode="existing" style="margin:0;padding:6px;font-size:11px;${mode==='existing'?'border-color:var(--accent);color:var(--accent-ink);background:var(--accent-tint);':''}">📋 Existing</button>
+    </div>
+    ${mode === 'existing' ? `
     <div class="dp-row" style="margin-top:8px">
-      <div>
-        <div class="dp-label">PO Number</div>
-        <input class="dp-input" placeholder="e.g. 4821" data-${idPrefix}id="${e.id}" data-${idPrefix}field="poNumber" value="${esc(e.poNumber)}" autocomplete="off" spellcheck="false">
+      <div style="grid-column:1/-1">
+        <div class="dp-label">Paste Existing Website SKU <span style="opacity:.6;font-weight:400">(edits this exact product, no rebuilding)</span></div>
+        <input class="dp-input" placeholder="e.g. NJ02-65-59559-2-K5" data-${idPrefix}id="${e.id}" data-${idPrefix}field="existingSku" value="${esc(e.existingSku||'')}" autocomplete="off" spellcheck="false">
       </div>
+    </div>
+    ${skuBreakdownHTML(e.existingSku||'', idPrefix, e.id)}
+    ` : `
+    <div class="dp-row" style="margin-top:8px">
+      <div style="grid-column:1/-1">
+        <div class="dp-label">PO Number <span style="opacity:.6;font-weight:400">(optional — swap in anytime)</span></div>
+        <input class="dp-input" placeholder="leave blank to use today's RTL code" data-${idPrefix}id="${e.id}" data-${idPrefix}field="poNumber" value="${esc(e.poNumber)}" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="dp-row" style="margin-top:7px">
       <div>
         <div class="dp-label">Unit Number <span style="opacity:.6;font-weight:400">(auto)</span></div>
         <input class="dp-input" data-unit-display="${e.id}" value="${esc(String(e.unitNumber||''))}" disabled style="opacity:.6;cursor:not-allowed">
       </div>
-    </div>
-    <div class="dp-row" style="margin-top:7px">
-      <div style="grid-column:1/-1">
-        <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet)</span></div>
+      <div>
+        <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet — changeable)</span></div>
         <input class="dp-input" placeholder="e.g. A12" data-${idPrefix}id="${e.id}" data-${idPrefix}field="invLocation" value="${esc(e.invLocation)}" autocomplete="off" spellcheck="false">
       </div>
     </div>
+    `}
     <div class="dp-label" style="margin-top:7px">Generated SKU</div>
-    <div class="dp-preview sku-assign-preview">${assigned ? esc(assigned) : 'Enter a PO Number to generate'}</div>
+    <div class="dp-preview sku-assign-preview">${assigned ? esc(assigned) : (mode==='existing' ? 'Paste the existing SKU above' : "Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt")}</div>
   </details>
   <div class="dp-row" style="margin-top:8px">
     <div>
@@ -5783,6 +5868,11 @@ function updateAbribookCodeCounter(){
 }
 
 function dpEntrySkuLabel(e){
+  // Prefer the real assigned/website SKU (what's physically on the item and the
+  // barcode) — only fall back to the internal tracking number if nothing's
+  // been assigned yet, so Session Cart is never blank.
+  const assigned = computeAssignedSku(e);
+  if(assigned) return assigned;
   const pos = dpEntries.findIndex(x=>x.id===e.id);
   const num = pos === -1 ? e.id : pos + 1;
   return listerSKU(num);
@@ -5837,6 +5927,20 @@ function dpUpdatePreviewAll(){
   dpEntries.forEach(e=>{
     const skuEl = document.getElementById('dp-sku-'+e.id);
     if(skuEl) skuEl.textContent = dpEntrySkuLabel(e);
+    // Also refresh the SKU Assignment box's own badge/preview directly — these
+    // don't get touched by the inline label update above, so without this they
+    // can go stale (e.g. still showing the pre-lock-in P1/RTL0000 fallback even
+    // after the real lister + batch are locked in). Patched directly here rather
+    // than via dpRenderEntry(), since dpRenderEntry() itself calls this function
+    // — calling it back would recurse infinitely.
+    const wrap = document.getElementById('dp-e-'+e.id);
+    if(wrap){
+      const assigned = computeAssignedSku(e);
+      const skuPreview = wrap.querySelector('.sku-assign-preview');
+      if(skuPreview) skuPreview.textContent = assigned || (e.skuMode === 'existing' ? 'Paste the existing SKU above' : "Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt");
+      const summaryEl = wrap.querySelector('.sku-assign-box summary');
+      if(summaryEl) summaryEl.innerHTML = '🏷️ SKU Assignment ' + (assigned ? '<span class="sku-assign-ready">'+esc(assigned)+'</span>' : '<span class="sku-assign-empty">not assigned yet</span>');
+    }
   });
   const lines = dpEntries.map(dpLineFor).filter(Boolean);
   document.getElementById('dpPreviewAll').textContent = lines.join('\n');
@@ -5899,7 +6003,7 @@ function dpRenderEntry(e){
   wrap.querySelector('.entry-main-preview').textContent = dpLineFor(e) || '—';
   const skuPreview = wrap.querySelector('.sku-assign-preview');
   const assigned = computeAssignedSku(e);
-  if(skuPreview) skuPreview.textContent = assigned || 'Enter a PO Number to generate';
+  if(skuPreview) skuPreview.textContent = assigned || (e.skuMode === 'existing' ? 'Paste the existing SKU above' : "Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt");
   const unitDisplay = wrap.querySelector('[data-unit-display]');
   if(unitDisplay) unitDisplay.value = e.unitNumber || '';
   const summaryEl = wrap.querySelector('.sku-assign-box summary');
@@ -6006,11 +6110,26 @@ function dpRemoveEntry(id){
 function dpHandleInput(ev){
   const el = ev.target;
   const id = parseInt(el.dataset.dpid);
-  const field = el.dataset.dpfield;
-  if(!id || !field) return;
+  if(!id) return;
   const e = dpEntries.find(x=>x.id===id);
   if(!e) return;
+  // Editing one piece of a broken-down existing SKU — rejoin all sibling
+  // part inputs (in order) back into the single existingSku string.
+  if(el.dataset.dpskupart !== undefined){
+    const wrap = el.closest('.sku-assign-box');
+    const partEls = wrap ? Array.from(wrap.querySelectorAll('[data-dpskupart]')) : [el];
+    partEls.sort((a,b)=>parseInt(a.dataset.dpskupart)-parseInt(b.dataset.dpskupart));
+    e.existingSku = partEls.map(p=>p.value.trim()).join('-');
+    dpRenderEntry(e);
+    return;
+  }
+  const field = el.dataset.dpfield;
+  if(!field) return;
   e[field] = el.value.trim();
+  if(field === 'existingSku'){
+    const breakEl = document.getElementById('dp-skubreak-'+e.id);
+    if(breakEl) breakEl.outerHTML = skuBreakdownHTML(e.existingSku, 'dp', e.id);
+  }
   dpRenderEntry(e);
 }
 
@@ -6064,6 +6183,13 @@ document.getElementById('dpEntries').addEventListener('click', ev=>{
       const hit = src.code ? resolveCode(src.code) : null;
       openEbaySoldSearch(hit ? hit.desc : src.code);
     }
+    return;
+  }
+  const modeBtn = ev.target.closest('[data-dpskumode]');
+  if(modeBtn){
+    const id = parseInt(modeBtn.dataset.dpid);
+    const e = dpEntries.find(x=>x.id===id);
+    if(e){ e.skuMode = modeBtn.dataset.dpskumode; dpRebuildEntry(e); } // full rebuild — mode switch changes which fields are visible
     return;
   }
   const btn = ev.target.closest('.dp-rmv');
@@ -6227,6 +6353,10 @@ if(document.getElementById('reviewSessionBtn')){
 // (lister locked, Guided mode review, export scope), different delivery.
 function prepareExportPrompt(){
   if(!LISTER_LOCKED){ toast('Select and lock your name first (Step 1)'); return null; }
+  // Batch entries don't have a single "Add Entry" commit moment like BhaiMode/Universal do —
+  // this is the safety net that guarantees every entry gets a real unit number before export,
+  // even if the lister never touched the PO field. Idempotent — no-ops for entries already assigned.
+  dpEntries.forEach(ensureSkuUnitAssigned);
   let entries = allManifestObjects ? allManifestObjects() : dpEntries.map(batchEntryObject);
   if(!entries.length){ toast('No entries to copy yet'); return null; }
   if(GUIDED_MODE){
@@ -6240,7 +6370,20 @@ function prepareExportPrompt(){
     if(!entries.length){ toast('No entries in the current mode to export'); return null; }
   }
   const prompt = buildClaudePrepPrompt ? buildClaudePrepPrompt(entries) : dpEntries.map(dpLineFor).filter(Boolean).join('\n');
+  shovoFlagMissingSkus(entries);
   return {entries, prompt};
+}
+
+// SKU is optional at intake — this doesn't block the copy, it just makes sure
+// you notice before pasting into Claude, since a missing SKU means Abribook
+// can't tell Claude whether an entry is a CREATE or an EDIT.
+function shovoFlagMissingSkus(entries){
+  const missing = entries.filter(e => !e.website_sku);
+  if(!missing.length) return;
+  const preview = missing.slice(0,3).map(e => e.internal_sku || ('Track #'+e.track_number)).join(', ');
+  const more = missing.length > 3 ? ` +${missing.length-3} more` : '';
+  toast('⚠ Shovo: '+missing.length+' entr'+(missing.length===1?'y':'ies')+' missing a SKU — '+preview+more);
+  shovoSayLine('flagPrice');
 }
 
 document.getElementById('dpCopyAll').addEventListener('click', ()=>{
@@ -6311,7 +6454,7 @@ let bhaiEntriesData = [];
 let bhaiNextId = 1;
 let bhaiEditingId = null; // set while editing an existing queued entry via the ✎ button
 
-function bhaiAction(e){ return e.websiteSku ? 'EDIT' : 'CREATE'; }
+function bhaiAction(e){ return (e.websiteSku && !e.isFreshlyAssigned) ? 'EDIT' : 'CREATE'; }
 
 function bhaiEntrySkuLabel(e){
   const pos = bhaiEntriesData.findIndex(x=>x.id===e.id);
@@ -6338,7 +6481,7 @@ function bhaiLineFor(e, idx){
 
 // ── BhaiMode SKU Assignment (persists PO/unit across form edits
 // until the entry is actually added to the queue) ──────────────
-let bhaiFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
+let bhaiFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', externalCode:'', trackNumber:'', _lastAssignedPo:''};
 function bhaiSkuAssignBlur(){
   bhaiFormSkuState.poNumber = document.getElementById('bhaiPoNumber')?.value.trim() || '';
   assignSkuUnit(bhaiFormSkuState);
@@ -6348,19 +6491,72 @@ function bhaiSkuAssignBlur(){
 }
 function bhaiRefreshSkuPreview(){
   bhaiFormSkuState.invLocation = document.getElementById('bhaiInvLocation')?.value.trim() || '';
+  bhaiFormSkuState.cost = document.getElementById('bhaiCost')?.value.trim() || '';
   const assigned = computeAssignedSku(bhaiFormSkuState);
   const prevEl = document.getElementById('bhaiSkuAssignPreview');
   const badgeEl = document.getElementById('bhaiSkuAssignBadge');
-  if(prevEl) prevEl.textContent = assigned || 'Enter a PO Number to generate';
+  if(prevEl) prevEl.textContent = assigned || 'Fill in above to generate — SKU is optional, Shovo will flag missing ones before you copy the prompt';
   if(badgeEl){ badgeEl.textContent = assigned || 'not assigned yet'; badgeEl.className = assigned ? 'sku-assign-ready' : 'sku-assign-empty'; }
 }
 document.getElementById('bhaiPoNumber')?.addEventListener('blur', bhaiSkuAssignBlur);
 document.getElementById('bhaiInvLocation')?.addEventListener('input', bhaiRefreshSkuPreview);
+document.getElementById('bhaiCost')?.addEventListener('input', bhaiRefreshSkuPreview);
+
+let bhaiSkuMode = 'new';
+function bhaiSetSkuMode(mode){
+  bhaiSkuMode = mode;
+  const newBtn = document.getElementById('bhaiSkuModeNew');
+  const existingBtn = document.getElementById('bhaiSkuModeExisting');
+  const newFields = document.getElementById('bhaiSkuNewFields');
+  const existingFields = document.getElementById('bhaiSkuExistingFields');
+  if(newBtn) newBtn.style.cssText = 'margin:0;padding:6px;font-size:11px;' + (mode==='new' ? 'border-color:var(--accent);color:var(--accent-ink);background:var(--accent-tint);' : '');
+  if(existingBtn) existingBtn.style.cssText = 'margin:0;padding:6px;font-size:11px;' + (mode==='existing' ? 'border-color:var(--accent);color:var(--accent-ink);background:var(--accent-tint);' : '');
+  if(newFields) newFields.style.display = mode==='new' ? '' : 'none';
+  if(existingFields) existingFields.style.display = mode==='existing' ? '' : 'none';
+  if(mode === 'existing') bhaiRenderSkuBreakdown();
+  bhaiRefreshSkuPreview();
+  bhaiUpdatePreview();
+}
+document.getElementById('bhaiSkuModeNew')?.addEventListener('click', ()=>bhaiSetSkuMode('new'));
+document.getElementById('bhaiSkuModeExisting')?.addEventListener('click', ()=>bhaiSetSkuMode('existing'));
+function bhaiRenderSkuBreakdown(){
+  const el = document.getElementById('bhaiSkuBreakdown');
+  if(!el) return;
+  const sku = document.getElementById('bhaiWebsiteSku')?.value.trim() || '';
+  if(!sku){ el.innerHTML = ''; return; }
+  const parts = sku.split('-');
+  el.innerHTML = `<div class="dp-label" style="margin-top:9px">Breakdown <span style="opacity:.6;font-weight:400">(edit any piece directly)</span></div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+    ${parts.map((p,i)=>`<div style="min-width:70px;flex:1;">
+      <div style="font:600 9.5px/1 var(--sans);color:var(--ink-soft);opacity:.7;margin-bottom:2px;">${esc(skuPartLabel(p,i,parts.length))}</div>
+      <input class="dp-input" style="padding:5px 7px;font-size:11.5px;" data-bhaiskupart="${i}" value="${esc(p)}" autocomplete="off" spellcheck="false">
+    </div>`).join('')}
+  </div>`;
+}
+document.getElementById('bhaiSkuBreakdown')?.addEventListener('input', ev=>{
+  const el = ev.target;
+  if(el.dataset.bhaiskupart === undefined) return;
+  const partEls = Array.from(document.getElementById('bhaiSkuBreakdown').querySelectorAll('[data-bhaiskupart]'));
+  partEls.sort((a,b)=>parseInt(a.dataset.bhaiskupart)-parseInt(b.dataset.bhaiskupart));
+  const rejoined = partEls.map(p=>p.value.trim()).join('-');
+  const skuInput = document.getElementById('bhaiWebsiteSku');
+  if(skuInput) skuInput.value = rejoined;
+  bhaiRefreshSkuPreview();
+  bhaiUpdatePreview();
+});
+document.getElementById('bhaiWebsiteSku')?.addEventListener('input', ()=>{ bhaiRenderSkuBreakdown(); bhaiRefreshSkuPreview(); bhaiUpdatePreview(); });
 
 function bhaiMakeFromForm(){
+  const typedSku = bhaiSkuMode === 'existing' ? (document.getElementById('bhaiWebsiteSku')?.value.trim() || '') : '';
+  const builtSku = bhaiSkuMode === 'new' ? computeAssignedSku(bhaiFormSkuState) : '';
   return {
     id: 0,
-    websiteSku: document.getElementById('bhaiWebsiteSku')?.value.trim() || computeAssignedSku(bhaiFormSkuState) || '',
+    websiteSku: typedSku || builtSku || '',
+    // True when the SKU only exists because the Builder just generated it this
+    // session (no existing Shopify product could have this SKU yet) — this is
+    // what fixes the CREATE/EDIT misclassification bug: a freshly-assigned SKU
+    // must never be treated as "matches an existing product."
+    isFreshlyAssigned: !typedSku && !!builtSku,
     desc: document.getElementById('bhaiDesc')?.value.trim() || '',
     claudeNotes: document.getElementById('bhaiClaudeNotes')?.value.trim() || '',
     returnPolicy: document.getElementById('bhaiReturnPolicy')?.value || '30 Days Free Return',
@@ -6370,7 +6566,8 @@ function bhaiMakeFromForm(){
     poNumber: bhaiFormSkuState.poNumber || '',
     unitNumber: bhaiFormSkuState.unitNumber || '',
     invLocation: document.getElementById('bhaiInvLocation')?.value.trim() || '',
-    assignedSku: computeAssignedSku(bhaiFormSkuState)
+    externalCode: bhaiFormSkuState.externalCode || '',
+    assignedSku: builtSku
   };
 }
 
@@ -6394,11 +6591,12 @@ function bhaiUpdatePreview(){
 }
 
 function clearBhaiForm(){
-  ['bhaiWebsiteSku','bhaiDesc','bhaiClaudeNotes','bhaiPoNumber','bhaiInvLocation','bhaiCost','bhaiPrice'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['bhaiWebsiteSku','bhaiDesc','bhaiClaudeNotes','bhaiPoNumber','bhaiInvLocation','bhaiExternalCode','bhaiCost','bhaiPrice'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const unitEl = document.getElementById('bhaiUnitNumber'); if(unitEl) unitEl.value='';
   const nr=document.getElementById('bhaiNeedsResearch'); if(nr) nr.checked=false;
   const rp=document.getElementById('bhaiReturnPolicy'); if(rp) rp.value='30 Days Free Return';
-  bhaiFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
+  bhaiFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', externalCode:'', trackNumber:'', _lastAssignedPo:''};
+  bhaiSetSkuMode('new');
   bhaiRefreshSkuPreview();
   bhaiUpdatePreview();
 }
@@ -6464,6 +6662,8 @@ if(document.getElementById('bhaiEbayLookup')) document.getElementById('bhaiEbayL
   openEbaySoldSearch(desc);
 });
 if(document.getElementById('bhaiAddEntry')) document.getElementById('bhaiAddEntry').addEventListener('click', ()=>{
+  if(!document.getElementById('bhaiDesc')?.value.trim()){ toast('Describe the item first'); return; }
+  if(bhaiSkuMode === 'new') ensureSkuUnitAssigned(bhaiFormSkuState); // consume a real counter slot now — this is a genuine commit, not a preview; skip entirely in Existing mode, nothing to build
   const e = bhaiMakeFromForm();
   if(!e.desc){ toast('Describe the item first'); return; }
   if(bhaiEditingId !== null){
@@ -6883,10 +7083,14 @@ function compactTableHtml(entry){
 <tbody>${tableRows}</tbody>
 </table>`;
 }
+let uniSkuMode = 'new';
 function uniMakePreviewObject(){
+  const typedSku = uniSkuMode === 'existing' ? (document.getElementById('uniWebsiteSku')?.value.trim() || '') : '';
+  const builtSku = uniSkuMode === 'new' ? computeAssignedSku(uniFormSkuState) : '';
   return {
     id: 0,
-    websiteSku: document.getElementById('uniWebsiteSku')?.value.trim() || computeAssignedSku(uniFormSkuState) || '',
+    websiteSku: typedSku || builtSku || '',
+    isFreshlyAssigned: !typedSku && !!builtSku,
     itemType: document.getElementById('uniItemType')?.value || 'Laptop',
     typedFields: {},
     desc: document.getElementById('uniDesc')?.value.trim() || '',
@@ -6902,13 +7106,54 @@ function uniMakePreviewObject(){
     poNumber: uniFormSkuState.poNumber || '',
     unitNumber: uniFormSkuState.unitNumber || '',
     invLocation: document.getElementById('uniInvLocation')?.value.trim() || '',
-    assignedSku: computeAssignedSku(uniFormSkuState)
+    externalCode: uniFormSkuState.externalCode || '',
+    assignedSku: typedSku || builtSku || ''
   };
 }
+function uniSetSkuMode(mode){
+  uniSkuMode = mode;
+  const newBtn = document.getElementById('uniSkuModeNew');
+  const existingBtn = document.getElementById('uniSkuModeExisting');
+  const newFields = document.getElementById('uniSkuNewFields');
+  const existingFields = document.getElementById('uniSkuExistingFields');
+  if(newBtn) newBtn.style.cssText = 'margin:0;padding:6px;font-size:11px;' + (mode==='new' ? 'border-color:var(--accent);color:var(--accent-ink);background:var(--accent-tint);' : '');
+  if(existingBtn) existingBtn.style.cssText = 'margin:0;padding:6px;font-size:11px;' + (mode==='existing' ? 'border-color:var(--accent);color:var(--accent-ink);background:var(--accent-tint);' : '');
+  if(newFields) newFields.style.display = mode==='new' ? '' : 'none';
+  if(existingFields) existingFields.style.display = mode==='existing' ? '' : 'none';
+  if(mode === 'existing') uniRenderSkuBreakdown();
+  uniRefreshSkuPreview();
+}
+document.getElementById('uniSkuModeNew')?.addEventListener('click', ()=>uniSetSkuMode('new'));
+document.getElementById('uniSkuModeExisting')?.addEventListener('click', ()=>uniSetSkuMode('existing'));
+function uniRenderSkuBreakdown(){
+  const el = document.getElementById('uniSkuBreakdown');
+  if(!el) return;
+  const sku = document.getElementById('uniWebsiteSku')?.value.trim() || '';
+  if(!sku){ el.innerHTML = ''; return; }
+  const parts = sku.split('-');
+  el.innerHTML = `<div class="dp-label" style="margin-top:9px">Breakdown <span style="opacity:.6;font-weight:400">(edit any piece directly)</span></div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+    ${parts.map((p,i)=>`<div style="min-width:70px;flex:1;">
+      <div style="font:600 9.5px/1 var(--sans);color:var(--ink-soft);opacity:.7;margin-bottom:2px;">${esc(skuPartLabel(p,i,parts.length))}</div>
+      <input class="dp-input" style="padding:5px 7px;font-size:11.5px;" data-uniskupart="${i}" value="${esc(p)}" autocomplete="off" spellcheck="false">
+    </div>`).join('')}
+  </div>`;
+}
+document.getElementById('uniSkuBreakdown')?.addEventListener('input', ev=>{
+  const el = ev.target;
+  if(el.dataset.uniskupart === undefined) return;
+  const partEls = Array.from(document.getElementById('uniSkuBreakdown').querySelectorAll('[data-uniskupart]'));
+  partEls.sort((a,b)=>parseInt(a.dataset.uniskupart)-parseInt(b.dataset.uniskupart));
+  const rejoined = partEls.map(p=>p.value.trim()).join('-');
+  const skuInput = document.getElementById('uniWebsiteSku');
+  if(skuInput) skuInput.value = rejoined;
+  uniRefreshSkuPreview();
+});
+document.getElementById('uniWebsiteSku')?.addEventListener('input', ()=>{ uniRenderSkuBreakdown(); uniRefreshSkuPreview(); });
 
 // ── Universal SKU Assignment (persists PO/unit across form edits
 // until the entry is actually added to the queue) ──────────────
-let uniFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
+let uniFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', externalCode:'', trackNumber:'', _lastAssignedPo:''};
 function uniSkuAssignBlur(){
   uniFormSkuState.poNumber = document.getElementById('uniPoNumber')?.value.trim() || '';
   assignSkuUnit(uniFormSkuState);
@@ -6918,14 +7163,16 @@ function uniSkuAssignBlur(){
 }
 function uniRefreshSkuPreview(){
   uniFormSkuState.invLocation = document.getElementById('uniInvLocation')?.value.trim() || '';
-  const assigned = computeAssignedSku(uniFormSkuState);
+  uniFormSkuState.cost = document.getElementById('uniCost')?.value.trim() || '';
+  const assigned = uniSkuMode === 'existing' ? (document.getElementById('uniWebsiteSku')?.value.trim() || '') : computeAssignedSku(uniFormSkuState);
   const prevEl = document.getElementById('uniSkuAssignPreview');
   const badgeEl = document.getElementById('uniSkuAssignBadge');
-  if(prevEl) prevEl.textContent = assigned || 'Enter a PO Number to generate';
+  if(prevEl) prevEl.textContent = assigned || (uniSkuMode==='existing' ? 'Paste the existing SKU above' : 'Fill in above to generate — SKU is optional, Shovo will flag missing ones before you copy the prompt');
   if(badgeEl){ badgeEl.textContent = assigned || 'not assigned yet'; badgeEl.className = assigned ? 'sku-assign-ready' : 'sku-assign-empty'; }
 }
 document.getElementById('uniPoNumber')?.addEventListener('blur', uniSkuAssignBlur);
 document.getElementById('uniInvLocation')?.addEventListener('input', uniRefreshSkuPreview);
+document.getElementById('uniCost')?.addEventListener('input', uniRefreshSkuPreview);
 
 function updateUniPreview(){
   const e = uniMakePreviewObject();
@@ -6988,12 +7235,13 @@ function renderUniEntries(){
   updateGoalCounter();
 }
 function clearUniForm(){
-  ['uniWebsiteSku','uniDesc','uniClaudeNotes','uniPoNumber','uniInvLocation','uniCost','uniPrice'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['uniWebsiteSku','uniDesc','uniClaudeNotes','uniPoNumber','uniInvLocation','uniExternalCode','uniCost','uniPrice'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const unitEl = document.getElementById('uniUnitNumber'); if(unitEl) unitEl.value='';
   const nr=document.getElementById('uniNeedsResearch'); if(nr) nr.checked=false;
   const rp=document.getElementById('uniReturnPolicy'); if(rp) rp.value='30 Days Free Return';
   uniTypedFields = {};
-  uniFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', _lastAssignedPo:''};
+  uniFormSkuState = {poNumber:'', unitNumber:'', invLocation:'', externalCode:'', trackNumber:'', _lastAssignedPo:''};
+  uniSetSkuMode('new');
   uniRefreshSkuPreview();
   updateUniPreview();
 }
@@ -7100,7 +7348,33 @@ function allManifestObjects(){
   const bhai = bhaiEntriesData.filter(e=>e.desc).map(bhaiEntryObject);
   return batch.concat(uni).concat(bhai).map((e, i)=>({...e, entry_id: e.entry_id || '', batch_id: LISTER_BATCH || '', lister: LISTER_INITIAL || '', internal_sku: listerSKU(i+1)}));
 }
+const EBAY_READINESS_BLOCK =
+`EBAY MARKETPLACE CONNECT READINESS — additional metafields (namespace: custom)
+Set these on every product too, so Marketplace Connect's Attribute Mapping (once configured in the app) can auto-populate the eBay listing without anyone touching Marketplace Connect by hand:
+  ebay_category_id, ebay_condition_code, ebay_condition_description, ebay_returns_accepted, ebay_returns_within
+
+CATEGORY (ebay_category_id) — match by item type, confirmed eBay category IDs:
+  Storage/SSD: 175669 | Storage/HDD: 56083 | RAM: 170083 | Motherboard: 1244 | GPU: 27386 | PSU: 42017
+  Power Tools: 3247 | Test Equipment: 181939 | Gaming Accessories: 54968 | Phone: 9355 | Laptop: 175672
+  Console: 139971 | Computer Peripherals: 3676
+  Audio Equipment: 180014 if description mentions microphone/mixer/audio interface/pro-audio gear, otherwise 15052 (headphones/earbuds/speakers/consumer audio)
+  If the item type has no match above (e.g. Desktop, CPU, or anything not on this list), leave ebay_category_id blank — never guess a category ID.
+
+CONDITION (ebay_condition_code + ebay_condition_description):
+  New / Sealed            → code 1000, description blank
+  Open Box (new, opened)  → code 1500, description blank
+  Used / Working          → code 3000, description auto-written from health%/testing notes, e.g. "93% battery health, tested working, minor cosmetic wear"
+  For Parts / Not Working → code 7000, description auto-written from notes, e.g. "Does not power on, sold for parts"
+
+RETURNS (ebay_returns_accepted + ebay_returns_within):
+  Derive from the exact same return-policy text already going into the Shipping & Returns block of the HTML description — don't recompute it separately:
+  "30 Days Free Return" (or equivalent) → ebay_returns_accepted = "Yes", ebay_returns_within = "30 Days"
+  "No Returns" (or equivalent)          → ebay_returns_accepted = "No",  ebay_returns_within = blank
+  Do NOT set a refund-type or return-shipping-paid-by field — those stay governed by the description text itself, not a separate metafield.`;
+
 function buildClaudePrepPrompt(entriesOverride){
+
+
   const entries = entriesOverride || allManifestObjects();
 
   // Split by panel type
@@ -7136,7 +7410,7 @@ function buildClaudePrepPrompt(entriesOverride){
       title_preview:e.title_preview, html_description_preview:e.html_description_preview, metafields_preview:e.metafields_preview, needs_research:e.needs_research||'', status:e.status
     }));
     parts.push(
-      `You are preparing the SYG manifest for bulk listing edits.\n\nRules:\n- Website SKU is the matching key. Do not change it.\n- Do not invent missing specs. Mark missing info as MISSING.\n- For Universal entries, use the item type and typed fields to generate category-correct title, compact HTML description, and metafields.\n- Every final HTML description must include Shipping and Returns rows using the provided policy values.\n- Respect Needs Research. If an entry is Needs Research, explain what must be verified before listing.\n- If an entry is ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- Universal item types are CPU, GPU, Console, Laptop, Desktop, Phone, Motherboard.\n- If assigned_sku is present and website_sku is blank, use assigned_sku as the Website SKU. po_number, unit_number, and inventory_location are internal tracking metadata only — never output them as metafields.\n- If cost is provided, set/update the product's per-unit cost (Shopify inventory item cost) alongside price — cost and price are different fields, do not conflate them.\n\nSHOPIFY METAFIELD KEYS (namespace: custom) — use ONLY these exact keys, no others:\n  type, brand, model, model_number, features, screen_size, color, connectivity,\n  processor, storage_capacity, operating_system, ram, gpu, mpn, network,\n  platform, release_year, game_name, upc\n\nPer item type, fill only the relevant keys:\n- Console:     type, brand, model, model_number, storage_capacity, color, network, mpn\n- Phone:       type, brand, model, model_number, storage_capacity, color, network, operating_system, screen_size, mpn, upc\n- Laptop:      type, brand, model, model_number, processor, ram, storage_capacity, gpu, operating_system, screen_size, mpn\n- Desktop:     type, brand, model, processor, ram, storage_capacity, gpu, operating_system, mpn\n- GPU:         type, brand, model, model_number, gpu, features, mpn\n- CPU:         type, brand, model, model_number, processor, platform, mpn\n- Motherboard: type, brand, model, model_number, platform, features, mpn\n\nDo NOT output keys like console_model, edition_storage, controller_included, cables_included, shipping, returns, or any other freeform keys not in the list above.\n\nReturn one completed row per Website SKU with these columns:\nWebsite SKU | Internal SKU | Item Type | Corrected Title | Final HTML Description | Final Metafields | Missing Info Warnings | Photo Reminder | Status\n\nUniversal manifest data:\n${JSON.stringify(payload,null,2)}`
+      `You are preparing the SYG manifest for bulk listing edits.\n\nRules:\n- Website SKU is the matching key. Do not change it.\n- Do not invent missing specs. Mark missing info as MISSING.\n- For Universal entries, use the item type and typed fields to generate category-correct title, compact HTML description, and metafields.\n- Every final HTML description must include Shipping and Returns rows using the provided policy values.\n- Respect Needs Research. If an entry is Needs Research, explain what must be verified before listing.\n- If an entry is ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- Universal item types are CPU, GPU, Console, Laptop, Desktop, Phone, Motherboard.\n- If assigned_sku is present and website_sku is blank, use assigned_sku as the Website SKU. po_number, unit_number, and inventory_location are internal tracking metadata only — never output them as metafields.\n- If cost is provided, set/update the product's per-unit cost (Shopify inventory item cost) alongside price — cost and price are different fields, do not conflate them.\n\nSHOPIFY METAFIELD KEYS (namespace: custom) — use ONLY these exact keys, no others:\n  type, brand, model, model_number, features, screen_size, color, connectivity,\n  processor, storage_capacity, operating_system, ram, gpu, mpn, network,\n  platform, release_year, game_name, upc,\n  ebay_category_id, ebay_condition_code, ebay_condition_description, ebay_returns_accepted, ebay_returns_within\n\nPer item type, fill only the relevant keys:\n- Console:     type, brand, model, model_number, storage_capacity, color, network, mpn\n- Phone:       type, brand, model, model_number, storage_capacity, color, network, operating_system, screen_size, mpn, upc\n- Laptop:      type, brand, model, model_number, processor, ram, storage_capacity, gpu, operating_system, screen_size, mpn\n- Desktop:     type, brand, model, processor, ram, storage_capacity, gpu, operating_system, mpn\n- GPU:         type, brand, model, model_number, gpu, features, mpn\n- CPU:         type, brand, model, model_number, processor, platform, mpn\n- Motherboard: type, brand, model, model_number, platform, features, mpn\n\nDo NOT output keys like console_model, edition_storage, controller_included, cables_included, shipping, returns, or any other freeform keys not in the list above.\n\n${EBAY_READINESS_BLOCK}\n\nReturn one completed row per Website SKU with these columns:\nWebsite SKU | Internal SKU | Item Type | Corrected Title | Final HTML Description | Final Metafields | Missing Info Warnings | Photo Reminder | Status\n\nUniversal manifest data:\n${JSON.stringify(payload,null,2)}`
     );
   }
 
@@ -7159,7 +7433,8 @@ function buildClaudePrepPrompt(entriesOverride){
       `STEP 3 — METAFIELDS (rigid — namespace: custom, use ONLY these exact keys):\n` +
       `  type, brand, model, model_number, features, screen_size, color, connectivity,\n` +
       `  processor, storage_capacity, operating_system, ram, gpu, mpn, network,\n` +
-      `  platform, release_year, game_name, upc\n\n` +
+      `  platform, release_year, game_name, upc,\n` +
+      `  ebay_category_id, ebay_condition_code, ebay_condition_description, ebay_returns_accepted, ebay_returns_within\n\n` +
       `Per classified type, fill only the relevant keys:\n` +
       `- Console:     type, brand, model, model_number, storage_capacity, color, network, mpn\n` +
       `- Phone:       type, brand, model, model_number, storage_capacity, color, network, operating_system, screen_size, mpn, upc\n` +
@@ -7177,6 +7452,7 @@ function buildClaudePrepPrompt(entriesOverride){
       `- Gaming Accessories: type, brand, model, model_number, connectivity, color, features, mpn  (controllers, headsets, and other console/PC gaming peripherals — connectivity = wired/wireless/Bluetooth; color = specific color or "Varies / Assorted" for mixed lots; features = compatibility, lot size, and condition notes, e.g. "PS5-compatible, lot of 14, tested and functional")\n` +
       `- Computer Peripherals: type, brand, model, model_number, connectivity, color, features, mpn  (non-gaming PC peripherals — keyboards, mice, webcams, hubs, etc. — connectivity = wired/wireless/Bluetooth; features = combo contents, new/sealed status, condition notes, e.g. "New sealed, keyboard + mouse combo, box has cosmetic flaws")\n\n` +
       `Do NOT invent keys outside this list. Do not invent values — if a spec isn't in the description, mark that field MISSING rather than guessing.\n\n` +
+      `${EBAY_READINESS_BLOCK}\n\n` +
       `STEP 4 — TITLE + HTML DESCRIPTION (flexible, not templated).\n` +
       `Write a natural SEO-appropriate title for the item. Build an "Item Specifications" HTML table using whatever rows are actually relevant to THIS item — don't force irrelevant fields in, don't omit relevant ones. Use judgment: a PSU naturally gets Wattage/Certification rows, a motherboard gets Socket/Chipset rows, a bundled combo gets an "Included" row listing what's mounted. Keep the same visual style used elsewhere (navy header row #1F4E79, alternating white/#f9f9f9 row shading, 35% label column). Always end the specs table with Condition, then Included, then Description rows, followed by a Shipping & Returns block using: Shipping = "Free Shipping", Return Policy = the value in notes_for_claude (default "30 Days Free Return" if not stated).\n\n` +
       `GUARDRAILS.\n- Do not invent missing specs — mark them MISSING.\n- If needs_research is "Yes", explain what must be verified before listing instead of finalizing it.\n- If ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- If raw_item_description conflicts with something already on file (e.g. a registry code mislabeled), flag it explicitly rather than silently propagating the error.\n- If assigned_sku is present and website_sku is blank, use assigned_sku as the Website SKU. po_number, unit_number, and inventory_location are internal tracking metadata only — never output them as metafields.\n- If cost is provided, set/update the product's per-unit cost (Shopify inventory item cost) alongside price — these are different fields, do not conflate them.\n\n` +
@@ -7405,6 +7681,7 @@ if(document.getElementById('uniEbayLookup')) document.getElementById('uniEbayLoo
   openEbaySoldSearch(query);
 });
 if(document.getElementById('uniAddEntry')) document.getElementById('uniAddEntry').addEventListener('click',()=>{
+  if(uniSkuMode === 'new') ensureSkuUnitAssigned(uniFormSkuState); // consume a real counter slot now — this is a genuine commit, not a preview; skip entirely in Existing mode, nothing to build
   const e = uniMakeFromForm();
   if(!e.websiteSku){ toast('Universal entry needs the website SKU'); return; }
   if(!e.desc){ toast('Describe the item/specs first'); return; }
@@ -14086,6 +14363,9 @@ function shovoSayLine(pool){
   const line = lines[Math.floor(Math.random() * lines.length)];
   shovoRenderAmbientLine(line);
 }
+// Exposed globally — this script runs inside an IIFE, but other script tags
+// (e.g. prepareExportPrompt's SKU check) need to call this too.
+window.shovoSayLine = shovoSayLine;
 
 function shovoRenderAmbientLine(text){
   let el = document.getElementById('shovoAmbientLine');
