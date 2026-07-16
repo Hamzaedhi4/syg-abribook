@@ -14016,11 +14016,17 @@ document.getElementById('tbLockBtn')?.addEventListener('click', () => {
 // Each entry: { keys: [...match terms], title, answer (HTML), related: [...topic keys] }
 const KB = [
 
-  // ── SPECS LOOKUP (DELL SERVICE TAG) ────────────────────────────────
-  { keys: ['specs command','dell specs','service tag lookup','specs tag','how specs works','dell service tag','specs st','look up dell','dell specs command'],
-    title: 'Specs lookup — "specs {tag}"',
-    answer: `<h3>What it does</h3>Type <code>specs</code> followed by a Dell Service Tag (e.g. <code>specs 4X7YZ12</code>) and Shovo opens Dell's support page in a new tab and copies the tag to your clipboard. Dell's site doesn't auto-fill its own search box, so paste (Ctrl+V) into the "Service tag" field and hit the arrow — no retyping.<h3>Format</h3><code>specs {tag}</code> — the tag has to come right after the word, nothing else in between.<h3>Note</h3>This only covers Dell for now. If you want the same shortcut for HP, Lenovo, or another brand's service/serial lookup, that can be added the same way.`,
-    related: ['log drive','abribook codes'] },
+  // ── SPECS LOOKUP (DELL / HP / LENOVO) ────────────────────────────────
+  { keys: ['specs command','dell specs','hp specs','lenovo specs','service tag lookup','specs tag','how specs works','dell service tag','specs st','look up dell','look up hp','look up lenovo','dell specs command'],
+    title: 'Specs lookup — "specs [brand] {tag}"',
+    answer: `<h3>What it does</h3>Type <code>specs</code>, optionally a brand, then the service tag / serial (e.g. <code>specs 4X7YZ12</code>, <code>specs hp ABC1234</code>, <code>specs lenovo PC2JLMMR</code>). Shovo opens the right manufacturer's lookup page in a new tab and copies the tag to your clipboard.<h3>Format</h3><code>specs {tag}</code> defaults to Dell. <code>specs hp {tag}</code> and <code>specs lenovo {tag}</code> cover those brands.<h3>Note</h3>None of these sites reliably auto-fill their own search box from the link alone — if you've installed the SYG Dell Specs Autofill browser extension, it fills and submits the field for you on Dell, HP, and Lenovo's pages automatically. Otherwise, paste (Ctrl+V) into the field yourself.`,
+    related: ['log drive','abribook codes','unlock command'] },
+
+  // ── AT&T UNLOCK REQUEST ────────────────────────────────────────────
+  { keys: ['unlock command','att unlock','device unlock','imei unlock','unlock imei','at&t unlock','unlock phone'],
+    title: 'AT&T unlock request — "unlock {imei}"',
+    answer: `<h3>What it does</h3>Type <code>unlock</code> followed by an IMEI (e.g. <code>unlock 356938035643809</code>) and Shovo opens AT&T's device unlock request page in a new tab, copies the IMEI to your clipboard, and — if the autofill extension is installed — selects "No" for AT&T Phone Number and fills in the IMEI automatically.<h3>Format</h3><code>unlock {imei}</code> — a 14-17 digit IMEI right after the word.<h3>Note</h3>The autofill part of this one hasn't been confirmed against AT&T's real form fields yet — double-check it actually selected and filled correctly the first few times you use it.`,
+    related: ['specs command'] },
 
   // ── LOGGING A DRIVE ──────────────────────────────────────────────
   { keys: ['log drive','log storage','log ssd','log nvme','log sata','batch entry','add entry','how to log','log item','log a drive','logging drives','log device','log disk','add a drive','add batch'],
@@ -14975,24 +14981,55 @@ function renderAnswer(q) {
 
   // ── 1b. Specs lookup command — "specs {tag}" opens Dell's support
   // page and copies the Service Tag to the clipboard. The ?servicetag=
-  // URL param DOES reach the page (confirmed) but does NOT auto-fill
-  // the visible "Service tag" search box or auto-run the search — so
-  // instead of pretending it's one-click, we hand you the tag ready to
-  // paste the instant the page loads.
+  // ── 1b. Specs lookup command — "specs [brand] {tag}" opens the right
+  // manufacturer's lookup page. Brand defaults to dell if omitted, for
+  // backwards compatibility with the original command. The extension
+  // (SYG Dell Specs Autofill) picks up from here on pages whose own URL
+  // param doesn't auto-fill the visible box.
   // Anchored to the start of the query so it only fires as a real
   // command, not when "specs" shows up inside an ordinary question
   // like "what are the specs of the RTX 3090".
-  const specsMatch = q.trim().match(/^(?:dell\s+)?specs?\s+([A-Za-z0-9-]{4,})$/i);
+  const specsMatch = q.trim().match(/^specs?\s+(?:(dell|hp|lenovo)\s+)?([A-Za-z0-9-]{4,})$/i);
   if (specsMatch) {
-    const tag = specsMatch[1].toUpperCase();
-    const url = 'https://www.dell.com/support/home/en-us?servicetag=' + encodeURIComponent(tag);
-    window.open(url, '_blank');
+    const brand = (specsMatch[1] || 'dell').toLowerCase();
+    const tag = specsMatch[2].toUpperCase();
+    const SPECS_SITES = {
+      dell:   { url: 'https://www.dell.com/support/home/en-us?servicetag=' + encodeURIComponent(tag), name: 'Dell', autofills: false },
+      hp:     { url: 'https://partsurfer.hp.com/?searchtext=' + encodeURIComponent(tag), name: 'HP PartSurfer', autofills: 'unconfirmed' },
+      lenovo: { url: 'https://pcsupport.lenovo.com/us/en/warranty-lookup?syg_serial=' + encodeURIComponent(tag) + '#/', name: 'Lenovo', autofills: false }
+    };
+    const site = SPECS_SITES[brand];
+    window.open(site.url, '_blank');
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(tag).catch(()=>{});
     }
-    if (labelEl) labelEl.textContent = 'Opening Dell specs lookup';
+    if (labelEl) labelEl.textContent = 'Opening ' + site.name + ' specs lookup';
+    const noteHtml = site.autofills === 'unconfirmed'
+      ? 'This link is supposed to search directly, but that hasn\'t been independently confirmed yet — worth checking the results loaded correctly. <b>'+esc(tag)+'</b> is also copied to your clipboard just in case.'
+      : (site.autofills
+        ? 'This site takes the tag straight from the link, so it should already be searching.'
+        : 'That site doesn\'t auto-fill from the link alone, so <b>'+esc(tag)+'</b> is already copied to your clipboard — paste it (Ctrl+V) if it isn\'t filled in already. If you\'ve installed the autofill extension, it\'ll handle this for you automatically.');
     bodyEl.innerHTML = '<div style="color:#86efac;font-weight:600;font-size:13px;margin-bottom:10px;">✓ Opened</div>'
-      + '<div style="color:rgba(255,255,255,.72);line-height:1.7;">Dell support opened in a new tab. The page doesn\'t auto-fill the search box, so <b>'+esc(tag)+'</b> is already copied to your clipboard — paste it (Ctrl+V) into the "Service tag" box and hit the arrow to search.</div>'
+      + '<div style="color:rgba(255,255,255,.72);line-height:1.7;">'+site.name+' opened in a new tab for <b>'+esc(tag)+'</b>. '+noteHtml+'</div>'
+      + '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:11.5px;color:rgba(255,255,255,.3);">Press Escape to close and get back to work.</div>';
+    return;
+  }
+
+  // ── 1c. AT&T unlock request — "unlock {imei}" opens AT&T's device
+  // unlock request and (via the extension) selects "No" for AT&T Phone
+  // Number and fills in the IMEI. Untested against AT&T's real form
+  // fields — flag to the lister if it doesn't select/fill correctly.
+  const unlockMatch = q.trim().match(/^unlock\s+([0-9]{14,17})$/i);
+  if (unlockMatch) {
+    const imei = unlockMatch[1];
+    const url = 'https://www.att.com/deviceunlock/unlockstep1?imei=' + encodeURIComponent(imei);
+    window.open(url, '_blank');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(imei).catch(()=>{});
+    }
+    if (labelEl) labelEl.textContent = 'Opening AT&T unlock request';
+    bodyEl.innerHTML = '<div style="color:#86efac;font-weight:600;font-size:13px;margin-bottom:10px;">✓ Opened</div>'
+      + '<div style="color:rgba(255,255,255,.72);line-height:1.7;">AT&T\'s unlock request page opened in a new tab. If the autofill extension is installed and up to date, it should select "No" for AT&T Phone Number and fill in IMEI <b>'+esc(imei)+'</b> — this part hasn\'t been confirmed against the real form yet, so double-check it landed correctly. The IMEI is also on your clipboard either way.</div>'
       + '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:11.5px;color:rgba(255,255,255,.3);">Press Escape to close and get back to work.</div>';
     return;
   }
