@@ -5808,6 +5808,18 @@ function smartSkuSplit(sku){
   }
   return sku.split('-');
 }
+// Builds the "Generated SKU" preview HTML for Existing mode. When the current
+// (edited) value matches the original, just shows it plainly. When they
+// differ, shows both clearly labeled — so it's never ambiguous which SKU is
+// used to find the product (the original) versus what it becomes (the edit).
+function skuMatchRenameDisplay(original, current){
+  if(!current) return '';
+  if(!original || original === current){
+    return `<span class="sku-assign-ready">${esc(current)}</span>`;
+  }
+  return `<div>🔒 Matching against: <b>${esc(original)}</b></div>`
+       + `<div style="margin-top:4px;color:#f59e0b;">✏️ Will rename to: <b>${esc(current)}</b></div>`;
+}
 function skuBreakdownHTML(sku, idPrefix, entryId){
   if(!sku) return `<div id="${idPrefix}-skubreak-${entryId}"></div>`;
   const parts = smartSkuSplit(sku);
@@ -5857,7 +5869,7 @@ function skuAssignmentBlockHTML(e, idPrefix){
     </div>
     `}
     <div class="dp-label" style="margin-top:7px">Generated SKU</div>
-    <div class="dp-preview sku-assign-preview">${assigned ? esc(assigned) : (mode==='existing' ? 'Paste the existing SKU above' : "Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt")}</div>
+    <div class="dp-preview sku-assign-preview">${mode==='existing' && assigned ? skuMatchRenameDisplay(e.originalExistingSku, assigned) : (assigned ? esc(assigned) : (mode==='existing' ? 'Paste the existing SKU above' : "Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt"))}</div>
   </details>
   <div class="dp-row" style="margin-top:8px">
     <div>
@@ -5951,7 +5963,10 @@ function dpUpdatePreviewAll(){
     if(wrap){
       const assigned = computeAssignedSku(e);
       const skuPreview = wrap.querySelector('.sku-assign-preview');
-      if(skuPreview) skuPreview.textContent = assigned || (e.skuMode === 'existing' ? 'Paste the existing SKU above' : "Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt");
+      if(skuPreview){
+        if(e.skuMode === 'existing' && assigned) skuPreview.innerHTML = skuMatchRenameDisplay(e.originalExistingSku, assigned);
+        else skuPreview.textContent = assigned || (e.skuMode === 'existing' ? 'Paste the existing SKU above' : "Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt");
+      }
       const summaryEl = wrap.querySelector('.sku-assign-box summary');
       if(summaryEl) summaryEl.innerHTML = '🏷️ SKU Assignment ' + (assigned ? '<span class="sku-assign-ready">'+esc(assigned)+'</span>' : '<span class="sku-assign-empty">not assigned yet</span>');
     }
@@ -6017,7 +6032,10 @@ function dpRenderEntry(e){
   wrap.querySelector('.entry-main-preview').textContent = dpLineFor(e) || '—';
   const skuPreview = wrap.querySelector('.sku-assign-preview');
   const assigned = computeAssignedSku(e);
-  if(skuPreview) skuPreview.textContent = assigned || (e.skuMode === 'existing' ? 'Paste the existing SKU above' : "Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt");
+  if(skuPreview){
+    if(e.skuMode === 'existing' && assigned) skuPreview.innerHTML = skuMatchRenameDisplay(e.originalExistingSku, assigned);
+    else skuPreview.textContent = assigned || (e.skuMode === 'existing' ? 'Paste the existing SKU above' : "Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt");
+  }
   const unitDisplay = wrap.querySelector('[data-unit-display]');
   if(unitDisplay) unitDisplay.value = e.unitNumber || '';
   const summaryEl = wrap.querySelector('.sku-assign-box summary');
@@ -6519,10 +6537,16 @@ function bhaiSkuAssignBlur(){
 function bhaiRefreshSkuPreview(){
   bhaiFormSkuState.invLocation = document.getElementById('bhaiInvLocation')?.value.trim() || '';
   bhaiFormSkuState.cost = document.getElementById('bhaiCost')?.value.trim() || '';
-  const assigned = computeAssignedSku(bhaiFormSkuState);
+  const assigned = bhaiSkuMode === 'existing' ? (document.getElementById('bhaiWebsiteSku')?.value.trim() || '') : computeAssignedSku(bhaiFormSkuState);
   const prevEl = document.getElementById('bhaiSkuAssignPreview');
   const badgeEl = document.getElementById('bhaiSkuAssignBadge');
-  if(prevEl) prevEl.textContent = assigned || 'Fill in above to generate — SKU is optional, Shovo will flag missing ones before you copy the prompt';
+  if(prevEl){
+    if(bhaiSkuMode === 'existing' && assigned){
+      prevEl.innerHTML = skuMatchRenameDisplay(bhaiOriginalExistingSku, assigned);
+    } else {
+      prevEl.textContent = assigned || (bhaiSkuMode==='existing' ? 'Paste the existing SKU above' : 'Fill in above to generate — SKU is optional, Shovo will flag missing ones before you copy the prompt');
+    }
+  }
   if(badgeEl){ badgeEl.textContent = assigned || 'not assigned yet'; badgeEl.className = assigned ? 'sku-assign-ready' : 'sku-assign-empty'; }
 }
 document.getElementById('bhaiPoNumber')?.addEventListener('blur', bhaiSkuAssignBlur);
@@ -7236,7 +7260,13 @@ function uniRefreshSkuPreview(){
   const assigned = uniSkuMode === 'existing' ? (document.getElementById('uniWebsiteSku')?.value.trim() || '') : computeAssignedSku(uniFormSkuState);
   const prevEl = document.getElementById('uniSkuAssignPreview');
   const badgeEl = document.getElementById('uniSkuAssignBadge');
-  if(prevEl) prevEl.textContent = assigned || (uniSkuMode==='existing' ? 'Paste the existing SKU above' : 'Fill in above to generate — SKU is optional, Shovo will flag missing ones before you copy the prompt');
+  if(prevEl){
+    if(uniSkuMode === 'existing' && assigned){
+      prevEl.innerHTML = skuMatchRenameDisplay(uniOriginalExistingSku, assigned);
+    } else {
+      prevEl.textContent = assigned || (uniSkuMode==='existing' ? 'Paste the existing SKU above' : 'Fill in above to generate — SKU is optional, Shovo will flag missing ones before you copy the prompt');
+    }
+  }
   if(badgeEl){ badgeEl.textContent = assigned || 'not assigned yet'; badgeEl.className = assigned ? 'sku-assign-ready' : 'sku-assign-empty'; }
 }
 document.getElementById('uniPoNumber')?.addEventListener('blur', uniSkuAssignBlur);
