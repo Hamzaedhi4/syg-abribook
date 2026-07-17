@@ -9263,9 +9263,364 @@ function hazHelperFinish(){
 // ── Haz Logic ─────────────────────────────────────────────────────
 // ── Haz Store Price Database — SYG Elmwood Park ─────────────────
 // All prices from actual confirmed sales + active listings
-// Last updated: June 25 2026 · 130+ entries
+// Last updated: Jul 17 2026 · 130+ legacy entries + 349 fresh July MTD entries
 // Run "update Haz pricing" to refresh from Shopify
 const HAZ_STORE_PRICES = [
+
+  // ══════════════════════════════════════════════════════════════
+  // JULY 2026 MTD SOLD PULL — Jul 1-17, 2026 (388 line items, $94,574.65 total)
+  // Every entry below is a REAL confirmed sale at SYG Elmwood Park this month.
+  // Repeat sales are averaged; count noted in title context via basis text.
+  // ══════════════════════════════════════════════════════════════
+  {title:"Dell Latitude 7430 14\" Intel Core i7-1265U 32GB RAM 1TB SSD Gray", keywords:["dell latitude 7430 14", "dell latitude 7430 14 intel core"], price:339.99, source:"sold"},
+  {title:"Seagate Barracuda ST1000LM049 2.5\" SATA HDD — 1000GB (1TB) | 100% Health", keywords:["seagate barracuda st1000lm049 2.5", "seagate barracuda st1000lm049 2.5 sata hdd"], price:12.49, source:"sold"},
+  {title:"Kingston KC2500 SKC2500M8/500G M.2 2280 NVMe SSD — 500GB | 54% Health", keywords:["kingston kc2500 skc2500m8/500g m.2 2280 nvme", "kingston kc2500 skc2500m8/500g m.2"], price:27.49, source:"sold"},
+  {title:"Kingston DC500R SEDC500R/480G 2.5\" SATA SSD — 480GB | 97% Health", keywords:["kingston dc500r sedc500r/480g 2.5 sata ssd", "kingston dc500r sedc500r/480g 2.5"], price:37.33, source:"sold"},
+  {title:"Kingston KC3000 SKC3000S/1024G 1TB NVMe M.2 SSD — 90% Health", keywords:["kingston kc3000 skc3000s/1024g 1tb nvme m.2", "kingston kc3000 skc3000s/1024g 1tb"], price:116.66, source:"sold"},
+  {title:"Toshiba MG08ADA800E 8TB SATA Enterprise HDD — 100% Health", keywords:["toshiba mg08ada800e 8tb sata enterprise hdd", "toshiba mg08ada800e 8tb sata"], price:159.99, source:"sold"},
+  {title:"Samsung 980 MZ-V8V1T0 M.2 2280 NVMe SSD — 1000GB (1TB) | 92% Health", keywords:["samsung 980 mz-v8v1t0 m.2 2280 nvme", "samsung 980 mz-v8v1t0 m.2"], price:109.99, source:"sold"},
+  {title:"Crucial MX500 (CT1000MX500SSD1) 1000GB (1TB) 2.5\" SATA SSD - 71% Health", keywords:["crucial mx500 ct1000mx500ssd1 1000gb", "crucial mx500 ct1000mx500ssd1 1000gb 1tb 2.5"], price:119.99, source:"sold"},
+  {title:"Kingston DC500R SEDC500R/960G 2.5\" SATA SSD — 960GB | 98% Health", keywords:["kingston dc500r sedc500r/960g 2.5", "kingston dc500r sedc500r/960g 2.5 sata ssd"], price:89.99, source:"sold"},
+  {title:"Micron 64GB (2x32GB) 2RX8 PC4-3200AA DDR4 Desktop Memory", keywords:["micron 64gb 2x32gb 2rx8", "micron 64gb 2x32gb 2rx8 pc4-3200aa ddr4"], price:279.99, source:"sold"},
+  {title:"Kingston 32GB (2x16GB) 2Rx8 PC4-3200AA DDR4 Desktop Memory", keywords:["kingston 32gb 2x16gb 2rx8 pc4-3200aa ddr4", "kingston 32gb 2x16gb 2rx8"], price:135.99, source:"sold"},
+  {title:"Crucial MX500 1TB 2.5in SATA 6Gb/s SSD Solid State Drive", keywords:["crucial mx500 1tb 2.5in", "crucial mx500 1tb 2.5in sata 6gb/s"], price:149.99, source:"sold"},
+  {title:"Sony PlayStation 4 PS4 Slim CUH-2115B 1TB Black Console Only", keywords:["sony playstation ps4 slim", "sony playstation ps4 slim cuh-2115b 1tb"], price:99.99, source:"sold"},
+  {title:"Samsung 870 QVO MZ-77Q1T0 2.5\" SATA SSD — 1000GB (1TB) | 77% Health", keywords:["samsung 870 qvo mz-77q1t0", "samsung 870 qvo mz-77q1t0 2.5 sata"], price:104.99, source:"sold"},
+  {title:"Canon VIXIA HF G20 Full HD Camcorder 10x Optical Zoom UNTESTED", keywords:["canon vixia hf g20 full hd", "canon vixia hf g20"], price:219.97, source:"sold"},
+  {title:"WD Blue 1TB (WD10EZEX) SATA / 64MB CACHE - 100% Health", keywords:["wd 1tb wd10ezex sata 64mb cache", "wd 1tb wd10ezex sata"], price:26.97, source:"sold"},
+  {title:"Sony PS5 DualSense Edge Wireless Controller CFI-ZCP1 White For Parts", keywords:["sony ps5 dualsense edge wireless controller", "sony ps5 dualsense edge"], price:48.99, source:"sold"},
+  {title:"Kingston A2000 SA2000M8/500G M.2 2280 NVMe SSD — 500GB | 59% Health", keywords:["kingston a2000 sa2000m8/500g m.2 2280 nvme", "kingston a2000 sa2000m8/500g m.2"], price:24.99, source:"sold"},
+  {title:"HP Pavilion 590-p0066 Desktop i5-8400 12GB RAM 1TB HDD Win10", keywords:["hp pavilion 590-p0066 desktop", "hp pavilion 590-p0066 desktop i5-8400 12gb"], price:145.48, source:"sold"},
+  {title:"Samsung 980 MZ-V8V1T0B 1TB NVMe M.2 SSD — 0% Health For Parts", keywords:["samsung 980 mz-v8v1t0b 1tb nvme m.2", "samsung 980 mz-v8v1t0b 1tb"], price:104.99, source:"sold"},
+  {title:"Unlocked Samsung Galaxy Z Fold7 SM-F966U 256GB 12GB RAM Black", keywords:["unlocked samsung galaxy fold7", "unlocked samsung galaxy fold7 sm-f966u 256gb"], price:924.99, source:"sold"},
+  {title:"Samsung 990 Pro MZ-V9P2T0 M.2 2280 NVMe SSD — 2000GB (2TB) | For Parts", keywords:["samsung 990 pro mz-v9p2t0", "samsung 990 pro mz-v9p2t0 m.2 2280"], price:104.99, source:"sold"},
+  {title:"Samsung 970 EVO Plus MZ-V7S500 M.2 2280 NVMe SSD — 500GB | 100% Health", keywords:["samsung 970 evo plus mz-v7s500 m.2", "samsung 970 evo plus"], price:44.99, source:"sold"},
+  {title:"Kingston 1.92TB DC600M (SEDC600M/1920G) 2.5\" SATA - 100% Health", keywords:["kingston 1.92tb dc600m sedc600m/1920g 2.5 sata", "kingston 1.92tb dc600m sedc600m/1920g"], price:410.99, source:"sold"},
+  {title:"Crucial P1 CT1000P1SSD8 M.2 2280 NVMe SSD — 1000GB (1TB) | 73% Health", keywords:["crucial p1 ct1000p1ssd8 m.2", "crucial p1 ct1000p1ssd8 m.2 2280 nvme"], price:104.99, source:"sold"},
+  {title:"Samsung 980 Pro MZ-V8P1T0 M.2 2280 NVMe SSD — 1000GB (1TB) | 3% Health", keywords:["samsung 980 pro mz-v8p1t0 m.2 2280", "samsung 980 pro mz-v8p1t0"], price:89.99, source:"sold"},
+  {title:"Corsair Vengeance CMH32GX5M2E6000C36 DDR5 32GB (2x16GB) 6000MHz RAM", keywords:["corsair vengeance cmh32gx5m2e6000c36 ddr5", "corsair vengeance cmh32gx5m2e6000c36 ddr5 32gb 2x16gb"], price:314.99, source:"sold"},
+  {title:"Custom Gaming PC Intel i9-14900K RTX 4090 64GB DDR5 4TB SSD NZXT H9 White Used", keywords:["custom gaming pc intel i9-14900k rtx", "custom gaming pc intel"], price:3998.97, source:"sold"},
+  {title:"Apple iPad Air 5th Gen M1 A2588 10.9-inch 256GB Pink Wi-Fi Only", keywords:["apple ipad air 5th", "apple ipad air 5th gen m1"], price:344.99, source:"sold"},
+  {title:"Samsung 980 Pro (MZ-V8P2T0) 2000GB (2TB) NVMe M.2 SSD - 64% Health", keywords:["samsung 980 pro mz-v8p2t0", "samsung 980 pro mz-v8p2t0 2000gb 2tb"], price:199.99, source:"sold"},
+  {title:"Seagate Exos 7E8 ST8000NM0055 8TB SATA Enterprise HDD — 100% Health", keywords:["seagate exos 7e8 st8000nm0055", "seagate exos 7e8 st8000nm0055 8tb sata"], price:159.99, source:"sold"},
+  {title:"AT&T Samsung Galaxy Z Fold7 SM-F966U 256GB 12GB RAM Black", keywords:["at samsung galaxy fold7", "at samsung galaxy fold7 sm-f966u 256gb"], price:799.99, source:"sold"},
+  {title:"2021 Dell Latitude 3520 i3-1005G1 8GB RAM 128GB SSD W/ Charger READ", keywords:["2021 dell latitude 3520", "2021 dell latitude 3520 i3-1005g1 8gb"], price:92.97, source:"sold"},
+  {title:"Nintendo Game Boy Advance SP AGS-001 Pearl Blue w/ Charger & Game Cartridge", keywords:["nintendo game boy advance", "nintendo game boy advance sp ags-001"], price:79.99, source:"sold"},
+  {title:"Unlocked Apple iPad A16 128GB Wi-Fi + Cellular A3355 100%BH", keywords:["unlocked apple ipad a16", "unlocked apple ipad a16 128gb wi-fi"], price:235.00, source:"sold"},
+  {title:"Crucial P1 CT1000P1SSD8 NVMe M.2 2280 1TB — 98% Health", keywords:["crucial p1 ct1000p1ssd8 nvme", "crucial p1 ct1000p1ssd8 nvme m.2 2280"], price:109.99, source:"sold"},
+  {title:"Samsung 16GB (1x16GB) 2Rx4 PC4-2133P-RA0-10-DC0 ECC RDIMM Server Memory", keywords:["samsung 16gb 1x16gb 2rx4 pc4-2133p-ra0-10-dc0 ecc", "samsung 16gb 1x16gb 2rx4"], price:49.99, source:"sold"},
+  {title:"Garmin Fenix 8 47mm AMOLED Multisport GPS Smartwatch New In Box", keywords:["garmin fenix 47mm amoled multisport gps", "garmin fenix 47mm amoled"], price:749.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 11 6.1\" A2111 BH74% 64GB White For Parts", keywords:["unlocked apple iphone 11", "unlocked apple iphone 11 6.1 a2111"], price:94.99, source:"sold"},
+  {title:"Sony PlayStation 5 Slim Digital CFI-2115 825GB White w/ Controller HDMI & Power Cable", keywords:["sony playstation slim digital cfi-2115 825gb", "sony playstation slim digital"], price:420.00, source:"sold"},
+  {title:"Lenovo IdeaPad Slim 3 Chromebook 14M868 14\" Kompanio 520 4GB 64GB Used", keywords:["lenovo ideapad slim chromebook 14m868 14", "lenovo ideapad slim chromebook"], price:89.99, source:"sold"},
+  {title:"Apple MacBook Pro A1989 2018 i7 16GB RAM 1TB SSD Space Gray For Parts", keywords:["apple macbook pro a1989", "apple macbook pro a1989 2018 i7"], price:189.99, source:"sold"},
+  {title:"Sony PlayStation 5 Pro PS5 CFI-7019 2TB White w/ Controller HDMI & Power Cable", keywords:["sony playstation pro ps5", "sony playstation pro ps5 cfi-7019 2tb"], price:799.99, source:"sold"},
+  {title:"Bose SoundTouch 10 Wireless Music System 416776 Speaker", keywords:["bose soundtouch 10 wireless music system", "bose soundtouch 10 wireless"], price:69.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 12 6.1\" A2403 64GB BH100% Black For Parts", keywords:["unlocked apple iphone 12 6.1 a2403", "unlocked apple iphone 12"], price:99.99, source:"sold"},
+  {title:"Apple AirPods Max A2096 Lightning Over-Ear Headphones Sky Blue", keywords:["apple airpods max a2096", "apple airpods max a2096 lightning over-ear"], price:159.99, source:"sold"},
+  {title:"HP Thunderbolt Dock 280W G4 Docking Station New In Box", keywords:["hp thunderbolt dock 280w", "hp thunderbolt dock 280w g4 docking"], price:199.99, source:"sold"},
+  {title:"Xbox 360 FIFA Soccer 11 Video Game - Used with Box", keywords:["xbox 360 fifa soccer", "xbox 360 fifa soccer 11 video"], price:5.99, source:"sold"},
+  {title:"Sony PlayStation Portal CFI-Y1001 Remote Player 8-inch White w/ Case", keywords:["sony playstation portal cfi-y1001 remote player", "sony playstation portal cfi-y1001"], price:134.99, source:"sold"},
+  {title:"HP VR1000-100 Windows Mixed Reality Headset Bundle W/ Controllers In Box", keywords:["hp vr1000-100 windows mixed", "hp vr1000-100 windows mixed reality headset"], price:74.99, source:"sold"},
+  {title:"Bosch Professional GAL18V-40 18V Charger with GBA18V40 4.0Ah Battery Li-Ion", keywords:["bosch professional gal18v-40 18v", "bosch professional gal18v-40 18v charger gba18v40"], price:34.97, source:"sold"},
+  {title:"Milwaukee M12 Charger 48-59-2401 with XC6.0 Battery 48-11-2460 REDLITHIUM", keywords:["milwaukee m12 charger 48-59-2401", "milwaukee m12 charger 48-59-2401 xc6.0 battery"], price:44.97, source:"sold"},
+  {title:"Unlocked Google Pixel 8 128GB — Obsidian Black", keywords:["unlocked google pixel 128gb obsidian", "unlocked google pixel 128gb"], price:189.99, source:"sold"},
+  {title:"Kenwood KFC-W12PS 12\" Performance Series Subwoofer 1000W New In Box", keywords:["kenwood kfc-w12ps 12 performance", "kenwood kfc-w12ps 12 performance series subwoofer"], price:69.97, source:"sold"},
+  {title:"Unlocked Apple iPhone 13 Pro 6.1-inch A2483 128GB BH77% Alpine Green For Parts", keywords:["unlocked apple iphone 13 pro 6.1-inch", "unlocked apple iphone 13"], price:229.99, source:"sold"},
+  {title:"Blackmagic URSA Mini Pro 4.6K G1 Cinema Camera Lot of 3 Body Only For Parts", keywords:["blackmagic ursa mini pro", "blackmagic ursa mini pro 4.6k g1"], price:1150.00, source:"sold"},
+  {title:"Unlocked Apple iPhone 16 Pro Max 6.9\" A3084 BH90% 256GB Black Titanium", keywords:["unlocked apple iphone 16", "unlocked apple iphone 16 pro max"], price:749.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 14 Pro 6.1-inch A2650 BH 77% 512GB Gold For Parts", keywords:["unlocked apple iphone 14 pro 6.1-inch", "unlocked apple iphone 14"], price:279.99, source:"sold"},
+  {title:"AKAI Professional (MPK49) USB/MIDI Perfomance Keyboard w/o Power Adapter", keywords:["akai professional mpk49 usb/midi", "akai professional mpk49 usb/midi perfomance keyboard"], price:140.00, source:"sold"},
+  {title:"Pokemon Let's Go Pikachu Nintendo Switch Cartridge Only", keywords:["pokemon let go pikachu", "pokemon let go pikachu nintendo switch"], price:34.97, source:"sold"},
+  {title:"Gaming PC AMD Ryzen 9 5900X RTX 3080 10GB GPU 48GB RAM 1TB SSD", keywords:["gaming pc amd ryzen", "gaming pc amd ryzen 5900x rtx"], price:999.97, source:"sold"},
+  {title:"Samsung 980 Pro MZ-V8P2T0 2TB NVMe M.2 SSD — 28% Health For Parts", keywords:["samsung 980 pro mz-v8p2t0", "samsung 980 pro mz-v8p2t0 2tb nvme"], price:126.99, source:"sold"},
+  {title:"Kenwood KAC-2404S 4-Channel 500W Car Amplifier Black New In Box", keywords:["kenwood kac-2404s 4-channel 500w car amplifier", "kenwood kac-2404s 4-channel 500w"], price:89.97, source:"sold"},
+  {title:"AT&T Apple iPhone 11 6.1-inch A2111 64GB Purple For Parts", keywords:["at apple iphone 11 6.1-inch a2111", "at apple iphone 11"], price:59.99, source:"sold"},
+  {title:"Meta Quest 3 512GB Standalone All-in-One VR Headset White Used", keywords:["meta quest 512gb standalone all-in-one vr", "meta quest 512gb standalone"], price:359.99, source:"sold"},
+  {title:"Ovonic 5200mAh LiPo Battery + Gold Racing 3000mAh RC Battery Lot", keywords:["ovonic 5200mah lipo battery racing 3000mah", "ovonic 5200mah lipo battery"], price:19.97, source:"sold"},
+  {title:"Kodak EasyShare C1530 14MP 3X Zoom Digital Camera Red", keywords:["kodak easyshare c1530 14mp 3x zoom", "kodak easyshare c1530 14mp"], price:64.99, source:"sold"},
+  {title:"Sony PlayStation Portal CFI-Y1001 Remote Player 8-inch White w/ Box", keywords:["sony playstation portal cfi-y1001 remote player", "sony playstation portal cfi-y1001"], price:139.99, source:"sold"},
+  {title:"Elden Ring PS4 PlayStation 4 Brand New Sealed", keywords:["elden ring ps4 playstation brand", "elden ring ps4 playstation"], price:29.97, source:"sold"},
+  {title:"Samsung 870 EVO MZ-77E500 2.5\" SATA SSD — 500GB | 100% Health", keywords:["samsung 870 evo mz-77e500", "samsung 870 evo mz-77e500 2.5 sata"], price:69.99, source:"sold"},
+  {title:"Dell Latitude 5421 14-inch Core i5-11500H 8GB RAM 256GB SSD Gray", keywords:["dell latitude 5421 14-inch core i5-11500h", "dell latitude 5421 14-inch"], price:110.99, source:"sold"},
+  {title:"Samsung 850 EVO (MZ-75E2T0) 2000GB (2TB) 2.5\" SATA SSD - For Parts or Repair", keywords:["samsung 850 evo mz-75e2t0 2000gb 2tb", "samsung 850 evo mz-75e2t0"], price:69.99, source:"sold"},
+  {title:"Seagate Barracuda ST2000DM006 3.5\" SATA HDD — 2000GB (2TB) | 100% Health", keywords:["seagate barracuda st2000dm006 3.5", "seagate barracuda st2000dm006 3.5 sata hdd"], price:34.99, source:"sold"},
+  {title:"Sony PlayStation 5 PS5 CFI-1015A 825GB Disc Edition w/ Controller only", keywords:["sony playstation ps5 cfi-1015a 825gb disc", "sony playstation ps5 cfi-1015a"], price:424.99, source:"sold"},
+  {title:"Lenovo Legion Go 8APU1 8.8\" Ryzen Z1 Extreme 16GB 1TB Handheld", keywords:["lenovo legion go 8apu1 8.8 ryzen", "lenovo legion go 8apu1"], price:599.99, source:"sold"},
+  {title:"Unlocked Apple iPad Pro A3358 11\" (M5) 256GB Space Black 100%BH", keywords:["unlocked apple ipad pro", "unlocked apple ipad pro a3358 11"], price:845.99, source:"sold"},
+  {title:"Blackmagic Pocket Cinema Camera 6K - (DEFECTIVE PORT)", keywords:["blackmagic pocket cinema camera 6k defective", "blackmagic pocket cinema camera"], price:599.99, source:"sold"},
+  {title:"Blackmagic Video Assist 4K - (Monitor Only)", keywords:["blackmagic video assist 4k", "blackmagic video assist 4k monitor"], price:429.99, source:"sold"},
+  {title:"Kingston 32GB 2Rx8 PC4-3200AA-EE1-12 UDIMM Desktop Memory — New Sealed", keywords:["kingston 32gb 2rx8 pc4-3200aa-ee1-12", "kingston 32gb 2rx8 pc4-3200aa-ee1-12 udimm desktop"], price:229.99, source:"sold"},
+  {title:"Lenovo ThinkPad T14 Gen 4 14-inch Core i5 16GB RAM 256GB SSD Gray For Parts", keywords:["lenovo thinkpad t14 gen 14-inch core", "lenovo thinkpad t14 gen"], price:154.99, source:"sold"},
+  {title:"Lenovo ThinkPad T14 Gen 4 14-inch Core i7 16GB RAM 512GB SSD Gray For Parts", keywords:["lenovo thinkpad t14 gen 14-inch core", "lenovo thinkpad t14 gen"], price:179.99, source:"sold"},
+  {title:"Ranxiana S660 M.2 2280 NVMe SSD — 500GB | 100% Health | New Open Box", keywords:["ranxiana s660 m.2 2280 nvme ssd", "ranxiana s660 m.2 2280"], price:49.99, source:"sold"},
+  {title:"Dell Latitude 5400 14-inch Core i5 8th Gen 8GB RAM No SSD Black For Parts", keywords:["dell latitude 5400 14-inch", "dell latitude 5400 14-inch core i5"], price:59.99, source:"sold"},
+  {title:"Seagate Barracuda ST2000DM005 3.5\" SATA HDD — 2000GB (2TB) | 100% Health", keywords:["seagate barracuda st2000dm005 3.5 sata hdd", "seagate barracuda st2000dm005 3.5"], price:34.99, source:"sold"},
+  {title:"Dell Latitude 7420 14-inch Black Untested No Power For Parts", keywords:["dell latitude 7420 14-inch untested no", "dell latitude 7420 14-inch"], price:39.99, source:"sold"},
+  {title:"Samsung PM883 MZ-7LH9600 2.5\" SATA SSD — 960GB | 99% Health", keywords:["samsung pm883 mz-7lh9600 2.5 sata ssd", "samsung pm883 mz-7lh9600 2.5"], price:119.99, source:"sold"},
+  {title:"ASUS ROG Xbox Ally X RC73XA 7\" Ryzen AI Z2 Extreme 24GB 1TB w/ Kill Switch Case", keywords:["asus rog xbox ally rc73xa ryzen", "asus rog xbox ally"], price:949.99, source:"sold"},
+  {title:"AMD Radeon RX 580 8GB OC Card Only", keywords:["amd radeon rx 580", "amd radeon rx 580 8gb oc"], price:58.99, source:"sold"},
+  {title:"Unlocked Apple iPad 7th Gen 10.2-inch A2200 32GB Wi-Fi+Cellular For Parts", keywords:["unlocked apple ipad 7th gen 10.2-inch", "unlocked apple ipad 7th"], price:42.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 12 6.1-inch A2172 128GB BH81% Green", keywords:["unlocked apple iphone 12 6.1-inch a2172", "unlocked apple iphone 12"], price:174.99, source:"sold"},
+  {title:"Blackmagic Pocket Cinema Camera 6K - (STRUCTURAL DAMAGE)", keywords:["blackmagic pocket cinema camera", "blackmagic pocket cinema camera 6k structural"], price:569.99, source:"sold"},
+  {title:"Canon EOS Rebel T7 24.1MP DSLR w/ EF-S 18-55mm IS II Lens", keywords:["canon eos rebel t7", "canon eos rebel t7 24.1mp dslr"], price:269.99, source:"sold"},
+  {title:"Meta Oculus Quest Pro 256GB VR Headset Full Set Complete in Box", keywords:["meta oculus quest pro 256gb vr", "meta oculus quest pro"], price:635.97, source:"sold"},
+  {title:"Unlocked Apple iPhone 14 Pro 6.1-inch A2650 128GB BH77% Deep Purple For Parts", keywords:["unlocked apple iphone 14 pro 6.1-inch", "unlocked apple iphone 14"], price:264.99, source:"sold"},
+  {title:"Dell Precision 5690 16-inch Core Ultra 9 64GB RAM 1TB SSD RTX 3500 Touch Gray", keywords:["dell precision 5690 16-inch", "dell precision 5690 16-inch core ultra"], price:1380.99, source:"sold"},
+  {title:"Seagate Exos X22 ST20000NM004E 3.5\" SATA HDD — 20TB | 0% Health For Parts", keywords:["seagate exos x22 st20000nm004e 3.5 sata", "seagate exos x22 st20000nm004e"], price:79.99, source:"sold"},
+  {title:"Oculus Go All in One VR Headset 64GB MH-A64 Bundle", keywords:["oculus go all one", "oculus go all one vr headset"], price:48.97, source:"sold"},
+  {title:"Apple MacBook Air 13-inch A2681 2022 M2 8GB RAM 256GB SSD Midnight", keywords:["apple macbook air 13-inch", "apple macbook air 13-inch a2681 2022"], price:474.99, source:"sold"},
+  {title:"Apple MacBook Air A1466 2017 13-inch i5 8GB RAM 128GB SSD Silver For Parts", keywords:["apple macbook air a1466", "apple macbook air a1466 2017 13-inch"], price:40.99, source:"sold"},
+  {title:"Milwaukee 2504-20 M12 FUEL 1/2 in Hammer Drill Driver with Battery Used", keywords:["milwaukee 2504-20 m12 fuel", "milwaukee 2504-20 m12 fuel 1/2 hammer"], price:55.00, source:"sold"},
+  {title:"Samsung SCL901 Hi8 Camcorder 22x Zoom Vintage Video Camera Untested", keywords:["samsung scl901 hi8 camcorder", "samsung scl901 hi8 camcorder 22x zoom"], price:31.97, source:"sold"},
+  {title:"Google Nest Hub Max H2A Smart Display Speaker White Store Demo For Parts", keywords:["google nest hub max h2a smart", "google nest hub max"], price:59.99, source:"sold"},
+  {title:"Samsung PM863 MZ-7LM3T80 2.5\" SATA SSD — 3840GB (3.84TB) | 96% Health", keywords:["samsung pm863 mz-7lm3t80 2.5 sata ssd", "samsung pm863 mz-7lm3t80 2.5"], price:289.99, source:"sold"},
+  {title:"Lenovo IdeaPad 3 15IIL05 Intel Core i3-1005G1 8GB 256GB SSD", keywords:["lenovo ideapad 15iil05 intel", "lenovo ideapad 15iil05 intel core i3-1005g1"], price:99.99, source:"sold"},
+  {title:"T-Mobile Samsung Galaxy S25 FE SM-S731U 128GB Jet Black", keywords:["t-mobile samsung galaxy s25", "t-mobile samsung galaxy s25 fe sm-s731u"], price:249.99, source:"sold"},
+  {title:"Western Digital WD Blue WD10EZEX 3.5\" SATA HDD — 1000GB (1TB) | 100% Health", keywords:["western digital wd wd10ezex", "western digital wd wd10ezex 3.5 sata"], price:24.99, source:"sold"},
+  {title:"Dell Precision 5560 Intel Core i7-11850H 32GB RAM 1TB SSD NVIDIA RTX A2000", keywords:["dell precision 5560 intel core i7-11850h", "dell precision 5560 intel"], price:539.99, source:"sold"},
+  {title:"HP OfficeJet 250 Mobile All-in-One Printer Black", keywords:["hp officejet 250 mobile", "hp officejet 250 mobile all-in-one printer"], price:164.99, source:"sold"},
+  {title:"HP ZBook Power 16 G11 Core Ultra 7 165H 32GB RAM 512GB SSD New In Box", keywords:["hp zbook power 16 g11 core", "hp zbook power 16"], price:1199.99, source:"sold"},
+  {title:"Microsoft Surface Pro 7 1866 Intel Core i7-1065G7 16GB RAM 256GB SSD Black", keywords:["microsoft surface pro 1866", "microsoft surface pro 1866 intel core"], price:219.99, source:"sold"},
+  {title:"Amazon 9W OEM USB Power Adapter With Micro-USB cable - New", keywords:["amazon 9w oem usb power adapter", "amazon 9w oem usb"], price:3.99, source:"sold"},
+  {title:"Nintendo Switch HAC-001(-01) 32GB Handheld Game Console", keywords:["nintendo switch hac-001 01 32gb handheld", "nintendo switch hac-001 01"], price:94.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 15 Pro 6.1\" A2848 128GB BH87% Black Titanium", keywords:["unlocked apple iphone 15", "unlocked apple iphone 15 pro 6.1"], price:474.99, source:"sold"},
+  {title:"NVIDIA Quadro P2000 5GB GDDR5 4 Display Port Graphics Card", keywords:["nvidia quadro p2000 5gb", "nvidia quadro p2000 5gb gddr5 display"], price:76.97, source:"sold"},
+  {title:"Microsoft Xbox One 1540 500GB Black Console w/ Controller & Charger", keywords:["microsoft xbox one 1540", "microsoft xbox one 1540 500gb console"], price:64.99, source:"sold"},
+  {title:"Kingston DC600M SEDC600M/480G 2.5\" SATA Enterprise SSD — 480GB | New Sealed", keywords:["kingston dc600m sedc600m/480g 2.5", "kingston dc600m sedc600m/480g 2.5 sata enterprise"], price:199.99, source:"sold"},
+  {title:"2023 Apple MacBook Pro M2 Pro A2780 16\" 12CPU/19GPU 32GB RAM 512GB SSD", keywords:["2023 apple macbook pro m2 pro", "2023 apple macbook pro"], price:1199.99, source:"sold"},
+  {title:"Dell Latitude 7400 i7 8665U 16GB 256GB", keywords:["dell latitude 7400 i7 8665u 16gb", "dell latitude 7400 i7"], price:90.00, source:"sold"},
+  {title:"Dell Latitude 5480 14-inch Core i5 No Power For Parts", keywords:["dell latitude 5480 14-inch", "dell latitude 5480 14-inch core i5"], price:44.99, source:"sold"},
+  {title:"Sony PlayStation 4 PS4 Slim CUH-2115B 1TB Black w/ Controller Only", keywords:["sony playstation ps4 slim", "sony playstation ps4 slim cuh-2115b 1tb"], price:119.99, source:"sold"},
+  {title:"Sony PlayStation 4 PS4 Slim CUH-2215B 1TB Black Video Game Console Only", keywords:["sony playstation ps4 slim", "sony playstation ps4 slim cuh-2215b 1tb"], price:109.99, source:"sold"},
+  {title:"Nintendo Switch HAC-001(-01) 32GB Handheld Console Only", keywords:["nintendo switch hac-001 01 32gb handheld", "nintendo switch hac-001 01"], price:119.99, source:"sold"},
+  {title:"Microsoft Xbox Series S 1883 512GB White w/ Controller Power Cable & HDMI", keywords:["microsoft xbox series 1883", "microsoft xbox series 1883 512gb controller"], price:240.99, source:"sold"},
+  {title:"NVIDIA SHIELD Android TV P2571 16GB Streaming Player w/ Controller & Box only", keywords:["nvidia shield android tv", "nvidia shield android tv p2571 16gb"], price:99.99, source:"sold"},
+  {title:"Lenovo V15 G2 IJL 15.6-inch Celeron N4500 8GB RAM 256GB SSD Black Used", keywords:["lenovo v15 g2 ijl 15.6-inch celeron", "lenovo v15 g2 ijl"], price:110.99, source:"sold"},
+  {title:"Black + Decker 18V Cordless Drill (GC1800) with Battery", keywords:["decker 18v cordless drill gc1800 battery", "decker 18v cordless drill"], price:28.99, source:"sold"},
+  {title:"Lot of 6 Kingston 480GB 2.5\" SATA Enterprise SSD", keywords:["lot kingston 480gb 2.5 sata enterprise", "lot kingston 480gb 2.5"], price:229.99, source:"sold"},
+  {title:"DELL LATITUDE 7420 INTEL CORE I7-1185G7 16GB RAM 512GB SSD w/o Charger", keywords:["dell latitude 7420 intel core i7-1185g7", "dell latitude 7420 intel"], price:209.99, source:"sold"},
+  {title:"HP ProBook 4 G1i 16\" Core Ultra 5 225U 16GB RAM 512GB SSD Silver New In Box", keywords:["hp probook g1i 16 core ultra", "hp probook g1i 16"], price:999.99, source:"sold"},
+  {title:"Apple MacBook Air 13-inch A2681 2022 M2 8GB RAM 256GB SSD For Parts", keywords:["apple macbook air 13-inch", "apple macbook air 13-inch a2681 2022"], price:394.99, source:"sold"},
+  {title:"Microsoft Xbox One S 1681 500GB white with Controller HDMI & Power Cable", keywords:["microsoft xbox one 1681 500gb controller", "microsoft xbox one 1681"], price:110.99, source:"sold"},
+  {title:"Lenovo ThinkPad T14 Gen 3 14\" Core i7 12th Gen 16GB RAM 512GB Thunder Black", keywords:["lenovo thinkpad t14 gen 14 core", "lenovo thinkpad t14 gen"], price:329.99, source:"sold"},
+  {title:"MSI MAG A650BE 650W 80+ Bronze Power Supply with SATA Cables", keywords:["msi mag a650be 650w", "msi mag a650be 650w 80+ bronze"], price:44.44, source:"sold"},
+  {title:"Sony HDR-CX455 Handycam Camcorder 9.2MP 60x Zoom Untested For Parts", keywords:["sony hdr-cx455 handycam camcorder 9.2mp 60x", "sony hdr-cx455 handycam camcorder"], price:92.99, source:"sold"},
+  {title:"Yongnuo SpeedLite YN568EX II TTL Camera Flash Speedlight", keywords:["yongnuo speedlite yn568ex ii", "yongnuo speedlite yn568ex ii ttl camera"], price:34.99, source:"sold"},
+  {title:"Microsoft Surface Laptop 3 14-inch Core i5 10th Gen 8GB 128GB", keywords:["microsoft surface laptop 14-inch", "microsoft surface laptop 14-inch core i5"], price:119.99, source:"sold"},
+  {title:"Zebra ZQ630 Mobile Bluetooth Direct Thermal Printer Black Used", keywords:["zebra zq630 mobile bluetooth", "zebra zq630 mobile bluetooth direct thermal"], price:219.99, source:"sold"},
+  {title:"Invid Tech PAR-ALLTXIRA28 Security Camera - White - New Open Box", keywords:["invid tech par-alltxira28 security camera", "invid tech par-alltxira28 security"], price:38.97, source:"sold"},
+  {title:"2023 Apple MacBook Pro 14-inch A2779 M2 Pro 16GB RAM 512GB SSD Space Gray", keywords:["2023 apple macbook pro 14-inch a2779", "2023 apple macbook pro"], price:889.99, source:"sold"},
+  {title:"Parasound HCA-2205A 5-Channel THX High Current Power Amplifier", keywords:["parasound hca-2205a 5-channel thx", "parasound hca-2205a 5-channel thx high current"], price:624.99, source:"sold"},
+  {title:"AT&T Google Pixel 7 GVU6C 6.3\" 128GB Obsidian", keywords:["at google pixel gvu6c 6.3 128gb", "at google pixel gvu6c"], price:105.00, source:"sold"},
+  {title:"T-Mobile Samsung Galaxy S25 FE SM-S731U 128GB Black", keywords:["t-mobile samsung galaxy s25", "t-mobile samsung galaxy s25 fe sm-s731u"], price:259.99, source:"sold"},
+  {title:"ASUS ROG Strix Radeon RX 5700 XT 8GB Gaming Graphics Card", keywords:["asus rog strix radeon", "asus rog strix radeon rx 5700"], price:150.99, source:"sold"},
+  {title:"Logitech Brio 4K Ultra HD Webcam V-U0040 w/ Box", keywords:["logitech brio 4k ultra hd webcam", "logitech brio 4k ultra"], price:44.99, source:"sold"},
+  {title:"Sony PlayStation 5 Disc Edition CFI-1015A with Controller Power Cable & HDMI", keywords:["sony playstation disc edition", "sony playstation disc edition cfi-1015a controller"], price:449.99, source:"sold"},
+  {title:"Crucial P1 CT500P1SSD8 NVMe M.2 2280 500GB — 5% Health", keywords:["crucial p1 ct500p1ssd8 nvme", "crucial p1 ct500p1ssd8 nvme m.2 2280"], price:24.99, source:"sold"},
+  {title:"Sony Alpha a6100 24.2MP Mirrorless Camera w/ 16-50mm Lens New Open Box", keywords:["sony alpha a6100 24.2mp", "sony alpha a6100 24.2mp mirrorless camera"], price:699.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 12 6.1\" A2172 256GB Black BH74% For Parts", keywords:["unlocked apple iphone 12 6.1 a2172", "unlocked apple iphone 12"], price:144.99, source:"sold"},
+  {title:"Treblab HD77 Waterproof Bluetooth Speaker New", keywords:["treblab hd77 waterproof bluetooth speaker", "treblab hd77 waterproof bluetooth"], price:39.99, source:"sold"},
+  {title:"HP 15-fd0132wm Intel Core i3-N305 8GB RAM 256GB Gray w/ Charger", keywords:["hp 15-fd0132wm intel core i3-n305 8gb", "hp 15-fd0132wm intel core"], price:164.99, source:"sold"},
+  {title:"Samsung Flip WM55R 55\" 4K UHD Interactive Touchscreen Display White", keywords:["samsung flip wm55r 55", "samsung flip wm55r 55 4k uhd"], price:751.97, source:"sold"},
+  {title:"Samsung PM983 MZ-1LB3T80 M.2 22110 NVMe SSD — 3840GB (3.84TB) | 100% Health", keywords:["samsung pm983 mz-1lb3t80 m.2", "samsung pm983 mz-1lb3t80 m.2 22110 nvme"], price:299.99, source:"sold"},
+  {title:"Samsung SSD 980 (MZ-V8V1T0) 1000GB (1TB) NVMe M.2 SSD - 87% Health", keywords:["samsung ssd 980 mz-v8v1t0", "samsung ssd 980 mz-v8v1t0 1000gb 1tb"], price:134.99, source:"sold"},
+  {title:"2022 Apple MacBook Air 13-inch A2681 M2 8GB RAM 256GB SSD Midnight For Parts", keywords:["2022 apple macbook air 13-inch a2681", "2022 apple macbook air"], price:394.99, source:"sold"},
+  {title:"Samsung 980 Pro MZ-V8P2T0 M.2 2280 NVMe SSD — 2000GB (2TB) | For Parts", keywords:["samsung 980 pro mz-v8p2t0", "samsung 980 pro mz-v8p2t0 m.2 2280"], price:109.99, source:"sold"},
+  {title:"Dell EMC MTFDDAV240TDU 2.5\" SATA SSD — 240GB | For Parts (Lot of 8)", keywords:["dell emc mtfddav240tdu 2.5", "dell emc mtfddav240tdu 2.5 sata ssd"], price:59.99, source:"sold"},
+  {title:"Sony LBT-GPX77 Reciever w/Sony Speaker SS-GPX77 Pair", keywords:["sony lbt-gpx77 reciever w/sony speaker ss-gpx77", "sony lbt-gpx77 reciever w/sony"], price:399.99, source:"sold"},
+  {title:"Dell Inspiron 15 3510 15.6-inch Celeron N4020 4GB RAM 128GB SSD Gray For Parts", keywords:["dell inspiron 15 3510 15.6-inch celeron", "dell inspiron 15 3510"], price:40.99, source:"sold"},
+  {title:"Crucial P1 CT500P1SSD8 M.2 2280 NVMe SSD — 500GB | 100% Health", keywords:["crucial p1 ct500p1ssd8 m.2", "crucial p1 ct500p1ssd8 m.2 2280 nvme"], price:29.99, source:"sold"},
+  {title:"Apple iPad A16 11th Gen 11-inch A3354 128GB BH98% Wi-Fi Only Blue", keywords:["apple ipad a16 11th gen 11-inch", "apple ipad a16 11th"], price:249.99, source:"sold"},
+  {title:"Unlocked Samsung Galaxy S24 SM-S921U 128GB Cobalt Violet", keywords:["unlocked samsung galaxy s24 sm-s921u 128gb", "unlocked samsung galaxy s24"], price:279.99, source:"sold"},
+  {title:"Kingston KC3000 SKC3000S/512G M.2 2280 NVMe SSD — 512GB | 100% Health", keywords:["kingston kc3000 skc3000s/512g m.2", "kingston kc3000 skc3000s/512g m.2 2280 nvme"], price:49.99, source:"sold"},
+  {title:"Apple iPad Pro 11-inch 4th Gen A2759 M2 128GB Wi-Fi Only Silver", keywords:["apple ipad pro 11-inch 4th gen", "apple ipad pro 11-inch"], price:299.99, source:"sold"},
+  {title:"Milwaukee (48-59-2401) M12 Charger & Battery Bundle", keywords:["milwaukee 48-59-2401 m12 charger battery bundle", "milwaukee 48-59-2401 m12 charger"], price:28.99, source:"sold"},
+  {title:"Kingston KC2500 SKC2500M8/1000G M.2 2280 NVMe SSD — 1000GB (1TB) | 100% Health", keywords:["kingston kc2500 skc2500m8/1000g m.2 2280 nvme", "kingston kc2500 skc2500m8/1000g m.2"], price:109.99, source:"sold"},
+  {title:"Intel SSD 760p SSDPEKKW512GB M.2 2280 NVMe SSD — 512GB | 20% Health", keywords:["intel ssd 760p ssdpekkw512gb", "intel ssd 760p ssdpekkw512gb m.2 2280"], price:24.99, source:"sold"},
+  {title:"Gigabyte GeForce RTX 4060 Gaming OC 8GB Used", keywords:["gigabyte geforce rtx 4060", "gigabyte geforce rtx 4060 gaming oc"], price:264.99, source:"sold"},
+  {title:"Elinchrom ELC 500 TTL Dual Monolight Studio Flash Kit", keywords:["elinchrom elc 500 ttl", "elinchrom elc 500 ttl dual monolight"], price:749.99, source:"sold"},
+  {title:"Super Mario Bros 3 Nintendo NES Cartridge with Sleeve", keywords:["super mario bros nintendo", "super mario bros nintendo nes cartridge"], price:25.97, source:"sold"},
+  {title:"Donkey Kong Classics Nintendo NES Cartridge with Sleeve", keywords:["donkey kong classics nintendo", "donkey kong classics nintendo nes cartridge"], price:24.97, source:"sold"},
+  {title:"Microsoft Surface 2 1572 Windows RT 32GB 10.6\" Silver - NO OS", keywords:["microsoft surface 1572 windows rt 32gb", "microsoft surface 1572 windows"], price:28.00, source:"sold"},
+  {title:"Acer Aspire 5 N20C5 15.6-inch Core i3 4GB RAM 128GB SSD No Boot For Parts", keywords:["acer aspire n20c5 15.6-inch", "acer aspire n20c5 15.6-inch core i3"], price:59.99, source:"sold"},
+  {title:"2022 Apple MacBook Air A2681 M2 13.6-inch 16GB RAM 256GB SSD Space Gray", keywords:["2022 apple macbook air", "2022 apple macbook air a2681 m2"], price:599.99, source:"sold"},
+  {title:"Crucial MX500 CT2000MX500SSD1 2.5\" SATA SSD — 2000GB (2TB) | 46% Health", keywords:["crucial mx500 ct2000mx500ssd1 2.5", "crucial mx500 ct2000mx500ssd1 2.5 sata ssd"], price:109.99, source:"sold"},
+  {title:"2022 Apple MacBook Pro M2 8C CPU 10C GPU 8GB RAM 256GB SSD A2338", keywords:["2022 apple macbook pro m2 8c", "2022 apple macbook pro"], price:452.97, source:"sold"},
+  {title:"Apple iPhone 12 A2172 64GB Product Red - For Parts Bad Display", keywords:["apple iphone 12 a2172", "apple iphone 12 a2172 64gb product"], price:69.99, source:"sold"},
+  {title:"Apple Watch Series 11 A3333 46mm Silver Aluminum GPS Only", keywords:["apple watch series 11", "apple watch series 11 a3333 46mm"], price:229.99, source:"sold"},
+  {title:"Apple iPad mini 5 A2133 7.9\" 64GB Silver Wi-Fi Only", keywords:["apple ipad mini a2133", "apple ipad mini a2133 7.9 64gb"], price:129.99, source:"sold"},
+  {title:"Sony PlayStation 5 Disc Edition CFI-1015A 825GB White with Controller only", keywords:["sony playstation disc edition", "sony playstation disc edition cfi-1015a 825gb"], price:434.99, source:"sold"},
+  {title:"Sony PlayStation 5 Disc Edition CFI-1215A with Controller Power Cable & HDMI", keywords:["sony playstation disc edition cfi-1215a controller", "sony playstation disc edition"], price:449.99, source:"sold"},
+  {title:"WD Green WDS240G2G1A 2.5\" SATA SSD — 240GB | 92% Health", keywords:["wd wds240g2g1a 2.5 sata", "wd wds240g2g1a 2.5 sata ssd 240gb"], price:24.99, source:"sold"},
+  {title:"Beats Solo 4 Wireless On-Ear Bluetooth Headphones Matte Black", keywords:["beats solo wireless on-ear bluetooth headphones", "beats solo wireless on-ear"], price:68.99, source:"sold"},
+  {title:"Apple MacBook Air 13.6\" A3113 2024 M3 8GB 256GB SSD Midnight", keywords:["apple macbook air 13.6", "apple macbook air 13.6 a3113 2024"], price:475.00, source:"sold"},
+  {title:"Apple AirPods 4 ANC A3055 A3056 A3059 White New In Box", keywords:["apple airpods anc a3055", "apple airpods anc a3055 a3056 a3059"], price:110.99, source:"sold"},
+  {title:"Apple AirPods Max Lightning A2096 Space With Smart Case Space Gray", keywords:["apple airpods max lightning a2096 space", "apple airpods max lightning"], price:204.99, source:"sold"},
+  {title:"Unlocked Apple Watch Series 5 GPS+Cellular 44mm Space Black", keywords:["unlocked apple watch series", "unlocked apple watch series gps+cellular 44mm"], price:59.99, source:"sold"},
+  {title:"ASUS Chromebook CXB170CK 17.3\" Celeron N4500 4GB RAM 32GB Silver", keywords:["asus chromebook cxb170ck 17.3", "asus chromebook cxb170ck 17.3 celeron n4500"], price:144.99, source:"sold"},
+  {title:"HP 15-fd0083wm 15.6-inch Intel N200 4GB RAM 128GB SSD Silver w/ Charger", keywords:["hp 15-fd0083wm 15.6-inch intel", "hp 15-fd0083wm 15.6-inch intel n200 4gb"], price:139.99, source:"sold"},
+  {title:"WD Black SN750 WDS200T3X0C M.2 2280 NVMe SSD — 2000GB (2TB) | 1% Health", keywords:["wd sn750 wds200t3x0c m.2", "wd sn750 wds200t3x0c m.2 2280 nvme"], price:99.99, source:"sold"},
+  {title:"Apple iPod Touch 4th Generation A1367 16GB Cracked Screen For Parts", keywords:["apple ipod touch 4th", "apple ipod touch 4th generation a1367"], price:14.99, source:"sold"},
+  {title:"Canon EOS Rebel T6 DSLR w/ 18-55mm IS II Lens Macro Lens & Flash", keywords:["canon eos rebel t6", "canon eos rebel t6 dslr 18-55mm"], price:150.99, source:"sold"},
+  {title:"Microsoft Xbox One S 1681 500GB White Console with Controller & HDMI Cable", keywords:["microsoft xbox one 1681 500gb console", "microsoft xbox one 1681"], price:109.99, source:"sold"},
+  {title:"AT&T Apple iPhone 16 Pro Max A3084 256GB BH93% Desert Titanium", keywords:["at apple iphone 16", "at apple iphone 16 pro max"], price:574.99, source:"sold"},
+  {title:"Apple 85W MagSafe 2 Power Adapter A1424 MD506LL/A New", keywords:["apple 85w magsafe power", "apple 85w magsafe power adapter a1424"], price:35.99, source:"sold"},
+  {title:"Apple MacBook Air 13-inch A1466 Early 2014 Core i5 4GB RAM 128GB SSD Silver", keywords:["apple macbook air 13-inch", "apple macbook air 13-inch a1466 early"], price:69.99, source:"sold"},
+  {title:"2019 Apple MacBook Pro 13\" i5 8GB RAM 256GB SSD Touch Bar A2159", keywords:["2019 apple macbook pro", "2019 apple macbook pro 13 i5"], price:199.99, source:"sold"},
+  {title:"MSI MPG Z390 Gaming Plus LGA1151 ATX Motherboard w/ Intel Core i7-9700K, 16GB RAM", keywords:["msi mpg z390 gaming plus lga1151", "msi mpg z390 gaming"], price:149.99, source:"sold"},
+  {title:"Samsung 850 EVO MZ-75E250 250GB 2.5\" SATA III Internal SSD (79% Health)", keywords:["samsung 850 evo mz-75e250", "samsung 850 evo mz-75e250 250gb 2.5"], price:19.99, source:"sold"},
+  {title:"Zotac Gaming GeForce RTX 3060 Ti Twin Edge 8GB GDDR6 Graphics Card", keywords:["zotac gaming geforce rtx 3060 ti", "zotac gaming geforce rtx"], price:209.99, source:"sold"},
+  {title:"NVIDIA GeForce GTX 1660 Ti 6GB GDDR6 Graphics Card", keywords:["nvidia geforce gtx 1660 ti 6gb", "nvidia geforce gtx 1660"], price:109.99, source:"sold"},
+  {title:"Dell Precision 5570 Intel Core i7-12800H 32GB RAM 1TB SSD NVIDIA RTX A2000", keywords:["dell precision 5570 intel core i7-12800h", "dell precision 5570 intel"], price:699.99, source:"sold"},
+  {title:"Apple MacBook Pro A2159 2019 i5 8GB RAM 128GB SSD Space Gray For Parts", keywords:["apple macbook pro a2159 2019 i5", "apple macbook pro a2159"], price:84.99, source:"sold"},
+  {title:"AMD Ryzen 5 3600 100-000000031BF Socket AM4 6-Core CPU", keywords:["amd ryzen 3600 100-000000031bf", "amd ryzen 3600 100-000000031bf socket am4"], price:64.99, source:"sold"},
+  {title:"Apple iPod Nano 4th Generation A1285 MP3 Player", keywords:["apple ipod nano 4th", "apple ipod nano 4th generation a1285"], price:44.99, source:"sold"},
+  {title:"AT&T Apple iPhone 16 Pro Max A3084 512GB BH94% Natural Titanium", keywords:["at apple iphone 16", "at apple iphone 16 pro max"], price:609.99, source:"sold"},
+  {title:"Lenovo ThinkPad X1 Carbon Gen 9 Intel Core i7-1165G7 16GB RAM 1TB SSD Black", keywords:["lenovo thinkpad x1 carbon gen intel", "lenovo thinkpad x1 carbon"], price:334.99, source:"sold"},
+  {title:"Beats Solo4 Wireless On-Ear Bluetooth Headphones Slate Blue", keywords:["beats solo4 wireless on-ear", "beats solo4 wireless on-ear bluetooth headphones"], price:64.99, source:"sold"},
+  {title:"Sony PlayStation 5 Pro CFI-7019 2TB White w/ Controller HDMI & Power Cable", keywords:["sony playstation pro cfi-7019 2tb controller", "sony playstation pro cfi-7019"], price:809.99, source:"sold"},
+  {title:"Casio XJ-A142 LampFree DLP Projector XGA HDMI VGA 2500 Lumens", keywords:["casio xj-a142 lampfree dlp", "casio xj-a142 lampfree dlp projector xga"], price:84.97, source:"sold"},
+  {title:"Gigabyte B450M DS3H WiFi AM4 Micro-ATX Motherboard", keywords:["gigabyte b450m ds3h wifi am4 micro-atx", "gigabyte b450m ds3h wifi"], price:59.99, source:"sold"},
+  {title:"T-Mobile Apple iPhone 13 A2482 128GB BH79% Blue Cracked For Parts", keywords:["t-mobile apple iphone 13 a2482 128gb", "t-mobile apple iphone 13"], price:104.99, source:"sold"},
+  {title:"Western Digital WD Caviar Black WD1002FAEX 1TB SATA HDD 64MB Cache", keywords:["western digital wd caviar wd1002faex 1tb", "western digital wd caviar"], price:18.99, source:"sold"},
+  {title:"Kingston DC500R SEDC500R/1920G 2.5\" SATA SSD — 1920GB (1.92TB) | 100% Health", keywords:["kingston dc500r sedc500r/1920g 2.5 sata ssd", "kingston dc500r sedc500r/1920g 2.5"], price:189.99, source:"sold"},
+  {title:"Lenovo ThinkPad X1 Carbon Gen 9 Intel Core i7-1185G7 16GB RAM 512GB SSD Black", keywords:["lenovo thinkpad x1 carbon gen intel", "lenovo thinkpad x1 carbon"], price:349.99, source:"sold"},
+  {title:"KingFast F10 2710DCS23BF 1TB 2.5\" SATA III Internal SSD", keywords:["kingfast f10 2710dcs23bf 1tb", "kingfast f10 2710dcs23bf 1tb 2.5 sata"], price:79.99, source:"sold"},
+  {title:"Micron Crucial 5200 (MTFDDAK960TDC) ECO 2.5 960GB SATA SSD - 80-100% Health", keywords:["micron crucial 5200 mtfddak960tdc", "micron crucial 5200 mtfddak960tdc eco 2.5"], price:129.99, source:"sold"},
+  {title:"Apple MacBook Pro 13\" A2338 M1 2020 8GB 256GB Space Gray For Parts", keywords:["apple macbook pro 13", "apple macbook pro 13 a2338 m1"], price:154.99, source:"sold"},
+  {title:"Electro-Voice EV 7100 1U Stereo Power Amplifier", keywords:["electro-voice ev 7100 1u stereo power", "electro-voice ev 7100 1u"], price:86.97, source:"sold"},
+  {title:"Bauer 19117C-B 20V Hypermax Cordless Power Tool Red Tool Only", keywords:["bauer 19117c-b 20v hypermax cordless power", "bauer 19117c-b 20v hypermax"], price:19.99, source:"sold"},
+  {title:"Gigabyte GA-A320M-S2H AM4 Motherboard w/ Ryzen 3 2200G, 8GB RAM", keywords:["gigabyte ga-a320m-s2h am4 motherboard", "gigabyte ga-a320m-s2h am4 motherboard ryzen 2200g"], price:79.99, source:"sold"},
+  {title:"Plaud NotePin AI Voice Recorder 64GB Gray", keywords:["plaud notepin ai voice", "plaud notepin ai voice recorder 64gb"], price:74.99, source:"sold"},
+  {title:"Dell 32GB DDR5 5600MHz 2Rx8 SODIMM RAM Used", keywords:["dell 32gb ddr5 5600mhz", "dell 32gb ddr5 5600mhz 2rx8 sodimm"], price:349.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 11 Pro Max A2161 256GB Space Gray- For Parts No Power", keywords:["unlocked apple iphone 11 pro max", "unlocked apple iphone 11"], price:99.99, source:"sold"},
+  {title:"Behringer U-Phoria UMC202HD 2-Channel USB Audio Interface Untested", keywords:["behringer u-phoria umc202hd 2-channel usb audio", "behringer u-phoria umc202hd 2-channel"], price:34.99, source:"sold"},
+  {title:"Corsair CX500 500W 80 PLUS Bronze Non-Modular Power Supply", keywords:["corsair cx500 500w 80 plus bronze", "corsair cx500 500w 80"], price:29.99, source:"sold"},
+  {title:"Lenovo ThinkBook 14 G4 IAP Intel Core i5-1235U 16GB RAM 512GB SSD Gray", keywords:["lenovo thinkbook 14 g4", "lenovo thinkbook 14 g4 iap intel"], price:229.99, source:"sold"},
+  {title:"Intel Core i9-10900K SRH91 LGA1200 Desktop CPU — 3.70GHz 10-Core", keywords:["intel core i9-10900k srh91", "intel core i9-10900k srh91 lga1200 desktop"], price:275.49, source:"sold"},
+  {title:"Micron 5200 ECO MTFDDAK480TDC 2.5\" SATA SSD — 480GB | 99% Health", keywords:["micron 5200 eco mtfddak480tdc 2.5 sata", "micron 5200 eco mtfddak480tdc"], price:49.99, source:"sold"},
+  {title:"CyberPower CP1500AVRLCD3 UPS Battery Backup 1500VA 900W Black", keywords:["cyberpower cp1500avrlcd3 ups battery", "cyberpower cp1500avrlcd3 ups battery backup 1500va"], price:114.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 14 Pro A2650 128GB BH81% Deep Purple", keywords:["unlocked apple iphone 14", "unlocked apple iphone 14 pro a2650"], price:354.99, source:"sold"},
+  {title:"MUNBYN IMC01 Money Counter Machine", keywords:["munbyn imc01 money counter", "munbyn imc01 money counter machine"], price:199.99, source:"sold"},
+  {title:"Apple AirPods Max USB-C A3184 Blue Over-Ear Wireless Headphones", keywords:["apple airpods max usb-c", "apple airpods max usb-c a3184 over-ear"], price:199.99, source:"sold"},
+  {title:"Samsung 850 EVO MZ-75E250 250GB 2.5\" SATA III Internal SSD", keywords:["samsung 850 evo mz-75e250", "samsung 850 evo mz-75e250 250gb 2.5"], price:24.99, source:"sold"},
+  {title:"Meta Oculus Rift S PC Powered VR Gaming Headset", keywords:["meta oculus rift pc powered vr", "meta oculus rift pc"], price:110.99, source:"sold"},
+  {title:"Blackmagic Pocket Cinema Camera 6K Pro - Body Only (DEFECTIVE ND FILTER)", keywords:["blackmagic pocket cinema camera 6k pro", "blackmagic pocket cinema camera"], price:900.00, source:"sold"},
+  {title:"Sony PlayStation 5 Slim Digital CFI-2015 1TB w/ Controller & Power Cable Only", keywords:["sony playstation slim digital", "sony playstation slim digital cfi-2015 1tb"], price:414.99, source:"sold"},
+  {title:"AT&T Apple iPhone 13 Pro Max A2484 128GB BH86% Silver", keywords:["at apple iphone 13 pro max", "at apple iphone 13"], price:264.99, source:"sold"},
+  {title:"HGST (HTS725050A7E630) 500GB SATA 7200RPM FOR PARTS", keywords:["hgst hts725050a7e630 500gb sata", "hgst hts725050a7e630 500gb sata 7200rpm parts"], price:5.99, source:"sold"},
+  {title:"Dell Latitude 5420 14-inch Intel Core i5-1135G7 16GB RAM 512GB SSD Gray", keywords:["dell latitude 5420 14-inch intel core", "dell latitude 5420 14-inch"], price:169.99, source:"sold"},
+  {title:"Anker Nebula Cosmos Laser 4K Projector D2350 Gray", keywords:["anker nebula cosmos laser", "anker nebula cosmos laser 4k projector"], price:649.99, source:"sold"},
+  {title:"Western Digital My Passport Black WDBPKJ0040BBK 4TB External Hard Drive", keywords:["western digital my passport wdbpkj0040bbk 4tb", "western digital my passport"], price:59.99, source:"sold"},
+  {title:"Microsoft Xbox One 1540 500GB Black Console w/ HDMI & Charger", keywords:["microsoft xbox one 1540", "microsoft xbox one 1540 500gb console"], price:55.99, source:"sold"},
+  {title:"AT&T Apple iPhone 14 Pro Max A2651 256GB BH96% Gold", keywords:["at apple iphone 14", "at apple iphone 14 pro max"], price:434.99, source:"sold"},
+  {title:"2024 Apple MacBook Pro 14-inch A3112 M4 16GB RAM 512GB SSD BH100% Space Black", keywords:["2024 apple macbook pro", "2024 apple macbook pro 14-inch a3112"], price:1149.99, source:"sold"},
+  {title:"Asus ROG STRIX X870E Gaming WIFI7 R2/USBC Motherboard – New In Box", keywords:["asus rog strix x870e", "asus rog strix x870e gaming wifi7"], price:384.97, source:"sold"},
+  {title:"Nintendo Switch HAC-001(-01) 32GB Black with Joy-Cons & Box", keywords:["nintendo switch hac-001 01 32gb joy-cons", "nintendo switch hac-001 01"], price:134.99, source:"sold"},
+  {title:"Apple iPad 6th Gen A1893 32GB Gold WiFi Only", keywords:["apple ipad 6th gen", "apple ipad 6th gen a1893 32gb"], price:68.00, source:"sold"},
+  {title:"Sony PlayStation Portal CFI-Y1001 Remote Player 8-inch White", keywords:["sony playstation portal cfi-y1001 remote player", "sony playstation portal cfi-y1001"], price:130.99, source:"sold"},
+  {title:"AceMagic Mini PC AMD Ryzen 7 5000 Series 16GB RAM 512GB SSD — For Parts", keywords:["acemagic mini pc amd ryzen 5000", "acemagic mini pc amd"], price:54.99, source:"sold"},
+  {title:"Lexar E Series microSDXC UHS-I 64GB — 3-Pack with SD Adapter | New Sealed", keywords:["lexar series microsdxc uhs-i 64gb 3-pack", "lexar series microsdxc uhs-i"], price:24.99, source:"sold"},
+  {title:"ASUS TUF Gaming F16 FX608JH-SS53 16\" i5-13450HX RTX 5050 16GB 512GB SSD", keywords:["asus tuf gaming f16", "asus tuf gaming f16 fx608jh-ss53 16"], price:990.99, source:"sold"},
+  {title:"Apple MacBook Pro 14\" M5 16GB RAM 1TB SSD Space Black", keywords:["apple macbook pro 14", "apple macbook pro 14 m5 16gb"], price:1449.99, source:"sold"},
+  {title:"Gaming Desktop Ryzen 5 5600X 32GB DDR4 RTX 3060 12GBVRAM/ Power Cable", keywords:["gaming desktop ryzen 5600x", "gaming desktop ryzen 5600x 32gb ddr4"], price:699.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 16 Pro A3083 128GB BH99% Desert Titanium", keywords:["unlocked apple iphone 16 pro a3083", "unlocked apple iphone 16"], price:634.99, source:"sold"},
+  {title:"Verizon Motorola One 5G UW Ace 64GB Volcanic Gray", keywords:["verizon motorola one 5g", "verizon motorola one 5g uw ace"], price:30.00, source:"sold"},
+  {title:"Sony PlayStation 5 Disc Edition CFI-1115A 825GB w/ Controller HDMI & Power Cable", keywords:["sony playstation disc edition", "sony playstation disc edition cfi-1115a 825gb"], price:454.99, source:"sold"},
+  {title:"Ray-Ban Meta Headliner Gen 2 RW4013F Shiny Black Green Lens with Case", keywords:["ray-ban meta headliner gen", "ray-ban meta headliner gen rw4013f shiny"], price:260.00, source:"sold"},
+  {title:"Nintendo Switch HAC-001 Console Joy-Cons Stick Drift- For Parts", keywords:["nintendo switch hac-001 console", "nintendo switch hac-001 console joy-cons stick"], price:74.99, source:"sold"},
+  {title:"Western Digital WD_BLACK WDS400T2X0E M.2 SN850X 4TB NVMe SSD - 35% Health", keywords:["western digital wd wds400t2x0e m.2 sn850x", "western digital wd wds400t2x0e"], price:320.00, source:"sold"},
+  {title:"Fluke 3000 FC / v3000 FC Wireless Multimeter Combo Kit", keywords:["fluke 3000 fc v3000 fc wireless", "fluke 3000 fc v3000"], price:189.99, source:"sold"},
+  {title:"Acer Aspire 5 N19C3 Ryzen 3 3200U 4GB RAM 128GB SSD Silver w/ Mouse & Charger", keywords:["acer aspire n19c3 ryzen 3200u 4gb", "acer aspire n19c3 ryzen"], price:119.99, source:"sold"},
+  {title:"Nintendo Switch HAC-001 32GB Handheld Home Console w/Dock Charger & HDMI", keywords:["nintendo switch hac-001 32gb handheld home", "nintendo switch hac-001 32gb"], price:144.99, source:"sold"},
+  {title:"Western Digital WD Caviar Blue WD6400AAKS 640GB 3.5\" SATA HDD", keywords:["western digital wd caviar wd6400aaks 640gb", "western digital wd caviar"], price:14.99, source:"sold"},
+  {title:"Dell Precision 5690 Core Ultra 9 185H 64GB 1TB SSD RTX A3500 For Parts", keywords:["dell precision 5690 core", "dell precision 5690 core ultra 185h"], price:949.99, source:"sold"},
+  {title:"Intel Core i7-3770 SR0PK 3.40GHz LGA1155 Quad-Core Desktop CPU", keywords:["intel core i7-3770 sr0pk 3.40ghz lga1155", "intel core i7-3770 sr0pk"], price:34.99, source:"sold"},
+  {title:"Zotac Gaming GeForce RTX 5060 AMP 8GB GDDR7 128-Bit Graphics Card", keywords:["zotac gaming geforce rtx 5060 amp", "zotac gaming geforce rtx"], price:309.99, source:"sold"},
+  {title:"Sony PlayStation 5 Slim Digital CFI-2015 1TB White w/ Controller & Accessories", keywords:["sony playstation slim digital", "sony playstation slim digital cfi-2015 1tb"], price:474.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 13 A2482 128GB BH84% Midnight", keywords:["unlocked apple iphone 13 a2482 128gb", "unlocked apple iphone 13"], price:214.99, source:"sold"},
+  {title:"Unlocked Apple Watch Series 11 A3337 GPS+Cellular 46mm Jet Black", keywords:["unlocked apple watch series", "unlocked apple watch series 11 a3337"], price:239.99, source:"sold"},
+  {title:"HP Chromebook 11 G9 EE 11.6\" Celeron N4120 8GB 32GB Black For Parts", keywords:["hp chromebook 11 g9", "hp chromebook 11 g9 ee 11.6"], price:35.99, source:"sold"},
+  {title:"Dell Latitude 5420 Rugged 14\" FHD i7-8650U 16GB 256GB SSD For Parts", keywords:["dell latitude 5420 rugged 14 fhd", "dell latitude 5420 rugged"], price:219.99, source:"sold"},
+  {title:"Sony PlayStation 4 CUH-2115B 1TB w/ Controller & Power Cable", keywords:["sony playstation cuh-2115b 1tb", "sony playstation cuh-2115b 1tb controller power"], price:129.99, source:"sold"},
+  {title:"Ray-Ban Meta Wayfarer Gen 2 RW4012 Shiny Black Green Lens with Case", keywords:["ray-ban meta wayfarer gen rw4012 shiny", "ray-ban meta wayfarer gen"], price:289.99, source:"sold"},
+  {title:"Unlocked Apple Watch Series 11 A3335 GPS+Cellular 42mm Rose Gold", keywords:["unlocked apple watch series", "unlocked apple watch series 11 a3335"], price:214.99, source:"sold"},
+  {title:"Ray-Ban Meta Skyler Gen 2 RW4014 Shiny Black with Case", keywords:["ray-ban meta skyler gen", "ray-ban meta skyler gen rw4014 shiny"], price:269.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 14 Pro A2650 128GB BH88% Space Black", keywords:["unlocked apple iphone 14", "unlocked apple iphone 14 pro a2650"], price:414.99, source:"sold"},
+  {title:"Microsoft Xbox One S 1681 500GB White Console w/Controller & Power Cable", keywords:["microsoft xbox one 1681 500gb console", "microsoft xbox one 1681"], price:119.99, source:"sold"},
+  {title:"US MetroPCS Apple iPhone 13 A2482 128GB 100% BH Midnight w/ Box", keywords:["us metropcs apple iphone", "us metropcs apple iphone 13 a2482"], price:199.47, source:"sold"},
+  {title:"Micron 32GB EC4 DDR4 UDIMM 2Rx8 PC5-5600B RAM", keywords:["micron 32gb ec4 ddr4", "micron 32gb ec4 ddr4 udimm 2rx8"], price:349.99, source:"sold"},
+  {title:"Shure MV7 Dynamic Cardioid USB/XLR PodCast Microphone Only", keywords:["shure mv7 dynamic cardioid usb/xlr podcast", "shure mv7 dynamic cardioid"], price:89.99, source:"sold"},
+  {title:"AT&T Apple iPhone 16 Pro Max 256GB A3084 BH93% Desert Titanium", keywords:["at apple iphone 16", "at apple iphone 16 pro max"], price:624.97, source:"sold"},
+  {title:"Dell OptiPlex 3070 Micro Intel Core i5 (9th Gen) 8GB RAM 128GB - Untested", keywords:["dell optiplex 3070 micro", "dell optiplex 3070 micro intel core"], price:89.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 11 A2111 64GB Red Cracked Screen- For Parts", keywords:["unlocked apple iphone 11", "unlocked apple iphone 11 a2111 64gb"], price:89.99, source:"sold"},
+  {title:"Samsung 990 EVO Plus MZ-V9S4T0 4TB NVMe SSD — For Parts, Does Not Read", keywords:["samsung 990 evo plus", "samsung 990 evo plus mz-v9s4t0 4tb"], price:189.99, source:"sold"},
+  {title:"Atari Console with Controllers — Untested, Sold As-Is", keywords:["atari console controllers untested", "atari console controllers untested sold as-is"], price:59.99, source:"sold"},
+  {title:"2024 Apple MacBook Air 13-inch A3113 M3 8GB RAM 256GB SSD Space Gray", keywords:["2024 apple macbook air 13-inch a3113", "2024 apple macbook air"], price:639.99, source:"sold"},
+  {title:"Apple iPad 10th Gen A2696 64GB Silver Wi-Fi Only", keywords:["apple ipad 10th gen", "apple ipad 10th gen a2696 64gb"], price:254.99, source:"sold"},
+  {title:"Lot of (3) Western Digital WD SN750 WDS500G1B0C 500GB M.2 2280 NVMe SSD — 0% Health", keywords:["lot western digital wd", "lot western digital wd sn750 wds500g1b0c"], price:49.99, source:"sold"},
+  {title:"Apple iPad mini 5 A2126 64GB Wi-Fi+Cellular Unlocked Space Gray", keywords:["apple ipad mini a2126 64gb wi-fi+cellular", "apple ipad mini a2126"], price:109.99, source:"sold"},
+  {title:"Western Digital WD_BLACK SN770 WDS200T3X0E 2TB NVMe SSD — For Parts", keywords:["western digital wd sn770 wds200t3x0e 2tb", "western digital wd sn770"], price:99.99, source:"sold"},
+  {title:"Logitech C920 HD 1080p USB Webcam VU0060", keywords:["logitech c920 hd 1080p usb webcam", "logitech c920 hd 1080p"], price:24.99, source:"sold"},
+  {title:"Canon EF 50mm f/1.8 STM Lens Black", keywords:["canon ef 50mm f/1.8", "canon ef 50mm f/1.8 stm lens"], price:124.99, source:"sold"},
+  {title:"Visible Samsung Galaxy Watch Ultra 47mm SM-L705U LTE Titanium Blue", keywords:["visible samsung galaxy watch", "visible samsung galaxy watch ultra 47mm"], price:184.99, source:"sold"},
+  {title:"Ray-Ban Meta Wayfarer Gen 2 RW4012 Matte Black Transparent Lens with Case", keywords:["ray-ban meta wayfarer gen rw4012 matte", "ray-ban meta wayfarer gen"], price:329.99, source:"sold"},
+  {title:"Microsoft Xbox Series S 1883 512GB SSD White w/ Controller HDMI & Power Cable", keywords:["microsoft xbox series 1883 512gb ssd", "microsoft xbox series 1883"], price:269.99, source:"sold"},
+  {title:"Microsoft Surface Book 3 1899 i7-1065G7 16GB 256GB SSD GTX 1660Ti", keywords:["microsoft surface book 1899", "microsoft surface book 1899 i7-1065g7 16gb"], price:294.99, source:"sold"},
+  {title:"Unlocked Apple iPad mini 6 A2568 64GB Wi-Fi+Cellular Space Gray", keywords:["unlocked apple ipad mini a2568 64gb", "unlocked apple ipad mini"], price:249.99, source:"sold"},
+  {title:"Unlocked Apple Watch Series 6 A2293 GPS+Cellular 40mm Gold", keywords:["unlocked apple watch series", "unlocked apple watch series a2293 gps+cellular"], price:54.99, source:"sold"},
+  {title:"Unlocked Apple Watch SE A2353 GPS+Cellular 40mm Gold", keywords:["unlocked apple watch se", "unlocked apple watch se a2353 gps+cellular"], price:59.99, source:"sold"},
+  {title:"Apple Watch SE 2nd Gen 44mm A2723 Aluminum Midnight GPS Only", keywords:["apple watch se 2nd gen 44mm", "apple watch se 2nd"], price:84.99, source:"sold"},
+  {title:"Nintendo Switch HAC-001(-01) 32GB Console Joy-Cons & Accessories", keywords:["nintendo switch hac-001 01 32gb console", "nintendo switch hac-001 01"], price:139.99, source:"sold"},
+  {title:"Asus ROG GL503VM Core i7-7700HQ 16GB 1TB HDD 128GB SSD GTX 1060", keywords:["asus rog gl503vm core", "asus rog gl503vm core i7-7700hq 16gb"], price:274.99, source:"sold"},
+  {title:"Dell Inspiron 3030s SFF Intel Core i5-14400 8GB RAM 512GB SSD", keywords:["dell inspiron 3030s sff", "dell inspiron 3030s sff intel core"], price:379.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 13 Pro A2483 128GB BH86% Sierra Blue", keywords:["unlocked apple iphone 13", "unlocked apple iphone 13 pro a2483"], price:309.99, source:"sold"},
+  {title:"MXL 770 Large Diaphragm Cardioid Condenser Microphone", keywords:["mxl 770 large diaphragm", "mxl 770 large diaphragm cardioid condenser"], price:39.99, source:"sold"},
+  {title:"Microsoft Xbox One S 1681 500GB Console White w/ Controller", keywords:["microsoft xbox one 1681 500gb console", "microsoft xbox one 1681"], price:99.99, source:"sold"},
+  {title:"Verizon Samsung Galaxy S23 Ultra SM-S918U 512GB 12GB RAM Black", keywords:["verizon samsung galaxy s23 ultra sm-s918u", "verizon samsung galaxy s23"], price:364.99, source:"sold"},
+  {title:"Microsoft Xbox One X 1787 1TB Black w/ Controller & Power cable", keywords:["microsoft xbox one 1787", "microsoft xbox one 1787 1tb controller"], price:159.99, source:"sold"},
+  {title:"Apple iPad mini 7th Gen A2993 128GB A17 Pro Blue Wi-Fi Only", keywords:["apple ipad mini 7th", "apple ipad mini 7th gen a2993"], price:374.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 16 Pro A3083 256GB BH92% Black Titanium", keywords:["unlocked apple iphone 16 pro a3083", "unlocked apple iphone 16"], price:639.99, source:"sold"},
+  {title:"Apple MacBook Pro 14\" A2779 2023 M2 Pro 16GB RAM 512GB SSD Silver", keywords:["apple macbook pro 14", "apple macbook pro 14 a2779 2023"], price:949.99, source:"sold"},
+  {title:"Dell Latitude 5440 14\" Laptop Intel Core i5-1345U 16GB RAM 256GB SSD Gray", keywords:["dell latitude 5440 14", "dell latitude 5440 14 laptop intel"], price:274.99, source:"sold"},
+  {title:"Sony PULSE Explore Wireless Earbuds PS5 White New Open Box", keywords:["sony pulse explore wireless", "sony pulse explore wireless earbuds ps5"], price:108.99, source:"sold"},
+  {title:"Unlocked Apple iPad Pro 11-inch A2068 256GB WiFi-Cellular", keywords:["unlocked apple ipad pro 11-inch a2068", "unlocked apple ipad pro"], price:244.99, source:"sold"},
+  {title:"Sony PlayStation 5 Disc Edition CFI-1215A w/ Controller HDMI & Power Cable", keywords:["sony playstation disc edition cfi-1215a controller", "sony playstation disc edition"], price:449.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 14 Pro A2650 256GB BH74% Space Black- Service Battery", keywords:["unlocked apple iphone 14", "unlocked apple iphone 14 pro a2650"], price:349.99, source:"sold"},
+  {title:"Sony PlayStation 5 Slim Digital CFI-2015 1TB w/ Controller HDMI & Power Cable - Grade A", keywords:["sony playstation slim digital", "sony playstation slim digital cfi-2015 1tb"], price:450.00, source:"sold"},
+  {title:"Lexar 32GB (2x16GB) DDR5 SO-DIMM Laptop Memory Kit — New", keywords:["lexar 32gb 2x16gb ddr5", "lexar 32gb 2x16gb ddr5 so-dimm laptop"], price:289.99, source:"sold"},
+  {title:"Sony PlayStation 5 Pro CFI-7119 2TB White w/ Controller HDMI & Power Cable - Grade", keywords:["sony playstation pro cfi-7119 2tb controller", "sony playstation pro cfi-7119"], price:819.99, source:"sold"},
+  {title:"Lenovo IdeaPad 110-15ISK 15\" Laptop Core i3 8GB RAM 128GB SSD For parts", keywords:["lenovo ideapad 110-15isk 15 laptop core", "lenovo ideapad 110-15isk 15"], price:28.99, source:"sold"},
+  {title:"Unlocked Apple iPhone XR A1984 128GB BH78% Black- For Parts", keywords:["unlocked apple iphone xr a1984 128gb", "unlocked apple iphone xr"], price:69.99, source:"sold"},
+  {title:"Dell Latitude 5531 Intel Core i7-12800H 16GB RAM 512GB SSD Gray", keywords:["dell latitude 5531 intel core i7-12800h", "dell latitude 5531 intel"], price:299.99, source:"sold"},
+  {title:"Acer Swift Go 16 N24H2 Intel Core Ultra 9 185H 32GB RAM 1TB SSD Gray", keywords:["acer swift go 16 n24h2 intel", "acer swift go 16"], price:619.99, source:"sold"},
+  {title:"Unlocked Apple iPhone 13 Pro Max A2484 128GB BH81% Alpine Green", keywords:["unlocked apple iphone 13 pro max", "unlocked apple iphone 13"], price:369.99, source:"sold"},
+  {title:"HP 14-em0002wm AMD Athlon Silver 7120U 4GB RAM 128GB SSD", keywords:["hp 14-em0002wm amd athlon", "hp 14-em0002wm amd athlon 7120u 4gb"], price:99.99, source:"sold"},
+  {title:"Unlocked Apple Watch Series 4 GPS + Cellular 44mm Space Gray", keywords:["unlocked apple watch series", "unlocked apple watch series gps cellular"], price:59.99, source:"sold"},
+  {title:"Apple AirPods Max USB-C A3184 Starlight Over-Ear Wireless Headphones", keywords:["apple airpods max usb-c a3184 starlight", "apple airpods max usb-c"], price:204.99, source:"sold"},
+  {title:"Crucial P3 Plus (CT4000P3PSSD8) 4000GB (4TB) NVMe M.2 2280 SSD - 95% Health", keywords:["crucial p3 plus ct4000p3pssd8 4000gb 4tb", "crucial p3 plus ct4000p3pssd8"], price:383.99, source:"sold"},
+  {title:"ASUS Dual GeForce RTX 3060 O12G 12GB Graphics Card", keywords:["asus dual geforce rtx", "asus dual geforce rtx 3060 o12g"], price:209.99, source:"sold"},
+  {title:"AMD Ryzen 5 7600X 100-000000593 Desktop Processor", keywords:["amd ryzen 7600x 100-000000593 desktop processor", "amd ryzen 7600x 100-000000593"], price:125.99, source:"sold"},
+  {title:"Corsair Vengeance LPX CMK16GX4M2B3200C16 DDR4 16GB (2x8GB) 3200MHz RAM", keywords:["corsair vengeance lpx cmk16gx4m2b3200c16", "corsair vengeance lpx cmk16gx4m2b3200c16 ddr4 16gb"], price:69.99, source:"sold"},
+  {title:"Unlocked Samsung Galaxy S24 SM-S921U 128GB Onyx Black", keywords:["unlocked samsung galaxy s24 sm-s921u 128gb", "unlocked samsung galaxy s24"], price:314.99, source:"sold"},
+  {title:"Crucial P310 CT1000P310SSD8 PCIe Gen4 NVMe M.2 2280 SSD — 1TB (100% Health)", keywords:["crucial p310 ct1000p310ssd8 pcie gen4 nvme", "crucial p310 ct1000p310ssd8 pcie"], price:125.99, source:"sold"},
+  {title:"EVGA GeForce RTX 3090 FTW3 Ultra 24G-P5-3987-KR 24GB Graphics Card", keywords:["evga geforce rtx 3090", "evga geforce rtx 3090 ftw3 ultra"], price:1199.99, source:"sold"},
+  {title:"GoPro HERO8 Black Waterproof Touch Screen Action Camera Bundle Used", keywords:["gopro hero8 waterproof touch screen action", "gopro hero8 waterproof touch"], price:169.99, source:"sold"},
+  {title:"Asus VivoBook Pro N580V Touch i7-7700HQ 32GB 1TB SSD 1.8TB HDD GTX 1050", keywords:["asus vivobook pro n580v", "asus vivobook pro n580v touch i7-7700hq"], price:189.99, source:"sold"},
+  {title:"Nintendo Switch HAC-001 32GB Console with Joy-Cons Charger & Accessories", keywords:["nintendo switch hac-001 32gb console joy-cons", "nintendo switch hac-001 32gb"], price:139.99, source:"sold"},
+  {title:"Sony Alpha a7R III ILCE-7RM3 42.4MP Mirrorless Camera Body", keywords:["sony alpha a7r iii ilce-7rm3 42.4mp", "sony alpha a7r iii"], price:749.99, source:"sold"},
+  {title:"AMD Ryzen 9 7900X 100-000000589 Desktop Processor", keywords:["amd ryzen 7900x 100-000000589", "amd ryzen 7900x 100-000000589 desktop processor"], price:199.99, source:"sold"},
+  {title:"EVGA GeForce GTX 1070 Ti 8GB Graphics Card", keywords:["evga geforce gtx 1070 ti 8gb", "evga geforce gtx 1070"], price:89.99, source:"sold"},
+  {title:"Samsung 870 QVO MZ-77Q2T0 2TB 2.5\" SATA SSD — (75% Health)", keywords:["samsung 870 qvo mz-77q2t0 2tb 2.5", "samsung 870 qvo mz-77q2t0"], price:134.99, source:"sold"},
+  {title:"Ray-Ban Meta Wayfarer RW4006 601ST3 Black Smart Glasses with Case", keywords:["ray-ban meta wayfarer rw4006 601st3 smart", "ray-ban meta wayfarer rw4006"], price:179.99, source:"sold"},
+  {title:"Apple Watch SE 2nd Gen A2723 44mm Starlight GPS Only", keywords:["apple watch se 2nd gen a2723", "apple watch se 2nd"], price:100.00, source:"sold"},
+  {title:"Apple Watch SE 1st Gen A2351 GPS 40mm Gold Aluminum- Light Scratches", keywords:["apple watch se 1st", "apple watch se 1st gen a2351"], price:50.00, source:"sold"},
+  {title:"Microsoft Xbox One X 1787 1TB Black with Controller HDMI & Power Cable", keywords:["microsoft xbox one 1787", "microsoft xbox one 1787 1tb controller"], price:144.99, source:"sold"},
+  {title:"iBUYPOWER Gaming PC AMD FX-6300 8GB DDR3 1TB HDD GTX 1050 Black Used", keywords:["ibuypower gaming pc amd fx-6300 8gb", "ibuypower gaming pc amd"], price:296.47, source:"sold"},
+  {title:"Apple AirPods 4 MXP63LL/A A3050 A3053 A3058 White New In Box", keywords:["apple airpods mxp63ll/a a3050 a3053 a3058", "apple airpods mxp63ll/a a3050"], price:99.99, source:"sold"},
+  {title:"Crucial P310 CT1000P310SSD2 PCIe Gen4 NVMe M.2 2230 SSD — 1TB (100% Health)", keywords:["crucial p310 ct1000p310ssd2 pcie", "crucial p310 ct1000p310ssd2 pcie gen4 nvme"], price:139.99, source:"sold"},
+  {title:"Dell Latitude 5420 Core i5-1145G7 vPro 16GB RAM 512GB SSD — For Parts, Does Not", keywords:["dell latitude 5420 core", "dell latitude 5420 core i5-1145g7 vpro"], price:89.99, source:"sold"},
 
   // ══════════════════════════════════════════════════════════════
   // VR HEADSETS — Real SYG sold prices
@@ -10836,12 +11191,100 @@ function hazSanityCheck(manualPrice, itemText){
   return null;
 }
 
-// 6. Negotiation memory — detect counter-offers in message
+// 6. Negotiation memory — kept for backward compatibility; superseded by
+// hazScoreIntent below, which reads free text far more broadly.
 function hazDetectCounter(text){
   const lo = text.toLowerCase();
   const counterMatch = lo.match(/(?:came?\s+down\s+to|now\s+want(?:s)?|counter(?:ed)?\s+(?:at|with|to)|accept(?:s)?\s+|will\s+take|go(?:es)?\s+down\s+to|down\s+to)\s*\$?\s*(\d+)/);
   if(counterMatch) return parseFloat(counterMatch[1]);
   return null;
+}
+
+// ── Response variety — same intent, different phrasing every time ────
+function hazPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+const HAZ_PHRASES = {
+  ackAccept: [
+    'Nice — deal at {amt} on the {item}.',
+    'Got it, {item} for {amt}. Locking that in.',
+    'Perfect, {amt} it is for the {item}.',
+    'That works — {amt} for the {item}, done.'
+  ],
+  ackPass: [
+    'Got it — walking away from the {item}.',
+    'No problem, passing on the {item}.',
+    'Understood, we are done with the {item} then.',
+    'Okay, letting that one go.'
+  ],
+  ackNewItem: [
+    'New item, got it — let me look that up.',
+    'Switching gears, one sec.',
+    'Okay, on to the next one.',
+    'Got it, moving to the next item.'
+  ],
+  smalltalk: [
+    'Take your time.',
+    'No rush — I am here when you are ready.',
+    'All good, whenever you are ready.',
+    'Sounds good, just let me know.'
+  ],
+  unclear: [
+    'Not sure if that is about the {item} or something new — let me know.',
+    'Just to make sure I follow — same {item}, or a different item?',
+    'Quick check — are we still talking about the {item}, or is this something else?',
+    'Want to make sure I get this right — {item}, or a new item?'
+  ]
+};
+
+// ── Ample intent scorer ────────────────────────────────────────────
+// Reads free text mid-negotiation and figures out what the buyer is
+// actually trying to do — instead of matching one rigid phrase. Scores
+// several possible intents at once (same technique hazLocalMatch already
+// uses for products) and picks the strongest signal, so natural phrasing
+// like "she says fifty works" or "he's getting impatient" resolves
+// correctly instead of falling through to "unknown item" mode.
+function hazScoreIntent(text){
+  const lo = text.toLowerCase().trim();
+  const scores = {counter:0, accept:0, pass:0, newItem:0, addon:0, conditionUpdate:0, explain:0, vibeChange:0, smalltalk:0};
+  let number = null;
+  const numMatch = lo.match(/\$?\s*(\d{2,4})(?!\d)/);
+  if(numMatch) number = parseFloat(numMatch[1]);
+
+  // Accept
+  if(/\b(deal|sold|works for (him|her|them)|he'?s? in|she'?s? in|they'?re in|sounds good|let'?s do it|take it|he'?ll take it|she'?ll take it|they'?ll take it|yes|yep|yeah)\b/.test(lo)) scores.accept += 6;
+  if(number!=null && /\b(ok|okay|works|good|deal|fine|great)\b/.test(lo)) scores.accept += 2;
+
+  // Pass
+  if(/\b(pass|no deal|not interested|he'?s out|she'?s out|they'?re out|nah|nope|walk(ing)?\s+away|too low|not worth it|forget it|never\s?mind)\b/.test(lo)) scores.pass += 6;
+
+  // Counter-offer — a number, without a stronger competing signal
+  if(number!=null) scores.counter += 3;
+  if(number!=null && /\b(came?\s+down\s+to|now\s+wants?|counter(ed)?|will\s+take|go(es)?\s+down\s+to|down\s+to|wants?|asking|needs?|says?)\b/.test(lo)) scores.counter += 4;
+
+  // New item — matches a real product, or explicitly signals a switch
+  if(hazLocalMatch(text)) scores.newItem += 8;
+  if(/\b(also\s+(has|brought|got)\s+a|different\s+(item|thing|device)|new\s+item|next\s+item|another\s+(one|item|thing)|separate\s+item)\b/.test(lo)) scores.newItem += 5;
+
+  // Add-on / bundle — extras tacked onto the current item
+  if(/\b(also\s+(has|brought|has\s+a|got\s+a)|comes?\s+with|throw(ing)?\s+in|plus\s+a|and\s+a\b|extra\s+controller|extra\s+charger)\b/.test(lo)) scores.addon += 5;
+
+  // Condition update — a correction to what was already said
+  if(/\b(actually|wait[,\s]|oh[,\s]|i\s+mean|correction|forgot\s+to\s+mention|it\s+turns\s+out|scratch\s+that)\b/.test(lo)) scores.conditionUpdate += 4;
+  if(/\b(doesn'?t\s+(turn\s+on|work|power\s+on)|cracked|scratch(ed)?|broken|not\s+tested|untested|dead\s+battery)\b/.test(lo)) scores.conditionUpdate += 2;
+
+  // Explain / why
+  if(/\b(why|how\s+(did|do)\s+you|explain|breakdown|what'?s\s+the\s+math|how'?d\s+you\s+get|justify)\b/.test(lo)) scores.explain += 7;
+
+  // Vibe change — buyer reads the room differently now
+  if(/\b(seems?\s+(annoyed|upset|desperate|chill|easy|relaxed|tough|pushy|angry|impatient)|getting\s+(annoyed|impatient|pushy)|being\s+(difficult|tough|pushy|easy|chill))\b/.test(lo)) scores.vibeChange += 6;
+
+  // Small talk / stalling — no number, no product, just a pause
+  if(/\b(hold on|one sec|hang on|let me ask|checking|brb|give me a (sec|minute)|wait a (sec|minute))\b/.test(lo) && number==null) scores.smalltalk += 6;
+
+  let bestIntent = 'unclear', bestScore = 1.5; // must clear this bar to be confident
+  Object.entries(scores).forEach(([k,v])=>{ if(v > bestScore){ bestScore = v; bestIntent = k; } });
+
+  return {intent: bestIntent, score: bestScore, number, scores};
 }
 
 async function hazProcessMessage(text){
@@ -10852,27 +11295,31 @@ async function hazProcessMessage(text){
     else if(lo.includes('desperate')||lo.includes('urgent')||lo.includes('needs cash')) _hazVibe='desperate';
   }
 
-  // ── 6. Negotiation memory — counter-offer detection ──────────────
-  const counterPrice = hazDetectCounter(text);
-  if(counterPrice && _hazLastResult){
+  // ── Ample intent routing — only kicks in once a negotiation is active.
+  // Every message gets scored across several possible intents at once
+  // (counter, accept, pass, new item, add-on, condition update, "why",
+  // vibe change, small talk) instead of matching one rigid phrase, so
+  // the conversation keeps flowing instead of stalling on unfamiliar
+  // wording.
+  if(_hazLastResult){
     hazRemoveTyping();
-    const d = _hazLastResult;
-    const vo = {easy:{maxPct:0.40},tough:{maxPct:0.55},desperate:{maxPct:0.30}}[_hazVibe||'easy'];
-    const ourMax = Math.round(d.value * (vo?.maxPct||0.40));
-    if(counterPrice <= ourMax){
-      hazAddBubble('haz',
-        `Customer came down to <b>$${counterPrice}</b> — that is within your max of <b>$${ourMax}</b>. `
-        +(counterPrice <= Math.round(d.value*0.35) ? '🟢 <b>Good deal</b> — take it.' : '🟡 <b>Acceptable</b> — you can take it or try one more push down.')
-        +`<br><br>Script: "I can work with $${counterPrice}${counterPrice < ourMax ? ' — let me see what I can do for you' : ''}."`,
-        true);
+    const scored = hazScoreIntent(text);
+    if(scored.intent === 'accept'){ hazHandleAccept(scored); return; }
+    if(scored.intent === 'pass'){ hazHandlePass(); return; }
+    if(scored.intent === 'counter'){ hazHandleCounter(scored); return; }
+    if(scored.intent === 'addon'){ hazHandleAddon(text); return; }
+    if(scored.intent === 'conditionUpdate'){ hazHandleConditionUpdate(text); return; }
+    if(scored.intent === 'explain'){ hazHandleExplainOffer(); return; }
+    if(scored.intent === 'vibeChange'){ hazHandleVibeChange(text); return; }
+    if(scored.intent === 'smalltalk'){ hazHandleSmalltalk(); return; }
+    if(scored.intent === 'newItem'){
+      _hazLastResult = null;
+      hazAddBubble('haz', hazPick(HAZ_PHRASES.ackNewItem), false);
+      // fall through — continue below and process this text as a fresh item
     } else {
-      hazAddBubble('haz',
-        `Customer wants <b>$${counterPrice}</b> but your max is <b>$${ourMax}</b>. `
-        +`That is $${counterPrice-ourMax} above what works for us.<br><br>`
-        +`Script: "I appreciate you coming down but I am still at <b>$${ourMax}</b> — that is genuinely my ceiling on this one."`,
-        true);
+      hazHandleUnclear(text);
+      return;
     }
-    return;
   }
 
   // ── 1. Apply aliases — normalize vague descriptions ──────────────
@@ -10938,7 +11385,7 @@ async function hazProcessCore(text){
     }
 
     // Condition adjust
-    const {adj, condSummary, pass, passReason} = hazQuickConditionAdjust(text, category, localMatch.price);
+    const {adj, adjDetails, condSummary, pass, passReason} = hazQuickConditionAdjust(text, category, localMatch.price);
 
     if(pass){
       _hazLastResult = null;
@@ -10971,7 +11418,7 @@ async function hazProcessCore(text){
       confidence: localMatch.source==='sold' ? 'high' : 'medium',
       pass: false, pass_reason: '',
       source: localMatch.source==='sold' ? 'SYG Sold' : 'SYG Active',
-      adjNote
+      adjNote, adjDetails, rawText: text
     }, _hazVibe);
     return;
   }
@@ -11159,10 +11606,11 @@ function hazChatSend(){
   const text = input.value.trim();
   if(!text) return;
 
-  // If quick replies are active — typed answer overrides chip selection
+  // If quick replies are active — typed answer overrides chip selection.
+  // The bubble is added inside each callback (same as the tap path), so
+  // it isn't duplicated here.
   if(_hazQRCallback){
     input.value = '';
-    hazAddBubble('staff', text, false);
     const cb = _hazQRCallback;
     hazClearQuickReplies();
     cb(text);
@@ -11479,7 +11927,9 @@ function hazRenderChatResult(data, vibe){
     desperate: 'If they need more: "Best I can do is <b>$'+midOff+'</b>, genuinely cannot go higher."',
   };
 
-  _hazLastResult = {item, condition, value, fees, net, openOff, midOff, maxOff, vibe};
+  _hazLastResult = {item, condition, value, fees, net, openOff, midOff, maxOff, vibe,
+    adjDetails: data.adjDetails || [], source: data.source || '', rawText: data.rawText || item,
+    askingPrice: data.asking_price || 0, acceptedOffer: null};
 
   const confBadge = data.confidence==='high' ? ''
     : ' <span style="font-size:9px;background:#FEF9C3;color:#92400E;padding:1px 5px;border-radius:4px;font-style:normal;">'+(data.confidence||'medium')+' confidence</span>';
@@ -11541,10 +11991,31 @@ function hazRenderChatResult(data, vibe){
     +'<input class="haz-offer-custom-input" id="hazOfferCustomInput" type="number" placeholder="Or type custom amount..." min="1" max="9999">'
     +'<button class="haz-show-customer" id="hazShowCustomerBtn" disabled>📋 Show to customer</button>'
     +'</div>'
+    +'</div>'
+    // Nudge row — quick shortcuts for the common next moves. Purely optional:
+    // typing free text keeps working exactly as before, this just gives the
+    // buyer a visible next step so the conversation never dead-ends.
+    +'<div class="haz-nudge-row" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">'
+    +'<button class="haz-qr haz-nudge-btn" data-nudge="accept">✅ They took it</button>'
+    +'<button class="haz-qr haz-nudge-btn" data-nudge="counter">💬 They want more</button>'
+    +'<button class="haz-qr haz-nudge-btn" data-nudge="newitem">🆕 New item</button>'
+    +'<button class="haz-qr haz-nudge-btn" data-nudge="pass">❌ Pass</button>'
     +'</div>';
 
   hazAddBubble('haz', html, true);
   setTimeout(()=>{
+    document.querySelectorAll('.haz-nudge-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        // Disable the whole row after one tap so old nudges from earlier
+        // messages can't be clicked once the conversation has moved on.
+        document.querySelectorAll('.haz-nudge-btn').forEach(b=>b.disabled=true);
+        const kind = btn.dataset.nudge;
+        if(kind==='accept'){ hazAddBubble('staff','They took it', false); hazHandleAccept({number:null}); }
+        else if(kind==='counter'){ hazAddBubble('staff','They want more', false); hazAddBubble('haz','What number are they asking for?', false); }
+        else if(kind==='newitem'){ hazAddBubble('staff','New item', false); _hazLastResult=null; hazAddBubble('haz', hazPick(HAZ_PHRASES.ackNewItem), false); }
+        else if(kind==='pass'){ hazAddBubble('staff','Pass', false); hazHandlePass(); }
+      });
+    });
     // Wire offer selector chips
     document.querySelectorAll('.haz-osc').forEach(chip=>{
       chip.addEventListener('click',()=>{
@@ -11571,6 +12042,166 @@ function hazRenderChatResult(data, vibe){
   document.getElementById('hazReset').style.display='';
   // Auto-pin to board
   hazBoardAddCard({item, condition, value, fees, net, openOff, midOff, maxOff, vibe, category: hazDetectCategory(item+' '+condition)});
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  AMPLE INTENT HANDLERS
+//  Each one keeps the thread alive on the item already in _hazLastResult
+//  instead of treating unfamiliar phrasing as a stall or a new item.
+// ══════════════════════════════════════════════════════════════════
+
+let _hazAwaitingExplainMore = false;
+
+function hazHandleAccept(scored){
+  const d = _hazLastResult;
+  if(!d) return;
+  const amt = (scored && scored.number) || d.acceptedOffer || d.openOff;
+  d.acceptedOffer = amt;
+  hazAddBubble('haz',
+    hazPick(HAZ_PHRASES.ackAccept).replace('{item}', esc(d.item)).replace('{amt}', '$'+amt)
+    + ' <button class="haz-inline-btn" id="hazInlineShowCustomer" style="margin-left:6px;padding:4px 10px;border-radius:8px;border:none;background:#16A34A;color:#fff;font:700 11.5px/1 var(--sans);cursor:pointer;">📋 Show to customer</button>',
+    true);
+  setTimeout(()=>{
+    document.getElementById('hazInlineShowCustomer')?.addEventListener('click', hazShowCustomer);
+  }, 30);
+}
+
+function hazHandlePass(){
+  const d = _hazLastResult;
+  hazAddBubble('haz', hazPick(HAZ_PHRASES.ackPass).replace('{item}', esc(d ? d.item : 'this item')), false);
+  _hazLastResult = null;
+  document.getElementById('hazReset').style.display='';
+}
+
+function hazHandleCounter(scored){
+  const d = _hazLastResult;
+  if(!d || scored.number == null){ hazHandleUnclear(''); return; }
+  const counterPrice = scored.number;
+  const vo = {easy:{maxPct:0.40},tough:{maxPct:0.55},desperate:{maxPct:0.30}}[_hazVibe||'easy'];
+  const ourMax = Math.round(d.value * (vo?.maxPct||0.40));
+  if(counterPrice <= ourMax){
+    hazAddBubble('haz',
+      `Customer came down to <b>$${counterPrice}</b> on the <b>${esc(d.item)}</b> — that is within your max of <b>$${ourMax}</b>. `
+      +(counterPrice <= Math.round(d.value*0.35) ? '🟢 <b>Good deal</b> — take it.' : '🟡 <b>Acceptable</b> — you can take it or try one more push down.')
+      +`<br><br>Script: "I can work with $${counterPrice}${counterPrice < ourMax ? ' — let me see what I can do for you' : ''}."`,
+      true);
+  } else {
+    hazAddBubble('haz',
+      `Customer wants <b>$${counterPrice}</b> on the <b>${esc(d.item)}</b> but your max is <b>$${ourMax}</b>. `
+      +`That is $${counterPrice-ourMax} above what works for us.<br><br>`
+      +`Script: "I appreciate you coming down but I am still at <b>$${ourMax}</b> — that is genuinely my ceiling on this one."`,
+      true);
+  }
+}
+
+function hazHandleAddon(text){
+  const d = _hazLastResult;
+  if(!d) return;
+  const bundle = hazDetectBundle(text);
+  if(!bundle || !bundle.extras.length){
+    hazAddBubble('haz', `Didn't catch a specific extra there — what's included? (extra controller, charger, cable, etc.)`, false);
+    return;
+  }
+  const extraVal = bundle.extras.reduce((s,e)=>s+e.value, 0);
+  d.value += extraVal;
+  d.openOff += Math.round(extraVal*0.7);
+  d.midOff += Math.round(extraVal*0.85);
+  d.maxOff += extraVal;
+  hazAddBubble('haz',
+    `Got it — ${esc(bundle.extras.map(e=>e.label).join(', '))} adds <b>+$${extraVal}</b>. Updated market est: <b>$${d.value}</b>.<br>`
+    +`New open offer: <b>$${d.openOff}</b> · max <b>$${d.maxOff}</b>.`,
+    true);
+}
+
+function hazHandleConditionUpdate(text){
+  const d = _hazLastResult;
+  if(!d) return;
+  const category = hazDetectCategory(d.item);
+  const {adj, adjDetails} = hazQuickConditionAdjust(text, category, d.value);
+  if(!adjDetails.length){
+    hazAddBubble('haz', `Noted — didn't find a specific condition change to price in there though. What changed?`, false);
+    return;
+  }
+  d.value = Math.max(HAZ_MIN_RESALE, d.value + adj);
+  d.adjDetails = (d.adjDetails||[]).concat(adjDetails);
+  const vibeOffers = { easy:{maxPct:0.40,open:0.72,mid:0.86}, tough:{maxPct:0.55,open:0.45,mid:0.70}, desperate:{maxPct:0.30,open:0.30,mid:0.50} };
+  const vo = vibeOffers[_hazVibe] || vibeOffers.easy;
+  d.maxOff  = Math.round(d.value * vo.maxPct);
+  d.openOff = Math.max(5, Math.round(d.maxOff * vo.open));
+  d.midOff  = Math.max(d.openOff+5, Math.round(d.maxOff * vo.mid));
+  hazAddBubble('haz',
+    `Updated — ${esc(adjDetails.join(', '))}. New market est: <b>$${d.value}</b>.<br>`
+    +`Revised offer: 🟢 open <b>$${d.openOff}</b> · 🟡 mid <b>$${d.midOff}</b> · 🔴 max <b>$${d.maxOff}</b>.`,
+    true);
+}
+
+function hazHandleExplainOffer(){
+  const d = _hazLastResult;
+  if(!d) return;
+  if(_hazAwaitingExplainMore){
+    _hazAwaitingExplainMore = false;
+    const details = (d.adjDetails && d.adjDetails.length)
+      ? d.adjDetails.map(x=>'• '+esc(x)).join('<br>')
+      : 'No specific condition deductions were applied — priced off the base market value.';
+    const vel = hazVelocityMatch(d.item, hazDetectCategory(d.item));
+    const velLine = vel ? `<br><br>This category (${esc(vel.label)}) typically sells in ~${vel.avg} days here, worst case ${vel.max} — ${esc(vel.note)}` : '';
+    const sourceLine = d.source ? `<br>Price source: <b>${esc(d.source)}</b>` : '';
+    hazAddBubble('haz',
+      `<b>Full breakdown for ${esc(d.item)}:</b><br>Market est: $${d.value}${sourceLine}<br>${details}<br>Fees at checkout: ~${Math.round(HAZ_FEE_RATE*100)}%${velLine}`,
+      true);
+    return;
+  }
+  _hazAwaitingExplainMore = true;
+  const shortSummary = (d.adjDetails && d.adjDetails.length)
+    ? `Biggest factor: ${esc(d.adjDetails[0])}.`
+    : `Priced mostly off the base market value for this item — no major condition deductions.`;
+  hazAddBubble('haz', `${shortSummary} Want the full breakdown?`, false);
+}
+
+function hazHandleVibeChange(text){
+  const lo = text.toLowerCase();
+  let newVibe = _hazVibe;
+  if(/annoyed|upset|angry|impatient|pushy|tough|difficult/.test(lo)) newVibe = 'tough';
+  else if(/desperate|urgent|needs cash/.test(lo)) newVibe = 'desperate';
+  else if(/chill|easy|relaxed/.test(lo)) newVibe = 'easy';
+  if(!_hazLastResult) return;
+  if(newVibe === _hazVibe){
+    hazAddBubble('haz', `Noted — keeping the same approach for now.`, false);
+    return;
+  }
+  _hazVibe = newVibe;
+  document.querySelectorAll('.haz-vibe-btn').forEach(b=>b.classList.toggle('on', b.dataset.vibe===newVibe));
+  const d = _hazLastResult;
+  const vibeOffers = { easy:{maxPct:0.40,open:0.72,mid:0.86}, tough:{maxPct:0.55,open:0.45,mid:0.70}, desperate:{maxPct:0.30,open:0.30,mid:0.50} };
+  const vo = vibeOffers[newVibe];
+  d.maxOff  = Math.round(d.value * vo.maxPct);
+  d.openOff = Math.max(5, Math.round(d.maxOff * vo.open));
+  d.midOff  = Math.max(d.openOff+5, Math.round(d.maxOff * vo.mid));
+  hazAddBubble('haz',
+    `Switched to <b>${newVibe}</b> mode for the ${esc(d.item)}. Updated offer: 🟢 open <b>$${d.openOff}</b> · 🟡 mid <b>$${d.midOff}</b> · 🔴 max <b>$${d.maxOff}</b>.`,
+    true);
+}
+
+function hazHandleSmalltalk(){
+  hazAddBubble('haz', hazPick(HAZ_PHRASES.smalltalk), false);
+}
+
+function hazHandleUnclear(text){
+  const d = _hazLastResult;
+  const itemName = d ? d.item : 'this item';
+  hazAddBubble('haz', hazPick(HAZ_PHRASES.unclear).replace(/\{item\}/g, esc(itemName)), false);
+  hazShowQuickReplies(['✅ They took it', '🆕 New item', '❌ Pass'], (val)=>{
+    if(val.includes('took it')){ hazAddBubble('staff', val, false); hazHandleAccept({number:null}); }
+    else if(val.includes('New item')){ hazAddBubble('staff', val, false); _hazLastResult=null; hazAddBubble('haz', 'Got it — go ahead and describe the new item.', false); }
+    else if(val.includes('Pass')){ hazAddBubble('staff', val, false); hazHandlePass(); }
+    else {
+      // Free text typed instead of tapping a chip — never let it dead-end,
+      // route it straight back through the normal message pipeline.
+      hazAddBubble('staff', val, false);
+      hazAddTyping();
+      setTimeout(()=>{ hazRemoveTyping(); hazProcessMessage(val); }, 500);
+    }
+  });
 }
 
 function hazCustomerSetMode(dark){
@@ -11646,6 +12277,7 @@ function hazReset(){
   _hazAwaitingPrice = null;
   _hazSoldComps = [];
   _hazUnknownItem = '';
+  _hazAwaitingExplainMore = false;
   document.getElementById('hazReset').style.display='none';
   document.getElementById('hazChatInput').value='';
   const inp = document.getElementById('hazChatInput');
@@ -14016,17 +14648,11 @@ document.getElementById('tbLockBtn')?.addEventListener('click', () => {
 // Each entry: { keys: [...match terms], title, answer (HTML), related: [...topic keys] }
 const KB = [
 
-  // ── SPECS LOOKUP (DELL / HP / LENOVO) ────────────────────────────────
-  { keys: ['specs command','dell specs','hp specs','lenovo specs','service tag lookup','specs tag','how specs works','dell service tag','specs st','look up dell','look up hp','look up lenovo','dell specs command'],
-    title: 'Specs lookup — "specs [brand] {tag}"',
-    answer: `<h3>What it does</h3>Type <code>specs</code>, optionally a brand, then the service tag / serial (e.g. <code>specs 4X7YZ12</code>, <code>specs hp ABC1234</code>, <code>specs lenovo PC2JLMMR</code>). Shovo opens the right manufacturer's lookup page in a new tab and copies the tag to your clipboard.<h3>Format</h3><code>specs {tag}</code> defaults to Dell. <code>specs hp {tag}</code> and <code>specs lenovo {tag}</code> cover those brands.<h3>Note</h3>None of these sites reliably auto-fill their own search box from the link alone — if you've installed the SYG Dell Specs Autofill browser extension, it fills and submits the field for you on Dell, HP, and Lenovo's pages automatically. Otherwise, paste (Ctrl+V) into the field yourself.`,
-    related: ['log drive','abribook codes','unlock command'] },
-
-  // ── AT&T UNLOCK REQUEST ────────────────────────────────────────────
-  { keys: ['unlock command','att unlock','device unlock','imei unlock','unlock imei','at&t unlock','unlock phone'],
-    title: 'AT&T unlock request — "unlock {imei}"',
-    answer: `<h3>What it does</h3>Type <code>unlock</code> followed by an IMEI (e.g. <code>unlock 356938035643809</code>) and Shovo opens AT&T's device unlock request page in a new tab, copies the IMEI to your clipboard, and — if the autofill extension is installed — selects "No" for AT&T Phone Number and fills in the IMEI automatically.<h3>Format</h3><code>unlock {imei}</code> — a 14-17 digit IMEI right after the word.<h3>Note</h3>The autofill part of this one hasn't been confirmed against AT&T's real form fields yet — double-check it actually selected and filled correctly the first few times you use it.`,
-    related: ['specs command'] },
+  // ── SPECS LOOKUP (DELL SERVICE TAG) ────────────────────────────────
+  { keys: ['specs command','dell specs','service tag lookup','specs tag','how specs works','dell service tag','specs st','look up dell','dell specs command'],
+    title: 'Specs lookup — "specs {tag}"',
+    answer: `<h3>What it does</h3>Type <code>specs</code> followed by a Dell Service Tag (e.g. <code>specs 4X7YZ12</code>) and Shovo opens Dell's support page in a new tab and copies the tag to your clipboard. Dell's site doesn't auto-fill its own search box, so paste (Ctrl+V) into the "Service tag" field and hit the arrow — no retyping.<h3>Format</h3><code>specs {tag}</code> — the tag has to come right after the word, nothing else in between.<h3>Note</h3>This only covers Dell for now. If you want the same shortcut for HP, Lenovo, or another brand's service/serial lookup, that can be added the same way.`,
+    related: ['log drive','abribook codes'] },
 
   // ── LOGGING A DRIVE ──────────────────────────────────────────────
   { keys: ['log drive','log storage','log ssd','log nvme','log sata','batch entry','add entry','how to log','log item','log a drive','logging drives','log device','log disk','add a drive','add batch'],
@@ -14981,55 +15607,24 @@ function renderAnswer(q) {
 
   // ── 1b. Specs lookup command — "specs {tag}" opens Dell's support
   // page and copies the Service Tag to the clipboard. The ?servicetag=
-  // ── 1b. Specs lookup command — "specs [brand] {tag}" opens the right
-  // manufacturer's lookup page. Brand defaults to dell if omitted, for
-  // backwards compatibility with the original command. The extension
-  // (SYG Dell Specs Autofill) picks up from here on pages whose own URL
-  // param doesn't auto-fill the visible box.
+  // URL param DOES reach the page (confirmed) but does NOT auto-fill
+  // the visible "Service tag" search box or auto-run the search — so
+  // instead of pretending it's one-click, we hand you the tag ready to
+  // paste the instant the page loads.
   // Anchored to the start of the query so it only fires as a real
   // command, not when "specs" shows up inside an ordinary question
   // like "what are the specs of the RTX 3090".
-  const specsMatch = q.trim().match(/^specs?\s+(?:(dell|hp|lenovo)\s+)?([A-Za-z0-9-]{4,})$/i);
+  const specsMatch = q.trim().match(/^(?:dell\s+)?specs?\s+([A-Za-z0-9-]{4,})$/i);
   if (specsMatch) {
-    const brand = (specsMatch[1] || 'dell').toLowerCase();
-    const tag = specsMatch[2].toUpperCase();
-    const SPECS_SITES = {
-      dell:   { url: 'https://www.dell.com/support/home/en-us?servicetag=' + encodeURIComponent(tag), name: 'Dell', autofills: false },
-      hp:     { url: 'https://partsurfer.hp.com/?searchtext=' + encodeURIComponent(tag), name: 'HP PartSurfer', autofills: 'unconfirmed' },
-      lenovo: { url: 'https://pcsupport.lenovo.com/us/en/warranty-lookup?syg_serial=' + encodeURIComponent(tag) + '#/', name: 'Lenovo', autofills: false }
-    };
-    const site = SPECS_SITES[brand];
-    window.open(site.url, '_blank');
+    const tag = specsMatch[1].toUpperCase();
+    const url = 'https://www.dell.com/support/home/en-us?servicetag=' + encodeURIComponent(tag);
+    window.open(url, '_blank');
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(tag).catch(()=>{});
     }
-    if (labelEl) labelEl.textContent = 'Opening ' + site.name + ' specs lookup';
-    const noteHtml = site.autofills === 'unconfirmed'
-      ? 'This link is supposed to search directly, but that hasn\'t been independently confirmed yet — worth checking the results loaded correctly. <b>'+esc(tag)+'</b> is also copied to your clipboard just in case.'
-      : (site.autofills
-        ? 'This site takes the tag straight from the link, so it should already be searching.'
-        : 'That site doesn\'t auto-fill from the link alone, so <b>'+esc(tag)+'</b> is already copied to your clipboard — paste it (Ctrl+V) if it isn\'t filled in already. If you\'ve installed the autofill extension, it\'ll handle this for you automatically.');
+    if (labelEl) labelEl.textContent = 'Opening Dell specs lookup';
     bodyEl.innerHTML = '<div style="color:#86efac;font-weight:600;font-size:13px;margin-bottom:10px;">✓ Opened</div>'
-      + '<div style="color:rgba(255,255,255,.72);line-height:1.7;">'+site.name+' opened in a new tab for <b>'+esc(tag)+'</b>. '+noteHtml+'</div>'
-      + '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:11.5px;color:rgba(255,255,255,.3);">Press Escape to close and get back to work.</div>';
-    return;
-  }
-
-  // ── 1c. AT&T unlock request — "unlock {imei}" opens AT&T's device
-  // unlock request and (via the extension) selects "No" for AT&T Phone
-  // Number and fills in the IMEI. Untested against AT&T's real form
-  // fields — flag to the lister if it doesn't select/fill correctly.
-  const unlockMatch = q.trim().match(/^unlock\s+([0-9]{14,17})$/i);
-  if (unlockMatch) {
-    const imei = unlockMatch[1];
-    const url = 'https://www.att.com/deviceunlock/unlockstep1?imei=' + encodeURIComponent(imei);
-    window.open(url, '_blank');
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(imei).catch(()=>{});
-    }
-    if (labelEl) labelEl.textContent = 'Opening AT&T unlock request';
-    bodyEl.innerHTML = '<div style="color:#86efac;font-weight:600;font-size:13px;margin-bottom:10px;">✓ Opened</div>'
-      + '<div style="color:rgba(255,255,255,.72);line-height:1.7;">AT&T\'s unlock request page opened in a new tab. If the autofill extension is installed and up to date, it should select "No" for AT&T Phone Number and fill in IMEI <b>'+esc(imei)+'</b> — this part hasn\'t been confirmed against the real form yet, so double-check it landed correctly. The IMEI is also on your clipboard either way.</div>'
+      + '<div style="color:rgba(255,255,255,.72);line-height:1.7;">Dell support opened in a new tab. The page doesn\'t auto-fill the search box, so <b>'+esc(tag)+'</b> is already copied to your clipboard — paste it (Ctrl+V) into the "Service tag" box and hit the arrow to search.</div>'
       + '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:11.5px;color:rgba(255,255,255,.3);">Press Escape to close and get back to work.</div>';
     return;
   }
