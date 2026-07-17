@@ -704,6 +704,40 @@
   .haz-left{flex:1;min-width:0;display:flex;flex-direction:column;border-right:1px solid rgba(74,222,128,.12);background:#1A1F1A;overflow:hidden;}
   .haz-right{width:420px;flex:none;display:flex;flex-direction:column;background:#F0F4F0;overflow:hidden;position:relative;}
   @media(max-width:900px){.haz-main{flex-direction:column-reverse;}.haz-right{width:100%;flex:1;}.haz-left{flex:1;min-height:240px;}}
+
+  /* ── Haz mobile clean view (buying tool only — Wan is untouched) ──
+     Goals: no iOS input auto-zoom, real touch-sized tap targets, header/
+     spacing tight enough that the chat + input stay fully visible without
+     fighting a small viewport or the on-screen keyboard. */
+  @media(max-width:640px){
+    .haz-header{padding:10px 14px;gap:8px;}
+    .haz-header h2{font-size:13px;}
+    .haz-back{padding:5px 11px;font-size:10.5px;}
+    .haz-body{padding:10px 10px;gap:8px;max-width:100%;}
+    .haz-vibe-section{padding:10px 12px;}
+    .haz-vibe-cards{gap:6px;}
+    .haz-vibe-btn{padding:8px 4px;}
+    .haz-vibe-emoji{font-size:16px;margin-bottom:2px;}
+    .haz-vibe-name{font-size:10.5px;}
+    .haz-vibe-hint{display:none;} /* trims noise on small screens, keeps the tap targets */
+    .haz-chat-wrap{min-height:0;flex:1;}
+    .haz-chat-messages{padding:12px 10px 6px;gap:10px;}
+    .haz-chat-text{font-size:13.5px;max-width:88%;}
+    .haz-chat-input-wrap{padding:8px 10px;gap:8px;}
+    /* 16px min stops iOS Safari from auto-zooming the page on focus */
+    .haz-chat-input{font-size:16px;padding:10px 12px;}
+    .haz-chat-send{width:44px;height:44px;font-size:18px;} /* real touch target */
+    .haz-qr,.haz-nudge-btn{padding:9px 15px;font-size:13px;}
+    .haz-osc{padding:11px 6px;font-size:12.5px;}
+    .haz-offer-custom-input{padding:9px 10px;font-size:14px;}
+    .haz-offer-card{padding:11px 12px;}
+    .haz-offer-card-amount{font-size:19px;}
+    .haz-show-customer{padding:11px 14px;font-size:13px;}
+    .haz-reset{padding:11px;}
+  }
+  @supports (height:100dvh){
+    @media(max-width:640px){ .haz-wrap.show{height:100dvh;} }
+  }
   .haz-body{display:flex;flex-direction:column;gap:10px;padding:12px 14px;flex:1;min-height:0;overflow-y:auto;}
   .haz-search-box{background:#fff;border:2px solid #E5E7EB;border-radius:var(--r-lg);padding:13px 15px;transition:border-color .15s;}
   .haz-search-box:focus-within{border-color:#22C55E;box-shadow:0 0 0 4px rgba(34,197,94,.09);}
@@ -12829,7 +12863,7 @@ document.getElementById('promptCopyBtn').addEventListener('click', ()=>{
 
 
 <button id="gModeFloatWan" style="display:none;position:fixed;bottom:20px;right:20px;z-index:450;padding:10px 16px;background:#6366F1;border:none;border-radius:999px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;box-shadow:0 4px 18px rgba(99,102,241,.5);letter-spacing:.03em;transition:all .2s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">⚡ G-Mode</button>
-<button id="gModeFloatHaz" style="display:none;position:fixed;bottom:20px;right:20px;z-index:450;padding:10px 16px;background:#16A34A;border:none;border-radius:999px;font:700 12px/1 var(--sans);color:#fff;cursor:pointer;box-shadow:0 4px 18px rgba(22,163,74,.45);letter-spacing:.03em;transition:all .2s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">⚡ G-Mode</button>
+<button id="gModeFloatHaz" style="display:none;position:fixed;top:66px;right:14px;z-index:450;padding:8px 14px;background:#16A34A;border:none;border-radius:999px;font:700 11px/1 var(--sans);color:#fff;cursor:pointer;box-shadow:0 4px 18px rgba(22,163,74,.45);letter-spacing:.03em;transition:all .2s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">⚡ G-Mode</button>
 
 <script>
 (function(){
@@ -13326,9 +13360,12 @@ function syncFloatButtons() {
   }
   if (hazBtn) {
     hazBtn.style.display = (hazVisible && !gActive) ? 'block' : 'none';
-    hazBtn.style.bottom  = '20px';
-    hazBtn.style.right   = '20px';
-    hazBtn.style.left    = 'auto';
+    // Parked top-right, below the header — bottom-right is where the chat
+    // send button lives, and the float used to sit directly on top of it.
+    hazBtn.style.top    = '66px';
+    hazBtn.style.bottom = 'auto';
+    hazBtn.style.right  = '14px';
+    hazBtn.style.left   = 'auto';
   }
 }
 
