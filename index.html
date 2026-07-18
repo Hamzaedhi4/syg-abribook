@@ -700,13 +700,23 @@
   .pc-header-icon{font-size:20px;}
   .pc-header h2{font:800 15px/1 var(--sans);color:#FDE68A;margin:0;flex:1;}
   .pc-back{padding:6px 14px;background:transparent;border:1px solid rgba(251,191,36,.35);border-radius:var(--r-pill);color:#FBBF24;font:700 11px/1 var(--sans);cursor:pointer;}
-  .pc-body{flex:1;overflow-y:auto;padding:22px;display:grid;grid-template-columns:1fr 340px;gap:20px;max-width:1200px;margin:0 auto;width:100%;}
-  @media (max-width:860px){.pc-body{grid-template-columns:1fr;}}
+  .pc-stepper{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;background:#14100A;border-bottom:1px solid rgba(251,191,36,.1);padding:9px 18px;flex:none;}
+  .pc-step{display:flex;align-items:center;gap:6px;font:700 10.5px/1 var(--sans);color:rgba(253,230,138,.4);}
+  .pc-step-num{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:999px;background:rgba(251,191,36,.12);color:#FBBF24;font:800 9.5px/1 var(--sans);}
+  .pc-step-arrow{color:rgba(251,191,36,.25);font-size:11px;}
+  .pc-main{display:flex;flex-direction:row-reverse;flex:1;min-height:0;overflow:hidden;}
+  .pc-left{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:#1A1608;}
+  .pc-right{width:400px;flex:none;display:flex;flex-direction:column;background:#150F08;border-right:1px solid rgba(251,191,36,.12);overflow:hidden;}
+  .pc-right-scroll{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:18px;}
+  @media (max-width:900px){.pc-main{flex-direction:column;}.pc-right{width:100%;flex:1;border-right:none;border-bottom:1px solid rgba(251,191,36,.12);}.pc-left{flex:1;min-height:280px;}}
+  .pc-board-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(251,191,36,.12);flex:none;flex-wrap:wrap;}
+  .pc-board-title{font:800 13px/1 var(--sans);color:#FDE68A;display:flex;align-items:center;gap:8px;}
+  .pc-board-toolbar-btns{display:flex;gap:8px;}
   .pc-panel{background:#221C10;border:1px solid rgba(251,191,36,.15);border-radius:14px;padding:18px;}
   .pc-panel h3{font:700 12px/1 var(--sans);color:#FDE68A;margin:0 0 12px;text-transform:uppercase;letter-spacing:.04em;}
   .pc-field{margin-bottom:14px;}
   .pc-field label{display:block;font:600 11px/1 var(--sans);color:rgba(253,230,138,.6);margin-bottom:6px;}
-  .pc-field input,.pc-field textarea{width:100%;background:#14100A;border:1px solid rgba(251,191,36,.2);border-radius:8px;color:#FDE68A;font:500 13px/1.4 var(--sans);padding:9px 11px;box-sizing:border-box;}
+  .pc-field input,.pc-field textarea,.pc-field select{width:100%;background:#14100A;border:1px solid rgba(251,191,36,.2);border-radius:8px;color:#FDE68A;font:500 13px/1.4 var(--sans);padding:9px 11px;box-sizing:border-box;}
   .pc-field textarea{resize:vertical;min-height:90px;font-family:ui-monospace,monospace;font-size:12.5px;}
   .pc-field input:focus,.pc-field textarea:focus{outline:none;border-color:#FBBF24;}
   .pc-row{display:flex;gap:10px;}
@@ -758,7 +768,7 @@
   .pc-batch-summary-value.ok{color:#4ADE80;}
   .pc-batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:16px;}
 
-  .pc-board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px;}
+  .pc-board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:1;overflow-y:auto;padding:18px;min-height:0;}
   @media (max-width:980px){.pc-board{grid-template-columns:repeat(2,1fr);}}
   .pc-board-col{background:#14100A;border:1px solid rgba(251,191,36,.15);border-radius:10px;padding:10px;min-height:220px;display:flex;flex-direction:column;transition:all .12s;}
   .pc-board-col.dragover{border-color:#FBBF24;background:rgba(251,191,36,.07);}
@@ -811,6 +821,12 @@
   .pc-batch-card-links a:hover{background:rgba(251,191,36,.12);}
   .pc-batch-tag{display:inline-block;padding:2px 7px;border-radius:999px;font:800 9px/1 var(--sans);margin-top:6px;margin-right:4px;background:rgba(148,163,184,.18);color:#CBD5E1;}
   .pc-status-line{font:600 11.5px/1.4 var(--sans);color:rgba(253,230,138,.55);background:#14100A;border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:8px 12px;margin-top:8px;}
+
+  .pc-drop-slot{border:2px dashed rgba(251,191,36,.3);border-radius:10px;padding:14px;text-align:center;font:600 11.5px/1.4 var(--sans);color:rgba(253,230,138,.4);margin-bottom:14px;transition:all .15s;}
+  .pc-drop-slot.dragover{border-color:#FBBF24;background:rgba(251,191,36,.1);color:#FDE68A;}
+  .pc-drop-slot.filled{border-style:solid;border-color:rgba(251,191,36,.35);background:#221C10;color:#FDE68A;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .pc-drop-slot-clear{background:none;border:none;color:rgba(253,230,138,.4);cursor:pointer;font-size:13px;flex:none;}
+  .pc-drop-slot-clear:hover{color:#F87171;}
 
   /* ── Haz ── */
   .haz-wrap{position:fixed;inset:0;background:#0D1A12;z-index:200;display:none;flex-direction:column;}
@@ -3596,101 +3612,24 @@
     <h2>Audit Tool</h2>
     <button class="pc-back" id="pcBack">← Back</button>
   </div>
-  <div class="pc-body">
-    <div class="pc-panel">
-      <h3>Barcode Lookup</h3>
-      <div class="pc-field">
-        <label>Barcodes — one per line (batch as many as you want)</label>
-        <textarea id="pcBarcodes" placeholder="69433891&#10;22747427&#10;32753955"></textarea>
-      </div>
-      <div class="pc-btns">
-        <button class="pc-btn pc-btn-calc" id="pcBuildBarcodePrompt">Build Lookup Prompt</button>
-        <button class="pc-btn pc-btn-save" id="pcCopyBarcodePrompt">📋 Copy</button>
-      </div>
-      <div class="pc-field" id="pcBarcodePromptWrap" style="display:none;margin-top:12px;">
-        <label>Paste this into Claude</label>
-        <textarea id="pcBarcodePromptOut" readonly style="min-height:110px;"></textarea>
-      </div>
-
-      <h3 style="margin-top:22px;">eBay Price Search</h3>
-      <div class="pc-field">
-        <label>Item / search query</label>
-        <input type="text" id="pcQuery" placeholder="e.g. Dell Latitude 5420 i5-1145G7 16GB 512GB">
-      </div>
-      <div class="pc-row">
-        <div class="pc-field">
-          <label>SKU (optional)</label>
-          <input type="text" id="pcSku" placeholder="NJ02-...">
-        </div>
-        <div class="pc-field">
-          <label>Condition (optional)</label>
-          <input type="text" id="pcCondition" placeholder="e.g. Used - A, For Parts">
-        </div>
-      </div>
-      <div class="pc-btns">
-        <button class="pc-btn pc-btn-search" id="pcOpenSold">🔎 Open Sold Listings on eBay</button>
-        <button class="pc-btn pc-btn-search" id="pcOpenActive">🔎 Open Active Listings on eBay</button>
-      </div>
-      <div class="pc-btns">
-        <button class="pc-btn pc-btn-calc" id="pcCheckEbayLive">🔴 Check eBay Now (Live)</button>
-        <button class="pc-btn pc-btn-save" id="pcMcAutofill">🔎 Find in Marketplace Connect</button>
-      </div>
-      <div class="pc-status-line" id="pcLiveStatusLine" style="display:none;"></div>
-      <div class="pc-status-line" id="pcMcStatusLine" style="display:none;"></div>
-
-      <h3 style="margin-top:22px;">Log Prices You Find</h3>
-      <div class="pc-row">
-        <div class="pc-field">
-          <label>Your current price</label>
-          <input type="text" id="pcCurrentPrice" placeholder="e.g. 349.99">
-        </div>
-      </div>
-      <div class="pc-field">
-        <label>Paste prices — one per line (numbers only, e.g. 129.99)</label>
-        <textarea id="pcPrices" placeholder="129.99&#10;134.00&#10;119.99&#10;140.00"></textarea>
-      </div>
-      <div class="pc-btns">
-        <button class="pc-btn pc-btn-calc" id="pcCalc">Calculate</button>
-        <button class="pc-btn pc-btn-save" id="pcSave">💾 Save to History</button>
-      </div>
-
-      <div class="pc-verdict-card" id="pcVerdictCard" style="display:none;">
-        <div class="pc-verdict-top">
-          <div class="pc-verdict-title" id="pcVerdictTitle">—</div>
-          <span class="pc-chip" id="pcVerdictChip">—</span>
-        </div>
-        <div class="pc-verdict-sub" id="pcVerdictSub"></div>
-      </div>
-
-      <div class="pc-stats" id="pcStats" style="display:none;">
-        <div class="pc-stat"><div class="pc-stat-label">Count</div><div class="pc-stat-value" id="pcStatCount">–</div></div>
-        <div class="pc-stat"><div class="pc-stat-label">Median</div><div class="pc-stat-value" id="pcStatMedian">–</div></div>
-        <div class="pc-stat"><div class="pc-stat-label">Average</div><div class="pc-stat-value" id="pcStatAvg">–</div></div>
-        <div class="pc-stat"><div class="pc-stat-label">Low – High</div><div class="pc-stat-value" id="pcStatRange" style="font-size:14px;">–</div></div>
-      </div>
-    </div>
-
-    <div class="pc-panel">
-      <h3>Recent Lookups</h3>
-      <div id="pcHistList"><div class="pc-hist-empty">No saved lookups yet.</div></div>
-    </div>
-
-    <div class="pc-panel pc-panel-wide">
-      <div class="pc-batch-head">
-        <h3 style="margin:0;">Batch Results <span class="pc-batch-count" id="pcBatchCount">0 items</span></h3>
-        <div class="pc-btns" style="margin:0;">
+  <div class="pc-stepper">
+    <span class="pc-step"><span class="pc-step-num">1</span> Build Batch</span>
+    <span class="pc-step-arrow">→</span>
+    <span class="pc-step"><span class="pc-step-num">2</span> Import</span>
+    <span class="pc-step-arrow">→</span>
+    <span class="pc-step"><span class="pc-step-num">3</span> Work the Board</span>
+    <span class="pc-step-arrow">→</span>
+    <span class="pc-step"><span class="pc-step-num">4</span> Review</span>
+  </div>
+  <div class="pc-main">
+    <div class="pc-left">
+      <div class="pc-board-toolbar">
+        <span class="pc-board-title">🗂 Batch Board <span class="pc-batch-count" id="pcBatchCount">0 items</span></span>
+        <div class="pc-board-toolbar-btns">
           <button class="pc-btn pc-btn-save" id="pcReviewBatch">📊 Review Batch</button>
           <button class="pc-btn pc-btn-save" id="pcClearBatch">🗑 Clear Batch</button>
         </div>
       </div>
-      <div class="pc-field" style="margin-top:12px;">
-        <label>Paste Claude's reply here</label>
-        <textarea id="pcBatchImport" placeholder="OK | Title | Date Created | Condition | Price | SKU | Shopify link | eBay link"></textarea>
-      </div>
-      <div class="pc-btns">
-        <button class="pc-btn pc-btn-calc" id="pcImportBatch">Import Into Batch</button>
-      </div>
-
       <div class="pc-board" id="pcBoard">
         <div class="pc-board-col" data-bin="unsorted">
           <div class="pc-board-col-head"><span>Unsorted</span><span class="pc-board-col-count" id="pcBinCount-unsorted">0</span></div>
@@ -3707,6 +3646,117 @@
         <div class="pc-board-col" data-bin="dead">
           <div class="pc-board-col-head"><span>🔴 Errored — Doesn't Activate</span><span class="pc-board-col-count" id="pcBinCount-dead">0</span></div>
           <div class="pc-board-cards" id="pcBinCards-dead"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pc-right">
+      <div class="pc-right-scroll">
+        <div class="pc-panel">
+          <h3>Barcode Lookup</h3>
+          <div class="pc-field">
+            <label>Barcodes — one per line (batch as many as you want)</label>
+            <textarea id="pcBarcodes" placeholder="69433891&#10;22747427&#10;32753955"></textarea>
+          </div>
+          <div class="pc-btns">
+            <button class="pc-btn pc-btn-calc" id="pcBuildBarcodePrompt">Build Lookup Prompt</button>
+            <button class="pc-btn pc-btn-save" id="pcCopyBarcodePrompt">📋 Copy</button>
+          </div>
+          <div class="pc-field" id="pcBarcodePromptWrap" style="display:none;margin-top:12px;">
+            <label>Paste this into Claude</label>
+            <textarea id="pcBarcodePromptOut" readonly style="min-height:110px;"></textarea>
+          </div>
+        </div>
+
+        <div class="pc-panel">
+          <h3>Import Batch Results</h3>
+          <div class="pc-field">
+            <label>Paste Claude's reply here</label>
+            <textarea id="pcBatchImport" placeholder="OK | Title | Date Created | Condition | Price | SKU | Shopify link | eBay link"></textarea>
+          </div>
+          <div class="pc-btns">
+            <button class="pc-btn pc-btn-calc" id="pcImportBatch">Import Into Batch</button>
+          </div>
+        </div>
+
+        <div class="pc-panel">
+          <h3>eBay Price Search</h3>
+          <div class="pc-drop-slot" id="pcCheckerDropSlot">🎯 Drag a card from the board here to load it into the checker</div>
+          <div class="pc-field">
+            <label>Item / search query</label>
+            <input type="text" id="pcQuery" placeholder="e.g. Dell Latitude 5420 i5-1145G7 16GB 512GB">
+          </div>
+          <div class="pc-row">
+            <div class="pc-field">
+              <label>SKU (optional)</label>
+              <input type="text" id="pcSku" placeholder="NJ02-...">
+            </div>
+            <div class="pc-field">
+              <label>Condition (optional, for your notes)</label>
+              <input type="text" id="pcCondition" placeholder="e.g. Used - A, For Parts">
+            </div>
+          </div>
+          <div class="pc-field">
+            <label>Filter eBay comps by condition</label>
+            <select id="pcConditionFilter">
+              <option value="">🔍 Auto (guess from title/condition)</option>
+              <option value="any">Any condition (no filter)</option>
+              <option value="new">New</option>
+              <option value="new-other">Open Box / New Other</option>
+              <option value="certified-refurb">Certified Refurbished</option>
+              <option value="seller-refurb">Seller Refurbished</option>
+              <option value="used">Used</option>
+              <option value="parts">For Parts / Not Working</option>
+            </select>
+          </div>
+          <div class="pc-btns">
+            <button class="pc-btn pc-btn-search" id="pcOpenSold">🔎 Open Sold Listings on eBay</button>
+            <button class="pc-btn pc-btn-search" id="pcOpenActive">🔎 Open Active Listings on eBay</button>
+          </div>
+          <div class="pc-btns">
+            <button class="pc-btn pc-btn-calc" id="pcCheckEbayLive">🔴 Check eBay Now (Live)</button>
+            <button class="pc-btn pc-btn-save" id="pcMcAutofill">🔎 Find in Marketplace Connect</button>
+          </div>
+          <div class="pc-status-line" id="pcLiveStatusLine" style="display:none;"></div>
+          <div class="pc-status-line" id="pcMcStatusLine" style="display:none;"></div>
+        </div>
+
+        <div class="pc-panel">
+          <h3>Log Prices You Find</h3>
+          <div class="pc-row">
+            <div class="pc-field">
+              <label>Your current price</label>
+              <input type="text" id="pcCurrentPrice" placeholder="e.g. 349.99">
+            </div>
+          </div>
+          <div class="pc-field">
+            <label>Paste prices — one per line (numbers only, e.g. 129.99)</label>
+            <textarea id="pcPrices" placeholder="129.99&#10;134.00&#10;119.99&#10;140.00"></textarea>
+          </div>
+          <div class="pc-btns">
+            <button class="pc-btn pc-btn-calc" id="pcCalc">Calculate</button>
+            <button class="pc-btn pc-btn-save" id="pcSave">💾 Save to History</button>
+          </div>
+
+          <div class="pc-verdict-card" id="pcVerdictCard" style="display:none;">
+            <div class="pc-verdict-top">
+              <div class="pc-verdict-title" id="pcVerdictTitle">—</div>
+              <span class="pc-chip" id="pcVerdictChip">—</span>
+            </div>
+            <div class="pc-verdict-sub" id="pcVerdictSub"></div>
+          </div>
+
+          <div class="pc-stats" id="pcStats" style="display:none;">
+            <div class="pc-stat"><div class="pc-stat-label">Count</div><div class="pc-stat-value" id="pcStatCount">–</div></div>
+            <div class="pc-stat"><div class="pc-stat-label">Median</div><div class="pc-stat-value" id="pcStatMedian">–</div></div>
+            <div class="pc-stat"><div class="pc-stat-label">Average</div><div class="pc-stat-value" id="pcStatAvg">–</div></div>
+            <div class="pc-stat"><div class="pc-stat-label">Low – High</div><div class="pc-stat-value" id="pcStatRange" style="font-size:14px;">–</div></div>
+          </div>
+        </div>
+
+        <div class="pc-panel">
+          <h3>Recent Lookups</h3>
+          <div id="pcHistList"><div class="pc-hist-empty">No saved lookups yet.</div></div>
         </div>
       </div>
     </div>
@@ -9011,17 +9061,58 @@ function pcBuildQuery(){
   return [q, cond].filter(Boolean).join(' ');
 }
 
+// eBay's actual condition filter IDs (LH_ItemCondition= in search URLs).
+const PC_CONDITION_IDS = {
+  'new': 1000,
+  'new-other': 1500,
+  'certified-refurb': 2000,
+  'seller-refurb': 2500,
+  'used': 3000,
+  'parts': 7000,
+};
+
+// Lightweight keyword guess so you don't have to pick a condition manually
+// most of the time — checked in priority order since e.g. "for parts" should
+// win over an incidental "new" elsewhere in the title.
+function pcGuessConditionKey(text){
+  const t = (text || '').toLowerCase();
+  if(/for parts|not working|doesn'?t (power|turn) on|no power|won'?t (power|turn) on|broken|cracked screen|water damage|does not read/.test(t)) return 'parts';
+  if(/certified refurb/.test(t)) return 'certified-refurb';
+  if(/refurb/.test(t)) return 'seller-refurb';
+  if(/open box|new other/.test(t)) return 'new-other';
+  if(/\bnew\b/.test(t) && !/renewed/.test(t)) return 'new';
+  if(/\bused\b/.test(t)) return 'used';
+  return ''; // no confident guess — falls through to "any condition"
+}
+
+// Resolves the dropdown to an actual LH_ItemCondition id (or null for "any"),
+// running the guess heuristic only when the dropdown is left on "Auto".
+function pcResolveConditionId(){
+  const selected = document.getElementById('pcConditionFilter')?.value || '';
+  let key = selected;
+  if(key === ''){
+    const text = pcBuildQuery();
+    key = pcGuessConditionKey(text);
+  }
+  if(!key || key === 'any') return null;
+  return PC_CONDITION_IDS[key] || null;
+}
+
 document.getElementById('pcOpenSold')?.addEventListener('click', ()=>{
   const q = pcBuildQuery();
   if(!q){ document.getElementById('pcQuery').focus(); return; }
-  const url = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(q) + '&LH_Sold=1&LH_Complete=1&_sop=13';
+  const condId = pcResolveConditionId();
+  let url = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(q) + '&LH_Sold=1&LH_Complete=1&_sop=13';
+  if(condId) url += '&LH_ItemCondition=' + condId;
   window.open(url, '_blank');
 });
 
 document.getElementById('pcOpenActive')?.addEventListener('click', ()=>{
   const q = pcBuildQuery();
   if(!q){ document.getElementById('pcQuery').focus(); return; }
-  const url = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(q) + '&LH_BIN=1&_sop=15';
+  const condId = pcResolveConditionId();
+  let url = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(q) + '&LH_BIN=1&_sop=15';
+  if(condId) url += '&LH_ItemCondition=' + condId;
   window.open(url, '_blank');
 });
 
@@ -9062,9 +9153,10 @@ document.getElementById('pcCheckEbayLive')?.addEventListener('click', async ()=>
   const line = document.getElementById('pcLiveStatusLine');
   line.style.display = 'block';
   if(!q){ document.getElementById('pcQuery').focus(); return; }
+  const condId = pcResolveConditionId();
   line.textContent = 'Scraping eBay via the extension…';
 
-  const res = await pcAskExtension('CHECK_EBAY_LIVE', { query: q });
+  const res = await pcAskExtension('CHECK_EBAY_LIVE', { query: q, conditionId: condId });
   if(!res.ok){
     line.textContent = res.error || 'Live check failed.';
     return;
@@ -9395,6 +9487,51 @@ function pcBatchCardHtml(e){
 }
 
 let _pcDragId = null;
+
+// ── Card → Price Checker drop slot ────────────────────────────────
+// Dropping a card here doesn't move it on the board — it just feeds that
+// item's title/SKU/condition/price into the checker fields so you don't
+// have to retype them. The card still lives in its board column and gets
+// dragged to a real bin (Good/Fixed/Dead) afterward, same as before.
+function pcResetDropSlot(){
+  const slot = document.getElementById('pcCheckerDropSlot');
+  if(!slot) return;
+  slot.classList.remove('filled');
+  slot.textContent = '🎯 Drag a card from the board here to load it into the checker';
+}
+
+(function initPcDropSlot(){
+  const slot = document.getElementById('pcCheckerDropSlot');
+  if(!slot) return;
+
+  slot.addEventListener('dragover', (ev)=>{ ev.preventDefault(); slot.classList.add('dragover'); });
+  slot.addEventListener('dragleave', ()=> slot.classList.remove('dragover'));
+  slot.addEventListener('drop', (ev)=>{
+    ev.preventDefault();
+    slot.classList.remove('dragover');
+    const id = ev.dataTransfer.getData('text/plain');
+    if(!id) return;
+    const entry = pcLoadBatch().find(e=>String(e.id)===String(id));
+    if(!entry) return;
+
+    if(entry.status === 'error'){
+      slot.classList.add('filled');
+      slot.innerHTML = `<span>⚠️ "${entry.barcode}" errored on import — nothing to price-check.</span><button class="pc-drop-slot-clear" id="pcDropSlotClear" title="Clear">×</button>`;
+      document.getElementById('pcDropSlotClear')?.addEventListener('click', pcResetDropSlot);
+      return;
+    }
+
+    document.getElementById('pcQuery').value = entry.title || '';
+    document.getElementById('pcSku').value = entry.sku || '';
+    document.getElementById('pcCondition').value = entry.condition || '';
+    const priceNum = parseFloat(String(entry.price || '').replace(/[^0-9.]/g,''));
+    document.getElementById('pcCurrentPrice').value = isNaN(priceNum) ? '' : priceNum;
+
+    slot.classList.add('filled');
+    slot.innerHTML = `<span>✓ Loaded: <strong>${entry.title}</strong></span><button class="pc-drop-slot-clear" id="pcDropSlotClear" title="Clear">×</button>`;
+    document.getElementById('pcDropSlotClear')?.addEventListener('click', pcResetDropSlot);
+  });
+})();
 
 function pcRenderBatch(){
   const list = pcLoadBatch();
