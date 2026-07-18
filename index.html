@@ -834,6 +834,15 @@
   .pc-verify-btn:hover{background:rgba(251,191,36,.2);}
   .pc-verify-btn:disabled{opacity:.6;cursor:default;}
   .pc-verify-status{font:500 9.5px/1.3 var(--sans);color:rgba(253,230,138,.4);}
+
+  .pc-board-card-edit{margin-top:8px;padding-top:8px;border-top:1px solid rgba(251,191,36,.08);}
+  .pc-edit-toggle{background:none;border:none;color:rgba(253,230,138,.5);font:700 10px/1 var(--sans);cursor:pointer;padding:2px 0;}
+  .pc-edit-toggle:hover{color:#FBBF24;}
+  .pc-edit-panel{margin-top:8px;}
+  .pc-edit-notes{width:100%;background:#14100A;border:1px solid rgba(251,191,36,.2);border-radius:7px;color:#FDE68A;font:500 11px/1.4 var(--sans);padding:8px 9px;box-sizing:border-box;min-height:60px;resize:vertical;}
+  .pc-edit-notes:focus{outline:none;border-color:#FBBF24;}
+  .pc-edit-btns{display:flex;gap:6px;margin-top:6px;}
+  .pc-edit-prompt-out{width:100%;background:#14100A;border:1px solid rgba(251,191,36,.25);border-radius:7px;color:rgba(253,230,138,.7);font:500 10.5px/1.4 ui-monospace,monospace;padding:8px 9px;box-sizing:border-box;min-height:140px;resize:vertical;margin-top:8px;}
   .pc-status-line{font:600 11.5px/1.4 var(--sans);color:rgba(253,230,138,.55);background:#14100A;border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:8px 12px;margin-top:8px;}
 
   .pc-drop-slot{border:2px dashed rgba(251,191,36,.3);border-radius:10px;padding:14px;text-align:center;font:600 11.5px/1.4 var(--sans);color:rgba(253,230,138,.4);margin-bottom:14px;transition:all .15s;}
@@ -9482,6 +9491,39 @@ function pcCopySpan(text, label){
   return `<span class="pc-copyable" data-copy="${safe}" title="Click to copy${label ? ' ' + label : ''}">${text}</span>`;
 }
 
+// Builds the Shopify audit-correction prompt for a single card. The three
+// standing instructions (metafields, description, title) are ALWAYS
+// included, no matter what the auditor typed — "notes" only adds to them,
+// it never replaces them.
+function pcBuildCorrectionPrompt(entry, notes){
+  const sku = entry.sku || '(no SKU on file — find by title/barcode instead)';
+  const lines = (notes || '').split('\n').map(l=>l.trim()).filter(Boolean);
+  const extra = lines.length ? lines.map(l=>`- ${l}`).join('\n') : '- none beyond the standing instructions above';
+
+  return `SHOPIFY AUDIT CORRECTION
+
+Action: EDIT
+
+Match the existing Shopify product using this exact SKU:
+${sku}
+
+Do not create a new product.
+
+Standing instructions — always apply these to every audited item:
+1. Review all metafields against the item's actual specs (processor, RAM, storage, color, etc.) and correct any that are wrong, missing, or inconsistent with the listing.
+2. Rewrite the description to be clearer and more appealing to buyers — same factual content, better presentation. Keep any real condition issues honestly disclosed.
+3. Rewrite the title to be clear, accurate, and follow our usual listing conventions (brand, model, specs, condition flag if needed).
+
+Additional corrections for this item:
+${extra}
+
+Do not change: images, inventory quantity, product status, shipping settings, return settings, tags, or the SKU itself — unless explicitly requested above.
+
+Before making changes: confirm exactly one product/variant matches this SKU, read the current values of all affected fields, and stop and report back if it can't be matched safely.
+
+After making changes: re-read the product, confirm the new values were actually saved, and report the old values, new values, and verification result.`;
+}
+
 function pcBatchCardHtml(e){
   if(e.status === 'error'){
     return `<div class="pc-board-card err" draggable="true" data-id="${e.id}">
@@ -9523,6 +9565,17 @@ function pcBatchCardHtml(e){
     <div class="pc-board-card-verify">
       <button class="pc-verify-btn" data-verify-id="${e.id}">🔍 Verify on eBay</button>
       <span class="pc-verify-status" id="pcVerifyStatus-${e.id}"></span>
+    </div>
+    <div class="pc-board-card-edit">
+      <button class="pc-edit-toggle" data-edit-id="${e.id}">${e.correctionExpanded ? '▾' : '▸'} Fix / Edit Instructions</button>
+      <div class="pc-edit-panel" id="pcEditPanel-${e.id}" style="display:${e.correctionExpanded ? 'block' : 'none'};">
+        <textarea class="pc-edit-notes" id="pcEditNotes-${e.id}" placeholder="e.g. Lower price to $249.99. Rewrite title to include the overheating issue. Fix processor metafield to i5-1335U.">${e.correctionNotes || ''}</textarea>
+        <div class="pc-edit-btns">
+          <button class="pc-verify-btn" data-genprompt-id="${e.id}">Generate Prompt</button>
+          <button class="pc-verify-btn" data-copyprompt-id="${e.id}">🛠 Fix!</button>
+        </div>
+        <textarea class="pc-edit-prompt-out" id="pcEditPromptOut-${e.id}" readonly style="display:${e.correctionPrompt ? 'block' : 'none'};">${e.correctionPrompt || ''}</textarea>
+      </div>
     </div>
   </div>`;
 }
@@ -9592,7 +9645,7 @@ function pcRenderBatch(){
 
     container.querySelectorAll('.pc-board-card').forEach(card=>{
       card.addEventListener('dragstart', (ev)=>{
-        if(ev.target.closest && (ev.target.closest('.pc-copyable') || ev.target.closest('.pc-verify-btn'))){ ev.preventDefault(); return; }
+        if(ev.target.closest && (ev.target.closest('.pc-copyable') || ev.target.closest('.pc-verify-btn') || ev.target.closest('.pc-board-card-edit'))){ ev.preventDefault(); return; }
         _pcDragId = card.dataset.id;
         card.classList.add('dragging');
         ev.dataTransfer.effectAllowed = 'move';
@@ -9667,6 +9720,73 @@ function pcRenderBatch(){
         pcRenderBatch();
         const el2 = document.getElementById('pcVerifyStatus-' + id);
         if(el2) el2.textContent = res.skuConfirmed ? '✓ SKU confirmed' : (res.reason || 'Title match only — not SKU confirmed.');
+      });
+
+      // ── Fix / Edit Instructions panel ──
+      const editToggle = card.querySelector('.pc-edit-toggle');
+      editToggle?.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        const id = editToggle.dataset.editId;
+        const list = pcLoadBatch();
+        const idx = list.findIndex(x=>String(x.id)===String(id));
+        if(idx === -1) return;
+        list[idx].correctionExpanded = !list[idx].correctionExpanded;
+        pcSaveBatch(list);
+        pcRenderBatch();
+      });
+
+      const editNotes = card.querySelector('.pc-edit-notes');
+      editNotes?.addEventListener('blur', ()=>{
+        const id = editNotes.id.replace('pcEditNotes-', '');
+        const list = pcLoadBatch();
+        const idx = list.findIndex(x=>String(x.id)===String(id));
+        if(idx === -1) return;
+        list[idx].correctionNotes = editNotes.value;
+        pcSaveBatch(list);
+      });
+
+      const genBtn = card.querySelector('[data-genprompt-id]');
+      genBtn?.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        const id = genBtn.dataset.genpromptId;
+        const list = pcLoadBatch();
+        const idx = list.findIndex(x=>String(x.id)===String(id));
+        if(idx === -1) return;
+        const notesEl = document.getElementById('pcEditNotes-' + id);
+        const notes = notesEl ? notesEl.value : (list[idx].correctionNotes || '');
+        const prompt = pcBuildCorrectionPrompt(list[idx], notes);
+        list[idx].correctionNotes = notes;
+        list[idx].correctionPrompt = prompt;
+        list[idx].correctionExpanded = true;
+        pcSaveBatch(list);
+        pcRenderBatch();
+      });
+
+      const copyBtn = card.querySelector('[data-copyprompt-id]');
+      copyBtn?.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        const id = copyBtn.dataset.copypromptId;
+        const list = pcLoadBatch();
+        const idx = list.findIndex(x=>String(x.id)===String(id));
+        if(idx === -1) return;
+        let prompt = list[idx].correctionPrompt;
+        if(!prompt){
+          const notesEl = document.getElementById('pcEditNotes-' + id);
+          const notes = notesEl ? notesEl.value : (list[idx].correctionNotes || '');
+          prompt = pcBuildCorrectionPrompt(list[idx], notes);
+          list[idx].correctionNotes = notes;
+          list[idx].correctionPrompt = prompt;
+          list[idx].correctionExpanded = true;
+          pcSaveBatch(list);
+        }
+        navigator.clipboard?.writeText(prompt).catch(()=>{});
+        const orig = copyBtn.textContent;
+        copyBtn.textContent = '✓ Copied Prompt!';
+        setTimeout(()=>{ copyBtn.textContent = orig; }, 1400);
+        // Reflect the freshly-generated prompt in the panel without a full re-render
+        // (avoids stealing focus if the user is about to type more notes).
+        const outEl = document.getElementById('pcEditPromptOut-' + id);
+        if(outEl){ outEl.value = prompt; outEl.style.display = 'block'; }
       });
     });
   });
