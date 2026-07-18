@@ -776,16 +776,26 @@
 
   .pc-board-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
   .pc-board-unsorted{flex:none;border-bottom:1px solid rgba(251,191,36,.12);padding:14px 18px;background:#170F06;}
-  .pc-board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:1;overflow-y:auto;padding:18px;min-height:0;}
+  .pc-board{display:grid;grid-template-columns:repeat(5,minmax(190px,1fr));gap:14px;flex:1;overflow-y:auto;overflow-x:auto;padding:18px;min-height:0;}
+  @media (max-width:1180px){.pc-board{grid-template-columns:repeat(3,1fr);}}
   @media (max-width:980px){.pc-board{grid-template-columns:repeat(2,1fr);}}
   .pc-board-col{background:#14100A;border:1px solid rgba(251,191,36,.15);border-radius:10px;padding:10px;min-height:220px;display:flex;flex-direction:column;transition:all .12s;}
   .pc-board-col.dragover, .pc-board-unsorted.dragover{border-color:#FBBF24;background:rgba(251,191,36,.07);}
+  /* Focus mode: once a card is selected (click or dragged into the checker),
+     everything else on the board dims so the active item stands out. */
+  .pc-board-wrap.pc-has-active .pc-board-col:not(:has(.pc-card-active)),
+  .pc-board-wrap.pc-has-active .pc-board-unsorted:not(:has(.pc-card-active)){opacity:.5;transition:opacity .15s;}
+  .pc-board-wrap.pc-has-active .pc-board-col:has(.pc-card-active),
+  .pc-board-wrap.pc-has-active .pc-board-unsorted:has(.pc-card-active){opacity:1;}
+  .pc-board-wrap.pc-has-active .pc-board-card{opacity:.4;filter:saturate(.5);transition:opacity .15s,filter .15s,box-shadow .15s;}
+  .pc-board-card.pc-card-active{cursor:pointer;}
+  .pc-board-wrap.pc-has-active .pc-board-card.pc-card-active{opacity:1 !important;filter:none;border-color:#FBBF24;box-shadow:0 0 0 2px rgba(251,191,36,.4),0 4px 16px rgba(0,0,0,.45);}
   .pc-board-col-head{display:flex;justify-content:space-between;align-items:center;font:700 10.5px/1 var(--sans);color:#FDE68A;text-transform:uppercase;letter-spacing:.03em;margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid rgba(251,191,36,.12);}
   .pc-board-col-count{font:700 10px/1 var(--sans);color:rgba(253,230,138,.4);background:rgba(251,191,36,.08);padding:2px 7px;border-radius:999px;}
   .pc-board-cards{flex:1;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overflow-x:hidden;min-height:70px;}
   .pc-board-cards.pc-board-cards-row{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;}
   .pc-board-cards.pc-board-cards-row .pc-board-card{width:250px;flex:none;}
-  .pc-board-card{background:#221C10;border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:9px 10px;cursor:grab;}
+  .pc-board-card{background:#221C10;border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:9px 10px;cursor:grab;transition:opacity .15s,filter .15s,box-shadow .15s,border-color .15s;}
   .pc-board-card:active{cursor:grabbing;}
   .pc-board-card.dragging{opacity:.4;}
   .pc-board-card.err{border-color:rgba(239,68,68,.3);}
@@ -3666,6 +3676,10 @@
           <div class="pc-board-col" data-bin="working">
             <div class="pc-board-col-head"><span>🔧 Working On</span><span class="pc-board-col-count" id="pcBinCount-working">0</span></div>
             <div class="pc-board-cards" id="pcBinCards-working"></div>
+          </div>
+          <div class="pc-board-col" data-bin="awaiting">
+            <div class="pc-board-col-head"><span>🟣 Awaiting Activation</span><span class="pc-board-col-count" id="pcBinCount-awaiting">0</span></div>
+            <div class="pc-board-cards" id="pcBinCards-awaiting"></div>
           </div>
           <div class="pc-board-col" data-bin="good">
             <div class="pc-board-col-head"><span>🟢 Good</span><span class="pc-board-col-count" id="pcBinCount-good">0</span></div>
@@ -9375,7 +9389,7 @@ function pcParseBatchReply(raw){
       items.push({
         id: Date.now() + Math.random(),
         status: 'ok',
-        bin: null, // null = Unsorted; 'good' | 'fixed' | 'dead' once dragged
+        bin: null, // null = Unsorted; 'working' | 'awaiting' | 'good' | 'fixed' | 'dead' once dragged
         title: parts[1] || '',
         date: parts[2] || '',
         condition: parts[3] || '',
@@ -9416,7 +9430,7 @@ document.getElementById('pcClearBatch')?.addEventListener('click', ()=>{
   pcRenderBatch();
 });
 
-const PC_BIN_LABELS = { unsorted:'📥 Unsorted', working:'🔧 Working On', good:'🟢 Good', fixed:'🟡 Errored & Fixed', dead:"🔴 Errored — Doesn't Activate" };
+const PC_BIN_LABELS = { unsorted:'📥 Unsorted', working:'🔧 Working On', awaiting:'🟣 Awaiting Activation', good:'🟢 Good', fixed:'🟡 Errored & Fixed', dead:"🔴 Errored — Doesn't Activate" };
 
 function pcBuildRecapData(){
   const list = pcLoadBatch();
@@ -9425,7 +9439,7 @@ function pcBuildRecapData(){
   const errItems = list.filter(e=>e.status==='error');
   const noEbay = okItems.filter(e=>!e.ebayLink && !e.ebayUnverified);
   const unverified = okItems.filter(e=>e.ebayUnverified);
-  const byBin = { unsorted:[], working:[], good:[], fixed:[], dead:[] };
+  const byBin = { unsorted:[], working:[], awaiting:[], good:[], fixed:[], dead:[] };
   list.forEach(e => byBin[e.bin || 'unsorted'].push(e));
   return { total, okItems, errItems, noEbay, unverified, byBin };
 }
@@ -9441,6 +9455,7 @@ document.getElementById('pcReviewBatch')?.addEventListener('click', ()=>{
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">No eBay Link</div><div class="pc-recap-stat-value warn">${noEbay.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Unverified</div><div class="pc-recap-stat-value warn">${unverified.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Working On</div><div class="pc-recap-stat-value">${byBin.working.length}</div></div>
+    <div class="pc-recap-stat"><div class="pc-recap-stat-label">Awaiting Activation</div><div class="pc-recap-stat-value warn">${byBin.awaiting.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Good</div><div class="pc-recap-stat-value ok">${byBin.good.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Errored &amp; Fixed</div><div class="pc-recap-stat-value warn">${byBin.fixed.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Doesn't Activate</div><div class="pc-recap-stat-value err">${byBin.dead.length}</div></div>
@@ -9448,7 +9463,7 @@ document.getElementById('pcReviewBatch')?.addEventListener('click', ()=>{
   `;
 
   const sectionsEl = document.getElementById('pcRecapSections');
-  const binOrder = ['good','fixed','dead','working','unsorted'];
+  const binOrder = ['good','fixed','dead','awaiting','working','unsorted'];
   sectionsEl.innerHTML = binOrder.map(binKey=>{
     const items = byBin[binKey];
     const rows = items.length
@@ -9607,6 +9622,24 @@ function pcBatchCardHtml(e){
 
 let _pcDragId = null;
 
+// ── Focus mode: one card can be "active" at a time (click it, or drag it
+// into the checker slot). While active, every other card/column on the
+// board dims out via CSS so the item you're auditing stands out. ──
+let _pcActiveCardId = null;
+function pcApplyActiveCardHighlight(){
+  const board = document.getElementById('pcBoard');
+  if(!board) return;
+  board.classList.toggle('pc-has-active', _pcActiveCardId !== null);
+  board.querySelectorAll('.pc-board-card').forEach(c=>{
+    c.classList.toggle('pc-card-active', _pcActiveCardId !== null && c.dataset.id === _pcActiveCardId);
+  });
+}
+function pcSetActiveCard(id){
+  const idStr = String(id);
+  _pcActiveCardId = (_pcActiveCardId === idStr) ? null : idStr; // clicking the active card again clears focus mode
+  pcApplyActiveCardHighlight();
+}
+
 // ── Card → Price Checker drop slot ────────────────────────────────
 // Dropping a card here doesn't move it on the board — it just feeds that
 // item's title/SKU/condition/price into the checker fields so you don't
@@ -9637,6 +9670,7 @@ function pcResetDropSlot(){
       slot.classList.add('filled');
       slot.innerHTML = `<span>⚠️ "${entry.barcode}" errored on import — nothing to price-check.</span><button class="pc-drop-slot-clear" id="pcDropSlotClear" title="Clear">×</button>`;
       document.getElementById('pcDropSlotClear')?.addEventListener('click', pcResetDropSlot);
+      pcSetActiveCard(entry.id);
       return;
     }
 
@@ -9649,6 +9683,7 @@ function pcResetDropSlot(){
     slot.classList.add('filled');
     slot.innerHTML = `<span>✓ Loaded: <strong>${entry.title}</strong></span><button class="pc-drop-slot-clear" id="pcDropSlotClear" title="Clear">×</button>`;
     document.getElementById('pcDropSlotClear')?.addEventListener('click', pcResetDropSlot);
+    pcSetActiveCard(entry.id);
   });
 })();
 
@@ -9656,7 +9691,7 @@ function pcRenderBatch(){
   const list = pcLoadBatch();
   document.getElementById('pcBatchCount').textContent = list.length + (list.length===1 ? ' item' : ' items');
 
-  const bins = { unsorted: [], working: [], good: [], fixed: [], dead: [] };
+  const bins = { unsorted: [], working: [], awaiting: [], good: [], fixed: [], dead: [] };
   list.forEach(e => bins[e.bin || 'unsorted'].push(e));
 
   Object.keys(bins).forEach(binKey=>{
@@ -9677,6 +9712,11 @@ function pcRenderBatch(){
         ev.dataTransfer.setData('text/plain', card.dataset.id);
       });
       card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
+
+      card.addEventListener('click', (ev)=>{
+        if(ev.target.closest && ev.target.closest('a, button, textarea, input, .pc-copyable, .pc-edit-panel')) return;
+        pcSetActiveCard(card.dataset.id);
+      });
 
       card.querySelectorAll('.pc-copyable').forEach(span=>{
         span.addEventListener('click', (ev)=>{
@@ -9699,9 +9739,9 @@ function pcRenderBatch(){
         if(!entry) return;
         verifyBtn.disabled = true;
         verifyBtn.textContent = '🔍 Checking…';
-        if(statusEl) statusEl.textContent = 'Searching gadgetpirates\u2019 eBay listings by SKU…';
+        if(statusEl) statusEl.textContent = 'Searching gadgetpirates\u2019 eBay listings by SKU… (can take up to ~60s)';
 
-        const res = await pcAskExtension('VERIFY_EBAY_SELLER', { title: entry.title, sku: entry.sku });
+        const res = await pcAskExtension('VERIFY_EBAY_SELLER', { title: entry.title, sku: entry.sku }, 60000);
 
         if(!res.ok){
           if(statusEl) statusEl.textContent = res.error || 'Verify failed.';
@@ -9833,6 +9873,8 @@ function pcRenderBatch(){
       pcRenderBatch();
     };
   });
+
+  pcApplyActiveCardHighlight();
 }
 
 function hazOpen(){
