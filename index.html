@@ -822,6 +822,20 @@
   .pc-recap-body{flex:1;overflow-y:auto;padding:26px;max-width:1000px;margin:0 auto;width:100%;}
   .pc-recap-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:28px;}
   .pc-recap-stat{background:#221C10;border:1px solid rgba(251,191,36,.18);border-radius:12px;padding:16px 18px;}
+  .pc-tag-legend{display:flex;flex-wrap:wrap;gap:7px;}
+  .pc-tag-sticker{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;font:700 10px/1 var(--sans);cursor:grab;border:1px solid;user-select:none;transition:transform .1s,opacity .1s;}
+  .pc-tag-sticker:active{cursor:grabbing;transform:scale(.94);}
+  .pc-tag-sticker.dragging{opacity:.4;}
+  .pc-board-card.sticker-hover{box-shadow:0 0 0 2px #FBBF24 inset;}
+  .pc-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;}
+  .pc-card-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;font:700 9px/1.4 var(--sans);cursor:pointer;border:1px solid;transition:opacity .1s;}
+  .pc-card-tag:hover{opacity:.55;}
+  .pc-recap-tags{margin:18px 0;}
+  .pc-recap-tag-row{display:grid;grid-template-columns:150px 1fr 30px;align-items:center;gap:10px;padding:5px 0;}
+  .pc-recap-tag-label{font:700 11px/1.3 var(--sans);color:#FDE68A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pc-recap-tag-bar-wrap{background:rgba(251,191,36,.08);border-radius:5px;height:10px;overflow:hidden;}
+  .pc-recap-tag-bar{height:100%;border-radius:5px;transition:width .2s;}
+  .pc-recap-tag-count{font:800 11px/1 var(--sans);color:#FDE68A;text-align:right;}
   .pc-recap-stat-label{font:700 10.5px/1 var(--sans);color:rgba(253,230,138,.45);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
   .pc-recap-stat-value{font:800 28px/1 var(--sans);color:#FDE68A;}
   .pc-recap-stat-value.ok{color:#4ADE80;}
@@ -3734,6 +3748,11 @@
         </div>
 
         <div class="pc-panel">
+          <h3>🏷️ Audit Reasons <span style="font-weight:500;font-size:10px;color:rgba(253,230,138,.4);text-transform:none;letter-spacing:normal;">— drag a sticker onto a card</span></h3>
+          <div class="pc-tag-legend" id="pcTagLegend"></div>
+        </div>
+
+        <div class="pc-panel">
           <h3>eBay Price Search</h3>
           <div class="pc-drop-slot" id="pcCheckerDropSlot">🎯 Drag a card from the board here to load it into the checker</div>
           <div class="pc-field">
@@ -3829,6 +3848,7 @@
   </div>
   <div class="pc-recap-body">
     <div class="pc-recap-stats" id="pcRecapStats"></div>
+    <div class="pc-recap-tags" id="pcRecapTags"></div>
     <div class="pc-recap-sections" id="pcRecapSections"></div>
   </div>
 </div>
@@ -9440,6 +9460,68 @@ document.getElementById('pcClearBatch')?.addEventListener('click', ()=>{
 
 const PC_BIN_LABELS = { unsorted:'📥 Unsorted', working:'🔧 Working On', awaiting:'🟣 Awaiting Activation', good:'🟢 Good', fixed:'🟡 Errored & Fixed', dead:"🔴 Errored — Doesn't Activate" };
 
+// ── Audit reason tags ("stickers") ──────────────────────────────────
+// Edit this list to add/rename/remove reason tags — everything else
+// (legend rendering, card badges, and the recap snapshot) reads from it.
+const PC_AUDIT_TAGS = [
+  { id:'metafield_wrong',     label:'Wrong/Dup Metafield',     icon:'🧩', color:'#F59E0B' },
+  { id:'metafield_missing',   label:'Missing Metafield',       icon:'❓', color:'#FBBF24' },
+  { id:'price',               label:'Price Correction',        icon:'💲', color:'#4ADE80' },
+  { id:'title',               label:'Title Rewrite',           icon:'📝', color:'#60A5FA' },
+  { id:'condition_misplaced', label:'Condition Misplaced',     icon:'⚠️', color:'#F87171' },
+  { id:'spec_wrong',          label:'Wrong Model/Spec',        icon:'🏷️', color:'#A78BFA' },
+  { id:'description',         label:'Description Restructure', icon:'🧾', color:'#38BDF8' },
+  { id:'serial_mpn',          label:'Serial/MPN Fix',          icon:'🔢', color:'#FB923C' },
+  { id:'no_ebay',             label:'No eBay Listing',         icon:'🚫', color:'#EF4444' },
+  { id:'archived_dup',        label:'Archived Duplicate',      icon:'🗄️', color:'#94A3B8' }
+];
+function pcAuditTagById(id){ return PC_AUDIT_TAGS.find(t=>t.id===id); }
+
+function pcRenderTagLegend(){
+  const el = document.getElementById('pcTagLegend');
+  if(!el) return;
+  el.innerHTML = PC_AUDIT_TAGS.map(t=>
+    `<div class="pc-tag-sticker" draggable="true" data-tag-id="${t.id}" style="background:${t.color}22;border-color:${t.color}66;color:${t.color};">${t.icon} ${t.label}</div>`
+  ).join('');
+  el.querySelectorAll('.pc-tag-sticker').forEach(chip=>{
+    chip.addEventListener('dragstart', (ev)=>{
+      ev.dataTransfer.effectAllowed = 'copy';
+      ev.dataTransfer.setData('application/x-pc-sticker', chip.dataset.tagId);
+      chip.classList.add('dragging');
+    });
+    chip.addEventListener('dragend', ()=> chip.classList.remove('dragging'));
+  });
+}
+pcRenderTagLegend();
+
+function pcAddAuditTag(id, tagId){
+  const list = pcLoadBatch();
+  const idx = list.findIndex(x=>String(x.id)===String(id));
+  if(idx === -1) return;
+  const tags = new Set(list[idx].auditTags || []);
+  tags.add(tagId);
+  list[idx].auditTags = Array.from(tags);
+  pcSaveBatch(list);
+  pcRenderBatch();
+}
+function pcRemoveAuditTag(id, tagId){
+  const list = pcLoadBatch();
+  const idx = list.findIndex(x=>String(x.id)===String(id));
+  if(idx === -1) return;
+  list[idx].auditTags = (list[idx].auditTags || []).filter(t=>t!==tagId);
+  pcSaveBatch(list);
+  pcRenderBatch();
+}
+function pcCardTagsHtml(e){
+  const tags = e.auditTags || [];
+  if(!tags.length) return '';
+  return `<div class="pc-card-tags">${tags.map(tid=>{
+    const t = pcAuditTagById(tid);
+    if(!t) return '';
+    return `<span class="pc-card-tag" data-remove-tag="${tid}" title="Click to remove" style="background:${t.color}22;border-color:${t.color}66;color:${t.color};">${t.icon} ${t.label}</span>`;
+  }).join('')}</div>`;
+}
+
 function pcBuildRecapData(){
   const list = pcLoadBatch();
   const total = list.length;
@@ -9449,11 +9531,13 @@ function pcBuildRecapData(){
   const unverified = okItems.filter(e=>e.ebayUnverified);
   const byBin = { unsorted:[], working:[], awaiting:[], good:[], fixed:[], dead:[] };
   list.forEach(e => byBin[e.bin || 'unsorted'].push(e));
-  return { total, okItems, errItems, noEbay, unverified, byBin };
+  const tagCounts = {};
+  list.forEach(e => (e.auditTags || []).forEach(tid => { tagCounts[tid] = (tagCounts[tid] || 0) + 1; }));
+  return { total, okItems, errItems, noEbay, unverified, byBin, tagCounts };
 }
 
 document.getElementById('pcReviewBatch')?.addEventListener('click', ()=>{
-  const { total, okItems, errItems, noEbay, unverified, byBin } = pcBuildRecapData();
+  const { total, okItems, errItems, noEbay, unverified, byBin, tagCounts } = pcBuildRecapData();
 
   const statsEl = document.getElementById('pcRecapStats');
   statsEl.innerHTML = `
@@ -9469,6 +9553,31 @@ document.getElementById('pcReviewBatch')?.addEventListener('click', ()=>{
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Doesn't Activate</div><div class="pc-recap-stat-value err">${byBin.dead.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Still Unsorted</div><div class="pc-recap-stat-value">${byBin.unsorted.length}</div></div>
   `;
+
+  const tagsEl = document.getElementById('pcRecapTags');
+  const sortedTags = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]);
+  if(sortedTags.length){
+    const maxCount = sortedTags[0][1];
+    tagsEl.innerHTML = `<div class="pc-recap-section">
+      <div class="pc-recap-section-head"><span>🏷️ Prominent Issues This Audit</span><span class="pc-recap-section-count">${sortedTags.reduce((s,[,c])=>s+c,0)} tags</span></div>
+      ${sortedTags.map(([tid, count])=>{
+        const t = pcAuditTagById(tid);
+        const label = t ? `${t.icon} ${t.label}` : tid;
+        const color = t ? t.color : '#FBBF24';
+        const pct = Math.max(8, Math.round((count / maxCount) * 100));
+        return `<div class="pc-recap-tag-row">
+          <span class="pc-recap-tag-label">${label}</span>
+          <div class="pc-recap-tag-bar-wrap"><div class="pc-recap-tag-bar" style="width:${pct}%;background:${color};"></div></div>
+          <span class="pc-recap-tag-count">${count}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else {
+    tagsEl.innerHTML = `<div class="pc-recap-section">
+      <div class="pc-recap-section-head"><span>🏷️ Prominent Issues This Audit</span></div>
+      <div class="pc-recap-empty">No reason tags applied yet — drag stickers onto cards from the board.</div>
+    </div>`;
+  }
 
   const sectionsEl = document.getElementById('pcRecapSections');
   const binOrder = ['good','fixed','dead','awaiting','working','unsorted'];
@@ -9495,20 +9604,29 @@ document.getElementById('pcRecapClose')?.addEventListener('click', ()=>{
 });
 
 document.getElementById('pcRecapCopy')?.addEventListener('click', ()=>{
-  const { total, okItems, errItems, noEbay, unverified, byBin } = pcBuildRecapData();
+  const { total, okItems, errItems, noEbay, unverified, byBin, tagCounts } = pcBuildRecapData();
   const lines = [
     `AUDIT RECAP — ${new Date().toLocaleString()}`,
     `Total Audited: ${total}`,
     `Import OK: ${okItems.length} | Import Errors: ${errItems.length} | No eBay Link: ${noEbay.length} | Unverified: ${unverified.length}`,
     ``,
   ];
-  ['good','fixed','dead','working','unsorted'].forEach(binKey=>{
+  const sortedTags = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]);
+  lines.push('PROMINENT ISSUES THIS AUDIT');
+  if(!sortedTags.length) lines.push('  — none tagged yet');
+  sortedTags.forEach(([tid, count])=>{
+    const t = pcAuditTagById(tid);
+    lines.push(`  - ${t ? `${t.icon} ${t.label}` : tid}: ${count}`);
+  });
+  lines.push('');
+  ['good','fixed','dead','awaiting','working','unsorted'].forEach(binKey=>{
     lines.push(`${PC_BIN_LABELS[binKey]} (${byBin[binKey].length})`);
     if(!byBin[binKey].length) lines.push('  —');
     byBin[binKey].forEach(e=>{
       const name = e.status === 'error' ? (e.barcode || 'Unknown barcode') : (e.title || 'Untitled');
       const meta = e.status === 'error' ? (e.reason || 'Not found') : [e.sku, e.condition, e.price].filter(Boolean).join(' · ');
-      lines.push(`  - ${name}${meta ? ' — ' + meta : ''}`);
+      const tags = (e.auditTags || []).map(tid=>{ const t = pcAuditTagById(tid); return t ? t.icon : ''; }).filter(Boolean).join(' ');
+      lines.push(`  - ${name}${meta ? ' — ' + meta : ''}${tags ? ' [' + tags + ']' : ''}`);
     });
     lines.push('');
   });
@@ -9584,6 +9702,7 @@ function pcBatchCardHtml(e){
       <button class="pc-card-delete" data-delete-id="${e.id}" title="Delete card">✕</button>
       <div class="pc-board-card-title">${pcCopySpan(e.barcode || 'Unknown barcode', 'barcode')} <span class="pc-chip revise" style="margin-left:4px;">ERR</span></div>
       <div class="pc-board-card-meta">${e.reason || 'Not found'}</div>
+      ${pcCardTagsHtml(e)}
       ${errEbayTag}
       ${errLinks.length ? `<div class="pc-board-card-links">${errLinks.join('')}</div>` : ''}
       <div class="pc-board-card-quickfields">
@@ -9634,6 +9753,7 @@ function pcBatchCardHtml(e){
     <button class="pc-card-delete" data-delete-id="${e.id}" title="Delete card">✕</button>
     <div class="pc-board-card-title">${pcCopySpan(e.title || 'Untitled', 'title')}</div>
     <div class="pc-board-card-meta">${metaParts.join(' · ')}</div>
+    ${pcCardTagsHtml(e)}
     ${ebayTag}
     ${staleHint}
     ${interestLine}
@@ -9742,13 +9862,38 @@ function pcRenderBatch(){
 
     container.querySelectorAll('.pc-board-card').forEach(card=>{
       card.addEventListener('dragstart', (ev)=>{
-        if(ev.target.closest && (ev.target.closest('.pc-copyable') || ev.target.closest('.pc-verify-btn') || ev.target.closest('.pc-board-card-edit') || ev.target.closest('.pc-card-delete') || ev.target.closest('.pc-board-card-quickfields'))){ ev.preventDefault(); return; }
+        if(ev.target.closest && (ev.target.closest('.pc-copyable') || ev.target.closest('.pc-verify-btn') || ev.target.closest('.pc-board-card-edit') || ev.target.closest('.pc-card-delete') || ev.target.closest('.pc-board-card-quickfields') || ev.target.closest('.pc-card-tags'))){ ev.preventDefault(); return; }
         _pcDragId = card.dataset.id;
         card.classList.add('dragging');
         ev.dataTransfer.effectAllowed = 'move';
         ev.dataTransfer.setData('text/plain', card.dataset.id);
       });
-      card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
+      card.addEventListener('dragend', ()=>{ card.classList.remove('dragging'); _pcDragId = null; });
+
+      card.addEventListener('dragover', (ev)=>{
+        if(ev.dataTransfer.types.includes('application/x-pc-sticker')){
+          ev.preventDefault();
+          ev.stopPropagation();
+          card.classList.add('sticker-hover');
+        }
+      });
+      card.addEventListener('dragleave', ()=> card.classList.remove('sticker-hover'));
+      card.addEventListener('drop', (ev)=>{
+        if(ev.dataTransfer.types.includes('application/x-pc-sticker')){
+          ev.preventDefault();
+          ev.stopPropagation();
+          card.classList.remove('sticker-hover');
+          const tagId = ev.dataTransfer.getData('application/x-pc-sticker');
+          if(tagId) pcAddAuditTag(card.dataset.id, tagId);
+        }
+      });
+
+      card.querySelectorAll('.pc-card-tag').forEach(tagEl=>{
+        tagEl.addEventListener('click', (ev)=>{
+          ev.stopPropagation();
+          pcRemoveAuditTag(card.dataset.id, tagEl.dataset.removeTag);
+        });
+      });
 
       card.addEventListener('click', (ev)=>{
         if(ev.target.closest && ev.target.closest('a, button, textarea, input, .pc-copyable, .pc-edit-panel')) return;
@@ -9934,6 +10079,12 @@ function pcRenderBatch(){
     col.ondragover = (ev)=>{ ev.preventDefault(); col.classList.add('dragover'); };
     col.ondragleave = ()=> col.classList.remove('dragover');
     col.ondrop = (ev)=>{
+      if(ev.dataTransfer.types.includes('application/x-pc-sticker')){
+        // Sticker dropped on empty column space (not on a specific card) — nothing to tag, ignore.
+        ev.preventDefault();
+        col.classList.remove('dragover');
+        return;
+      }
       ev.preventDefault();
       col.classList.remove('dragover');
       const id = ev.dataTransfer.getData('text/plain') || _pcDragId;
