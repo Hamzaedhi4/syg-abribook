@@ -9491,9 +9491,10 @@ function pcBatchCardHtml(e){
   }
   const links = [];
   if(e.shopifyLink) links.push(`<a href="${e.shopifyLink}" target="_blank" rel="noopener">Shopify</a>`);
-  if(e.ebayLink) links.push(`<a href="${e.ebayLink}" target="_blank" rel="noopener">eBay</a>`);
+  if(e.ebayLink) links.push(`<a href="${e.ebayLink}" target="_blank" rel="noopener">eBay${e.skuConfirmed ? ' ✓' : ''}</a>`);
+  if(!e.ebayLink && e.titleOnlyMatchUrl) links.push(`<a href="${e.titleOnlyMatchUrl}" target="_blank" rel="noopener">Possible eBay match?</a>`);
   const ebayTag = e.ebayLink ? '' : (e.ebayUnverified
-    ? `<span class="pc-batch-tag warn" title="Comps file predates this item — couldn't confirm eBay status">⚠️ Unverified</span>`
+    ? `<span class="pc-batch-tag warn" title="Comps file predates this item, or a title match couldn't be confirmed by SKU">⚠️ Unverified</span>`
     : `<span class="pc-batch-tag">No eBay</span>`);
   const metaParts = [];
   if(e.sku) metaParts.push(pcCopySpan(e.sku, 'SKU'));
@@ -9501,6 +9502,8 @@ function pcBatchCardHtml(e){
   if(e.price) metaParts.push(pcCopySpan(e.price, 'price'));
 
   const interestParts = [];
+  if(typeof e.views === 'number') interestParts.push(`👀 ${e.views} views`);
+  if(typeof e.viewedToday === 'number') interestParts.push(`⏱ ${e.viewedToday} today`);
   if(typeof e.watchers === 'number') interestParts.push(`👁 ${e.watchers} watching`);
   if(typeof e.sold === 'number') interestParts.push(`🔥 ${e.sold} sold`);
   const interestLine = interestParts.length ? `<div class="pc-board-card-interest">${interestParts.join(' · ')}</div>` : '';
@@ -9618,7 +9621,7 @@ function pcRenderBatch(){
         if(!entry) return;
         verifyBtn.disabled = true;
         verifyBtn.textContent = '🔍 Checking…';
-        if(statusEl) statusEl.textContent = 'Searching gadgetpirates\u2019 eBay listings…';
+        if(statusEl) statusEl.textContent = 'Searching gadgetpirates\u2019 eBay listings by SKU…';
 
         const res = await pcAskExtension('VERIFY_EBAY_SELLER', { title: entry.title, sku: entry.sku });
 
@@ -9635,21 +9638,35 @@ function pcRenderBatch(){
         if(!res.found){
           list[idx].ebayLink = '';
           list[idx].ebayUnverified = false;
+          list[idx].skuConfirmed = false;
           list[idx].watchers = undefined;
           list[idx].sold = undefined;
+          list[idx].views = undefined;
+          list[idx].viewedToday = undefined;
           list[idx].verifiedAt = new Date().toISOString();
           pcSaveBatch(list);
           pcRenderBatch();
+          const el = document.getElementById('pcVerifyStatus-' + id);
+          if(el) el.textContent = res.reason || 'No match found.';
           return;
         }
 
-        list[idx].ebayLink = res.url;
-        list[idx].ebayUnverified = false;
+        // Only treat the eBay link as confirmed when the Custom Label (SKU)
+        // matched exactly — a title-only match still gets the watcher/view
+        // data, but keeps the "Unverified" tag rather than a green eBay link.
+        list[idx].ebayLink = res.skuConfirmed ? res.url : '';
+        list[idx].ebayUnverified = !res.skuConfirmed;
+        list[idx].skuConfirmed = !!res.skuConfirmed;
+        list[idx].titleOnlyMatchUrl = res.skuConfirmed ? undefined : res.url;
         list[idx].watchers = (typeof res.watchers === 'number') ? res.watchers : null;
         list[idx].sold = (typeof res.sold === 'number') ? res.sold : null;
+        list[idx].views = (typeof res.views === 'number') ? res.views : null;
+        list[idx].viewedToday = (typeof res.viewedToday === 'number') ? res.viewedToday : null;
         list[idx].verifiedAt = new Date().toISOString();
         pcSaveBatch(list);
         pcRenderBatch();
+        const el2 = document.getElementById('pcVerifyStatus-' + id);
+        if(el2) el2.textContent = res.skuConfirmed ? '✓ SKU confirmed' : (res.reason || 'Title match only — not SKU confirmed.');
       });
     });
   });
