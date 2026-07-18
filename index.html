@@ -694,6 +694,12 @@
   .welcome-card-desc{font-size:11.5px;color:var(--on-dark-soft);line-height:1.5;}
 
   /* ── Audit Tool workspace ── */
+  .pc-wrap ::-webkit-scrollbar{width:10px;height:10px;}
+  .pc-wrap ::-webkit-scrollbar-track{background:transparent;}
+  .pc-wrap ::-webkit-scrollbar-thumb{background:rgba(251,191,36,.22);border-radius:999px;border:2px solid transparent;background-clip:padding-box;}
+  .pc-wrap ::-webkit-scrollbar-thumb:hover{background:rgba(251,191,36,.4);background-clip:padding-box;}
+  .pc-wrap ::-webkit-scrollbar-corner{background:transparent;}
+  .pc-right-scroll,.pc-board,.pc-board-cards,.pc-recap-body{scrollbar-width:thin;scrollbar-color:rgba(251,191,36,.25) transparent;}
   .pc-wrap{position:fixed;inset:0;background:#1A1608;z-index:200;display:none;flex-direction:column;}
   .pc-wrap.show{display:flex;}
   .pc-header{background:#14100A;border-bottom:3px solid #FBBF24;padding:14px 18px;display:flex;align-items:center;gap:12px;flex:none;}
