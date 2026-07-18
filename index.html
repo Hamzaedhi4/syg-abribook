@@ -9187,9 +9187,9 @@ document.getElementById('pcMcAutofill')?.addEventListener('click', async ()=>{
   const line = document.getElementById('pcMcStatusLine');
   line.style.display = 'block';
   if(!sku){ document.getElementById('pcSku').focus(); line.textContent = 'Enter a SKU first.'; return; }
-  line.textContent = 'Opening Marketplace Connect…';
+  line.textContent = 'Opening Marketplace Connect… (can take up to ~15s for the app to load)';
 
-  const res = await pcAskExtension('MC_AUTOFILL', { sku });
+  const res = await pcAskExtension('MC_AUTOFILL', { sku }, 22000);
   if(!res.ok){
     line.textContent = res.error || 'Could not autofill.';
     return;
