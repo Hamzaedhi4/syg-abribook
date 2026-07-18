@@ -689,7 +689,83 @@
   .welcome-card-name{font-size:17px;font-weight:800;color:#fff;margin-bottom:3px;}
   .welcome-card.wan .welcome-card-name{color:#A5B4FC;}
   .welcome-card.haz .welcome-card-name{color:#4ADE80;}
+  .welcome-card.pc .welcome-card-name{color:#FBBF24;}
+  .welcome-card.pc:hover{border-color:#FBBF24;box-shadow:0 8px 32px rgba(251,191,36,.15);}
   .welcome-card-desc{font-size:11.5px;color:var(--on-dark-soft);line-height:1.5;}
+
+  /* ── Audit Tool workspace ── */
+  .pc-wrap{position:fixed;inset:0;background:#1A1608;z-index:200;display:none;flex-direction:column;}
+  .pc-wrap.show{display:flex;}
+  .pc-header{background:#14100A;border-bottom:3px solid #FBBF24;padding:14px 18px;display:flex;align-items:center;gap:12px;flex:none;}
+  .pc-header-icon{font-size:20px;}
+  .pc-header h2{font:800 15px/1 var(--sans);color:#FDE68A;margin:0;flex:1;}
+  .pc-back{padding:6px 14px;background:transparent;border:1px solid rgba(251,191,36,.35);border-radius:var(--r-pill);color:#FBBF24;font:700 11px/1 var(--sans);cursor:pointer;}
+  .pc-body{flex:1;overflow-y:auto;padding:22px;display:grid;grid-template-columns:1fr 340px;gap:20px;max-width:1200px;margin:0 auto;width:100%;}
+  @media (max-width:860px){.pc-body{grid-template-columns:1fr;}}
+  .pc-panel{background:#221C10;border:1px solid rgba(251,191,36,.15);border-radius:14px;padding:18px;}
+  .pc-panel h3{font:700 12px/1 var(--sans);color:#FDE68A;margin:0 0 12px;text-transform:uppercase;letter-spacing:.04em;}
+  .pc-field{margin-bottom:14px;}
+  .pc-field label{display:block;font:600 11px/1 var(--sans);color:rgba(253,230,138,.6);margin-bottom:6px;}
+  .pc-field input,.pc-field textarea{width:100%;background:#14100A;border:1px solid rgba(251,191,36,.2);border-radius:8px;color:#FDE68A;font:500 13px/1.4 var(--sans);padding:9px 11px;box-sizing:border-box;}
+  .pc-field textarea{resize:vertical;min-height:90px;font-family:ui-monospace,monospace;font-size:12.5px;}
+  .pc-field input:focus,.pc-field textarea:focus{outline:none;border-color:#FBBF24;}
+  .pc-row{display:flex;gap:10px;}
+  .pc-row .pc-field{flex:1;}
+  .pc-btn{padding:9px 16px;border-radius:9px;font:700 12px/1 var(--sans);cursor:pointer;border:none;transition:all .15s;}
+  .pc-btn-search{background:rgba(251,191,36,.15);color:#FBBF24;border:1px solid rgba(251,191,36,.35);}
+  .pc-btn-search:hover{background:rgba(251,191,36,.28);}
+  .pc-btn-calc{background:#FBBF24;color:#1A1608;}
+  .pc-btn-calc:hover{background:#FCD34D;}
+  .pc-btn-save{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.14);}
+  .pc-btn-save:hover{background:rgba(255,255,255,.14);}
+  .pc-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+  .pc-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+  .pc-stat{background:#14100A;border:1px solid rgba(251,191,36,.15);border-radius:10px;padding:10px 12px;}
+  .pc-stat-label{font:600 10px/1 var(--sans);color:rgba(253,230,138,.45);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+  .pc-stat-value{font:800 18px/1 var(--sans);color:#FDE68A;}
+  .pc-hist-item{background:#14100A;border:1px solid rgba(251,191,36,.12);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+  .pc-hist-item:hover{border-color:rgba(251,191,36,.4);}
+  .pc-hist-q{font:700 12px/1.3 var(--sans);color:#FDE68A;margin-bottom:3px;}
+  .pc-hist-meta{font:500 10.5px/1 var(--sans);color:rgba(253,230,138,.4);}
+  .pc-hist-empty{font:500 12px/1.4 var(--sans);color:rgba(253,230,138,.3);text-align:center;padding:20px 0;}
+  .pc-hist-del{float:right;background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;font-size:13px;}
+  .pc-hist-del:hover{color:#F87171;}
+
+  .pc-verdict-card{background:#14100A;border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:14px 16px;margin-top:16px;}
+  .pc-verdict-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .pc-verdict-title{font:700 13px/1.3 var(--sans);color:#FDE68A;}
+  .pc-verdict-sub{font:500 11.5px/1.4 var(--sans);color:rgba(253,230,138,.45);margin-top:6px;}
+  .pc-chip{padding:4px 11px;border-radius:999px;font:800 10.5px/1 var(--sans);letter-spacing:.02em;white-space:nowrap;}
+  .pc-chip.good{background:rgba(34,197,94,.18);color:#4ADE80;}
+  .pc-chip.over{background:rgba(239,68,68,.18);color:#F87171;}
+  .pc-chip.under{background:rgba(250,204,21,.18);color:#FDE047;}
+  .pc-chip.revise{background:rgba(148,163,184,.18);color:#CBD5E1;}
+  .pc-hist-chip{display:inline-block;padding:2px 8px;border-radius:999px;font:800 9px/1 var(--sans);letter-spacing:.02em;margin-left:6px;vertical-align:middle;}
+  .pc-hist-chip.good{background:rgba(34,197,94,.18);color:#4ADE80;}
+  .pc-hist-chip.over{background:rgba(239,68,68,.18);color:#F87171;}
+  .pc-hist-chip.under{background:rgba(250,204,21,.18);color:#FDE047;}
+  .pc-hist-chip.revise{background:rgba(148,163,184,.18);color:#CBD5E1;}
+
+  .pc-panel-wide{grid-column:1 / -1;}
+  .pc-batch-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .pc-batch-count{font:600 10.5px/1 var(--sans);color:rgba(253,230,138,.4);text-transform:none;letter-spacing:0;margin-left:6px;}
+  .pc-batch-summary{margin-top:14px;padding:12px 14px;background:#14100A;border:1px solid rgba(251,191,36,.2);border-radius:10px;display:flex;gap:22px;flex-wrap:wrap;}
+  .pc-batch-summary-stat{display:flex;flex-direction:column;gap:2px;}
+  .pc-batch-summary-label{font:600 10px/1 var(--sans);color:rgba(253,230,138,.45);text-transform:uppercase;letter-spacing:.04em;}
+  .pc-batch-summary-value{font:800 18px/1 var(--sans);color:#FDE68A;}
+  .pc-batch-summary-value.err{color:#F87171;}
+  .pc-batch-summary-value.warn{color:#FDE047;}
+  .pc-batch-summary-value.ok{color:#4ADE80;}
+  .pc-batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:16px;}
+  .pc-batch-card{background:#14100A;border:1px solid rgba(251,191,36,.15);border-radius:10px;padding:12px;position:relative;}
+  .pc-batch-card.err{border-color:rgba(239,68,68,.35);}
+  .pc-batch-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
+  .pc-batch-card-title{font:700 11.5px/1.35 var(--sans);color:#FDE68A;}
+  .pc-batch-card-meta{font:500 10.5px/1.5 var(--sans);color:rgba(253,230,138,.5);}
+  .pc-batch-card-links{display:flex;gap:8px;margin-top:8px;}
+  .pc-batch-card-links a{font:700 10px/1 var(--sans);color:#FBBF24;text-decoration:none;border:1px solid rgba(251,191,36,.3);padding:4px 8px;border-radius:6px;}
+  .pc-batch-card-links a:hover{background:rgba(251,191,36,.12);}
+  .pc-batch-tag{display:inline-block;padding:2px 7px;border-radius:999px;font:800 9px/1 var(--sans);margin-top:6px;margin-right:4px;background:rgba(148,163,184,.18);color:#CBD5E1;}
 
   /* ── Haz ── */
   .haz-wrap{position:fixed;inset:0;background:#0D1A12;z-index:200;display:none;flex-direction:column;}
@@ -3340,6 +3416,11 @@
         <div class="welcome-card-name">Wan</div>
         <div class="welcome-card-desc">Listing intake<br>RAM &amp; Storage</div>
       </div>
+      <div class="welcome-card pc" id="welcomePc">
+        <div class="welcome-card-icon">🧭</div>
+        <div class="welcome-card-name">Audit Tool</div>
+        <div class="welcome-card-desc">Barcode lookup<br>eBay price research</div>
+      </div>
       <div class="welcome-card haz" id="welcomeHaz">
         <div class="welcome-card-icon">🔍</div>
         <div class="welcome-card-name">Haz</div>
@@ -3460,6 +3541,109 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ── Audit Tool ── -->
+<div class="pc-wrap" id="pcWrap">
+  <div class="pc-header">
+    <span class="pc-header-icon">🧭</span>
+    <h2>Audit Tool</h2>
+    <button class="pc-back" id="pcBack">← Back</button>
+  </div>
+  <div class="pc-body">
+    <div class="pc-panel">
+      <h3>Barcode Lookup</h3>
+      <div class="pc-field">
+        <label>Barcodes — one per line (batch as many as you want)</label>
+        <textarea id="pcBarcodes" placeholder="69433891&#10;22747427&#10;32753955"></textarea>
+      </div>
+      <div class="pc-btns">
+        <button class="pc-btn pc-btn-calc" id="pcBuildBarcodePrompt">Build Lookup Prompt</button>
+        <button class="pc-btn pc-btn-save" id="pcCopyBarcodePrompt">📋 Copy</button>
+      </div>
+      <div class="pc-field" id="pcBarcodePromptWrap" style="display:none;margin-top:12px;">
+        <label>Paste this into Claude</label>
+        <textarea id="pcBarcodePromptOut" readonly style="min-height:110px;"></textarea>
+      </div>
+
+      <h3 style="margin-top:22px;">eBay Price Search</h3>
+      <div class="pc-field">
+        <label>Item / search query</label>
+        <input type="text" id="pcQuery" placeholder="e.g. Dell Latitude 5420 i5-1145G7 16GB 512GB">
+      </div>
+      <div class="pc-row">
+        <div class="pc-field">
+          <label>SKU (optional)</label>
+          <input type="text" id="pcSku" placeholder="NJ02-...">
+        </div>
+        <div class="pc-field">
+          <label>Condition (optional)</label>
+          <input type="text" id="pcCondition" placeholder="e.g. Used - A, For Parts">
+        </div>
+      </div>
+      <div class="pc-btns">
+        <button class="pc-btn pc-btn-search" id="pcOpenSold">🔎 Open Sold Listings on eBay</button>
+        <button class="pc-btn pc-btn-search" id="pcOpenActive">🔎 Open Active Listings on eBay</button>
+      </div>
+
+      <h3 style="margin-top:22px;">Log Prices You Find</h3>
+      <div class="pc-row">
+        <div class="pc-field">
+          <label>Your current price</label>
+          <input type="text" id="pcCurrentPrice" placeholder="e.g. 349.99">
+        </div>
+      </div>
+      <div class="pc-field">
+        <label>Paste prices — one per line (numbers only, e.g. 129.99)</label>
+        <textarea id="pcPrices" placeholder="129.99&#10;134.00&#10;119.99&#10;140.00"></textarea>
+      </div>
+      <div class="pc-btns">
+        <button class="pc-btn pc-btn-calc" id="pcCalc">Calculate</button>
+        <button class="pc-btn pc-btn-save" id="pcSave">💾 Save to History</button>
+      </div>
+
+      <div class="pc-verdict-card" id="pcVerdictCard" style="display:none;">
+        <div class="pc-verdict-top">
+          <div class="pc-verdict-title" id="pcVerdictTitle">—</div>
+          <span class="pc-chip" id="pcVerdictChip">—</span>
+        </div>
+        <div class="pc-verdict-sub" id="pcVerdictSub"></div>
+      </div>
+
+      <div class="pc-stats" id="pcStats" style="display:none;">
+        <div class="pc-stat"><div class="pc-stat-label">Count</div><div class="pc-stat-value" id="pcStatCount">–</div></div>
+        <div class="pc-stat"><div class="pc-stat-label">Median</div><div class="pc-stat-value" id="pcStatMedian">–</div></div>
+        <div class="pc-stat"><div class="pc-stat-label">Average</div><div class="pc-stat-value" id="pcStatAvg">–</div></div>
+        <div class="pc-stat"><div class="pc-stat-label">Low – High</div><div class="pc-stat-value" id="pcStatRange" style="font-size:14px;">–</div></div>
+      </div>
+    </div>
+
+    <div class="pc-panel">
+      <h3>Recent Lookups</h3>
+      <div id="pcHistList"><div class="pc-hist-empty">No saved lookups yet.</div></div>
+    </div>
+
+    <div class="pc-panel pc-panel-wide">
+      <div class="pc-batch-head">
+        <h3 style="margin:0;">Batch Results <span class="pc-batch-count" id="pcBatchCount">0 items</span></h3>
+        <div class="pc-btns" style="margin:0;">
+          <button class="pc-btn pc-btn-save" id="pcReviewBatch">📊 Review Batch</button>
+          <button class="pc-btn pc-btn-save" id="pcClearBatch">🗑 Clear Batch</button>
+        </div>
+      </div>
+      <div class="pc-field" style="margin-top:12px;">
+        <label>Paste Claude's reply here</label>
+        <textarea id="pcBatchImport" placeholder="OK | Title | Date Created | Condition | Price | SKU | Shopify link | eBay link"></textarea>
+      </div>
+      <div class="pc-btns">
+        <button class="pc-btn pc-btn-calc" id="pcImportBatch">Import Into Batch</button>
+      </div>
+
+      <div class="pc-batch-summary" id="pcBatchSummary" style="display:none;"></div>
+
+      <div class="pc-batch-grid" id="pcBatchGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -8691,6 +8875,318 @@ document.getElementById('hazBack').addEventListener('click', ()=>{
   document.getElementById('hazWrap').classList.remove('show');
   document.getElementById('welcomeBackdrop').classList.remove('hidden');
 });
+
+// ── Audit Tool ────────────────────────────────────────────────
+document.getElementById('welcomePc')?.addEventListener('click', ()=>{
+  document.getElementById('welcomeBackdrop').classList.add('hidden');
+  pcOpen();
+});
+document.getElementById('pcBack')?.addEventListener('click', ()=>{
+  document.getElementById('pcWrap').classList.remove('show');
+  document.getElementById('welcomeBackdrop').classList.remove('hidden');
+});
+
+const PC_HIST_KEY = 'abribook_priceCheck_history';
+
+function pcOpen(){
+  document.getElementById('pcWrap').classList.add('show');
+  pcRenderHistory();
+  pcRenderBatch();
+  setTimeout(()=>document.getElementById('pcBarcodes')?.focus(), 50);
+}
+
+function pcBuildBarcodePrompt(){
+  const raw = document.getElementById('pcBarcodes').value;
+  const barcodes = raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+  if(!barcodes.length) return '';
+  const list = barcodes.map(b=>`- ${b}`).join('\n');
+  return `Look up these barcodes in Shopify:\n${list}\n\nReply with ONE line per barcode, in exactly this format (pipe-separated, no extra text):\n\nOK | Title | Date Created | Condition | Price | SKU | Shopify link | eBay link\n\nIf a barcode isn't found or has no active eBay listing, use:\n\nERROR | <barcode> | <short reason>\n\nUse "—" for any field that doesn't apply (e.g. no eBay link). Don't add commentary before or after the lines — I'm pasting this straight into a batch importer.`;
+}
+
+document.getElementById('pcBuildBarcodePrompt')?.addEventListener('click', ()=>{
+  const prompt = pcBuildBarcodePrompt();
+  const wrap = document.getElementById('pcBarcodePromptWrap');
+  const out = document.getElementById('pcBarcodePromptOut');
+  if(!prompt){ document.getElementById('pcBarcodes').focus(); return; }
+  out.value = prompt;
+  wrap.style.display = 'block';
+});
+
+document.getElementById('pcCopyBarcodePrompt')?.addEventListener('click', ()=>{
+  let prompt = document.getElementById('pcBarcodePromptOut').value;
+  if(!prompt){ prompt = pcBuildBarcodePrompt(); document.getElementById('pcBarcodePromptOut').value = prompt; document.getElementById('pcBarcodePromptWrap').style.display='block'; }
+  if(!prompt) return;
+  navigator.clipboard?.writeText(prompt).catch(()=>{});
+  const btn = document.getElementById('pcCopyBarcodePrompt');
+  const orig = btn.textContent;
+  btn.textContent = '✓ Copied';
+  setTimeout(()=>{ btn.textContent = orig; }, 1400);
+});
+
+function pcBuildQuery(){
+  const q = document.getElementById('pcQuery').value.trim();
+  const cond = document.getElementById('pcCondition').value.trim();
+  return [q, cond].filter(Boolean).join(' ');
+}
+
+document.getElementById('pcOpenSold')?.addEventListener('click', ()=>{
+  const q = pcBuildQuery();
+  if(!q){ document.getElementById('pcQuery').focus(); return; }
+  const url = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(q) + '&LH_Sold=1&LH_Complete=1&_sop=13';
+  window.open(url, '_blank');
+});
+
+document.getElementById('pcOpenActive')?.addEventListener('click', ()=>{
+  const q = pcBuildQuery();
+  if(!q){ document.getElementById('pcQuery').focus(); return; }
+  const url = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(q) + '&LH_BIN=1&_sop=15';
+  window.open(url, '_blank');
+});
+
+function pcParsePrices(){
+  const raw = document.getElementById('pcPrices').value;
+  return raw.split(/[\n,]+/)
+    .map(s => parseFloat(s.replace(/[^0-9.]/g,'')))
+    .filter(n => !isNaN(n) && n > 0);
+}
+
+function pcCalcStats(prices){
+  if(!prices.length) return null;
+  const sorted = [...prices].sort((a,b)=>a-b);
+  const mid = Math.floor(sorted.length/2);
+  const median = sorted.length % 2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+  const avg = sorted.reduce((a,b)=>a+b,0) / sorted.length;
+  return { count: sorted.length, median, avg, low: sorted[0], high: sorted[sorted.length-1] };
+}
+
+// Verdict thresholds: within ±12% of median = Good. Below 3 comps = can't trust a verdict.
+const PC_MIN_COMPS = 3;
+const PC_BAND = 0.12;
+
+function pcVerdict(currentPrice, stats){
+  if(!stats || stats.count < PC_MIN_COMPS){
+    return { key:'revise', label:'Needs Revision', reason: !stats ? 'No comps logged yet.' : `Only ${stats.count} comp${stats.count===1?'':'s'} logged — need at least ${PC_MIN_COMPS} to trust a verdict.` };
+  }
+  if(!currentPrice || isNaN(currentPrice) || currentPrice <= 0){
+    return { key:'revise', label:'Needs Revision', reason: 'Enter your current price to get a verdict.' };
+  }
+  const diff = (currentPrice - stats.median) / stats.median;
+  if(diff > PC_BAND){
+    return { key:'over', label:'Overpriced', reason: `${(diff*100).toFixed(0)}% above median ($${stats.median.toFixed(2)}) — consider lowering.` };
+  }
+  if(diff < -PC_BAND){
+    return { key:'under', label:'Underpriced', reason: `${Math.abs(diff*100).toFixed(0)}% below median ($${stats.median.toFixed(2)}) — room to raise.` };
+  }
+  return { key:'good', label:'Good Price', reason: `Within range of median ($${stats.median.toFixed(2)}).` };
+}
+
+function pcRenderVerdictCard(currentPrice, stats){
+  const card = document.getElementById('pcVerdictCard');
+  const verdict = pcVerdict(currentPrice, stats);
+  const title = document.getElementById('pcQuery').value.trim() || 'This item';
+  document.getElementById('pcVerdictTitle').textContent = title + (currentPrice ? ' — $' + currentPrice.toFixed(2) : '');
+  const chip = document.getElementById('pcVerdictChip');
+  chip.className = 'pc-chip ' + verdict.key;
+  chip.textContent = verdict.label;
+  document.getElementById('pcVerdictSub').textContent = verdict.reason;
+  card.style.display = 'block';
+  return verdict;
+}
+
+document.getElementById('pcCalc')?.addEventListener('click', ()=>{
+  const prices = pcParsePrices();
+  const stats = pcCalcStats(prices);
+  const box = document.getElementById('pcStats');
+  const currentPrice = parseFloat(document.getElementById('pcCurrentPrice').value.replace(/[^0-9.]/g,''));
+  pcRenderVerdictCard(currentPrice, stats);
+  if(!stats){ box.style.display='none'; return; }
+  document.getElementById('pcStatCount').textContent = stats.count;
+  document.getElementById('pcStatMedian').textContent = '$' + stats.median.toFixed(2);
+  document.getElementById('pcStatAvg').textContent = '$' + stats.avg.toFixed(2);
+  document.getElementById('pcStatRange').textContent = '$' + stats.low.toFixed(2) + ' – $' + stats.high.toFixed(2);
+  box.style.display = 'grid';
+});
+
+function pcLoadHistory(){
+  try{ return JSON.parse(localStorage.getItem(PC_HIST_KEY)) || []; }catch(e){ return []; }
+}
+function pcSaveHistory(list){
+  try{ localStorage.setItem(PC_HIST_KEY, JSON.stringify(list)); }catch(e){}
+}
+
+document.getElementById('pcSave')?.addEventListener('click', ()=>{
+  const query = document.getElementById('pcQuery').value.trim();
+  if(!query){ document.getElementById('pcQuery').focus(); return; }
+  const prices = pcParsePrices();
+  const stats = pcCalcStats(prices);
+  const currentPrice = parseFloat(document.getElementById('pcCurrentPrice').value.replace(/[^0-9.]/g,''));
+  const verdict = pcVerdict(currentPrice, stats);
+  const entry = {
+    id: Date.now(),
+    query,
+    sku: document.getElementById('pcSku').value.trim(),
+    condition: document.getElementById('pcCondition').value.trim(),
+    currentPrice: isNaN(currentPrice) ? null : currentPrice,
+    prices,
+    stats,
+    verdict,
+    savedAt: new Date().toISOString()
+  };
+  const list = pcLoadHistory();
+  list.unshift(entry);
+  pcSaveHistory(list.slice(0, 100));
+  pcRenderHistory();
+});
+
+function pcRenderHistory(){
+  const wrap = document.getElementById('pcHistList');
+  const list = pcLoadHistory();
+  if(!list.length){ wrap.innerHTML = '<div class="pc-hist-empty">No saved lookups yet.</div>'; return; }
+  wrap.innerHTML = list.map(e => {
+    const med = e.stats ? '$' + e.stats.median.toFixed(2) + ' median · ' + e.stats.count + ' comps' : 'no prices logged';
+    const when = new Date(e.savedAt).toLocaleDateString();
+    const v = e.verdict || pcVerdict(e.currentPrice, e.stats);
+    const chip = `<span class="pc-hist-chip ${v.key}">${v.label}</span>`;
+    return `<div class="pc-hist-item" data-id="${e.id}">
+      <button class="pc-hist-del" data-del="${e.id}" title="Delete">×</button>
+      <div class="pc-hist-q">${e.query}${e.sku ? ' <span style="opacity:.5;font-weight:500;">· '+e.sku+'</span>' : ''}${chip}</div>
+      <div class="pc-hist-meta">${e.currentPrice ? '$'+e.currentPrice.toFixed(2)+' · ' : ''}${med} · ${when}</div>
+    </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('.pc-hist-del').forEach(btn=>{
+    btn.addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      const id = Number(btn.dataset.del);
+      pcSaveHistory(pcLoadHistory().filter(e=>e.id!==id));
+      pcRenderHistory();
+    });
+  });
+  wrap.querySelectorAll('.pc-hist-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      const id = Number(item.dataset.id);
+      const entry = pcLoadHistory().find(e=>e.id===id);
+      if(!entry) return;
+      document.getElementById('pcQuery').value = entry.query || '';
+      document.getElementById('pcSku').value = entry.sku || '';
+      document.getElementById('pcCondition').value = entry.condition || '';
+      document.getElementById('pcCurrentPrice').value = entry.currentPrice != null ? entry.currentPrice : '';
+      document.getElementById('pcPrices').value = (entry.prices||[]).join('\n');
+      document.getElementById('pcCalc').click();
+    });
+  });
+}
+
+// ── Batch Results ──────────────────────────────────────────────
+const PC_BATCH_KEY = 'abribook_auditBatch';
+
+function pcLoadBatch(){
+  try{ return JSON.parse(localStorage.getItem(PC_BATCH_KEY)) || []; }catch(e){ return []; }
+}
+function pcSaveBatch(list){
+  try{ localStorage.setItem(PC_BATCH_KEY, JSON.stringify(list)); }catch(e){}
+}
+
+// Parses lines like:
+//   OK | Title | Date Created | Condition | Price | SKU | Shopify link | eBay link
+//   ERROR | barcode | reason
+function pcParseBatchReply(raw){
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const items = [];
+  lines.forEach(line=>{
+    const parts = line.split('|').map(p=>p.trim());
+    const tag = (parts[0]||'').toUpperCase();
+    if(tag === 'OK' && parts.length >= 6){
+      items.push({
+        id: Date.now() + Math.random(),
+        status: 'ok',
+        title: parts[1] || '',
+        date: parts[2] || '',
+        condition: parts[3] || '',
+        price: parts[4] || '',
+        sku: parts[5] || '',
+        shopifyLink: (parts[6] && parts[6] !== '—') ? parts[6] : '',
+        ebayLink: (parts[7] && parts[7] !== '—') ? parts[7] : '',
+        importedAt: new Date().toISOString()
+      });
+    } else if(tag === 'ERROR'){
+      items.push({
+        id: Date.now() + Math.random(),
+        status: 'error',
+        barcode: parts[1] || '',
+        reason: parts[2] || 'Not found',
+        importedAt: new Date().toISOString()
+      });
+    }
+  });
+  return items;
+}
+
+document.getElementById('pcImportBatch')?.addEventListener('click', ()=>{
+  const raw = document.getElementById('pcBatchImport').value;
+  const parsed = pcParseBatchReply(raw);
+  if(!parsed.length) return;
+  const list = pcLoadBatch();
+  list.push(...parsed);
+  pcSaveBatch(list);
+  document.getElementById('pcBatchImport').value = '';
+  document.getElementById('pcBatchSummary').style.display = 'none';
+  pcRenderBatch();
+});
+
+document.getElementById('pcClearBatch')?.addEventListener('click', ()=>{
+  pcSaveBatch([]);
+  document.getElementById('pcBatchSummary').style.display = 'none';
+  pcRenderBatch();
+});
+
+document.getElementById('pcReviewBatch')?.addEventListener('click', ()=>{
+  const list = pcLoadBatch();
+  const box = document.getElementById('pcBatchSummary');
+  const total = list.length;
+  const okItems = list.filter(e=>e.status==='ok');
+  const errItems = list.filter(e=>e.status==='error');
+  const noEbay = okItems.filter(e=>!e.ebayLink);
+  box.innerHTML = `
+    <div class="pc-batch-summary-stat"><div class="pc-batch-summary-label">Total Audited</div><div class="pc-batch-summary-value">${total}</div></div>
+    <div class="pc-batch-summary-stat"><div class="pc-batch-summary-label">OK</div><div class="pc-batch-summary-value ok">${okItems.length}</div></div>
+    <div class="pc-batch-summary-stat"><div class="pc-batch-summary-label">Errors</div><div class="pc-batch-summary-value err">${errItems.length}</div></div>
+    <div class="pc-batch-summary-stat"><div class="pc-batch-summary-label">No eBay Link</div><div class="pc-batch-summary-value warn">${noEbay.length}</div></div>
+  `;
+  box.style.display = 'flex';
+});
+
+function pcRenderBatch(){
+  const list = pcLoadBatch();
+  document.getElementById('pcBatchCount').textContent = list.length + (list.length===1 ? ' item' : ' items');
+  const grid = document.getElementById('pcBatchGrid');
+  if(!list.length){ grid.innerHTML = ''; return; }
+
+  grid.innerHTML = list.map(e=>{
+    if(e.status === 'error'){
+      return `<div class="pc-batch-card err">
+        <div class="pc-batch-card-top">
+          <div class="pc-batch-card-title">${e.barcode || 'Unknown barcode'}</div>
+          <span class="pc-chip revise">ERROR</span>
+        </div>
+        <div class="pc-batch-card-meta">${e.reason || 'Not found'}</div>
+      </div>`;
+    }
+    const links = [];
+    if(e.shopifyLink) links.push(`<a href="${e.shopifyLink}" target="_blank" rel="noopener">Shopify</a>`);
+    if(e.ebayLink) links.push(`<a href="${e.ebayLink}" target="_blank" rel="noopener">eBay</a>`);
+    const noEbayTag = !e.ebayLink ? `<span class="pc-batch-tag">No eBay Link</span>` : '';
+    return `<div class="pc-batch-card">
+      <div class="pc-batch-card-top">
+        <div class="pc-batch-card-title">${e.title || 'Untitled'}</div>
+        <span class="pc-chip good">OK</span>
+      </div>
+      <div class="pc-batch-card-meta">${e.sku ? e.sku + ' · ' : ''}${e.condition || ''}${e.price ? ' · ' + e.price : ''}${e.date ? ' · ' + e.date : ''}</div>
+      ${noEbayTag}
+      ${links.length ? `<div class="pc-batch-card-links">${links.join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
 
 function hazOpen(){
   hazBoardLoad();
