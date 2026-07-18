@@ -766,6 +766,7 @@
   .pc-batch-card-links a{font:700 10px/1 var(--sans);color:#FBBF24;text-decoration:none;border:1px solid rgba(251,191,36,.3);padding:4px 8px;border-radius:6px;}
   .pc-batch-card-links a:hover{background:rgba(251,191,36,.12);}
   .pc-batch-tag{display:inline-block;padding:2px 7px;border-radius:999px;font:800 9px/1 var(--sans);margin-top:6px;margin-right:4px;background:rgba(148,163,184,.18);color:#CBD5E1;}
+  .pc-status-line{font:600 11.5px/1.4 var(--sans);color:rgba(253,230,138,.55);background:#14100A;border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:8px 12px;margin-top:8px;}
 
   /* ── Haz ── */
   .haz-wrap{position:fixed;inset:0;background:#0D1A12;z-index:200;display:none;flex-direction:column;}
@@ -3586,6 +3587,12 @@
         <button class="pc-btn pc-btn-search" id="pcOpenSold">🔎 Open Sold Listings on eBay</button>
         <button class="pc-btn pc-btn-search" id="pcOpenActive">🔎 Open Active Listings on eBay</button>
       </div>
+      <div class="pc-btns">
+        <button class="pc-btn pc-btn-calc" id="pcCheckEbayLive">🔴 Check eBay Now (Live)</button>
+        <button class="pc-btn pc-btn-save" id="pcMcAutofill">🔎 Find in Marketplace Connect</button>
+      </div>
+      <div class="pc-status-line" id="pcLiveStatusLine" style="display:none;"></div>
+      <div class="pc-status-line" id="pcMcStatusLine" style="display:none;"></div>
 
       <h3 style="margin-top:22px;">Log Prices You Find</h3>
       <div class="pc-row">
@@ -8941,6 +8948,72 @@ document.getElementById('pcOpenActive')?.addEventListener('click', ()=>{
   if(!q){ document.getElementById('pcQuery').focus(); return; }
   const url = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(q) + '&LH_BIN=1&_sop=15';
   window.open(url, '_blank');
+});
+
+// ── Extension bridge ──────────────────────────────────────────────
+// The Audit Tool page has no direct access to eBay or Shopify Marketplace
+// Connect — that only works through the SYG Audit Tool browser extension's
+// content-abribook-sync.js, which listens for these window messages and
+// forwards them to the extension's background worker. If the extension
+// isn't installed, these calls just time out and we tell the user why.
+let _pcBridgeReqId = 0;
+function pcAskExtension(type, payload, timeoutMs = 12000){
+  return new Promise((resolve)=>{
+    const requestId = ++_pcBridgeReqId;
+    const expectedType = type + '_RESULT';
+    let done = false;
+    function listener(event){
+      if(event.source !== window) return;
+      const data = event.data;
+      if(!data || data.source !== 'syg-audit-extension') return;
+      if(data.requestId !== requestId) return;
+      if(data.type !== expectedType) return;
+      done = true;
+      window.removeEventListener('message', listener);
+      resolve(data);
+    }
+    window.addEventListener('message', listener);
+    window.postMessage({ source:'syg-audit-page', type, requestId, ...payload }, '*');
+    setTimeout(()=>{
+      if(done) return;
+      window.removeEventListener('message', listener);
+      resolve({ ok:false, error:'No response from the SYG Audit Tool extension — make sure it\'s installed and enabled.' });
+    }, timeoutMs);
+  });
+}
+
+document.getElementById('pcCheckEbayLive')?.addEventListener('click', async ()=>{
+  const q = pcBuildQuery();
+  const line = document.getElementById('pcLiveStatusLine');
+  line.style.display = 'block';
+  if(!q){ document.getElementById('pcQuery').focus(); return; }
+  line.textContent = 'Scraping eBay via the extension…';
+
+  const res = await pcAskExtension('CHECK_EBAY_LIVE', { query: q });
+  if(!res.ok){
+    line.textContent = res.error || 'Live check failed.';
+    return;
+  }
+  const prices = (res.listings || []).map(l=>l.price).filter(p=>p>0);
+  document.getElementById('pcPrices').value = prices.join('\n');
+  line.textContent = `Found ${prices.length} comp${prices.length===1?'':'s'} — calculating…`;
+  document.getElementById('pcCalc').click();
+  line.textContent = `Found ${prices.length} comp${prices.length===1?'':'s'} from eBay sold listings.`;
+});
+
+document.getElementById('pcMcAutofill')?.addEventListener('click', async ()=>{
+  const sku = document.getElementById('pcSku').value.trim();
+  const line = document.getElementById('pcMcStatusLine');
+  line.style.display = 'block';
+  if(!sku){ document.getElementById('pcSku').focus(); line.textContent = 'Enter a SKU first.'; return; }
+  line.textContent = 'Looking for an open Marketplace Connect tab…';
+
+  const res = await pcAskExtension('MC_AUTOFILL', { sku });
+  if(!res.ok){
+    line.textContent = res.error || 'Could not autofill.';
+    return;
+  }
+  line.textContent = `SKU "${sku}" filled into the Marketplace Connect search bar — check that tab.`;
 });
 
 function pcParsePrices(){
