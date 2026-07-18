@@ -775,6 +775,9 @@
   .pc-board-card-links a{font:700 9px/1 var(--sans);color:#FBBF24;text-decoration:none;border:1px solid rgba(251,191,36,.3);padding:2px 6px;border-radius:5px;}
   .pc-board-card-links a:hover{background:rgba(251,191,36,.12);}
   .pc-board-empty-hint{font:500 10px/1.4 var(--sans);color:rgba(253,230,138,.25);text-align:center;padding:14px 0;}
+  .pc-copyable{cursor:pointer;border-bottom:1px dashed rgba(251,191,36,.35);transition:color .1s;}
+  .pc-copyable:hover{color:#FCD34D;border-bottom-color:#FCD34D;}
+  .pc-copyable.copied{color:#4ADE80;border-bottom-color:#4ADE80;}
 
   /* ── Audit Recap (full-screen) ── */
   .pc-recap-overlay{position:fixed;inset:0;background:#120E06;z-index:260;display:none;flex-direction:column;}
@@ -9363,10 +9366,15 @@ document.getElementById('pcRecapCopy')?.addEventListener('click', ()=>{
   setTimeout(()=>{ btn.textContent = orig; }, 1400);
 });
 
+function pcCopySpan(text, label){
+  const safe = String(text).replace(/"/g,'&quot;');
+  return `<span class="pc-copyable" data-copy="${safe}" title="Click to copy${label ? ' ' + label : ''}">${text}</span>`;
+}
+
 function pcBatchCardHtml(e){
   if(e.status === 'error'){
     return `<div class="pc-board-card err" draggable="true" data-id="${e.id}">
-      <div class="pc-board-card-title">${e.barcode || 'Unknown barcode'} <span class="pc-chip revise" style="margin-left:4px;">ERR</span></div>
+      <div class="pc-board-card-title">${pcCopySpan(e.barcode || 'Unknown barcode', 'barcode')} <span class="pc-chip revise" style="margin-left:4px;">ERR</span></div>
       <div class="pc-board-card-meta">${e.reason || 'Not found'}</div>
     </div>`;
   }
@@ -9374,9 +9382,13 @@ function pcBatchCardHtml(e){
   if(e.shopifyLink) links.push(`<a href="${e.shopifyLink}" target="_blank" rel="noopener">Shopify</a>`);
   if(e.ebayLink) links.push(`<a href="${e.ebayLink}" target="_blank" rel="noopener">eBay</a>`);
   const noEbayTag = !e.ebayLink ? `<span class="pc-batch-tag">No eBay</span>` : '';
+  const metaParts = [];
+  if(e.sku) metaParts.push(pcCopySpan(e.sku, 'SKU'));
+  if(e.condition) metaParts.push(e.condition);
+  if(e.price) metaParts.push(pcCopySpan(e.price, 'price'));
   return `<div class="pc-board-card" draggable="true" data-id="${e.id}">
-    <div class="pc-board-card-title">${e.title || 'Untitled'}</div>
-    <div class="pc-board-card-meta">${e.sku ? e.sku + ' · ' : ''}${e.condition || ''}${e.price ? ' · ' + e.price : ''}</div>
+    <div class="pc-board-card-title">${pcCopySpan(e.title || 'Untitled', 'title')}</div>
+    <div class="pc-board-card-meta">${metaParts.join(' · ')}</div>
     ${noEbayTag}
     ${links.length ? `<div class="pc-board-card-links">${links.join('')}</div>` : ''}
   </div>`;
@@ -9402,12 +9414,25 @@ function pcRenderBatch(){
 
     container.querySelectorAll('.pc-board-card').forEach(card=>{
       card.addEventListener('dragstart', (ev)=>{
+        if(ev.target.closest && ev.target.closest('.pc-copyable')){ ev.preventDefault(); return; }
         _pcDragId = card.dataset.id;
         card.classList.add('dragging');
         ev.dataTransfer.effectAllowed = 'move';
         ev.dataTransfer.setData('text/plain', card.dataset.id);
       });
       card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
+
+      card.querySelectorAll('.pc-copyable').forEach(span=>{
+        span.addEventListener('click', (ev)=>{
+          ev.stopPropagation();
+          const text = span.dataset.copy;
+          navigator.clipboard?.writeText(text).catch(()=>{});
+          const orig = span.textContent;
+          span.classList.add('copied');
+          span.textContent = 'Copied!';
+          setTimeout(()=>{ span.classList.remove('copied'); span.textContent = orig; }, 900);
+        });
+      });
     });
   });
 
