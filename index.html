@@ -826,6 +826,14 @@
   .pc-batch-card-links a{font:700 10px/1 var(--sans);color:#FBBF24;text-decoration:none;border:1px solid rgba(251,191,36,.3);padding:4px 8px;border-radius:6px;}
   .pc-batch-card-links a:hover{background:rgba(251,191,36,.12);}
   .pc-batch-tag{display:inline-block;padding:2px 7px;border-radius:999px;font:800 9px/1 var(--sans);margin-top:6px;margin-right:4px;background:rgba(148,163,184,.18);color:#CBD5E1;}
+  .pc-batch-tag.warn{background:rgba(250,204,21,.18);color:#FDE047;}
+  .pc-board-card-interest{font:700 10px/1.4 var(--sans);color:#4ADE80;margin-top:6px;}
+  .pc-board-card-interest.muted{font-weight:500;color:rgba(253,230,138,.3);}
+  .pc-board-card-verify{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(251,191,36,.08);}
+  .pc-verify-btn{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:#FBBF24;font:700 9.5px/1 var(--sans);padding:5px 9px;border-radius:6px;cursor:pointer;flex:none;}
+  .pc-verify-btn:hover{background:rgba(251,191,36,.2);}
+  .pc-verify-btn:disabled{opacity:.6;cursor:default;}
+  .pc-verify-status{font:500 9.5px/1.3 var(--sans);color:rgba(253,230,138,.4);}
   .pc-status-line{font:600 11.5px/1.4 var(--sans);color:rgba(253,230,138,.55);background:#14100A;border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:8px 12px;margin-top:8px;}
 
   .pc-drop-slot{border:2px dashed rgba(251,191,36,.3);border-radius:10px;padding:14px;text-align:center;font:600 11.5px/1.4 var(--sans);color:rgba(253,230,138,.4);margin-bottom:14px;transition:all .15s;}
@@ -9038,7 +9046,7 @@ function pcBuildBarcodePrompt(){
   const barcodes = raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
   if(!barcodes.length) return '';
   const list = barcodes.map(b=>`- ${b}`).join('\n');
-  return `Look up these barcodes in Shopify:\n${list}\n\nReply with ONE line per barcode, in exactly this format (pipe-separated, no extra text):\n\nOK | Title | Date Created | Condition | Price | SKU | Shopify link | eBay link\n\nIf a barcode isn't found or has no active eBay listing, use:\n\nERROR | <barcode> | <short reason>\n\nOnly count an eBay link if it's an active listing under our own seller account, gadgetpirates (https://www.ebay.com/usr/gadgetpirates) — not any other seller's matching listing. Use "—" for any field that doesn't apply (e.g. no eBay link). Don't add commentary before or after the lines — I'm pasting this straight into a batch importer.`;
+  return `Look up these barcodes in Shopify:\n${list}\n\nReply with ONE line per barcode, in exactly this format (pipe-separated, no extra text):\n\nOK | Title | Date Created | Condition | Price | SKU | Shopify link | eBay link\n\nIf a barcode isn't found or has no active eBay listing, use:\n\nERROR | <barcode> | <short reason>\n\nOnly count an eBay link if it's an active listing under our own seller account, gadgetpirates (https://www.ebay.com/usr/gadgetpirates) — not any other seller's matching listing. Use "—" for any field that doesn't apply (e.g. no eBay link).\n\nImportant: if you're checking eBay status against an uploaded comps/listings file, that file has a fixed export date — it does NOT update in real time. If this item's Shopify "Date Created" is on or after that file's export date, you can't safely conclude it has no eBay listing just because it's missing from the file. In that specific case, use "UNVERIFIED" instead of "—" in the eBay link field, so it's flagged for a manual check instead of being marked as confirmed unlisted.\n\nDon't add commentary before or after the lines — I'm pasting this straight into a batch importer.`;
 }
 
 document.getElementById('pcBuildBarcodePrompt')?.addEventListener('click', ()=>{
@@ -9179,7 +9187,7 @@ document.getElementById('pcMcAutofill')?.addEventListener('click', async ()=>{
   const line = document.getElementById('pcMcStatusLine');
   line.style.display = 'block';
   if(!sku){ document.getElementById('pcSku').focus(); line.textContent = 'Enter a SKU first.'; return; }
-  line.textContent = 'Looking for an open Marketplace Connect tab…';
+  line.textContent = 'Opening Marketplace Connect…';
 
   const res = await pcAskExtension('MC_AUTOFILL', { sku });
   if(!res.ok){
@@ -9343,6 +9351,8 @@ function pcParseBatchReply(raw){
     const parts = line.split('|').map(p=>p.trim());
     const tag = (parts[0]||'').toUpperCase();
     if(tag === 'OK' && parts.length >= 6){
+      const ebayRaw = parts[7] || '';
+      const isUnverified = ebayRaw.toUpperCase() === 'UNVERIFIED';
       items.push({
         id: Date.now() + Math.random(),
         status: 'ok',
@@ -9353,7 +9363,8 @@ function pcParseBatchReply(raw){
         price: parts[4] || '',
         sku: parts[5] || '',
         shopifyLink: (parts[6] && parts[6] !== '—') ? parts[6] : '',
-        ebayLink: (parts[7] && parts[7] !== '—') ? parts[7] : '',
+        ebayLink: (ebayRaw && ebayRaw !== '—' && !isUnverified) ? ebayRaw : '',
+        ebayUnverified: isUnverified,
         importedAt: new Date().toISOString()
       });
     } else if(tag === 'ERROR'){
@@ -9393,14 +9404,15 @@ function pcBuildRecapData(){
   const total = list.length;
   const okItems = list.filter(e=>e.status==='ok');
   const errItems = list.filter(e=>e.status==='error');
-  const noEbay = okItems.filter(e=>!e.ebayLink);
+  const noEbay = okItems.filter(e=>!e.ebayLink && !e.ebayUnverified);
+  const unverified = okItems.filter(e=>e.ebayUnverified);
   const byBin = { unsorted:[], good:[], fixed:[], dead:[] };
   list.forEach(e => byBin[e.bin || 'unsorted'].push(e));
-  return { total, okItems, errItems, noEbay, byBin };
+  return { total, okItems, errItems, noEbay, unverified, byBin };
 }
 
 document.getElementById('pcReviewBatch')?.addEventListener('click', ()=>{
-  const { total, okItems, errItems, noEbay, byBin } = pcBuildRecapData();
+  const { total, okItems, errItems, noEbay, unverified, byBin } = pcBuildRecapData();
 
   const statsEl = document.getElementById('pcRecapStats');
   statsEl.innerHTML = `
@@ -9408,6 +9420,7 @@ document.getElementById('pcReviewBatch')?.addEventListener('click', ()=>{
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Import OK</div><div class="pc-recap-stat-value ok">${okItems.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Import Errors</div><div class="pc-recap-stat-value err">${errItems.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">No eBay Link</div><div class="pc-recap-stat-value warn">${noEbay.length}</div></div>
+    <div class="pc-recap-stat"><div class="pc-recap-stat-label">Unverified</div><div class="pc-recap-stat-value warn">${unverified.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Good</div><div class="pc-recap-stat-value ok">${byBin.good.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Errored &amp; Fixed</div><div class="pc-recap-stat-value warn">${byBin.fixed.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Doesn't Activate</div><div class="pc-recap-stat-value err">${byBin.dead.length}</div></div>
@@ -9439,11 +9452,11 @@ document.getElementById('pcRecapClose')?.addEventListener('click', ()=>{
 });
 
 document.getElementById('pcRecapCopy')?.addEventListener('click', ()=>{
-  const { total, okItems, errItems, noEbay, byBin } = pcBuildRecapData();
+  const { total, okItems, errItems, noEbay, unverified, byBin } = pcBuildRecapData();
   const lines = [
     `AUDIT RECAP — ${new Date().toLocaleString()}`,
     `Total Audited: ${total}`,
-    `Import OK: ${okItems.length} | Import Errors: ${errItems.length} | No eBay Link: ${noEbay.length}`,
+    `Import OK: ${okItems.length} | Import Errors: ${errItems.length} | No eBay Link: ${noEbay.length} | Unverified: ${unverified.length}`,
     ``,
   ];
   ['good','fixed','dead','unsorted'].forEach(binKey=>{
@@ -9479,16 +9492,35 @@ function pcBatchCardHtml(e){
   const links = [];
   if(e.shopifyLink) links.push(`<a href="${e.shopifyLink}" target="_blank" rel="noopener">Shopify</a>`);
   if(e.ebayLink) links.push(`<a href="${e.ebayLink}" target="_blank" rel="noopener">eBay</a>`);
-  const noEbayTag = !e.ebayLink ? `<span class="pc-batch-tag">No eBay</span>` : '';
+  const ebayTag = e.ebayLink ? '' : (e.ebayUnverified
+    ? `<span class="pc-batch-tag warn" title="Comps file predates this item — couldn't confirm eBay status">⚠️ Unverified</span>`
+    : `<span class="pc-batch-tag">No eBay</span>`);
   const metaParts = [];
   if(e.sku) metaParts.push(pcCopySpan(e.sku, 'SKU'));
   if(e.condition) metaParts.push(e.condition);
   if(e.price) metaParts.push(pcCopySpan(e.price, 'price'));
+
+  const interestParts = [];
+  if(typeof e.watchers === 'number') interestParts.push(`👁 ${e.watchers} watching`);
+  if(typeof e.sold === 'number') interestParts.push(`🔥 ${e.sold} sold`);
+  const interestLine = interestParts.length ? `<div class="pc-board-card-interest">${interestParts.join(' · ')}</div>` : '';
+  const noInterestHint = (e.ebayLink && e.watchers === null && e.sold === null && e.verifiedAt)
+    ? `<div class="pc-board-card-interest muted">No watcher/sold data found on the listing page</div>` : '';
+  const staleHint = (typeof e.watchers === 'number' && e.watchers === 0 && (e.sold === 0 || e.sold === null))
+    ? `<div class="pc-batch-tag warn" title="No watchers, no sales — candidate for a price cut or liquidation">📉 No movement</div>` : '';
+
   return `<div class="pc-board-card" draggable="true" data-id="${e.id}">
     <div class="pc-board-card-title">${pcCopySpan(e.title || 'Untitled', 'title')}</div>
     <div class="pc-board-card-meta">${metaParts.join(' · ')}</div>
-    ${noEbayTag}
+    ${ebayTag}
+    ${staleHint}
+    ${interestLine}
+    ${noInterestHint}
     ${links.length ? `<div class="pc-board-card-links">${links.join('')}</div>` : ''}
+    <div class="pc-board-card-verify">
+      <button class="pc-verify-btn" data-verify-id="${e.id}">🔍 Verify on eBay</button>
+      <span class="pc-verify-status" id="pcVerifyStatus-${e.id}"></span>
+    </div>
   </div>`;
 }
 
@@ -9557,7 +9589,7 @@ function pcRenderBatch(){
 
     container.querySelectorAll('.pc-board-card').forEach(card=>{
       card.addEventListener('dragstart', (ev)=>{
-        if(ev.target.closest && ev.target.closest('.pc-copyable')){ ev.preventDefault(); return; }
+        if(ev.target.closest && (ev.target.closest('.pc-copyable') || ev.target.closest('.pc-verify-btn'))){ ev.preventDefault(); return; }
         _pcDragId = card.dataset.id;
         card.classList.add('dragging');
         ev.dataTransfer.effectAllowed = 'move';
@@ -9575,6 +9607,49 @@ function pcRenderBatch(){
           span.textContent = 'Copied!';
           setTimeout(()=>{ span.classList.remove('copied'); span.textContent = orig; }, 900);
         });
+      });
+
+      const verifyBtn = card.querySelector('.pc-verify-btn');
+      verifyBtn?.addEventListener('click', async (ev)=>{
+        ev.stopPropagation();
+        const id = verifyBtn.dataset.verifyId;
+        const statusEl = document.getElementById('pcVerifyStatus-' + id);
+        const entry = pcLoadBatch().find(x=>String(x.id)===String(id));
+        if(!entry) return;
+        verifyBtn.disabled = true;
+        verifyBtn.textContent = '🔍 Checking…';
+        if(statusEl) statusEl.textContent = 'Searching gadgetpirates\u2019 eBay listings…';
+
+        const res = await pcAskExtension('VERIFY_EBAY_SELLER', { title: entry.title, sku: entry.sku });
+
+        if(!res.ok){
+          if(statusEl) statusEl.textContent = res.error || 'Verify failed.';
+          verifyBtn.disabled = false;
+          verifyBtn.textContent = '🔍 Verify on eBay';
+          return;
+        }
+        const list = pcLoadBatch();
+        const idx = list.findIndex(x=>String(x.id)===String(id));
+        if(idx === -1) return;
+
+        if(!res.found){
+          list[idx].ebayLink = '';
+          list[idx].ebayUnverified = false;
+          list[idx].watchers = undefined;
+          list[idx].sold = undefined;
+          list[idx].verifiedAt = new Date().toISOString();
+          pcSaveBatch(list);
+          pcRenderBatch();
+          return;
+        }
+
+        list[idx].ebayLink = res.url;
+        list[idx].ebayUnverified = false;
+        list[idx].watchers = (typeof res.watchers === 'number') ? res.watchers : null;
+        list[idx].sold = (typeof res.sold === 'number') ? res.sold : null;
+        list[idx].verifiedAt = new Date().toISOString();
+        pcSaveBatch(list);
+        pcRenderBatch();
       });
     });
   });
