@@ -795,11 +795,14 @@
   .pc-board-cards{flex:1;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overflow-x:hidden;min-height:70px;}
   .pc-board-cards.pc-board-cards-row{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;}
   .pc-board-cards.pc-board-cards-row .pc-board-card{width:250px;flex:none;}
-  .pc-board-card{background:#221C10;border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:9px 10px;cursor:grab;transition:opacity .15s,filter .15s,box-shadow .15s,border-color .15s;}
+  .pc-board-card{background:#221C10;border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:9px 10px;cursor:grab;transition:opacity .15s,filter .15s,box-shadow .15s,border-color .15s;position:relative;}
+  .pc-card-delete{position:absolute;top:6px;right:6px;width:18px;height:18px;line-height:16px;text-align:center;padding:0;border:1px solid rgba(251,191,36,.2);border-radius:5px;background:rgba(0,0,0,.25);color:rgba(253,230,138,.45);font:700 11px/16px var(--sans);cursor:pointer;transition:all .12s;}
+  .pc-card-delete:hover{background:#7F1D1D;border-color:#EF4444;color:#FEE2E2;}
+  .pc-card-delete.confirm{background:#7F1D1D;border-color:#EF4444;color:#FEE2E2;width:auto;padding:0 6px;font-size:9px;}
   .pc-board-card:active{cursor:grabbing;}
   .pc-board-card.dragging{opacity:.4;}
   .pc-board-card.err{border-color:rgba(239,68,68,.3);}
-  .pc-board-card-title{font:700 11px/1.35 var(--sans);color:#FDE68A;}
+  .pc-board-card-title{font:700 11px/1.35 var(--sans);color:#FDE68A;padding-right:22px;}
   .pc-board-card-meta{font:500 10px/1.4 var(--sans);color:rgba(253,230,138,.45);margin-top:3px;}
   .pc-board-card-links{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
   .pc-board-card-links a{font:700 9px/1 var(--sans);color:#FBBF24;text-decoration:none;border:1px solid rgba(251,191,36,.3);padding:2px 6px;border-radius:5px;}
@@ -9569,6 +9572,7 @@ function pcBatchCardHtml(e){
   if(e.status === 'error'){
     const errLinks = e.shopifyLink ? `<div class="pc-board-card-links"><a href="${e.shopifyLink}" target="_blank" rel="noopener">Shopify</a></div>` : '';
     return `<div class="pc-board-card err" draggable="true" data-id="${e.id}">
+      <button class="pc-card-delete" data-delete-id="${e.id}" title="Delete card">✕</button>
       <div class="pc-board-card-title">${pcCopySpan(e.barcode || 'Unknown barcode', 'barcode')} <span class="pc-chip revise" style="margin-left:4px;">ERR</span></div>
       <div class="pc-board-card-meta">${e.reason || 'Not found'}</div>
       ${errLinks}
@@ -9598,6 +9602,7 @@ function pcBatchCardHtml(e){
     ? `<div class="pc-batch-tag warn" title="No watchers, no sales — candidate for a price cut or liquidation">📉 No movement</div>` : '';
 
   return `<div class="pc-board-card" draggable="true" data-id="${e.id}">
+    <button class="pc-card-delete" data-delete-id="${e.id}" title="Delete card">✕</button>
     <div class="pc-board-card-title">${pcCopySpan(e.title || 'Untitled', 'title')}</div>
     <div class="pc-board-card-meta">${metaParts.join(' · ')}</div>
     ${ebayTag}
@@ -9708,7 +9713,7 @@ function pcRenderBatch(){
 
     container.querySelectorAll('.pc-board-card').forEach(card=>{
       card.addEventListener('dragstart', (ev)=>{
-        if(ev.target.closest && (ev.target.closest('.pc-copyable') || ev.target.closest('.pc-verify-btn') || ev.target.closest('.pc-board-card-edit'))){ ev.preventDefault(); return; }
+        if(ev.target.closest && (ev.target.closest('.pc-copyable') || ev.target.closest('.pc-verify-btn') || ev.target.closest('.pc-board-card-edit') || ev.target.closest('.pc-card-delete'))){ ev.preventDefault(); return; }
         _pcDragId = card.dataset.id;
         card.classList.add('dragging');
         ev.dataTransfer.effectAllowed = 'move';
@@ -9719,6 +9724,26 @@ function pcRenderBatch(){
       card.addEventListener('click', (ev)=>{
         if(ev.target.closest && ev.target.closest('a, button, textarea, input, .pc-copyable, .pc-edit-panel')) return;
         pcSetActiveCard(card.dataset.id);
+      });
+
+      const deleteBtn = card.querySelector('.pc-card-delete');
+      deleteBtn?.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        const id = deleteBtn.dataset.deleteId;
+        if(!deleteBtn.classList.contains('confirm')){
+          deleteBtn.classList.add('confirm');
+          deleteBtn.textContent = 'Sure?';
+          deleteBtn._confirmTimeout = setTimeout(()=>{
+            deleteBtn.classList.remove('confirm');
+            deleteBtn.textContent = '✕';
+          }, 2500);
+          return;
+        }
+        clearTimeout(deleteBtn._confirmTimeout);
+        const list = pcLoadBatch().filter(x=>String(x.id)!==String(id));
+        pcSaveBatch(list);
+        if(_pcActiveCardId === String(id)) _pcActiveCardId = null;
+        pcRenderBatch();
       });
 
       card.querySelectorAll('.pc-copyable').forEach(span=>{
