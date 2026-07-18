@@ -9407,6 +9407,7 @@ function pcParseBatchReply(raw){
         bin: null,
         barcode: parts[1] || '',
         reason: parts[2] || 'Not found',
+        shopifyLink: (parts[3] && parts[3] !== '—') ? parts[3] : '',
         importedAt: new Date().toISOString()
       });
     }
@@ -9566,9 +9567,11 @@ After making changes: re-read the product, confirm the new values were actually 
 
 function pcBatchCardHtml(e){
   if(e.status === 'error'){
+    const errLinks = e.shopifyLink ? `<div class="pc-board-card-links"><a href="${e.shopifyLink}" target="_blank" rel="noopener">Shopify</a></div>` : '';
     return `<div class="pc-board-card err" draggable="true" data-id="${e.id}">
       <div class="pc-board-card-title">${pcCopySpan(e.barcode || 'Unknown barcode', 'barcode')} <span class="pc-chip revise" style="margin-left:4px;">ERR</span></div>
       <div class="pc-board-card-meta">${e.reason || 'Not found'}</div>
+      ${errLinks}
     </div>`;
   }
   const links = [];
@@ -9739,9 +9742,9 @@ function pcRenderBatch(){
         if(!entry) return;
         verifyBtn.disabled = true;
         verifyBtn.textContent = '🔍 Checking…';
-        if(statusEl) statusEl.textContent = 'Searching gadgetpirates\u2019 eBay listings by SKU… (can take up to ~60s)';
+        if(statusEl) statusEl.textContent = 'Searching gadgetpirates\u2019 eBay listings by SKU…';
 
-        const res = await pcAskExtension('VERIFY_EBAY_SELLER', { title: entry.title, sku: entry.sku }, 60000);
+        const res = await pcAskExtension('VERIFY_EBAY_SELLER', { title: entry.title, sku: entry.sku });
 
         if(!res.ok){
           if(statusEl) statusEl.textContent = res.error || 'Verify failed.';
