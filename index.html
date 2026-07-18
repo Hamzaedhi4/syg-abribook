@@ -857,6 +857,10 @@
   .pc-edit-toggle:hover{color:#FBBF24;}
   .pc-edit-panel{margin-top:8px;}
   .pc-edit-notes{width:100%;background:#14100A;border:1px solid rgba(251,191,36,.2);border-radius:7px;color:#FDE68A;font:500 11px/1.4 var(--sans);padding:8px 9px;box-sizing:border-box;min-height:60px;resize:vertical;}
+  .pc-board-card-quickfields{display:flex;flex-direction:column;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(251,191,36,.08);}
+  .pc-quickfield{width:100%;background:#14100A;border:1px solid rgba(251,191,36,.2);border-radius:6px;color:#FDE68A;font:500 10.5px/1.3 var(--sans);padding:6px 8px;box-sizing:border-box;}
+  .pc-quickfield::placeholder{color:rgba(253,230,138,.3);}
+  .pc-quickfield:focus{outline:none;border-color:#FBBF24;}
   .pc-edit-notes:focus{outline:none;border-color:#FBBF24;}
   .pc-edit-btns{display:flex;gap:6px;margin-top:6px;}
   .pc-edit-prompt-out{width:100%;background:#14100A;border:1px solid rgba(251,191,36,.25);border-radius:7px;color:rgba(253,230,138,.7);font:500 10.5px/1.4 ui-monospace,monospace;padding:8px 9px;box-sizing:border-box;min-height:140px;resize:vertical;margin-top:8px;}
@@ -9570,12 +9574,37 @@ After making changes: re-read the product, confirm the new values were actually 
 
 function pcBatchCardHtml(e){
   if(e.status === 'error'){
-    const errLinks = e.shopifyLink ? `<div class="pc-board-card-links"><a href="${e.shopifyLink}" target="_blank" rel="noopener">Shopify</a></div>` : '';
+    const errLinks = [];
+    if(e.shopifyLink) errLinks.push(`<a href="${e.shopifyLink}" target="_blank" rel="noopener">Shopify</a>`);
+    if(e.ebayLink) errLinks.push(`<a href="${e.ebayLink}" target="_blank" rel="noopener">eBay${e.skuConfirmed ? ' ✓' : ''}</a>`);
+    const errEbayTag = e.ebayLink ? '' : (e.ebayUnverified
+      ? `<span class="pc-batch-tag warn" title="Title match only — not SKU confirmed">⚠️ Unverified</span>` : '');
+    const esc = s => (s || '').replace(/"/g, '&quot;');
     return `<div class="pc-board-card err" draggable="true" data-id="${e.id}">
       <button class="pc-card-delete" data-delete-id="${e.id}" title="Delete card">✕</button>
       <div class="pc-board-card-title">${pcCopySpan(e.barcode || 'Unknown barcode', 'barcode')} <span class="pc-chip revise" style="margin-left:4px;">ERR</span></div>
       <div class="pc-board-card-meta">${e.reason || 'Not found'}</div>
-      ${errLinks}
+      ${errEbayTag}
+      ${errLinks.length ? `<div class="pc-board-card-links">${errLinks.join('')}</div>` : ''}
+      <div class="pc-board-card-quickfields">
+        <input class="pc-quickfield" id="pcQuickTitle-${e.id}" data-quick-id="${e.id}" data-quick-field="title" placeholder="Title (needed to verify on eBay)" value="${esc(e.title)}">
+        <input class="pc-quickfield" id="pcQuickSku-${e.id}" data-quick-id="${e.id}" data-quick-field="sku" placeholder="SKU (needed to verify on eBay)" value="${esc(e.sku)}">
+      </div>
+      <div class="pc-board-card-verify">
+        <button class="pc-verify-btn" data-verify-id="${e.id}">🔍 Verify on eBay</button>
+        <span class="pc-verify-status" id="pcVerifyStatus-${e.id}"></span>
+      </div>
+      <div class="pc-board-card-edit">
+        <button class="pc-edit-toggle" data-edit-id="${e.id}">${e.correctionExpanded ? '▾' : '▸'} Fix / Edit Instructions</button>
+        <div class="pc-edit-panel" id="pcEditPanel-${e.id}" style="display:${e.correctionExpanded ? 'block' : 'none'};">
+          <textarea class="pc-edit-notes" id="pcEditNotes-${e.id}" placeholder="e.g. Correct SKU is NJ02-..., title should be...">${e.correctionNotes || ''}</textarea>
+          <div class="pc-edit-btns">
+            <button class="pc-verify-btn" data-genprompt-id="${e.id}">Generate Prompt</button>
+            <button class="pc-verify-btn" data-copyprompt-id="${e.id}">🛠 Fix!</button>
+          </div>
+          <textarea class="pc-edit-prompt-out" id="pcEditPromptOut-${e.id}" readonly style="display:${e.correctionPrompt ? 'block' : 'none'};">${e.correctionPrompt || ''}</textarea>
+        </div>
+      </div>
     </div>`;
   }
   const links = [];
@@ -9713,7 +9742,7 @@ function pcRenderBatch(){
 
     container.querySelectorAll('.pc-board-card').forEach(card=>{
       card.addEventListener('dragstart', (ev)=>{
-        if(ev.target.closest && (ev.target.closest('.pc-copyable') || ev.target.closest('.pc-verify-btn') || ev.target.closest('.pc-board-card-edit') || ev.target.closest('.pc-card-delete'))){ ev.preventDefault(); return; }
+        if(ev.target.closest && (ev.target.closest('.pc-copyable') || ev.target.closest('.pc-verify-btn') || ev.target.closest('.pc-board-card-edit') || ev.target.closest('.pc-card-delete') || ev.target.closest('.pc-board-card-quickfields'))){ ev.preventDefault(); return; }
         _pcDragId = card.dataset.id;
         card.classList.add('dragging');
         ev.dataTransfer.effectAllowed = 'move';
@@ -9765,6 +9794,10 @@ function pcRenderBatch(){
         const statusEl = document.getElementById('pcVerifyStatus-' + id);
         const entry = pcLoadBatch().find(x=>String(x.id)===String(id));
         if(!entry) return;
+        if(!entry.title && !entry.sku){
+          if(statusEl) statusEl.textContent = 'Fill in a title or SKU above first — nothing to search on yet.';
+          return;
+        }
         verifyBtn.disabled = true;
         verifyBtn.textContent = '🔍 Checking…';
         if(statusEl) statusEl.textContent = 'Searching gadgetpirates\u2019 eBay listings by SKU…';
@@ -9836,6 +9869,19 @@ function pcRenderBatch(){
         if(idx === -1) return;
         list[idx].correctionNotes = editNotes.value;
         pcSaveBatch(list);
+      });
+
+      card.querySelectorAll('.pc-quickfield').forEach(qf=>{
+        qf.addEventListener('click', ev=> ev.stopPropagation());
+        qf.addEventListener('blur', ()=>{
+          const id = qf.dataset.quickId;
+          const field = qf.dataset.quickField; // 'title' | 'sku'
+          const list = pcLoadBatch();
+          const idx = list.findIndex(x=>String(x.id)===String(id));
+          if(idx === -1) return;
+          list[idx][field] = qf.value.trim();
+          pcSaveBatch(list);
+        });
       });
 
       const genBtn = card.querySelector('[data-genprompt-id]');
