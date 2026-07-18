@@ -774,10 +774,14 @@
   .pc-batch-summary-value.ok{color:#4ADE80;}
   .pc-batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:16px;}
 
+  .pc-board-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+  .pc-board-unsorted{flex:none;border-bottom:1px solid rgba(251,191,36,.12);padding:14px 18px;background:#170F06;}
+  .pc-board-cards-row{display:flex;flex-direction:row;gap:10px;overflow-x:auto;padding-bottom:6px;min-height:70px;}
+  .pc-board-cards-row .pc-board-card{width:250px;flex:none;}
   .pc-board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:1;overflow-y:auto;padding:18px;min-height:0;}
   @media (max-width:980px){.pc-board{grid-template-columns:repeat(2,1fr);}}
   .pc-board-col{background:#14100A;border:1px solid rgba(251,191,36,.15);border-radius:10px;padding:10px;min-height:220px;display:flex;flex-direction:column;transition:all .12s;}
-  .pc-board-col.dragover{border-color:#FBBF24;background:rgba(251,191,36,.07);}
+  .pc-board-col.dragover, .pc-board-unsorted.dragover{border-color:#FBBF24;background:rgba(251,191,36,.07);}
   .pc-board-col-head{display:flex;justify-content:space-between;align-items:center;font:700 10.5px/1 var(--sans);color:#FDE68A;text-transform:uppercase;letter-spacing:.03em;margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid rgba(251,191,36,.12);}
   .pc-board-col-count{font:700 10px/1 var(--sans);color:rgba(253,230,138,.4);background:rgba(251,191,36,.08);padding:2px 7px;border-radius:999px;}
   .pc-board-cards{flex:1;display:flex;flex-direction:column;gap:8px;min-height:70px;}
@@ -3653,22 +3657,28 @@
           <button class="pc-btn pc-btn-save" id="pcClearBatch">🗑 Clear Batch</button>
         </div>
       </div>
-      <div class="pc-board" id="pcBoard">
-        <div class="pc-board-col" data-bin="unsorted">
-          <div class="pc-board-col-head"><span>Unsorted</span><span class="pc-board-col-count" id="pcBinCount-unsorted">0</span></div>
-          <div class="pc-board-cards" id="pcBinCards-unsorted"></div>
+      <div class="pc-board-wrap" id="pcBoard">
+        <div class="pc-board-unsorted" data-bin="unsorted">
+          <div class="pc-board-col-head"><span>📥 Unsorted</span><span class="pc-board-col-count" id="pcBinCount-unsorted">0</span></div>
+          <div class="pc-board-cards pc-board-cards-row" id="pcBinCards-unsorted"></div>
         </div>
-        <div class="pc-board-col" data-bin="good">
-          <div class="pc-board-col-head"><span>🟢 Good</span><span class="pc-board-col-count" id="pcBinCount-good">0</span></div>
-          <div class="pc-board-cards" id="pcBinCards-good"></div>
-        </div>
-        <div class="pc-board-col" data-bin="fixed">
-          <div class="pc-board-col-head"><span>🟡 Errored &amp; Fixed</span><span class="pc-board-col-count" id="pcBinCount-fixed">0</span></div>
-          <div class="pc-board-cards" id="pcBinCards-fixed"></div>
-        </div>
-        <div class="pc-board-col" data-bin="dead">
-          <div class="pc-board-col-head"><span>🔴 Errored — Doesn't Activate</span><span class="pc-board-col-count" id="pcBinCount-dead">0</span></div>
-          <div class="pc-board-cards" id="pcBinCards-dead"></div>
+        <div class="pc-board">
+          <div class="pc-board-col" data-bin="working">
+            <div class="pc-board-col-head"><span>🔧 Working On</span><span class="pc-board-col-count" id="pcBinCount-working">0</span></div>
+            <div class="pc-board-cards" id="pcBinCards-working"></div>
+          </div>
+          <div class="pc-board-col" data-bin="good">
+            <div class="pc-board-col-head"><span>🟢 Good</span><span class="pc-board-col-count" id="pcBinCount-good">0</span></div>
+            <div class="pc-board-cards" id="pcBinCards-good"></div>
+          </div>
+          <div class="pc-board-col" data-bin="fixed">
+            <div class="pc-board-col-head"><span>🟡 Errored &amp; Fixed</span><span class="pc-board-col-count" id="pcBinCount-fixed">0</span></div>
+            <div class="pc-board-cards" id="pcBinCards-fixed"></div>
+          </div>
+          <div class="pc-board-col" data-bin="dead">
+            <div class="pc-board-col-head"><span>🔴 Errored — Doesn't Activate</span><span class="pc-board-col-count" id="pcBinCount-dead">0</span></div>
+            <div class="pc-board-cards" id="pcBinCards-dead"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -9406,7 +9416,7 @@ document.getElementById('pcClearBatch')?.addEventListener('click', ()=>{
   pcRenderBatch();
 });
 
-const PC_BIN_LABELS = { unsorted:'Unsorted', good:'🟢 Good', fixed:'🟡 Errored & Fixed', dead:"🔴 Errored — Doesn't Activate" };
+const PC_BIN_LABELS = { unsorted:'📥 Unsorted', working:'🔧 Working On', good:'🟢 Good', fixed:'🟡 Errored & Fixed', dead:"🔴 Errored — Doesn't Activate" };
 
 function pcBuildRecapData(){
   const list = pcLoadBatch();
@@ -9415,7 +9425,7 @@ function pcBuildRecapData(){
   const errItems = list.filter(e=>e.status==='error');
   const noEbay = okItems.filter(e=>!e.ebayLink && !e.ebayUnverified);
   const unverified = okItems.filter(e=>e.ebayUnverified);
-  const byBin = { unsorted:[], good:[], fixed:[], dead:[] };
+  const byBin = { unsorted:[], working:[], good:[], fixed:[], dead:[] };
   list.forEach(e => byBin[e.bin || 'unsorted'].push(e));
   return { total, okItems, errItems, noEbay, unverified, byBin };
 }
@@ -9430,6 +9440,7 @@ document.getElementById('pcReviewBatch')?.addEventListener('click', ()=>{
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Import Errors</div><div class="pc-recap-stat-value err">${errItems.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">No eBay Link</div><div class="pc-recap-stat-value warn">${noEbay.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Unverified</div><div class="pc-recap-stat-value warn">${unverified.length}</div></div>
+    <div class="pc-recap-stat"><div class="pc-recap-stat-label">Working On</div><div class="pc-recap-stat-value">${byBin.working.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Good</div><div class="pc-recap-stat-value ok">${byBin.good.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Errored &amp; Fixed</div><div class="pc-recap-stat-value warn">${byBin.fixed.length}</div></div>
     <div class="pc-recap-stat"><div class="pc-recap-stat-label">Doesn't Activate</div><div class="pc-recap-stat-value err">${byBin.dead.length}</div></div>
@@ -9437,7 +9448,7 @@ document.getElementById('pcReviewBatch')?.addEventListener('click', ()=>{
   `;
 
   const sectionsEl = document.getElementById('pcRecapSections');
-  const binOrder = ['good','fixed','dead','unsorted'];
+  const binOrder = ['good','fixed','dead','working','unsorted'];
   sectionsEl.innerHTML = binOrder.map(binKey=>{
     const items = byBin[binKey];
     const rows = items.length
@@ -9468,7 +9479,7 @@ document.getElementById('pcRecapCopy')?.addEventListener('click', ()=>{
     `Import OK: ${okItems.length} | Import Errors: ${errItems.length} | No eBay Link: ${noEbay.length} | Unverified: ${unverified.length}`,
     ``,
   ];
-  ['good','fixed','dead','unsorted'].forEach(binKey=>{
+  ['good','fixed','dead','working','unsorted'].forEach(binKey=>{
     lines.push(`${PC_BIN_LABELS[binKey]} (${byBin[binKey].length})`);
     if(!byBin[binKey].length) lines.push('  —');
     byBin[binKey].forEach(e=>{
@@ -9645,7 +9656,7 @@ function pcRenderBatch(){
   const list = pcLoadBatch();
   document.getElementById('pcBatchCount').textContent = list.length + (list.length===1 ? ' item' : ' items');
 
-  const bins = { unsorted: [], good: [], fixed: [], dead: [] };
+  const bins = { unsorted: [], working: [], good: [], fixed: [], dead: [] };
   list.forEach(e => bins[e.bin || 'unsorted'].push(e));
 
   Object.keys(bins).forEach(binKey=>{
@@ -9805,7 +9816,7 @@ function pcRenderBatch(){
     });
   });
 
-  document.querySelectorAll('.pc-board-col').forEach(col=>{
+  document.querySelectorAll('.pc-board-col, .pc-board-unsorted').forEach(col=>{
     col.ondragover = (ev)=>{ ev.preventDefault(); col.classList.add('dragover'); };
     col.ondragleave = ()=> col.classList.remove('dragover');
     col.ondrop = (ev)=>{
