@@ -19194,12 +19194,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var median=prices.length%2?prices[mid]:(prices[mid-1]+prices[mid])/2;
     var avg=prices.reduce(function(a,b){return a+b},0)/prices.length;
     var low=prices[0],high=prices[prices.length-1];
-    // Anchor on the top quartile, not the median — a median gets pulled down
-    // by old/low sales even when the item is clearly reselling higher today.
-    // This is "what's the highest price this will actually sell for", not
-    // "what's the typical price across every sale ever logged".
-    var p75=percentile(prices,0.75);
-    var recommended=retailRound(p75);
+    // Recommendation is the median and average of the actual comps you gave
+    // it for THIS item — nothing more. The earlier top-quartile + steering
+    // approach could get pulled way off by a mismatched trained/store/live
+    // signal for a different item entirely (confirmed on a real test: it
+    // recommended $350 on a $150 item because of exactly that). Median and
+    // average of your own entered comps can't drift that way.
+    var recommended=retailRound((median+avg)/2);
     var queryText=document.getElementById('nexusPriceQuery').value.trim();
     var current=parseFloat(String(document.getElementById('nexusCurrentPrice').value||'').replace(/[^0-9.]/g,''));
 
@@ -19207,24 +19208,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var storeMatches=queryText?searchStoreSoldPrices(queryText):[];
     var liveMatches=queryText?await searchLiveSoldPrices(queryText):[];
     var trend=queryText?await getPriceTrend(queryText):null;
+    // Still computed for the supporting trail below (so you can see what
+    // matched) — but no longer allowed to move the actual recommended price.
     var steer=steerRecommendation(recommended,trainedMatches,storeMatches,liveMatches);
     var hasSignal=steer.items.length>0;
-    var heroPrice=hasSignal?steer.steered:recommended;
+    var heroPrice=recommended;
 
-    // Compare the current listed price against the actual recommendation
-    // (heroPrice) — not the raw median — since that's the number we're
-    // telling the person to aim for.
+    // Compare the current listed price against the median/average
+    // recommendation — that's the number we're telling the person to aim for.
     var verdict={cls:'unknown',label:'Add your price',text:'Enter what it\'s currently listed for to see how it compares.'};
     if(isFinite(current)&&current>0){
       var diff=(current-heroPrice)/heroPrice;
       if(diff>.12)verdict={cls:'high',label:'Priced Too High',text:'This is priced '+Math.round(diff*100)+'% higher than the recommended price — it may sit longer before it sells.'};
-      else if(diff<-.12)verdict={cls:'low',label:'Priced Too Low',text:'This is priced '+Math.abs(Math.round(diff*100))+'% lower than what the market will likely pay right now — you could very likely charge more.'};
-      else verdict={cls:'good',label:'Good Price',text:'This is priced right around the top of what similar items are actually selling for.'};
+      else if(diff<-.12)verdict={cls:'low',label:'Priced Too Low',text:'This is priced '+Math.abs(Math.round(diff*100))+'% lower than what similar items have actually sold for — you could likely charge more.'};
+      else verdict={cls:'good',label:'Good Price',text:'This is priced right around what similar items have actually sold for.'};
     }
     var marker=isFinite(current)&&high>low?Math.max(0,Math.min(100,(current-low)/(high-low)*100)):50;
-    var heroSub=hasSignal
-      ? 'Steered toward '+steer.items.length+' real sale'+(steer.items.length===1?'':'s')+' (leaning hard toward the top cluster) — comps alone suggested '+money(recommended)
-      : 'Built around the top quartile of '+prices.length+' sold comp'+(prices.length===1?'':'s')+', not the flat median';
+    var heroSub='Median '+money(median)+' and average '+money(avg)+' of '+prices.length+' sold comp'+(prices.length===1?'':'s')+', blended';
     var trendHtml='';
     if(trend&&trend.enough){
       var dir=trend.pct>3?'up':(trend.pct<-3?'down':'flat');
@@ -19280,7 +19280,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       var ta=a.timestamp?new Date(a.timestamp).getTime():-1,tb=b.timestamp?new Date(b.timestamp).getTime():-1;
       return tb-ta;
     });
-    el.innerHTML='<div class="nexus-health-mini-label" style="margin:16px 0 8px">Feeding this recommendation ('+items.length+')</div>'+
+    el.innerHTML='<div class="nexus-health-mini-label" style="margin:16px 0 8px">Related prices found ('+items.length+') — for reference, not used to set the number above</div>'+
       '<div class="nexus-status" style="margin:-4px 0 10px">"You confirmed" = a price you personally told Nexus this sold for. "Your store sale" = one of SYG\'s own real completed sales. "eBay sold price" = a real completed eBay sale (any seller) pulled live when you clicked Check live comps.</div>'+
       '<div style="display:grid;gap:6px">'+sorted.slice(0,10).map(function(it){
         var month=it.monthLabel||monthLabel(it.timestamp);
