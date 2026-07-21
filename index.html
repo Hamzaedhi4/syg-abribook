@@ -17599,7 +17599,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <div class="nexus-oq-list nexus-oq-list-packed" id="nexusPackedQueue" data-oq-bin="packed"><div class="nexus-oq-empty">Drag orders here once packed — top to bottom becomes the exact label print order.</div></div>
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
-        <h3>3 · Scan or enter the physical item SKU</h3>
+        <h3>3 · Scan the physical item SKU</h3>
+        <div class="nexus-status" style="margin:-2px 0 10px">Scanning matches the barcode against Incoming/Packed above and moves it into Packed automatically — use this once you're holding the item in hand. No eBay match yet? Falls back to a Listing Health import.</div>
         <div class="nexus-field"><label>SKU</label><input class="nexus-input" id="nexusShipSku" placeholder="Scan SKU and press Enter" autocomplete="off"></div>
         <div class="nexus-order-card empty" id="nexusOrderMatch">Waiting for a physical item…</div>
       </div>
@@ -18210,6 +18211,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       };
     });
   }
+  function findPulledOrderBySku(sku){
+    var needle=sku.toUpperCase();
+    var hit=packedOrders.find(function(o){return String(o.sku||'').toUpperCase()===needle});
+    if(hit)return {order:hit,bin:'packed'};
+    hit=pulledOrders.find(function(o){return String(o.sku||'').toUpperCase()===needle});
+    if(hit)return {order:hit,bin:'incoming'};
+    return null;
+  }
   function findOrderBySku(sku){
     if(typeof window.pcLoadBatch!=='function')return null;
     return window.pcLoadBatch().find(function(e){return String(e.sku||'').toUpperCase()===sku.toUpperCase()})||null;
@@ -18217,11 +18226,26 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function resolveSku(){
     var sku=document.getElementById('nexusShipSku').value.trim();
     if(!sku)return;
-    selectedOrder=findOrderBySku(sku);
     var card=document.getElementById('nexusOrderMatch');
+
+    // Prefer a real eBay-pulled order — that's the live, connected data source.
+    var pulledHit=findPulledOrderBySku(sku);
+    if(pulledHit){
+      var o=pulledHit.order;
+      selectedOrder={sku:o.sku,title:o.buyerName?('Order for '+o.buyerName):('Order '+(o.orderNumber||'')),price:o.value,orderNumber:o.orderNumber,orderUrl:o.orderUrl};
+      if(pulledHit.bin==='incoming')moveCard('incoming',o.id,'packed',null); // scanning it = it's packed now
+      card.className='nexus-order-card';
+      card.innerHTML='<div class="nexus-order-title">'+escapeHtml(o.buyerName||'Matched order')+'</div><div class="nexus-order-meta">SKU: '+escapeHtml(o.sku||'—')+'<br>Value: '+escapeHtml(o.value||'—')+(o.orderNumber?'<br>Order # '+escapeHtml(o.orderNumber):'')+(pulledHit.bin==='incoming'?'<br>Moved to Packed — sets its position in the label order.':'<br>Already in Packed.')+'</div>';
+      nexusEvent('shipping_item_scanned',selectedOrder,{sku:sku});
+      validateShip();
+      return;
+    }
+
+    // Fallback: match against a Listing Health import batch (no eBay pull yet).
+    selectedOrder=findOrderBySku(sku);
     if(!selectedOrder){
       card.className='nexus-order-card empty';
-      card.innerHTML='<div class="nexus-order-title">No imported order match</div><div class="nexus-order-meta">Import the day’s orders into Listing Health or connect the eBay extension to resolve '+escapeHtml(sku)+'.</div>';
+      card.innerHTML='<div class="nexus-order-title">No order match</div><div class="nexus-order-meta">Pull orders from the connected eBay tab, or import the day’s orders into Listing Health, to resolve '+escapeHtml(sku)+'.</div>';
     }else{
       card.className='nexus-order-card';
       card.innerHTML='<div class="nexus-order-title">'+escapeHtml(selectedOrder.title||'Matched listing')+'</div><div class="nexus-order-meta">SKU: '+escapeHtml(selectedOrder.sku||'—')+'<br>Price: '+escapeHtml(selectedOrder.price||'—')+'<br>Order/customer details will be returned by the shipping extension.</div>';
@@ -18398,7 +18422,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!selectedOrder||!selectedBox)return;
     var payload={
       workingUrl:document.getElementById('nexusShipUrl').value.trim(),
-      sku:selectedOrder.sku,title:selectedOrder.title,
+      sku:selectedOrder.sku,title:selectedOrder.title,orderNumber:selectedOrder.orderNumber||'',
       weightLb:parseInt(document.getElementById('nexusWeightLb').value||'0',10),
       weightOz:parseInt(document.getElementById('nexusWeightOz').value||'0',10),
       dimensions:{length:selectedBox.l,width:selectedBox.w,height:selectedBox.h},
