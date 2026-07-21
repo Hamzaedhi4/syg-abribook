@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SYG Abribook Lookup</title>
+<title>SYG Nexus</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -3525,30 +3525,20 @@
 
 <!-- ── Welcome Screen ── -->
 <div class="welcome-backdrop" id="welcomeBackdrop">
-  <div class="welcome-box">
-    <div class="welcome-logo">SYG <span>Abribook</span></div>
-    <div class="welcome-sub">Sell Your Gadgets — Elmwood Park</div>
-    <div class="welcome-q">Who do you want to work with today?</div>
-    <div class="welcome-cards">
-      <div class="welcome-card wan" id="welcomeWan">
-        <div class="welcome-card-icon">📖</div>
-        <div class="welcome-card-name">Wan</div>
-        <div class="welcome-card-desc">Listing intake<br>RAM &amp; Storage</div>
+  <div class="nexus-home">
+    <div class="nexus-home-head"><div class="nexus-mark">SYG</div><div><div class="nexus-brand">SYG <span>Nexus</span></div><div class="nexus-kicker">Sell Your Gadgets · Elmwood Park</div></div><div class="nexus-date"><b>Operations Center</b>Intake · Listings · Health · Shipping</div></div>
+    <div class="nexus-home-body">
+      <div class="nexus-hero"><div><h1>Store operations, connected.</h1><p>Move from intake to healthy listings to physical-first shipping.</p></div><div class="nexus-health-mini"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-health-mini-row"><strong id="nexusOverallHealth">100%</strong><span id="nexusHealthSub">Ready for first audit</span></div></div></div>
+      <div class="nexus-grid">
+        <button class="nexus-module" id="welcomeWan" style="--mod-color:var(--nexus-blue)"><div class="nexus-module-foot">List</div><div class="nexus-module-icon">📖</div><h2>Wan Workspace</h2><p>Listing intake, Abribook registry, manifests and batch tools.</p></button>
+        <button class="nexus-module" id="welcomePc" style="--mod-color:#f4bb55"><div class="nexus-module-foot">Audit</div><div class="nexus-module-icon">◉</div><h2>Listing Health</h2><p>Scan, audit, correct and understand every listing.</p></button>
+        <button class="nexus-module" id="welcomeHaz" style="--mod-color:#4ade80"><div class="nexus-module-foot">Buy</div><div class="nexus-module-icon">◇</div><h2>Haz Buying</h2><p>Customer intake, offer calculations and buying board.</p></button>
+        <button class="nexus-module" data-module="shipping" style="--mod-color:var(--nexus-cyan)"><div class="nexus-module-foot">Ship</div><div class="nexus-module-icon">▰</div><h2>Shipping Station</h2><p>Physical-first packing, package presets and eBay prefill.</p></button>
+        <button class="nexus-module" data-module="pricing" style="--mod-color:#34d399"><div class="nexus-module-foot">Price</div><div class="nexus-module-icon">$</div><h2>Pricing Lab</h2><p>Turn sold comps into a clear, defensible selling price.</p></button>
+        <button class="nexus-module" data-module="command" style="--mod-color:#c084fc"><div class="nexus-module-foot">Insights</div><div class="nexus-module-icon">⌁</div><h2>Command Center</h2><p>Health trends and smart operational suggestions.</p></button>
+        <button class="nexus-module" data-module="shovo" style="--mod-color:#fb7185"><div class="nexus-module-foot">Assist</div><div class="nexus-module-icon">✦</div><h2>Ask Shovo</h2><p>System guidance, shortcuts and operational answers.</p></button>
       </div>
-      <div class="welcome-card pc" id="welcomePc">
-        <div class="welcome-card-icon">🧭</div>
-        <div class="welcome-card-name">Audit Tool</div>
-        <div class="welcome-card-desc">Barcode lookup<br>eBay price research</div>
-      </div>
-      <div class="welcome-card haz" id="welcomeHaz">
-        <div class="welcome-card-icon">🔍</div>
-        <div class="welcome-card-name">Haz</div>
-        <div class="welcome-card-desc">Buying intake<br>Offer calculator</div>
-      </div>
-    </div>
-    <div style="margin-top:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;">
-      <button id="openAboutWelcomeBtn" style="padding:9px 22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;font:600 12px/1 var(--sans);color:rgba(255,255,255,.45);cursor:pointer;letter-spacing:.02em;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.45)'">ℹ About this system</button>
-      <button id="gModeWelcomeBtn" style="padding:9px 22px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;font:700 12px/1 var(--sans);color:rgba(167,170,255,.85);cursor:pointer;letter-spacing:.04em;transition:all .15s;" onmouseover="this.style.background='rgba(99,102,241,.28)';this.style.color='#c7c8ff'" onmouseout="this.style.background='rgba(99,102,241,.15)';this.style.color='rgba(167,170,255,.85)'">⚡ G-Mode — Guided Tour</button>
+      <div class="nexus-home-actions"><button class="nexus-quiet-btn" id="openAboutWelcomeBtn">About Nexus</button><button class="nexus-quiet-btn" id="gModeWelcomeBtn">Guided Tour</button></div>
     </div>
   </div>
 </div>
@@ -9464,16 +9454,26 @@ const PC_BIN_LABELS = { unsorted:'📥 Unsorted', working:'🔧 Working On', awa
 // Edit this list to add/rename/remove reason tags — everything else
 // (legend rendering, card badges, and the recap snapshot) reads from it.
 const PC_AUDIT_TAGS = [
-  { id:'metafield_wrong',     label:'Wrong/Dup Metafield',     icon:'🧩', color:'#F59E0B' },
-  { id:'metafield_missing',   label:'Missing Metafield',       icon:'❓', color:'#FBBF24' },
-  { id:'price',               label:'Price Correction',        icon:'💲', color:'#4ADE80' },
-  { id:'title',               label:'Title Rewrite',           icon:'📝', color:'#60A5FA' },
-  { id:'condition_misplaced', label:'Condition Misplaced',     icon:'⚠️', color:'#F87171' },
-  { id:'spec_wrong',          label:'Wrong Model/Spec',        icon:'🏷️', color:'#A78BFA' },
-  { id:'description',         label:'Description Restructure', icon:'🧾', color:'#38BDF8' },
-  { id:'serial_mpn',          label:'Serial/MPN Fix',          icon:'🔢', color:'#FB923C' },
-  { id:'no_ebay',             label:'No eBay Listing',         icon:'🚫', color:'#EF4444' },
-  { id:'archived_dup',        label:'Archived Duplicate',      icon:'🗄️', color:'#94A3B8' }
+  { id:'desc_wrong',          label:'Description · Incorrect',  icon:'🧾', color:'#F87171' },
+  { id:'desc_missing',        label:'Description · Missing Info',icon:'🧾', color:'#FBBF24' },
+  { id:'desc_structure',      label:'Description · Structure',  icon:'🧾', color:'#38BDF8' },
+  { id:'desc_unsupported',    label:'Description · Unsupported',icon:'🧾', color:'#FB7185' },
+  { id:'title_wrong',         label:'Title · Incorrect',        icon:'📝', color:'#F87171' },
+  { id:'title_missing',       label:'Title · Missing Info',     icon:'📝', color:'#FBBF24' },
+  { id:'title_structure',     label:'Title · Structure',        icon:'📝', color:'#60A5FA' },
+  { id:'metafield_wrong',     label:'Metafield · Incorrect',    icon:'🧩', color:'#F59E0B' },
+  { id:'metafield_missing',   label:'Metafield · Missing',      icon:'❓', color:'#FBBF24' },
+  { id:'metafield_duplicate', label:'Metafield · Duplicate',    icon:'🧩', color:'#FB923C' },
+  { id:'condition_wrong',     label:'Condition · Incorrect',    icon:'⚠️', color:'#F87171' },
+  { id:'condition_misplaced', label:'Condition · Misplaced',    icon:'⚠️', color:'#FB923C' },
+  { id:'spec_wrong',          label:'Specification · Incorrect',icon:'🏷️', color:'#A78BFA' },
+  { id:'spec_missing',        label:'Specification · Missing',  icon:'🏷️', color:'#C4B5FD' },
+  { id:'price_high',          label:'Price · Too High',         icon:'💲', color:'#F87171' },
+  { id:'price_low',           label:'Price · Too Low',          icon:'💲', color:'#4ADE80' },
+  { id:'no_ebay',             label:'eBay · Listing Missing',   icon:'🚫', color:'#EF4444' },
+  { id:'ebay_mismatch',       label:'eBay · Listing Mismatch',  icon:'🔗', color:'#F97316' },
+  { id:'photo_issue',         label:'Images · Needs Attention', icon:'📷', color:'#22D3EE' },
+  { id:'archived_dup',        label:'Identity · Duplicate',     icon:'🗄️', color:'#94A3B8' }
 ];
 function pcAuditTagById(id){ return PC_AUDIT_TAGS.find(t=>t.id===id); }
 
@@ -12680,6 +12680,28 @@ const HAZ_PHRASES = {
   ]
 };
 
+// Casual conversation stays out of the pricing/intake parser. Haz can answer
+// naturally without requiring a customer vibe, while product-bearing messages
+// still flow into the real buying engine.
+function hazCasualReply(text){
+  const lo = text.toLowerCase().trim();
+  if(!lo) return null;
+  if(hazLocalMatch(text) || /\$?\d{2,}/.test(lo) || /\b(ps[1-5]|xbox|iphone|ipad|macbook|laptop|phone|console|switch|gpu|ssd|ram|computer|tablet)\b/.test(lo)) return null;
+  if(/^(hey|hi|hello|yo|sup|what'?s up|good (morning|afternoon|evening))[!?.\s]*$/.test(lo))
+    return hazPick(['Hey — what are we working with today?','What’s up. Hand me the item details when you’re ready.','Hey. I’m ready when you are.']);
+  if(/\b(how are you|how you doing|you good|how'?s it going)\b/.test(lo))
+    return hazPick(['Good — ready to run numbers. How’s the floor treating you?','Locked in. What came through the door?','Doing good. Give me the item whenever you’re ready.']);
+  if(/\b(thanks|thank you|appreciate it|good looks)\b/.test(lo))
+    return hazPick(['Anytime.','Of course — that’s what I’m here for.','Got you.']);
+  if(/\b(long day|busy day|rough day|crazy today|tired|exhausted|slow day)\b/.test(lo))
+    return hazPick(['I hear you. We’ll keep the next one quick and clean.','Yeah, one item at a time. I’ll handle the numbers.','Let’s make the next intake the easy one.']);
+  if(/^(nice|cool|bet|word|perfect|awesome|great|lol|lmao|got it|okay|ok)[!?.\s]*$/.test(lo))
+    return hazPick(['We’re good.','Bet — keep it moving.','Perfect. What’s next?']);
+  if(/\b(who are you|what can you do|what do you do)\b/.test(lo))
+    return 'I’m Haz. Give me the item, condition, what they want, and the customer vibe — I’ll research the market, build the offer range, and help you handle the negotiation.';
+  return null;
+}
+
 // ── Ample intent scorer ────────────────────────────────────────────
 // Reads free text mid-negotiation and figures out what the buyer is
 // actually trying to do — instead of matching one rigid phrase. Scores
@@ -12723,7 +12745,7 @@ function hazScoreIntent(text){
   if(/\b(seems?\s+(annoyed|upset|desperate|chill|easy|relaxed|tough|pushy|angry|impatient)|getting\s+(annoyed|impatient|pushy)|being\s+(difficult|tough|pushy|easy|chill))\b/.test(lo)) scores.vibeChange += 6;
 
   // Small talk / stalling — no number, no product, just a pause
-  if(/\b(hold on|one sec|hang on|let me ask|checking|brb|give me a (sec|minute)|wait a (sec|minute))\b/.test(lo) && number==null) scores.smalltalk += 6;
+  if(/\b(hold on|one sec|hang on|let me ask|checking|brb|give me a (sec|minute)|wait a (sec|minute)|thanks|thank you|how are you|long day|busy day)\b/.test(lo) && number==null) scores.smalltalk += 6;
 
   let bestIntent = 'unclear', bestScore = 1.5; // must clear this bar to be confident
   Object.entries(scores).forEach(([k,v])=>{ if(v > bestScore){ bestScore = v; bestIntent = k; } });
@@ -12733,6 +12755,12 @@ function hazScoreIntent(text){
 
 async function hazProcessMessage(text){
   const lo = text.toLowerCase();
+  const casual = hazCasualReply(text);
+  if(casual){
+    hazRemoveTyping();
+    hazAddBubble('haz', casual, false);
+    return;
+  }
   if(!_hazVibe){
     if(lo.includes('easy')||lo.includes('chill')||lo.includes('relaxed')) _hazVibe='easy';
     else if(lo.includes('tough')||lo.includes('pushy')||lo.includes('aggressive')) _hazVibe='tough';
@@ -13062,6 +13090,14 @@ function hazChatSend(){
   }
 
   if(!_hazVibe){
+    const casual = hazCasualReply(text);
+    if(casual){
+      input.value = '';
+      hazAddBubble('staff', text);
+      hazAddTyping();
+      setTimeout(()=>{ hazRemoveTyping(); hazAddBubble('haz', casual, false); }, 420);
+      return;
+    }
     hazAddBubble('haz','Pick a customer vibe first (Easy / Tough / Desperate) so I can calibrate the offer.');
     return;
   }
@@ -17210,6 +17246,9 @@ document.querySelectorAll('.gai-chip').forEach(btn => {
   });
 });
 
+// Public launcher used by the SYG Nexus home screen.
+window.openShovoFromNexus = openGModeAI;
+
 })();
 </script>
 
@@ -17460,6 +17499,755 @@ const _hook=()=>{
   if(typeof orig==='function'&&!orig._pmHooked){window.dpUpdatePreviewAll=function(){orig.apply(this,arguments);pmRenderCards();};window.dpUpdatePreviewAll._pmHooked=true;}
 };
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_hook);else _hook();
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     YOUR GADGET NEXUS — prototype experience layer
+     ═══════════════════════════════════════════════════════════════ -->
+<style>
+  :root{--nexus-bg:#080b12;--nexus-panel:#111722;--nexus-panel-2:#171f2d;--nexus-line:rgba(255,255,255,.09);--nexus-text:#f4f7fb;--nexus-soft:#8f9aad;--nexus-blue:#6d7cff;--nexus-cyan:#32d6c5;--nexus-gold:#f4bb55;}
+  .nexus-home{position:absolute;inset:0;display:flex;flex-direction:column;background:
+    radial-gradient(circle at 15% 0%,rgba(109,124,255,.16),transparent 35%),
+    radial-gradient(circle at 90% 85%,rgba(50,214,197,.08),transparent 32%),var(--nexus-bg);color:var(--nexus-text);overflow:auto;}
+  .nexus-home-head{display:flex;align-items:center;gap:16px;padding:24px 30px;border-bottom:1px solid var(--nexus-line);background:rgba(8,11,18,.82);backdrop-filter:blur(18px);position:sticky;top:0;z-index:2;}
+  .nexus-mark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font:800 17px var(--mono);background:linear-gradient(145deg,var(--nexus-blue),#4855d7);box-shadow:0 10px 30px rgba(109,124,255,.25);}
+  .nexus-brand{font-size:19px;font-weight:750;letter-spacing:-.035em}.nexus-brand span{color:var(--nexus-cyan)}
+  .nexus-kicker{font:600 10px var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--nexus-soft);margin-top:4px}
+  .nexus-date{margin-left:auto;text-align:right;font-size:12px;color:var(--nexus-soft)}.nexus-date b{display:block;color:var(--nexus-text);font-size:13px;margin-bottom:3px}
+  .nexus-home-body{width:min(1180px,100%);margin:0 auto;padding:34px 30px 46px;}
+  .nexus-hero{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:24px}
+  .nexus-hero h1{font-size:31px;line-height:1.12;letter-spacing:-.045em;margin:0 0 8px}.nexus-hero p{margin:0;color:var(--nexus-soft);font-size:14px}
+  .nexus-health-mini{min-width:230px;padding:15px 17px;border:1px solid rgba(50,214,197,.22);border-radius:15px;background:rgba(50,214,197,.06)}
+  .nexus-health-mini-label{font:700 10px var(--mono);letter-spacing:.1em;color:#72eadc;text-transform:uppercase}
+  .nexus-health-mini-row{display:flex;align-items:end;gap:9px;margin-top:7px}.nexus-health-mini strong{font:800 29px var(--mono)}.nexus-health-mini span{color:var(--nexus-soft);font-size:11px;padding-bottom:4px}
+  .nexus-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .nexus-module{position:relative;min-height:174px;padding:20px;border:1px solid var(--nexus-line);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));color:var(--nexus-text);text-align:left;cursor:pointer;overflow:hidden;transition:.18s ease;font:inherit}
+  .nexus-module:before{content:"";position:absolute;inset:auto -30px -55px auto;width:125px;height:125px;border-radius:50%;background:var(--mod-color);opacity:.09;filter:blur(4px)}
+  .nexus-module:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--mod-color),transparent 55%);background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));box-shadow:0 18px 50px rgba(0,0,0,.22)}
+  .nexus-module-icon{font-size:24px;margin-bottom:26px}.nexus-module h2{font-size:16px;margin:0 0 7px;letter-spacing:-.025em}.nexus-module p{font-size:12px;line-height:1.5;color:var(--nexus-soft);margin:0;max-width:260px}
+  .nexus-module-foot{position:absolute;right:18px;top:18px;font:700 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mod-color)}
+  .nexus-home-actions{display:flex;gap:9px;margin-top:18px}.nexus-quiet-btn{border:1px solid var(--nexus-line);background:rgba(255,255,255,.035);color:var(--nexus-soft);border-radius:999px;padding:9px 14px;font:650 11px var(--sans);cursor:pointer}.nexus-quiet-btn:hover{color:#fff;border-color:rgba(255,255,255,.2)}
+  .nexus-shipping{position:fixed;inset:0;z-index:10020;background:var(--nexus-bg);color:var(--nexus-text);display:none;flex-direction:column}.nexus-shipping.show{display:flex}
+  .nexus-ship-head{display:flex;align-items:center;gap:13px;padding:18px 24px;border-bottom:1px solid var(--nexus-line);background:#0c111b}.nexus-ship-head h2{margin:0;font-size:16px;flex:1}.nexus-back{border:1px solid var(--nexus-line);border-radius:10px;background:transparent;color:var(--nexus-soft);padding:9px 13px;cursor:pointer}
+  .nexus-ship-body{display:grid;grid-template-columns:minmax(330px,430px) 1fr;gap:18px;overflow:auto;padding:22px;max-width:1200px;width:100%;margin:0 auto}.nexus-ship-panel{border:1px solid var(--nexus-line);border-radius:17px;background:var(--nexus-panel);padding:18px}.nexus-ship-panel h3{font-size:13px;margin:0 0 14px;color:#fff}
+  .nexus-field{margin-bottom:13px}.nexus-field label{display:block;font:700 9.5px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--nexus-soft);margin-bottom:6px}.nexus-input{width:100%;border:1px solid var(--nexus-line);border-radius:10px;background:#090d15;color:#fff;padding:11px 12px;font:600 12px var(--mono);outline:none}.nexus-input:focus{border-color:var(--nexus-blue);box-shadow:0 0 0 3px rgba(109,124,255,.12)}
+  .nexus-connect{width:100%;border:0;border-radius:10px;padding:11px;background:var(--nexus-blue);color:#fff;font:750 12px var(--sans);cursor:pointer}.nexus-connect.connected{background:#157f71}
+  .nexus-status{font-size:11px;line-height:1.45;color:var(--nexus-soft);margin-top:8px}.nexus-order-card{border:1px solid rgba(50,214,197,.2);border-radius:14px;background:rgba(50,214,197,.055);padding:14px;margin:14px 0}.nexus-order-card.empty{border-color:var(--nexus-line);background:#0b1019;color:var(--nexus-soft)}
+  .nexus-order-title{font-weight:750;font-size:13px;margin-bottom:6px}.nexus-order-meta{font:550 11px/1.65 var(--mono);color:var(--nexus-soft)}
+  .nexus-box-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.nexus-box{border:1px solid var(--nexus-line);border-radius:11px;background:#0b1019;color:var(--nexus-soft);padding:11px 7px;font:700 10px var(--mono);cursor:pointer}.nexus-box:hover,.nexus-box.on{border-color:var(--nexus-blue);background:rgba(109,124,255,.12);color:#fff}
+  .nexus-weight{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.nexus-prefill{width:100%;margin-top:14px;padding:13px;border:0;border-radius:11px;background:linear-gradient(90deg,var(--nexus-blue),#5968ed);color:#fff;font:800 12px var(--sans);cursor:pointer}.nexus-prefill:disabled{opacity:.35;cursor:not-allowed}
+  .nexus-queue-row{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--nexus-line)}.nexus-queue-num{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:#20283a;font:700 10px var(--mono)}.nexus-queue-name{font-size:12px;font-weight:700}.nexus-queue-meta{font:500 10px var(--mono);color:var(--nexus-soft);margin-top:3px}.nexus-queue-state{font:700 9px var(--mono);color:var(--nexus-cyan);text-transform:uppercase}
+  .nexus-label-match{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid var(--nexus-line)}.nexus-label-match b{font-size:10.5px}.nexus-label-match span{font:650 9px var(--mono);color:var(--nexus-soft)}.nexus-label-match em{font:750 9px var(--mono);font-style:normal}.nexus-label-match em.ok{color:#4ade80}.nexus-label-match em.warn{color:#fbbf24}.nexus-label-summary{margin-top:12px;padding:11px;border-radius:10px;background:#0b1019;border:1px solid var(--nexus-line);font:650 10px/1.6 var(--mono);color:var(--nexus-soft)}
+  .nexus-pdf-drop{margin:12px 0;padding:25px 16px;border:1.5px dashed rgba(251,191,36,.32);border-radius:14px;background:rgba(251,191,36,.035);text-align:center;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}.nexus-pdf-drop:hover,.nexus-pdf-drop.dragover{background:rgba(251,191,36,.09);border-color:#FBBF24;transform:translateY(-1px)}.nexus-pdf-drop-icon{font-size:24px;margin-bottom:8px}.nexus-pdf-drop strong{display:block;font-size:12px;color:#FDE68A;margin-bottom:5px}.nexus-pdf-drop span{display:block;font-size:10.5px;color:rgba(253,230,138,.42)}.nexus-pdf-drop.loaded{border-style:solid;border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.055)}.nexus-pdf-drop.loaded strong{color:#4ADE80}
+  .nexus-command{position:fixed;inset:0;z-index:10025;background:var(--nexus-bg);color:var(--nexus-text);display:none;flex-direction:column}.nexus-command.show{display:flex}.nexus-command-body{width:min(1180px,100%);margin:0 auto;padding:26px;overflow:auto}.nexus-command-hero{display:grid;grid-template-columns:260px 1fr;gap:16px}.nexus-score-card,.nexus-insight-card{border:1px solid var(--nexus-line);border-radius:18px;background:var(--nexus-panel);padding:20px}.nexus-score-ring{width:132px;height:132px;margin:16px auto;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--nexus-cyan) var(--score),#242c3a 0);position:relative}.nexus-score-ring:after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--nexus-panel)}.nexus-score-ring strong{position:relative;z-index:1;font:800 27px var(--mono)}.nexus-score-caption{text-align:center;color:var(--nexus-soft);font-size:11px}.nexus-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:16px}.nexus-stat{padding:13px;border:1px solid var(--nexus-line);border-radius:12px;background:#0d121c}.nexus-stat b{display:block;font:800 20px var(--mono);margin-bottom:5px}.nexus-stat span{font-size:10px;color:var(--nexus-soft)}.nexus-suggestion{padding:15px 16px;border:1px solid rgba(109,124,255,.22);border-radius:14px;background:rgba(109,124,255,.06);margin-top:10px}.nexus-suggestion-tag{font:750 9px var(--mono);color:#9da7ff;letter-spacing:.1em;text-transform:uppercase}.nexus-suggestion h4{font-size:13px;margin:8px 0 6px}.nexus-suggestion p{font-size:11.5px;line-height:1.55;color:var(--nexus-soft);margin:0}.nexus-suggestion-impact{display:inline-block;margin-top:9px;color:var(--nexus-cyan);font:700 10px var(--mono)}
+  .nexus-next-btn{width:100%;margin-top:14px;padding:13px;border:0;border-radius:11px;background:linear-gradient(90deg,#7c3aed,#6366f1);color:#fff;font:800 12px var(--sans);cursor:pointer}.nexus-next-btn:hover{filter:brightness(1.08)}
+  .pc-health-actions{display:flex;gap:6px;margin-top:7px}.pc-health-action{border:1px solid rgba(253,230,138,.18);border-radius:7px;background:rgba(255,255,255,.035);color:rgba(253,230,138,.62);padding:5px 8px;font:700 9px var(--sans);cursor:pointer}.pc-health-action:hover{color:#fff;border-color:rgba(253,230,138,.4)}
+  .nexus-modal{position:fixed;inset:0;z-index:10100;background:rgba(3,5,10,.78);backdrop-filter:blur(9px);display:none;align-items:center;justify-content:center;padding:20px}.nexus-modal.show{display:flex}.nexus-modal-card{width:min(560px,100%);max-height:82vh;overflow:auto;border:1px solid var(--nexus-line);border-radius:18px;background:#111722;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.55)}.nexus-modal-head{display:flex;align-items:center;gap:10px;padding:17px 19px;border-bottom:1px solid var(--nexus-line)}.nexus-modal-head h3{font-size:14px;margin:0;flex:1}.nexus-modal-close{border:0;background:transparent;color:var(--nexus-soft);font-size:20px;cursor:pointer}.nexus-modal-body{padding:18px}.nexus-health-total{display:flex;align-items:end;gap:10px;margin-bottom:17px}.nexus-health-total strong{font:800 34px var(--mono)}.nexus-health-total span{color:var(--nexus-soft);font-size:11px;padding-bottom:5px}.nexus-deduction{display:grid;grid-template-columns:46px 1fr;gap:10px;padding:11px 0;border-top:1px solid var(--nexus-line)}.nexus-deduction-points{font:800 12px var(--mono);color:#f87171}.nexus-deduction b{display:block;font-size:11.5px;margin-bottom:3px}.nexus-deduction p{font-size:10.5px;color:var(--nexus-soft);margin:0;line-height:1.4}
+  .nexus-pricing{position:fixed;inset:0;z-index:10030;background:radial-gradient(circle at 90% 0%,rgba(52,211,153,.1),transparent 34%),var(--nexus-bg);color:var(--nexus-text);display:none;flex-direction:column}.nexus-pricing.show{display:flex}.nexus-price-body{width:min(1220px,100%);margin:0 auto;padding:24px;overflow:auto;display:grid;grid-template-columns:380px 1fr;gap:18px}.nexus-price-inputs,.nexus-price-results{border:1px solid var(--nexus-line);border-radius:18px;background:var(--nexus-panel);padding:20px}.nexus-price-inputs textarea{min-height:210px;resize:vertical;line-height:1.7}.nexus-price-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.nexus-price-btn{padding:11px;border:1px solid var(--nexus-line);border-radius:10px;background:#0c111a;color:var(--nexus-soft);font:750 11px var(--sans);cursor:pointer}.nexus-price-btn.primary{border:0;background:#159b79;color:#fff}.nexus-price-btn:hover{filter:brightness(1.1)}.nexus-price-empty{min-height:450px;display:grid;place-items:center;text-align:center;color:var(--nexus-soft)}.nexus-price-empty strong{display:block;color:#fff;font-size:18px;margin-bottom:8px}.nexus-market-head{display:flex;align-items:start;justify-content:space-between;gap:16px}.nexus-verdict{padding:7px 11px;border-radius:999px;font:800 10px var(--mono);text-transform:uppercase}.nexus-verdict.good{color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3)}.nexus-verdict.high{color:#f87171;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3)}.nexus-verdict.low{color:#60a5fa;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3)}.nexus-verdict.unknown{color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3)}.nexus-price-hero{margin:24px 0;padding:24px;border:1px solid rgba(52,211,153,.2);border-radius:18px;background:rgba(52,211,153,.055);text-align:center}.nexus-price-hero-label{font:750 10px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:#6ee7c4}.nexus-price-hero-value{font:850 52px/1 var(--mono);margin:12px 0 8px}.nexus-price-hero-sub{font-size:12px;color:var(--nexus-soft)}.nexus-price-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.nexus-price-stat{padding:14px;border:1px solid var(--nexus-line);border-radius:13px;background:#0c111a}.nexus-price-stat span{display:block;font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--nexus-soft);margin-bottom:8px}.nexus-price-stat b{font:800 17px var(--mono)}.nexus-range{margin-top:20px}.nexus-range-track{height:12px;border-radius:999px;background:linear-gradient(90deg,#60a5fa,#34d399 45%,#fbbf24 70%,#f87171);position:relative;margin:38px 6px 12px}.nexus-range-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border:4px solid #fff;border-radius:50%;background:#111827;box-shadow:0 3px 12px rgba(0,0,0,.5)}.nexus-range-marker:before{content:attr(data-label);position:absolute;bottom:22px;left:50%;transform:translateX(-50%);white-space:nowrap;font:700 9px var(--mono);color:#fff}.nexus-range-labels{display:flex;justify-content:space-between;font:650 9px var(--mono);color:var(--nexus-soft)}.nexus-price-guidance{margin-top:18px;padding:14px 16px;border-radius:13px;background:#0c111a;border:1px solid var(--nexus-line);font-size:12px;line-height:1.55;color:var(--nexus-soft)}.nexus-price-guidance b{color:#fff}
+  /* Pricing Lab inherits the Audit Tool's warm, evidence-focused visual language. */
+  .nexus-pricing{background:radial-gradient(circle at 88% 0%,rgba(251,191,36,.1),transparent 34%),#1A1608}.nexus-pricing .nexus-ship-head{background:#14100A;border-bottom:3px solid #FBBF24}.nexus-pricing .nexus-mark{background:linear-gradient(145deg,#FBBF24,#D97706);color:#1A1608;box-shadow:0 10px 30px rgba(251,191,36,.18)}.nexus-pricing .nexus-back{border-color:rgba(251,191,36,.35);color:#FBBF24}.nexus-pricing .nexus-price-inputs,.nexus-pricing .nexus-price-results{background:#221C10;border-color:rgba(251,191,36,.15)}.nexus-pricing .nexus-health-mini-label{color:#FBBF24}.nexus-pricing .nexus-input{background:#14100A;border-color:rgba(251,191,36,.2);color:#FDE68A}.nexus-pricing .nexus-input:focus{border-color:#FBBF24;box-shadow:0 0 0 3px rgba(251,191,36,.1)}.nexus-pricing .nexus-price-btn{background:#14100A;border-color:rgba(251,191,36,.22);color:rgba(253,230,138,.65)}.nexus-pricing .nexus-price-btn.primary{background:#FBBF24;color:#1A1608}.nexus-pricing .nexus-price-hero{border-color:rgba(251,191,36,.24);background:rgba(251,191,36,.065)}.nexus-pricing .nexus-price-hero-label{color:#FBBF24}.nexus-pricing .nexus-price-hero-value{color:#FDE68A}.nexus-pricing .nexus-price-stat,.nexus-pricing .nexus-price-guidance{background:#14100A;border-color:rgba(251,191,36,.15)}.nexus-pricing .nexus-price-stat b{color:#FDE68A}.nexus-pricing .nexus-range-track{background:linear-gradient(90deg,#60A5FA,#FDE68A 47%,#FBBF24 68%,#F87171)}.nexus-pricing .nexus-range-marker{background:#1A1608;border-color:#FDE68A}.nexus-pricing .nexus-status,.nexus-pricing .nexus-price-hero-sub,.nexus-pricing .nexus-range-labels,.nexus-pricing .nexus-price-guidance{color:rgba(253,230,138,.5)}
+  .nexus-about-shell{background:#0D1119;border:1px solid rgba(251,191,36,.16);border-radius:20px;box-shadow:0 32px 90px rgba(0,0,0,.6);width:min(900px,100%);margin:auto;overflow:hidden;color:#F7F4EA}.nexus-about-head{display:flex;align-items:center;gap:14px;padding:22px 26px;background:#14100A;border-bottom:3px solid #FBBF24}.nexus-about-head h2{margin:0;font-size:18px;letter-spacing:-.03em}.nexus-about-head p{margin:4px 0 0;color:rgba(253,230,138,.48);font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase}.nexus-about-body{padding:26px;max-height:72vh;overflow:auto}.nexus-about-intro{font-size:14px;line-height:1.7;color:rgba(255,255,255,.72);margin:0 0 22px}.nexus-about-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.nexus-about-module{padding:16px;border:1px solid rgba(251,191,36,.12);border-radius:14px;background:#151922}.nexus-about-module span{font-size:18px}.nexus-about-module h3{font-size:12px;color:#FDE68A;margin:10px 0 6px}.nexus-about-module p{font-size:11.5px;line-height:1.55;color:rgba(255,255,255,.48);margin:0}.nexus-about-flow{margin-top:18px;padding:16px;border-radius:14px;background:#14100A;border:1px solid rgba(251,191,36,.16);font:650 11px/1.8 var(--mono);color:rgba(253,230,138,.68)}.nexus-about-close{background:none;border:0;color:rgba(253,230,138,.5);font-size:22px;cursor:pointer}.nexus-about-foot{padding:14px 26px 20px}.nexus-about-done{width:100%;padding:12px;border:1px solid rgba(251,191,36,.25);border-radius:10px;background:rgba(251,191,36,.08);color:#FDE68A;font:750 12px var(--sans);cursor:pointer}@media(max-width:650px){.nexus-about-grid{grid-template-columns:1fr}}
+  /* Haz Nexus layout: board above, centered dark conversation console below. */
+  #hazWrap{background:#07100B}.haz-wrap .haz-main{display:grid;grid-template-rows:minmax(250px,1fr) minmax(300px,42vh);overflow:hidden;background:#07100B}.haz-wrap .haz-left{grid-row:1;width:100%;border-right:0;border-bottom:1px solid rgba(74,222,128,.13);background:#0A120D}.haz-wrap .haz-right{grid-row:2;width:100%;background:#07100B;border:0;overflow:hidden;padding:12px 18px 16px}.haz-wrap #hazStaffView{width:min(900px,100%);max-width:900px;margin:0 auto;padding:0;overflow:hidden}.haz-wrap .haz-chat-wrap{min-height:0;height:100%;background:#0D1711;border:1px solid rgba(74,222,128,.16);border-radius:18px;box-shadow:0 18px 55px rgba(0,0,0,.35);overflow:hidden}.haz-wrap .haz-chat-messages{background:radial-gradient(circle at 50% 100%,rgba(34,197,94,.045),transparent 45%),#0D1711;padding:15px 18px 8px;gap:11px}.haz-wrap .haz-chat-bubble.haz .haz-chat-text{background:#13251A;color:#C9F7D5;border:1px solid rgba(74,222,128,.12)}.haz-wrap .haz-chat-bubble.staff .haz-chat-text{background:#20272F;color:#F6F8FA;border:1px solid rgba(255,255,255,.06)}.haz-wrap .haz-chat-bubble.haz .haz-chat-avatar{background:#184C2A;color:#7BF29A}.haz-wrap .haz-chat-bubble.staff .haz-chat-avatar{background:#303845;color:#C7CED8}.haz-wrap .haz-chat-input-wrap{order:9;background:#0A120D;border-top:1px solid rgba(74,222,128,.12);padding:10px 12px}.haz-wrap .haz-chat-input{background:#111D16;border:1px solid rgba(74,222,128,.18);color:#EDFDF2;border-radius:12px;min-height:42px;max-height:86px}.haz-wrap .haz-chat-input::placeholder{color:rgba(201,247,213,.3)}.haz-wrap .haz-chat-input:focus{border-color:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.08)}.haz-wrap .haz-chat-send{width:42px;height:42px;background:#22C55E;box-shadow:0 6px 20px rgba(34,197,94,.18)}.haz-wrap .haz-vibe-section{order:8;display:flex;align-items:center;gap:10px;background:#0A120D;border:0;border-top:1px solid rgba(74,222,128,.1);border-radius:0;padding:8px 12px}.haz-wrap .haz-vibe-label{font-size:9px;color:rgba(201,247,213,.38);margin:0;white-space:nowrap}.haz-wrap .haz-vibe-cards{display:flex;gap:6px;flex:1}.haz-wrap .haz-vibe-btn{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;padding:6px 10px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:#121A15}.haz-wrap .haz-vibe-emoji{font-size:13px;margin:0}.haz-wrap .haz-vibe-name{font-size:9.5px;color:rgba(255,255,255,.62);white-space:nowrap}.haz-wrap .haz-vibe-hint{display:none}.haz-wrap .haz-vibe-btn.on.easy{border-color:#22C55E;background:rgba(34,197,94,.13)}.haz-wrap .haz-vibe-btn.on.easy .haz-vibe-name{color:#86EFAC}.haz-wrap .haz-vibe-btn.on.tough{border-color:#EF4444;background:rgba(239,68,68,.12)}.haz-wrap .haz-vibe-btn.on.tough .haz-vibe-name{color:#FCA5A5}.haz-wrap .haz-vibe-btn.on.desperate{border-color:#F59E0B;background:rgba(245,158,11,.12)}.haz-wrap .haz-vibe-btn.on.desperate .haz-vibe-name{color:#FCD34D}.haz-wrap .haz-quick-replies{order:7;background:#0D1711;border-color:rgba(74,222,128,.1)}.haz-wrap .haz-reset{position:absolute;right:18px;bottom:18px;width:auto;background:#111D16;border-color:rgba(74,222,128,.18);color:#86A991;z-index:3}.haz-wrap .haz-board-toolbar{background:#0A120D}.haz-wrap .haz-board-inner{min-width:100%;min-height:100%}
+  @media(max-width:700px){.haz-wrap .haz-main{grid-template-rows:minmax(210px,1fr) minmax(360px,54vh)}.haz-wrap .haz-right{padding:8px}.haz-wrap .haz-vibe-label{display:none}.haz-wrap .haz-vibe-cards{justify-content:center}.haz-wrap .haz-vibe-btn{flex:1;padding:7px 6px}.haz-wrap .haz-chat-messages{padding:12px 10px 6px}}
+  .pc-health-badge{display:inline-flex;align-items:center;gap:5px;margin-top:7px;padding:5px 8px;border-radius:7px;font:800 10px var(--mono);border:1px solid}.pc-health-badge.good{color:#4ADE80;background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)}.pc-health-badge.warn{color:#FBBF24;background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25)}.pc-health-badge.bad{color:#F87171;background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25)}.pc-scan-list{font:500 9.5px/1.45 var(--sans);color:rgba(253,230,138,.55);margin-top:5px}
+  @media(max-width:850px){.nexus-grid{grid-template-columns:1fr 1fr}.nexus-ship-body,.nexus-price-body{grid-template-columns:1fr}.nexus-hero{align-items:start;flex-direction:column}.nexus-health-mini{width:100%}}@media(max-width:560px){.nexus-grid{grid-template-columns:1fr}.nexus-home-body{padding:24px 16px}.nexus-home-head{padding:18px 16px}.nexus-date{display:none}.nexus-box-grid{grid-template-columns:1fr 1fr}.nexus-price-stats,.nexus-stat-grid{grid-template-columns:1fr 1fr}}
+</style>
+
+<div class="nexus-shipping" id="nexusShipping">
+  <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Nexus Shipping Station</h2><button class="nexus-back" id="nexusShipBack">← Command</button></div>
+  <div class="nexus-ship-body">
+    <div>
+      <div class="nexus-ship-panel">
+        <h3>1 · Connect today’s eBay shipping page</h3>
+        <div class="nexus-field"><label>Working page URL</label><input class="nexus-input" id="nexusShipUrl" placeholder="Paste the eBay orders shipping URL"></div>
+        <button class="nexus-connect" id="nexusConnectPage">Connect working page</button>
+        <div class="nexus-status" id="nexusConnectStatus">Saved locally for today. The Nexus browser extension will use this page for prefilling.</div>
+      </div>
+      <div class="nexus-ship-panel" style="margin-top:14px">
+        <h3>2 · Scan or enter the physical item SKU</h3>
+        <div class="nexus-field"><label>SKU</label><input class="nexus-input" id="nexusShipSku" placeholder="Scan SKU and press Enter" autocomplete="off"></div>
+        <div class="nexus-order-card empty" id="nexusOrderMatch">Waiting for a physical item…</div>
+      </div>
+    </div>
+    <div>
+      <div class="nexus-ship-panel">
+        <h3>3 · Choose the package</h3>
+        <div class="nexus-box-grid" id="nexusBoxGrid"></div>
+        <div class="nexus-weight">
+          <div class="nexus-field"><label>Total pounds</label><input class="nexus-input" id="nexusWeightLb" type="number" min="0" value="0"></div>
+          <div class="nexus-field"><label>Total ounces</label><input class="nexus-input" id="nexusWeightOz" type="number" min="0" max="15" placeholder="0"></div>
+        </div>
+        <button class="nexus-prefill" id="nexusPrefill" disabled>Prefill eBay Shipping</button>
+        <div class="nexus-status" id="nexusPrefillStatus">Select a matched SKU, package, and weight.</div>
+      </div>
+      <div class="nexus-ship-panel" style="margin-top:14px">
+        <h3>Physical pack sequence</h3>
+        <div id="nexusPackQueue"><div class="nexus-status">Scanned shipments will appear here in the exact order you packed them.</div></div>
+      </div>
+      <div class="nexus-ship-panel" style="margin-top:14px">
+        <h3>4 · Sort the combined label PDF</h3>
+        <div class="nexus-field"><label>Label match keys — one line per packed shipment</label><textarea class="nexus-input" id="nexusLabelKeys" style="min-height:100px;resize:vertical;line-height:1.6" placeholder="Michael Rodriguez 44107 12-11111-22222&#10;Sarah Thompson 07024 12-33333-44444"></textarea></div>
+        <div class="nexus-status" style="margin:-5px 0 10px">Nexus fills this from order data when available. Tracking number or order number gives the strongest match.</div>
+        <input type="file" id="nexusLabelPdf" accept="application/pdf" style="display:none">
+        <div class="nexus-pdf-drop" id="nexusPdfDrop" role="button" tabindex="0">
+          <div class="nexus-pdf-drop-icon">⇩</div>
+          <strong>Drop the combined eBay label PDF here</strong>
+          <span>or click to choose · one label per page · processed only on this computer</span>
+        </div>
+        <div class="nexus-price-btns">
+          <button class="nexus-price-btn" id="nexusChoosePdf">Choose a different PDF</button>
+          <button class="nexus-price-btn primary" id="nexusAnalyzeLabels" disabled>Analyze and match</button>
+        </div>
+        <div class="nexus-status" id="nexusLabelStatus">Every label must occupy its own PDF page.</div>
+        <div id="nexusLabelMatches"></div>
+        <button class="nexus-prefill" id="nexusCreateSortedPdf" style="display:none">Download Sorted Label PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nexus-command" id="nexusCommand">
+  <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Listing Health Command Center</h2><button class="nexus-back" id="nexusCommandBack">← Command</button></div>
+  <div class="nexus-command-body">
+    <div class="nexus-command-hero">
+      <div class="nexus-score-card"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-score-ring" id="nexusScoreRing" style="--score:100%"><strong id="nexusCommandScore">100%</strong></div><div class="nexus-score-caption" id="nexusCommandCaption">No audited listings yet</div></div>
+      <div class="nexus-insight-card"><div class="nexus-health-mini-label">Current audit snapshot</div><div class="nexus-stat-grid" id="nexusCommandStats"></div><div id="nexusSuggestions"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="nexus-pricing" id="nexusPricing">
+  <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Pricing Lab</h2><span style="font-size:11px;color:var(--nexus-soft)">Sold comps → clear selling price</span><button class="nexus-back" id="nexusPricingBack">← Command</button></div>
+  <div class="nexus-price-body">
+    <div class="nexus-price-inputs">
+      <div class="nexus-health-mini-label" style="margin-bottom:16px">Price check</div>
+      <div class="nexus-field"><label>Item or search query</label><input class="nexus-input" id="nexusPriceQuery" placeholder="Dell Latitude 5420 i5 16GB 512GB"></div>
+      <div class="nexus-field"><label>Current selling price (optional)</label><input class="nexus-input" id="nexusCurrentPrice" inputmode="decimal" placeholder="349.99"></div>
+      <div class="nexus-field"><label>Sold prices — one per line</label><textarea class="nexus-input" id="nexusCompPrices" placeholder="299.99&#10;324.00&#10;349.99&#10;310.00"></textarea></div>
+      <div class="nexus-price-btns">
+        <button class="nexus-price-btn" id="nexusOpenSold">Open eBay sold</button>
+        <button class="nexus-price-btn" id="nexusLiveComps">Check live comps</button>
+        <button class="nexus-price-btn" id="nexusClearPrice">Clear</button>
+        <button class="nexus-price-btn primary" id="nexusCalculatePrice">Calculate price</button>
+      </div>
+      <div class="nexus-status" id="nexusPriceStatus">Use at least three relevant sold prices for a reliable recommendation.</div>
+    </div>
+    <div class="nexus-price-results" id="nexusPriceResults">
+      <div class="nexus-price-empty"><div><strong>What should this sell for?</strong>Add relevant sold prices, then Nexus will show the market center, range, and a recommended selling price.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="nexus-modal" id="nexusHealthModal">
+  <div class="nexus-modal-card">
+    <div class="nexus-modal-head"><h3>Listing Health explanation</h3><button class="nexus-modal-close" id="nexusHealthClose">×</button></div>
+    <div class="nexus-modal-body" id="nexusHealthModalBody"></div>
+  </div>
+</div>
+
+<script src="nexus-assets/pdf.min.js"></script>
+<script src="nexus-assets/pdf-lib.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  var DB_NAME='your_gadget_nexus';
+  var DB_VERSION=1;
+  var dbPromise=null;
+  var BOXES=[
+    {id:'20x20x12',name:'20 × 20 × 12',l:20,w:20,h:12},
+    {id:'16x16x6', name:'16 × 16 × 6', l:16,w:16,h:6},
+    {id:'8x4x4',   name:'8 × 4 × 4',   l:8, w:4, h:4},
+    {id:'8x8x2',   name:'8 × 8 × 2',   l:8, w:8, h:2},
+    {id:'8x6x4',   name:'8 × 6 × 4',   l:8, w:6, h:4},
+    {id:'10x10x4', name:'10 × 10 × 4', l:10,w:10,h:4},
+    {id:'12x10x4', name:'12 × 10 × 4', l:12,w:10,h:4},
+    {id:'12x6x6',  name:'12 × 6 × 6',  l:12,w:6, h:6},
+    {id:'16x10x4', name:'16 × 10 × 4', l:16,w:10,h:4},
+    {id:'16x12x6', name:'16 × 12 × 6', l:16,w:12,h:6},
+    {id:'16x12x8', name:'16 × 12 × 8', l:16,w:12,h:8},
+    {id:'18x12x6', name:'18 × 12 × 6', l:18,w:12,h:6},
+    {id:'16x10x5', name:'16 × 10 × 5', l:16,w:10,h:5}
+  ];
+  var selectedBox=null, selectedOrder=null, packQueue=[];
+  var labelPdfBytes=null,labelPageTexts=[],labelMapping=[];
+  var HEALTH_WEIGHTS={
+    desc_wrong:15,desc_missing:8,desc_structure:8,desc_unsupported:15,
+    title_wrong:15,title_missing:8,title_structure:3,
+    metafield_wrong:15,metafield_missing:8,metafield_duplicate:8,
+    condition_wrong:30,condition_misplaced:8,spec_wrong:15,spec_missing:8,
+    price_high:15,price_low:15,no_ebay:8,ebay_mismatch:15,photo_issue:8,archived_dup:30
+  };
+
+  function openDb(){
+    if(dbPromise)return dbPromise;
+    dbPromise=new Promise(function(resolve,reject){
+      var req=indexedDB.open(DB_NAME,DB_VERSION);
+      req.onupgradeneeded=function(){
+        var db=req.result;
+        if(!db.objectStoreNames.contains('events')){
+          var events=db.createObjectStore('events',{keyPath:'eventId'});
+          events.createIndex('listingId','listingId');
+          events.createIndex('timestamp','timestamp');
+          events.createIndex('type','type');
+        }
+        if(!db.objectStoreNames.contains('settings'))db.createObjectStore('settings',{keyPath:'key'});
+      };
+      req.onsuccess=function(){resolve(req.result)};
+      req.onerror=function(){reject(req.error)};
+    });
+    return dbPromise;
+  }
+  function nexusEvent(type,entry,data){
+    openDb().then(function(db){
+      var tx=db.transaction('events','readwrite');
+      tx.objectStore('events').put({
+        eventId:'evt_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
+        listingId:(entry&&entry.sku)?'sku:'+entry.sku:'item:'+((entry&&entry.id)||'system'),
+        sku:(entry&&entry.sku)||'',title:(entry&&entry.title)||'',
+        timestamp:new Date().toISOString(),type:type,data:data||{}
+      });
+    }).catch(function(){});
+  }
+  function putSetting(key,value){
+    return openDb().then(function(db){
+      return new Promise(function(resolve){
+        var tx=db.transaction('settings','readwrite');
+        tx.objectStore('settings').put({key:key,value:value,updatedAt:new Date().toISOString()});
+        tx.oncomplete=resolve;
+      });
+    });
+  }
+  function getSetting(key){
+    return openDb().then(function(db){
+      return new Promise(function(resolve){
+        var req=db.transaction('settings').objectStore('settings').get(key);
+        req.onsuccess=function(){resolve(req.result?req.result.value:null)};
+        req.onerror=function(){resolve(null)};
+      });
+    });
+  }
+  window.NexusLedger={record:nexusEvent,open:openDb};
+
+  function issuesFor(entry){
+    var issues=[];
+    if(!entry.sku)issues.push({code:'metafield_missing',label:'SKU is missing',points:15});
+    if(!entry.title||entry.title.length<12)issues.push({code:'title_missing',label:'Title may be incomplete',points:8});
+    if(!entry.condition)issues.push({code:'condition_wrong',label:'Condition is missing',points:15});
+    if(!entry.price||!parseFloat(String(entry.price).replace(/[^0-9.]/g,'')))issues.push({code:'price_low',label:'Price is missing or invalid',points:15});
+    if(!entry.ebayLink){
+      issues.push({code:entry.ebayUnverified?'ebay_mismatch':'no_ebay',label:entry.ebayUnverified?'eBay match is unverified':'No SKU-confirmed eBay listing',points:entry.ebayUnverified?15:8});
+    }
+    if(entry.status==='error')issues.push({code:'spec_wrong',label:'Import could not identify the listing',points:30});
+    return issues;
+  }
+  function healthFor(entry){
+    var confirmed=(entry.auditTags||[]).map(function(code){return {code:code,label:'Confirmed audit defect',points:HEALTH_WEIGHTS[code]||8}});
+    var potential=(entry.nexusPotentialIssues||[]);
+    var map={};
+    confirmed.concat(potential).forEach(function(i){if(!map[i.code]||map[i.code].points<i.points)map[i.code]=i});
+    var issues=Object.keys(map).map(function(k){return map[k]});
+    var score=Math.max(0,100-issues.reduce(function(sum,i){return sum+(i.points||8)},0));
+    return {score:score,issues:issues};
+  }
+  function scanEntry(entry){
+    entry.nexusPotentialIssues=issuesFor(entry);
+    entry.nexusScannedAt=new Date().toISOString();
+    var result=healthFor(entry);
+    entry.nexusHealth=result.score;
+    nexusEvent('listing_health_scanned',entry,{score:result.score,issues:result.issues});
+  }
+  function decorateHealth(){
+    if(typeof window.pcLoadBatch!=='function')return;
+    var list=window.pcLoadBatch();
+    document.querySelectorAll('.pc-board-card[data-id]').forEach(function(card){
+      var entry=list.find(function(e){return String(e.id)===String(card.dataset.id)});
+      if(!entry)return;
+      var h=healthFor(entry);
+      var cls=h.score>=90?'good':h.score>=75?'warn':'bad';
+      var old=card.querySelector('.pc-health-badge');if(old)old.remove();
+      var badge=document.createElement('div');
+      badge.className='pc-health-badge '+cls;
+      badge.textContent='Listing Health '+h.score+'%';
+      var anchor=card.querySelector('.pc-board-card-meta')||card.firstElementChild;
+      anchor.insertAdjacentElement('afterend',badge);
+      if(entry.nexusScannedAt&&h.issues.length){
+        var scan=document.createElement('div');scan.className='pc-scan-list';
+        scan.textContent=h.issues.length+' potential/confirmed issue'+(h.issues.length===1?'':'s')+' affecting health';
+        badge.insertAdjacentElement('afterend',scan);
+      }
+      var actions=document.createElement('div');actions.className='pc-health-actions';
+      actions.innerHTML='<button class="pc-health-action" data-health-explain="'+entry.id+'">Why '+h.score+'%?</button><button class="pc-health-action" data-health-recheck="'+entry.id+'">↻ Recheck</button>';
+      (card.querySelector('.pc-scan-list')||badge).insertAdjacentElement('afterend',actions);
+      actions.querySelector('[data-health-explain]').onclick=function(ev){ev.stopPropagation();showHealthExplanation(entry)};
+      actions.querySelector('[data-health-recheck]').onclick=function(ev){
+        ev.stopPropagation();
+        var list2=window.pcLoadBatch(),idx=list2.findIndex(function(x){return String(x.id)===String(entry.id)});
+        if(idx===-1)return;
+        scanEntry(list2[idx]);window.pcSaveBatch(list2);window.pcRenderBatch();
+      };
+    });
+    updateHomeHealth(list);
+  }
+  function updateHomeHealth(list){
+    var el=document.getElementById('nexusOverallHealth');if(!el)return;
+    var scored=list.filter(function(e){return e.nexusScannedAt||(e.auditTags||[]).length});
+    var avg=scored.length?Math.round(scored.reduce(function(s,e){return s+healthFor(e).score},0)/scored.length):100;
+    el.textContent=avg+'%';
+    var sub=document.getElementById('nexusHealthSub');if(sub)sub.textContent=scored.length?scored.length+' audited listing'+(scored.length===1?'':'s'):'Ready for first audit';
+  }
+  function buildCommandCenter(){
+    var list=typeof window.pcLoadBatch==='function'?window.pcLoadBatch():[];
+    var scored=list.filter(function(e){return e.nexusScannedAt||(e.auditTags||[]).length});
+    var avg=scored.length?Math.round(scored.reduce(function(s,e){return s+healthFor(e).score},0)/scored.length):100;
+    document.getElementById('nexusCommandScore').textContent=avg+'%';
+    document.getElementById('nexusScoreRing').style.setProperty('--score',avg+'%');
+    document.getElementById('nexusCommandCaption').textContent=scored.length?scored.length+' listing'+(scored.length===1?'':'s')+' included in health':'Move a listing to Working On to begin';
+    var healthy=scored.filter(function(e){return healthFor(e).score>=90}).length;
+    var attention=scored.filter(function(e){var s=healthFor(e).score;return s>=50&&s<90}).length;
+    var unhealthy=scored.filter(function(e){return healthFor(e).score<50}).length;
+    var unresolved=list.filter(function(e){return ['working','awaiting','unsorted',null,undefined].indexOf(e.bin)!==-1}).length;
+    document.getElementById('nexusCommandStats').innerHTML=
+      statHtml(healthy,'Healthy')+statHtml(attention,'Needs attention')+statHtml(unhealthy,'Unhealthy')+statHtml(unresolved,'Unresolved');
+    var counts={},pointLoss={};
+    scored.forEach(function(e){healthFor(e).issues.forEach(function(i){counts[i.code]=(counts[i.code]||0)+1;pointLoss[i.code]=(pointLoss[i.code]||0)+(i.points||8)})});
+    var ranked=Object.keys(counts).sort(function(a,b){return pointLoss[b]-pointLoss[a]});
+    var suggestions=document.getElementById('nexusSuggestions');
+    if(!ranked.length){
+      suggestions.innerHTML='<div class="nexus-suggestion"><div class="nexus-suggestion-tag">Next best action</div><h4>Run the first Listing Health scan</h4><p>Move an imported card into Working On. Nexus will scan its available listing data, calculate health, and begin identifying operational patterns.</p></div><button class="nexus-next-btn" id="nexusWorkNext">What should I work on next?</button>';
+      document.getElementById('nexusWorkNext').onclick=workOnNext;
+      return;
+    }
+    suggestions.innerHTML=ranked.slice(0,3).map(function(code,index){
+      var count=counts[code],loss=pointLoss[code],label=defectLabel(code);
+      var pct=scored.length?Math.round(count/scored.length*100):0;
+      var action=suggestionFor(code);
+      return '<div class="nexus-suggestion"><div class="nexus-suggestion-tag">'+(index===0?'Highest-impact opportunity':'Pattern '+(index+1))+'</div><h4>'+label+' affects '+count+' listing'+(count===1?'':'s')+'</h4><p>'+pct+'% of scanned listings show this issue. '+action+'</p><span class="nexus-suggestion-impact">Recoverable health impact: up to +'+loss+' total points</span></div>';
+    }).join('')+'<button class="nexus-next-btn" id="nexusWorkNext">What should I work on next?</button>';
+    document.getElementById('nexusWorkNext').onclick=workOnNext;
+  }
+  function showHealthExplanation(entry){
+    var h=healthFor(entry),body=document.getElementById('nexusHealthModalBody');
+    var state=h.score>=90?'Healthy':h.score>=75?'Mostly Healthy':h.score>=50?'Needs Attention':'Unhealthy';
+    var rows=h.issues.length?h.issues.map(function(i){
+      return '<div class="nexus-deduction"><div class="nexus-deduction-points">−'+(i.points||8)+'</div><div><b>'+defectLabel(i.code)+'</b><p>'+escapeHtml(i.label||'Confirmed audit defect')+'</p></div></div>';
+    }).join(''):'<div class="nexus-price-guidance"><b>No active deductions.</b> This listing is currently considered healthy based on the information Nexus can scan.</div>';
+    body.innerHTML='<div class="nexus-health-total"><strong>'+h.score+'%</strong><span>'+state+'</span></div>'+rows+'<div class="nexus-price-guidance"><b>How to improve it:</b> confirm or dismiss potential issues, correct confirmed defects, then use Recheck. Resolved deductions disappear from the active score while remaining in the listing ledger.</div>';
+    document.getElementById('nexusHealthModal').classList.add('show');
+  }
+  function workOnNext(){
+    var list=typeof window.pcLoadBatch==='function'?window.pcLoadBatch():[];
+    if(!list.length){alert('Import a listing batch first. Nexus will then prioritize the most important unresolved card.');return}
+    var rank={working:0,awaiting:1,unsorted:2,good:4,fixed:4,dead:3};
+    var candidates=list.filter(function(e){return e.bin!=='good'&&e.bin!=='fixed'});
+    candidates.sort(function(a,b){
+      var ah=healthFor(a).score,bh=healthFor(b).score;
+      if(ah!==bh)return ah-bh;
+      var ar=rank[a.bin||'unsorted'],br=rank[b.bin||'unsorted'];
+      return (ar===undefined?2:ar)-(br===undefined?2:br);
+    });
+    var next=candidates[0]||list[0];
+    document.getElementById('nexusCommand').classList.remove('show');
+    document.getElementById('pcWrap').classList.add('show');
+    if(typeof window.pcRenderBatch==='function')window.pcRenderBatch();
+    setTimeout(function(){
+      var card=document.querySelector('.pc-board-card[data-id="'+CSS.escape(String(next.id))+'"]');
+      if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.click();card.style.boxShadow='0 0 0 3px #A78BFA,0 16px 45px rgba(0,0,0,.35)';setTimeout(function(){card.style.boxShadow=''},2400)}
+    },100);
+  }
+  function statHtml(value,label){return '<div class="nexus-stat"><b>'+value+'</b><span>'+label+'</span></div>'}
+  function defectLabel(code){
+    var labels={desc_wrong:'Incorrect descriptions',desc_missing:'Incomplete descriptions',desc_structure:'Description structure',title_wrong:'Incorrect titles',title_missing:'Incomplete titles',title_structure:'Title structure',metafield_wrong:'Incorrect metafields',metafield_missing:'Missing metafields',metafield_duplicate:'Duplicate metafields',condition_wrong:'Condition accuracy',condition_misplaced:'Condition placement',spec_wrong:'Incorrect specifications',spec_missing:'Missing specifications',price_high:'Overpricing',price_low:'Pricing gaps',no_ebay:'Missing eBay listings',ebay_mismatch:'eBay mismatches',photo_issue:'Image issues',archived_dup:'Duplicate listings'};
+    return labels[code]||code.replace(/_/g,' ');
+  }
+  function suggestionFor(code){
+    if(code.indexOf('desc_')===0)return 'Review the description generator and the approved single-table row order before the next listing batch.';
+    if(code.indexOf('title_')===0)return 'Tighten title construction so brand, model, core specifications, and meaningful condition flags are consistently present.';
+    if(code.indexOf('metafield_')===0)return 'Add a metafield completeness and conflict check before manifest export.';
+    if(code.indexOf('condition_')===0)return 'Require a short condition confirmation before the listing can leave intake.';
+    if(code.indexOf('price_')===0)return 'Run sold-comps pricing before activation and review listings outside the median band.';
+    if(code.indexOf('ebay')>=0||code==='no_ebay')return 'Prioritize SKU-confirmed marketplace activation and clear the Awaiting Activation queue.';
+    if(code.indexOf('spec_')===0)return 'Add a final specification confirmation at intake, focusing on the exact model or variant.';
+    return 'Review the affected listings together and correct the shared upstream cause before processing the next batch.';
+  }
+
+  function installAuditHooks(){
+    if(typeof window.pcSaveBatch!=='function'||window.pcSaveBatch._nexusHooked)return;
+    var rawSave=window.pcSaveBatch;
+    window.pcSaveBatch=function(list){
+      var before=typeof window.pcLoadBatch==='function'?window.pcLoadBatch():[];
+      list.forEach(function(entry){
+        var prior=before.find(function(x){return String(x.id)===String(entry.id)});
+        if(entry.bin==='working'&&(!prior||prior.bin!=='working'))scanEntry(entry);
+        if(prior&&prior.bin!==entry.bin)nexusEvent('status_changed',entry,{from:prior.bin||'unsorted',to:entry.bin||'unsorted'});
+        var oldTags=prior?(prior.auditTags||[]):[];
+        (entry.auditTags||[]).filter(function(t){return oldTags.indexOf(t)===-1}).forEach(function(t){nexusEvent('defect_added',entry,{defect:t})});
+        oldTags.filter(function(t){return (entry.auditTags||[]).indexOf(t)===-1}).forEach(function(t){nexusEvent('defect_removed',entry,{defect:t})});
+        entry.nexusHealth=healthFor(entry).score;
+      });
+      rawSave(list);
+    };
+    window.pcSaveBatch._nexusHooked=true;
+    if(typeof window.pcRenderBatch==='function'){
+      var rawRender=window.pcRenderBatch;
+      window.pcRenderBatch=function(){var out=rawRender.apply(this,arguments);setTimeout(decorateHealth,0);return out};
+    }
+    decorateHealth();
+  }
+
+  function buildHome(){
+    var box=document.querySelector('#welcomeBackdrop .welcome-box');
+    if(!box){
+      box=document.querySelector('#welcomeBackdrop .nexus-home');
+      if(!box)return;
+      box.querySelectorAll('[data-module]').forEach(function(btn){btn.addEventListener('click',function(){openModule(btn.dataset.module)})});
+      updateHomeHealth(typeof window.pcLoadBatch==='function'?window.pcLoadBatch():[]);
+      return;
+    }
+    var date=new Date();
+    box.className='nexus-home';
+    box.innerHTML='<div class="nexus-home-head"><div class="nexus-mark">SYG</div><div><div class="nexus-brand">SYG <span>Nexus</span></div><div class="nexus-kicker">Sell Your Gadgets · Elmwood Park</div></div><div class="nexus-date"><b>'+date.toLocaleDateString(undefined,{weekday:'long'})+'</b>'+date.toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})+'</div></div>'+
+      '<div class="nexus-home-body"><div class="nexus-hero"><div><h1>Store operations, connected.</h1><p>Move from intake to healthy listings to physical-first shipping.</p></div><div class="nexus-health-mini"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-health-mini-row"><strong id="nexusOverallHealth">100%</strong><span id="nexusHealthSub">Ready for first audit</span></div></div></div>'+
+      '<div class="nexus-grid">'+
+      moduleHtml('wan','📖','Wan Workspace','Listing intake, Abribook registry, manifests and batch tools.','LIST','var(--nexus-blue)')+
+      moduleHtml('audit','◉','Listing Health','Scan, audit, correct and understand every listing.','AUDIT','#f4bb55')+
+      moduleHtml('haz','◇','Haz Buying','Customer intake, offer calculations and buying board.','BUY','#4ade80')+
+      moduleHtml('shipping','▰','Shipping Station','Physical-first packing, package presets and eBay prefill.','SHIP','var(--nexus-cyan)')+
+      moduleHtml('command','⌁','Command Center','Health trends and smart operational suggestions.','INSIGHTS','#c084fc')+
+      moduleHtml('shovo','✦','Ask Shovo','System guidance, shortcuts and operational answers.','ASSIST','#fb7185')+
+      '</div><div class="nexus-home-actions"><button class="nexus-quiet-btn" id="nexusAbout">About Nexus</button><button class="nexus-quiet-btn" id="nexusTour">Guided Tour</button></div></div>';
+    box.querySelectorAll('[data-module]').forEach(function(btn){
+      btn.addEventListener('click',function(){openModule(btn.dataset.module)});
+    });
+    document.getElementById('nexusAbout').onclick=function(){var b=document.getElementById('openAboutBtn');if(b)b.click()};
+    document.getElementById('nexusTour').onclick=function(){if(typeof window.openPicker==='function')window.openPicker()};
+    updateHomeHealth(typeof window.pcLoadBatch==='function'?window.pcLoadBatch():[]);
+  }
+  function moduleHtml(id,icon,title,desc,label,color){
+    return '<button class="nexus-module" data-module="'+id+'" style="--mod-color:'+color+'"><div class="nexus-module-foot">'+label+'</div><div class="nexus-module-icon">'+icon+'</div><h2>'+title+'</h2><p>'+desc+'</p></button>';
+  }
+  function openModule(id){
+    var welcome=document.getElementById('welcomeBackdrop');
+    if(id==='wan'){welcome.classList.add('hidden');return}
+    if(id==='audit'){welcome.classList.add('hidden');if(typeof window.pcOpen==='function')window.pcOpen();return}
+    if(id==='haz'){welcome.classList.add('hidden');if(typeof window.hazOpen==='function')window.hazOpen();return}
+    if(id==='shipping'){welcome.classList.add('hidden');document.getElementById('nexusShipping').classList.add('show');setTimeout(function(){document.getElementById('nexusShipSku').focus()},80);return}
+    if(id==='pricing'){welcome.classList.add('hidden');document.getElementById('nexusPricing').classList.add('show');setTimeout(function(){document.getElementById('nexusPriceQuery').focus()},80);return}
+    if(id==='shovo'){if(typeof window.openShovoFromNexus==='function')window.openShovoFromNexus();return}
+    if(id==='command'){buildCommandCenter();welcome.classList.add('hidden');document.getElementById('nexusCommand').classList.add('show');return}
+  }
+
+  function buildBoxes(){
+    var grid=document.getElementById('nexusBoxGrid');
+    grid.innerHTML=BOXES.map(function(b){return '<button class="nexus-box" data-box="'+b.id+'">'+b.name+'</button>'}).join('');
+    grid.querySelectorAll('.nexus-box').forEach(function(btn){
+      btn.onclick=function(){
+        selectedBox=BOXES.find(function(b){return b.id===btn.dataset.box});
+        grid.querySelectorAll('.nexus-box').forEach(function(x){x.classList.toggle('on',x===btn)});
+        validateShip();
+      };
+    });
+  }
+  function findOrderBySku(sku){
+    if(typeof window.pcLoadBatch!=='function')return null;
+    return window.pcLoadBatch().find(function(e){return String(e.sku||'').toUpperCase()===sku.toUpperCase()})||null;
+  }
+  function resolveSku(){
+    var sku=document.getElementById('nexusShipSku').value.trim();
+    if(!sku)return;
+    selectedOrder=findOrderBySku(sku);
+    var card=document.getElementById('nexusOrderMatch');
+    if(!selectedOrder){
+      card.className='nexus-order-card empty';
+      card.innerHTML='<div class="nexus-order-title">No imported order match</div><div class="nexus-order-meta">Import the day’s orders into Listing Health or connect the eBay extension to resolve '+escapeHtml(sku)+'.</div>';
+    }else{
+      card.className='nexus-order-card';
+      card.innerHTML='<div class="nexus-order-title">'+escapeHtml(selectedOrder.title||'Matched listing')+'</div><div class="nexus-order-meta">SKU: '+escapeHtml(selectedOrder.sku||'—')+'<br>Price: '+escapeHtml(selectedOrder.price||'—')+'<br>Order/customer details will be returned by the shipping extension.</div>';
+      nexusEvent('shipping_item_scanned',selectedOrder,{sku:sku});
+    }
+    validateShip();
+  }
+  function escapeHtml(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
+  function validateShip(){
+    var oz=parseInt(document.getElementById('nexusWeightOz').value||'0',10);
+    var lb=parseInt(document.getElementById('nexusWeightLb').value||'0',10);
+    document.getElementById('nexusPrefill').disabled=!(selectedOrder&&selectedBox&&(lb>0||oz>0));
+  }
+  function renderQueue(){
+    var el=document.getElementById('nexusPackQueue');
+    if(!packQueue.length){el.innerHTML='<div class="nexus-status">Scanned shipments will appear here in the exact order you packed them.</div>';return}
+    el.innerHTML=packQueue.map(function(q,i){
+      return '<div class="nexus-queue-row"><div class="nexus-queue-num">'+(i+1)+'</div><div><div class="nexus-queue-name">'+escapeHtml(q.title)+'</div><div class="nexus-queue-meta">'+escapeHtml(q.sku)+' · '+q.box+'</div></div><div class="nexus-queue-state">Sent</div></div>';
+    }).join('');
+    var keys=document.getElementById('nexusLabelKeys');
+    if(keys&&!keys.value.trim())keys.value=packQueue.map(labelKeyForShipment).join('\n');
+  }
+  function labelKeyForShipment(q){
+    return [q.tracking,q.orderNumber,q.recipient,q.zip,q.sku].filter(Boolean).join(' ');
+  }
+  function prefillShipping(){
+    if(!selectedOrder||!selectedBox)return;
+    var payload={
+      workingUrl:document.getElementById('nexusShipUrl').value.trim(),
+      sku:selectedOrder.sku,title:selectedOrder.title,
+      weightLb:parseInt(document.getElementById('nexusWeightLb').value||'0',10),
+      weightOz:parseInt(document.getElementById('nexusWeightOz').value||'0',10),
+      dimensions:{length:selectedBox.l,width:selectedBox.w,height:selectedBox.h},
+      packageName:selectedBox.name
+    };
+    window.postMessage({source:'syg-audit-page',type:'PREFILL_EBAY_SHIPPING',requestId:Date.now(),payload:payload},'*');
+    packQueue.push({sku:payload.sku,title:payload.title||'Matched listing',box:selectedBox.name,at:new Date().toISOString()});
+    putSetting('shipping_pack_queue',packQueue);
+    nexusEvent('shipping_prefill_requested',selectedOrder,payload);
+    renderQueue();
+    document.getElementById('nexusPrefillStatus').textContent='Sent to the Nexus browser extension. Review the matched customer and shipping service on eBay before purchasing the label.';
+    document.getElementById('nexusShipSku').value='';
+    selectedOrder=null;
+    document.getElementById('nexusOrderMatch').className='nexus-order-card empty';
+    document.getElementById('nexusOrderMatch').textContent='Waiting for the next physical item…';
+    validateShip();
+    document.getElementById('nexusShipSku').focus();
+  }
+  function parsePriceList(){
+    return document.getElementById('nexusCompPrices').value.split(/[\n,]+/).map(function(s){return parseFloat(s.replace(/[^0-9.]/g,''))}).filter(function(n){return isFinite(n)&&n>0});
+  }
+  function money(n){return '$'+Number(n||0).toFixed(2)}
+  function retailRound(n){return Math.max(.99,Math.round(n)-.01)}
+  function calculatePricing(){
+    var prices=parsePriceList(),out=document.getElementById('nexusPriceResults');
+    if(!prices.length){document.getElementById('nexusPriceStatus').textContent='Add at least one sold price first.';return}
+    prices.sort(function(a,b){return a-b});
+    var mid=Math.floor(prices.length/2);
+    var median=prices.length%2?prices[mid]:(prices[mid-1]+prices[mid])/2;
+    var avg=prices.reduce(function(a,b){return a+b},0)/prices.length;
+    var low=prices[0],high=prices[prices.length-1],recommended=retailRound(median);
+    var current=parseFloat(String(document.getElementById('nexusCurrentPrice').value||'').replace(/[^0-9.]/g,''));
+    var verdict={cls:'unknown',label:'Enter current price',text:'No current selling price was supplied.'};
+    if(isFinite(current)&&current>0){
+      var diff=(current-median)/median;
+      if(diff>.12)verdict={cls:'high',label:'Priced High',text:'Current price is '+Math.round(diff*100)+'% above the sold median.'};
+      else if(diff<-.12)verdict={cls:'low',label:'Priced Low',text:'Current price is '+Math.abs(Math.round(diff*100))+'% below the sold median.'};
+      else verdict={cls:'good',label:'In Market',text:'Current price is within 12% of the sold median.'};
+    }
+    var marker=isFinite(current)&&high>low?Math.max(0,Math.min(100,(current-low)/(high-low)*100)):50;
+    out.innerHTML='<div class="nexus-market-head"><div><div class="nexus-health-mini-label">Market read</div><h3 style="font-size:19px;margin:8px 0 0">'+escapeHtml(document.getElementById('nexusPriceQuery').value||'Untitled item')+'</h3></div><span class="nexus-verdict '+verdict.cls+'">'+verdict.label+'</span></div>'+
+      '<div class="nexus-price-hero"><div class="nexus-price-hero-label">Recommended selling price</div><div class="nexus-price-hero-value">'+money(recommended)+'</div><div class="nexus-price-hero-sub">Built around the median of '+prices.length+' sold comp'+(prices.length===1?'':'s')+'</div></div>'+
+      '<div class="nexus-price-stats"><div class="nexus-price-stat"><span>Sold comps</span><b>'+prices.length+'</b></div><div class="nexus-price-stat"><span>Median</span><b>'+money(median)+'</b></div><div class="nexus-price-stat"><span>Average</span><b>'+money(avg)+'</b></div><div class="nexus-price-stat"><span>Range</span><b style="font-size:12px">'+money(low)+'–'+money(high)+'</b></div></div>'+
+      '<div class="nexus-range"><div class="nexus-range-track"><div class="nexus-range-marker" style="left:'+marker+'%" data-label="'+(isFinite(current)?'Current '+money(current):'Market center')+'"></div></div><div class="nexus-range-labels"><span>Low '+money(low)+'</span><span>Median '+money(median)+'</span><span>High '+money(high)+'</span></div></div>'+
+      '<div class="nexus-price-guidance"><b>'+verdict.text+'</b><br>For a faster sale, consider '+money(retailRound(median*.92))+'. For more margin with a potentially longer wait, consider '+money(retailRound(median*1.08))+'. '+(prices.length<3?'This is a low-confidence read because fewer than three comps were supplied.':'The median is the primary recommendation because it is less distorted by unusually high or low sales.')+'</div>';
+    document.getElementById('nexusPriceStatus').textContent=prices.length<3?'Low confidence — add at least three relevant sold comps.':'Price check ready · '+prices.length+' sold comps analyzed.';
+    try{localStorage.setItem('syg_nexus_last_price_check',JSON.stringify({query:document.getElementById('nexusPriceQuery').value,prices:prices,current:current,recommended:recommended,at:new Date().toISOString()}))}catch(e){}
+  }
+  function nexusAskExtension(type,payload,timeout){
+    return new Promise(function(resolve){
+      var requestId=Date.now()+Math.random(),done=false;
+      function listener(e){
+        if(e.source!==window||!e.data||e.data.source!=='syg-audit-extension'||e.data.requestId!==requestId||e.data.type!==type+'_RESULT')return;
+        done=true;window.removeEventListener('message',listener);resolve(e.data);
+      }
+      window.addEventListener('message',listener);
+      window.postMessage(Object.assign({source:'syg-audit-page',type:type,requestId:requestId},payload),'*');
+      setTimeout(function(){if(!done){window.removeEventListener('message',listener);resolve({ok:false,error:'The Nexus browser extension did not respond.'})}},timeout||12000);
+    });
+  }
+  async function getLivePricing(){
+    var q=document.getElementById('nexusPriceQuery').value.trim();
+    if(!q){document.getElementById('nexusPriceQuery').focus();return}
+    var status=document.getElementById('nexusPriceStatus');status.textContent='Checking live sold comps through the Nexus extension…';
+    var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:null},15000);
+    if(!res.ok){status.textContent=res.error||'Live comp check failed.';return}
+    var prices=(res.listings||[]).map(function(x){return x.price}).filter(function(n){return n>0});
+    document.getElementById('nexusCompPrices').value=prices.join('\n');
+    status.textContent='Found '+prices.length+' sold comp'+(prices.length===1?'':'s')+'.';
+    calculatePricing();
+  }
+  function normalizeLabelText(text){
+    return String(text||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+  }
+  function compactIdentifier(text){
+    return String(text||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  }
+  function scoreLabelMatch(key,pageText){
+    var raw=String(key||'').trim(),page=normalizeLabelText(pageText),compactPage=compactIdentifier(pageText);
+    if(!raw)return 0;
+    var score=0;
+    var identifiers=raw.match(/[a-z0-9]*\d[a-z0-9-]{5,}/ig)||[];
+    identifiers.forEach(function(id){
+      var compact=compactIdentifier(id);
+      if(compact.length>=8&&compactPage.indexOf(compact)!==-1)score+=100;
+      else if(compact.length>=5&&compactPage.indexOf(compact)!==-1)score+=45;
+    });
+    var words=normalizeLabelText(raw).split(' ').filter(function(w){return w.length>=3&&!/^\d+$/.test(w)});
+    words.forEach(function(w){if(page.split(' ').indexOf(w)!==-1)score+=12});
+    var zips=raw.match(/\b\d{5}(?:-\d{4})?\b/g)||[];
+    zips.forEach(function(z){if(page.indexOf(z.toLowerCase())!==-1)score+=30});
+    return score;
+  }
+  async function readLabelPdf(file){
+    var status=document.getElementById('nexusLabelStatus');
+    status.textContent='Reading label pages locally…';
+    labelPdfBytes=new Uint8Array(await file.arrayBuffer());
+    if(!window.pdfjsLib){status.textContent='PDF reader did not load. Keep the nexus-assets folder beside this HTML file.';return}
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc='nexus-assets/pdf.worker.min.js';
+    var pdf=await window.pdfjsLib.getDocument({data:labelPdfBytes.slice()}).promise;
+    labelPageTexts=[];
+    for(var p=1;p<=pdf.numPages;p++){
+      status.textContent='Reading label '+p+' of '+pdf.numPages+' locally…';
+      var page=await pdf.getPage(p),content=await page.getTextContent();
+      labelPageTexts.push(content.items.map(function(i){return i.str}).join(' '));
+    }
+    status.textContent=pdf.numPages+' label page'+(pdf.numPages===1?'':'s')+' ready to match.';
+    document.getElementById('nexusAnalyzeLabels').disabled=false;
+    var drop=document.getElementById('nexusPdfDrop');
+    drop.classList.add('loaded');
+    drop.querySelector('strong').textContent=file.name+' · '+pdf.numPages+' page'+(pdf.numPages===1?'':'s');
+    drop.querySelector('span').textContent='PDF read locally · drop another file here to replace it';
+    if(document.getElementById('nexusLabelKeys').value.trim()){
+      status.textContent='PDF read successfully. Matching pages to physical pack order…';
+      analyzeLabelMatches();
+    }else{
+      status.textContent='PDF ready. Add one label match-key line per packed shipment, then select Analyze and Match.';
+    }
+  }
+  function handleLabelFile(file){
+    if(!file)return;
+    if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name||'')){
+      document.getElementById('nexusLabelStatus').textContent='That file is not a PDF. Drop the combined eBay label PDF.';
+      return;
+    }
+    document.getElementById('nexusLabelMatches').innerHTML='';
+    document.getElementById('nexusCreateSortedPdf').style.display='none';
+    readLabelPdf(file).catch(function(e){document.getElementById('nexusLabelStatus').textContent='Could not read this PDF: '+e.message});
+  }
+  function analyzeLabelMatches(){
+    var keys=document.getElementById('nexusLabelKeys').value.split('\n').map(function(s){return s.trim()}).filter(Boolean);
+    var used={},matches=[];
+    keys.forEach(function(key,index){
+      var best=-1,bestScore=0;
+      labelPageTexts.forEach(function(text,pageIndex){
+        if(used[pageIndex])return;
+        var score=scoreLabelMatch(key,text);
+        if(score>bestScore){bestScore=score;best=pageIndex}
+      });
+      var matched=best!==-1&&bestScore>=24;
+      if(matched)used[best]=true;
+      matches.push({position:index+1,key:key,page:matched?best:null,score:bestScore,matched:matched});
+    });
+    var unmatchedPages=labelPageTexts.map(function(_,i){return i}).filter(function(i){return !used[i]});
+    labelMapping=matches;
+    var exact=matches.filter(function(m){return m.matched&&m.score>=90}).length;
+    var weaker=matches.filter(function(m){return m.matched&&m.score<90}).length;
+    var missing=matches.filter(function(m){return !m.matched}).length;
+    document.getElementById('nexusLabelMatches').innerHTML=matches.map(function(m){
+      return '<div class="nexus-label-match"><div class="nexus-queue-num">'+m.position+'</div><div><b>'+escapeHtml(m.key)+'</b><br><span>'+(m.matched?'Original PDF page '+(m.page+1):'No confident page match')+'</span></div><em class="'+(m.matched?'ok':'warn')+'">'+(m.matched?(m.score>=90?'Exact':'Review'):'Unmatched')+'</em></div>';
+    }).join('')+'<div class="nexus-label-summary">Requested sequence: '+matches.length+' · Exact: '+exact+' · Review: '+weaker+' · Unmatched shipments: '+missing+' · Unused PDF pages: '+unmatchedPages.length+'</div>';
+    document.getElementById('nexusLabelStatus').textContent=missing?'Resolve unmatched labels before printing. The current output will append unused pages at the end.':'All requested shipments have a page match. Review any amber matches before downloading.';
+    document.getElementById('nexusCreateSortedPdf').style.display='block';
+    document.getElementById('nexusCreateSortedPdf').disabled=missing>0;
+    nexusEvent('label_pdf_analyzed',null,{pages:labelPageTexts.length,requested:matches.length,exact:exact,review:weaker,missing:missing,unused:unmatchedPages.length});
+  }
+  async function createSortedLabelPdf(){
+    if(!labelPdfBytes||!window.PDFLib||!labelMapping.length)return;
+    var source=await window.PDFLib.PDFDocument.load(labelPdfBytes);
+    var output=await window.PDFLib.PDFDocument.create(),used={};
+    var ordered=labelMapping.filter(function(m){return m.matched}).map(function(m){used[m.page]=true;return m.page});
+    for(var i=0;i<source.getPageCount();i++)if(!used[i])ordered.push(i);
+    var pages=await output.copyPages(source,ordered);pages.forEach(function(p){output.addPage(p)});
+    output.setTitle('SYG Nexus Labels — Physical Pack Order');
+    var bytes=await output.save(),blob=new Blob([bytes],{type:'application/pdf'}),url=URL.createObjectURL(blob);
+    var a=document.createElement('a'),date=new Date().toISOString().slice(0,10);
+    a.href=url;a.download='SYG-Labels-'+date+'-Pack-Order.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1500);
+    document.getElementById('nexusLabelStatus').textContent='Sorted PDF downloaded · '+ordered.length+' pages · original label content preserved.';
+    nexusEvent('sorted_label_pdf_created',null,{pages:ordered.length,sequence:ordered.map(function(x){return x+1})});
+  }
+  function updateAboutNexus(){
+    var back=document.getElementById('aboutBackdrop');if(!back)return;
+    back.style.background='rgba(3,5,10,.88)';
+    back.style.backdropFilter='blur(10px)';
+    back.style.zIndex='10200';
+    back.innerHTML='<div class="nexus-about-shell">'+
+      '<div class="nexus-about-head"><div class="nexus-mark">SYG</div><div style="flex:1"><h2>About SYG Nexus</h2><p>Elmwood Park operations system · current prototype</p></div><button class="nexus-about-close" id="aboutClose">×</button></div>'+
+      '<div class="nexus-about-body"><p class="nexus-about-intro">SYG Nexus is the operational layer built around how work actually happens at Sell Your Gadgets. It connects buying, intake, listing creation, quality control, pricing, shipping, and operational learning in one system—reducing repeated work while keeping the important decisions human.</p>'+
+      '<div class="nexus-about-grid">'+
+      aboutModule('📖','Wan Workspace','Runs RAM and storage intake, Universal listings, BhaiMode, Blitzting, SKU assignment, manifests, photos, and the Abribook code registry.')+
+      aboutModule('◇','Haz Buying','Guides customer intake, market research, offer ranges, negotiation, purchase-order preparation, and the buying board.')+
+      aboutModule('◉','Listing Health','Imports products into an audit board, automatically scans cards entering Working On, calculates health, explains deductions, supports rechecks, and uses draggable defect stickers.')+
+      aboutModule('$','Pricing Lab','Turns relevant eBay sold comps into a visual market range, recommended selling price, fast-sale option, higher-margin option, and a verdict on the current price.')+
+      aboutModule('▰','Shipping Station','Works physical-item-first: scan a SKU, match the listing, choose one of the real SYG box sizes, enter weight, preserve pack order, and send the shipment to the browser extension for eBay prefilling.')+
+      aboutModule('⌁','Command Center','Aggregates Listing Health, identifies the highest-impact recurring problems, recommends upstream improvements, and chooses the most important unresolved listing to work on next.')+
+      aboutModule('✦','Shovo','Provides local system guidance, shortcuts, workflow answers, command actions, pricing guidance, and fulfillment assistance without interrupting the active workspace.')+
+      aboutModule('◷','Nexus Ledger','Uses IndexedDB to record health scans, status movement, assigned or removed defects, shipping activity, and other listing events as the foundation for permanent per-listing history.')+
+      '</div><div class="nexus-about-flow">BUY WITH HAZ → LOG WITH WAN → BUILD THE LISTING → MEASURE LISTING HEALTH → CORRECT AND RECHECK → PRICE WITH CONFIDENCE → PACK IN PHYSICAL ORDER → SHIP</div></div>'+
+      '<div class="nexus-about-foot"><button class="nexus-about-done" id="aboutCloseBtn">Return to Nexus</button></div></div>';
+    function close(){back.style.display='none'}
+    document.getElementById('aboutClose').onclick=close;
+    document.getElementById('aboutCloseBtn').onclick=close;
+    back.onclick=function(e){if(e.target===back)close()};
+  }
+  function aboutModule(icon,title,text){
+    return '<div class="nexus-about-module"><span>'+icon+'</span><h3>'+title+'</h3><p>'+text+'</p></div>';
+  }
+  function redesignHaz(){
+    var chat=document.getElementById('hazChatWrap');
+    var vibe=document.querySelector('#hazStaffView .haz-vibe-section');
+    var input=document.querySelector('#hazChatWrap .haz-chat-input-wrap');
+    if(chat&&vibe&&input&&vibe.parentElement!==chat)chat.insertBefore(vibe,input);
+    var field=document.getElementById('hazChatInput');
+    if(field)field.placeholder='Describe the item, update the negotiation, or just talk to Haz…';
+  }
+
+  function init(){
+    buildHome();buildBoxes();installAuditHooks();openDb();updateAboutNexus();redesignHaz();
+    document.getElementById('nexusShipBack').onclick=function(){document.getElementById('nexusShipping').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
+    document.getElementById('nexusCommandBack').onclick=function(){document.getElementById('nexusCommand').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
+    document.getElementById('nexusPricingBack').onclick=function(){document.getElementById('nexusPricing').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
+    document.getElementById('nexusHealthClose').onclick=function(){document.getElementById('nexusHealthModal').classList.remove('show')};
+    document.getElementById('nexusHealthModal').onclick=function(e){if(e.target===this)this.classList.remove('show')};
+    document.getElementById('nexusCalculatePrice').onclick=calculatePricing;
+    document.getElementById('nexusLiveComps').onclick=getLivePricing;
+    document.getElementById('nexusOpenSold').onclick=function(){var q=document.getElementById('nexusPriceQuery').value.trim();if(q)window.open('https://www.ebay.com/sch/i.html?_nkw='+encodeURIComponent(q)+'&LH_Sold=1&LH_Complete=1&_sop=13','_blank')};
+    document.getElementById('nexusClearPrice').onclick=function(){document.getElementById('nexusPriceQuery').value='';document.getElementById('nexusCurrentPrice').value='';document.getElementById('nexusCompPrices').value='';document.getElementById('nexusPriceResults').innerHTML='<div class="nexus-price-empty"><div><strong>What should this sell for?</strong>Add relevant sold prices, then Nexus will show the market center, range, and a recommended selling price.</div></div>';document.getElementById('nexusPriceStatus').textContent='Use at least three relevant sold prices for a reliable recommendation.'};
+    document.getElementById('nexusShipSku').addEventListener('keydown',function(e){if(e.key==='Enter')resolveSku()});
+    document.getElementById('nexusWeightLb').oninput=validateShip;
+    document.getElementById('nexusWeightOz').oninput=validateShip;
+    document.getElementById('nexusPrefill').onclick=prefillShipping;
+    document.getElementById('nexusChoosePdf').onclick=function(){document.getElementById('nexusLabelPdf').click()};
+    document.getElementById('nexusLabelPdf').onchange=function(){if(this.files&&this.files[0])handleLabelFile(this.files[0])};
+    var pdfDrop=document.getElementById('nexusPdfDrop');
+    pdfDrop.onclick=function(){document.getElementById('nexusLabelPdf').click()};
+    pdfDrop.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();document.getElementById('nexusLabelPdf').click()}};
+    pdfDrop.ondragover=function(e){e.preventDefault();e.dataTransfer.dropEffect='copy';pdfDrop.classList.add('dragover')};
+    pdfDrop.ondragleave=function(){pdfDrop.classList.remove('dragover')};
+    pdfDrop.ondrop=function(e){e.preventDefault();pdfDrop.classList.remove('dragover');var files=Array.from(e.dataTransfer.files||[]);handleLabelFile(files.find(function(f){return f.type==='application/pdf'||/\.pdf$/i.test(f.name||'')})||files[0])};
+    document.getElementById('nexusAnalyzeLabels').onclick=analyzeLabelMatches;
+    document.getElementById('nexusCreateSortedPdf').onclick=function(){createSortedLabelPdf().catch(function(e){document.getElementById('nexusLabelStatus').textContent='Could not create the sorted PDF: '+e.message})};
+    document.getElementById('nexusConnectPage').onclick=function(){
+      var url=document.getElementById('nexusShipUrl').value.trim(),status=document.getElementById('nexusConnectStatus');
+      if(!/^https:\/\/([a-z0-9-]+\.)*ebay\.com\//i.test(url)){status.textContent='Use an eBay.com shipping or orders page URL.';return}
+      putSetting('shipping_url_'+new Date().toISOString().slice(0,10),url);
+      this.textContent='✓ Working page saved';this.classList.add('connected');
+      status.textContent='Connected for today. Nexus will send package details to this eBay workflow through the browser extension.';
+    };
+    getSetting('shipping_url_'+new Date().toISOString().slice(0,10)).then(function(url){if(url)document.getElementById('nexusShipUrl').value=url});
+    getSetting('shipping_pack_queue').then(function(q){if(Array.isArray(q)){packQueue=q;renderQueue()}});
+    window.addEventListener('message',function(e){
+      if(e.source!==window||!e.data||e.data.source!=='syg-audit-extension'||e.data.type!=='PREFILL_EBAY_SHIPPING_RESULT')return;
+      document.getElementById('nexusPrefillStatus').textContent=e.data.ok?'✓ eBay shipping fields were prefilled. Review and purchase the label.':(e.data.error||'The shipping extension has not implemented prefilling yet.');
+      if(e.data.ok&&packQueue.length){
+        var q=packQueue[packQueue.length-1];
+        q.orderNumber=e.data.orderNumber||q.orderNumber;
+        q.recipient=e.data.recipient||q.recipient;
+        q.zip=e.data.zip||q.zip;
+        q.tracking=e.data.tracking||q.tracking;
+        putSetting('shipping_pack_queue',packQueue);
+        var keys=document.getElementById('nexusLabelKeys');
+        if(keys)keys.value=packQueue.map(labelKeyForShipment).join('\n');
+        renderQueue();
+      }
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
 
