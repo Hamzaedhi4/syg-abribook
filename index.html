@@ -17535,6 +17535,25 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-connect{width:100%;border:0;border-radius:10px;padding:11px;background:var(--nexus-blue);color:#fff;font:750 12px var(--sans);cursor:pointer}.nexus-connect.connected{background:#157f71}
   .nexus-status{font-size:11px;line-height:1.45;color:var(--nexus-soft);margin-top:8px}.nexus-order-card{border:1px solid rgba(50,214,197,.2);border-radius:14px;background:rgba(50,214,197,.055);padding:14px;margin:14px 0}.nexus-order-card.empty{border-color:var(--nexus-line);background:#0b1019;color:var(--nexus-soft)}
   .nexus-order-title{font-weight:750;font-size:13px;margin-bottom:6px}.nexus-order-meta{font:550 11px/1.65 var(--mono);color:var(--nexus-soft)}
+  .nexus-oq-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px}.nexus-oq-count{font:700 10px var(--mono);color:var(--nexus-cyan);background:rgba(50,214,197,.12);border:1px solid rgba(50,214,197,.28);border-radius:999px;padding:4px 9px}
+  .nexus-oq-list{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto}
+  .nexus-oq-card{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--nexus-line);border-radius:12px;background:#0b1019;padding:10px 11px;transition:opacity .15s,border-color .15s}
+  .nexus-oq-card.nexus-oq-dragging{opacity:.35;border-style:dashed}
+  .nexus-oq-card.nexus-oq-drag-over{border-color:var(--nexus-cyan);box-shadow:0 0 0 2px rgba(50,214,197,.18)}
+  .nexus-oq-handle{cursor:grab;color:var(--nexus-soft);font-size:14px;line-height:1;padding:3px 2px;flex:none;user-select:none}
+  .nexus-oq-num{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:#20283a;color:var(--nexus-cyan);font:700 10px var(--mono);flex:none}
+  .nexus-oq-main{flex:1;min-width:0}
+  .nexus-oq-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+  .nexus-oq-sku{font:700 10.5px var(--mono);color:#fff;background:rgba(109,124,255,.16);border:1px solid rgba(109,124,255,.3);border-radius:6px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nexus-oq-value{font:700 11px var(--mono);color:var(--nexus-gold);flex:none}
+  .nexus-oq-name{font:650 12px var(--sans);color:#fff;margin-bottom:2px}
+  .nexus-oq-addr{font:500 10px/1.5 var(--mono);color:var(--nexus-soft)}
+  .nexus-oq-order{font:600 10.5px var(--mono);color:var(--nexus-soft);margin-top:4px}
+  .nexus-oq-order a{color:var(--nexus-cyan);text-decoration:none}
+  .nexus-oq-order a:hover{text-decoration:underline}
+  .nexus-oq-rmv{background:none;border:none;color:var(--nexus-soft);font-size:14px;cursor:pointer;padding:2px 3px;flex:none;line-height:1}
+  .nexus-oq-rmv:hover{color:#ff8585}
+  .nexus-oq-empty{border:1px dashed var(--nexus-line);border-radius:12px;padding:16px;text-align:center;color:var(--nexus-soft);font-size:12px}
   .nexus-box-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.nexus-box{border:1px solid var(--nexus-line);border-radius:11px;background:#0b1019;color:var(--nexus-soft);padding:11px 7px;font:700 10px var(--mono);cursor:pointer}.nexus-box:hover,.nexus-box.on{border-color:var(--nexus-blue);background:rgba(109,124,255,.12);color:#fff}
   .nexus-weight{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.nexus-prefill{width:100%;margin-top:14px;padding:13px;border:0;border-radius:11px;background:linear-gradient(90deg,var(--nexus-blue),#5968ed);color:#fff;font:800 12px var(--sans);cursor:pointer}.nexus-prefill:disabled{opacity:.35;cursor:not-allowed}
   .nexus-queue-row{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--nexus-line)}.nexus-queue-num{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:#20283a;font:700 10px var(--mono)}.nexus-queue-name{font-size:12px;font-weight:700}.nexus-queue-meta{font:500 10px var(--mono);color:var(--nexus-soft);margin-top:3px}.nexus-queue-state{font:700 9px var(--mono);color:var(--nexus-cyan);text-transform:uppercase}
@@ -17563,17 +17582,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <h3>1 · Connect today’s eBay shipping page</h3>
         <div class="nexus-field"><label>Working page URL</label><input class="nexus-input" id="nexusShipUrl" placeholder="Paste the eBay orders shipping URL"></div>
         <button class="nexus-connect" id="nexusConnectPage">Connect working page</button>
+        <button class="nexus-prefill" id="nexusPullOrders" style="margin-top:9px" disabled>Pull orders from this tab</button>
         <div class="nexus-status" id="nexusConnectStatus">Saved locally for today. The Nexus browser extension will use this page for prefilling.</div>
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
-        <h3>2 · Scan or enter the physical item SKU</h3>
+        <h3>2 · Arrange the pack order</h3>
+        <div class="nexus-oq-toolbar"><span class="nexus-oq-count" id="nexusOqCount">0 orders</span><span class="nexus-status" style="margin:0">Drag to set the order you'll pack and print labels in.</span></div>
+        <div class="nexus-oq-list" id="nexusOrderQueue"><div class="nexus-oq-empty">Connect the eBay tab, then pull orders — every order on the page will show here as a draggable card, matched by SKU, buyer, order #, and value.</div></div>
+      </div>
+      <div class="nexus-ship-panel" style="margin-top:14px">
+        <h3>3 · Scan or enter the physical item SKU</h3>
         <div class="nexus-field"><label>SKU</label><input class="nexus-input" id="nexusShipSku" placeholder="Scan SKU and press Enter" autocomplete="off"></div>
         <div class="nexus-order-card empty" id="nexusOrderMatch">Waiting for a physical item…</div>
       </div>
     </div>
     <div>
       <div class="nexus-ship-panel">
-        <h3>3 · Choose the package</h3>
+        <h3>4 · Choose the package</h3>
         <div class="nexus-box-grid" id="nexusBoxGrid"></div>
         <div class="nexus-weight">
           <div class="nexus-field"><label>Total pounds</label><input class="nexus-input" id="nexusWeightLb" type="number" min="0" value="0"></div>
@@ -17587,7 +17612,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <div id="nexusPackQueue"><div class="nexus-status">Scanned shipments will appear here in the exact order you packed them.</div></div>
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
-        <h3>4 · Sort the combined label PDF</h3>
+        <h3>5 · Sort the combined label PDF</h3>
         <div class="nexus-field"><label>Label match keys — one line per packed shipment</label><textarea class="nexus-input" id="nexusLabelKeys" style="min-height:100px;resize:vertical;line-height:1.6" placeholder="Michael Rodriguez 44107 12-11111-22222&#10;Sarah Thompson 07024 12-33333-44444"></textarea></div>
         <div class="nexus-status" style="margin:-5px 0 10px">Nexus fills this from order data when available. Tracking number or order number gives the strongest match.</div>
         <input type="file" id="nexusLabelPdf" accept="application/pdf" style="display:none">
@@ -17664,7 +17689,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (function(){
   'use strict';
   var DB_NAME='your_gadget_nexus';
-  var DB_VERSION=2;
+  var DB_VERSION=3;
   var dbPromise=null;
   var BOXES=[
     {id:'20x20x12',name:'20 × 20 × 12',l:20,w:20,h:12},
@@ -17682,6 +17707,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     {id:'16x10x5', name:'16 × 10 × 5', l:16,w:10,h:5}
   ];
   var selectedBox=null, selectedOrder=null, packQueue=[];
+  var pulledOrders=[], _oqDragId=null;
   var lastCalc=null;
   var labelPdfBytes=null,labelPageTexts=[],labelMapping=[];
   var HEALTH_WEIGHTS={
@@ -17708,6 +17734,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         if(!db.objectStoreNames.contains('price_training')){
           var pt=db.createObjectStore('price_training',{keyPath:'id'});
           pt.createIndex('timestamp','timestamp');
+        }
+        if(!db.objectStoreNames.contains('live_sold_prices')){
+          var ls=db.createObjectStore('live_sold_prices',{keyPath:'id'});
+          ls.createIndex('timestamp','timestamp');
         }
       };
       req.onsuccess=function(){resolve(req.result)};
@@ -17792,15 +17822,148 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         .sort(function(a,b){return b.score-a.score||new Date(b.record.timestamp)-new Date(a.record.timestamp)});
     });
   }
-  function steerRecommendation(recommended,matches){
-    if(!matches.length)return {steered:recommended,blend:0,learnedAvg:null};
-    var top=matches.slice(0,5);
-    var totalW=0,weightedSum=0;
-    top.forEach(function(m){totalW+=m.score;weightedSum+=m.record.confirmed*m.score});
-    var learnedAvg=weightedSum/totalW;
-    var blend=Math.min(.6,.2+.15*top.length);
-    var steered=retailRound(recommended*(1-blend)+learnedAvg*blend);
-    return {steered:steered,blend:blend,learnedAvg:learnedAvg,matches:top};
+  // Newer confirmations matter more than old ones — a price from 8 months ago
+  // shouldn't pull as hard as one from last week. Store-sold entries have no
+  // per-item date (just a point-in-time catalog pull), so they stay full-weight.
+  function recencyWeight(timestampIso){
+    if(!timestampIso)return 1;
+    var months=(Date.now()-new Date(timestampIso).getTime())/(30*86400000);
+    if(months<=1)return 1;
+    if(months<=3)return .85;
+    if(months<=6)return .65;
+    if(months<=12)return .4;
+    return .2;
+  }
+  function monthLabel(timestampIso){
+    if(!timestampIso)return null;
+    var d=new Date(timestampIso);
+    return d.toLocaleDateString(undefined,{month:'short',year:'numeric'});
+  }
+  // Builds one weighted list of every matched real price (trained, store-sold,
+  // live-sold) and steers toward it — leaning toward the stronger end of what's
+  // actually sold, not just a flat average, so the recommendation aims at
+  // maximizing profit while staying grounded in prices that really happened.
+  function steerRecommendation(recommended,trainedMatches,storeMatches,liveMatches){
+    var items=[];
+    (trainedMatches||[]).slice(0,5).forEach(function(m){
+      items.push({value:m.record.confirmed,weight:m.score*1.3*recencyWeight(m.record.timestamp),source:'trained',label:m.record.query,timestamp:m.record.timestamp});
+    });
+    (storeMatches||[]).slice(0,8).forEach(function(m){
+      items.push({value:m.price,weight:m.score*1.0,source:'store',label:m.title,timestamp:null});
+    });
+    (liveMatches||[]).slice(0,8).forEach(function(m){
+      items.push({value:m.price,weight:m.score*1.15*recencyWeight(m.timestamp),source:'live',label:m.query,timestamp:m.timestamp});
+    });
+    if(!items.length)return {steered:recommended,blend:0,learnedTarget:null,items:[]};
+    var sorted=items.slice().sort(function(a,b){return a.value-b.value});
+    var totalW=sorted.reduce(function(s,i){return s+i.weight},0);
+    var avg=sorted.reduce(function(s,i){return s+i.value*i.weight},0)/totalW;
+    var cumulative=0,medianValue=sorted[sorted.length-1].value;
+    for(var i=0;i<sorted.length;i++){cumulative+=sorted[i].weight;if(cumulative>=totalW/2){medianValue=sorted[i].value;break}}
+    var upper=sorted.filter(function(i){return i.value>=medianValue});
+    var upperW=upper.reduce(function(s,i){return s+i.weight},0);
+    var upperAvg=upperW?upper.reduce(function(s,i){return s+i.value*i.weight},0)/upperW:avg;
+    var learnedTarget=avg*.55+upperAvg*.45; // modest lean toward the stronger half of real sales
+    var signalCount=items.length;
+    var blend=Math.min(.65,.15+.08*signalCount);
+    var steered=retailRound(recommended*(1-blend)+learnedTarget*blend);
+    return {steered:steered,blend:blend,learnedTarget:learnedTarget,avg:avg,upperAvg:upperAvg,items:sorted};
+  }
+  // Matches the query against SYG's own confirmed sold history (HAZ_STORE_PRICES,
+  // source:'sold' only — real completed sales, not market reference prices).
+  function searchStoreSoldPrices(query){
+    var qTokens=tokenize(query);
+    if(!qTokens.length||typeof HAZ_STORE_PRICES==='undefined')return [];
+    var out=[];
+    HAZ_STORE_PRICES.forEach(function(e){
+      if(e.source!=='sold')return;
+      var recordTokens=tokenize(e.title);
+      (e.keywords||[]).forEach(function(k){recordTokens=recordTokens.concat(tokenize(k))});
+      var score=trainingScore(qTokens,recordTokens);
+      if(score>=0.5)out.push({title:e.title,price:e.price,score:score});
+    });
+    return out.sort(function(a,b){return b.score-a.score}).slice(0,10);
+  }
+  // Persists individual prices pulled from "Check live comps" so a live check
+  // isn't thrown away after one use — it becomes a dated, steerable signal too.
+  function saveLiveSoldPrices(query,prices){
+    if(!prices||!prices.length)return Promise.resolve();
+    var tokens=tokenize(query),now=new Date().toISOString();
+    return openDb().then(function(db){
+      return new Promise(function(resolve){
+        var tx=db.transaction('live_sold_prices','readwrite'),store=tx.objectStore('live_sold_prices');
+        prices.forEach(function(p,i){
+          store.put({id:'ls_'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,6),query:query,tokens:tokens,price:p,timestamp:now});
+        });
+        tx.oncomplete=function(){resolve()};
+        tx.onerror=function(){resolve()};
+      });
+    });
+  }
+  function loadAllLiveSold(){
+    return openDb().then(function(db){
+      return new Promise(function(resolve){
+        var out=[],req;
+        try{req=db.transaction('live_sold_prices').objectStore('live_sold_prices').openCursor()}
+        catch(e){resolve([]);return}
+        req.onsuccess=function(){
+          var cur=req.result;
+          if(cur){out.push(cur.value);cur.continue()}else resolve(out);
+        };
+        req.onerror=function(){resolve([])};
+      });
+    });
+  }
+  function searchLiveSoldPrices(query){
+    var qTokens=tokenize(query);
+    return loadAllLiveSold().then(function(all){
+      return all.map(function(r){return {query:r.query,price:r.price,timestamp:r.timestamp,score:trainingScore(qTokens,r.tokens||tokenize(r.query))}})
+        .filter(function(x){return x.score>=0.5})
+        .sort(function(a,b){return b.score-a.score||new Date(b.timestamp)-new Date(a.timestamp)})
+        .slice(0,10);
+    });
+  }
+  // Reads back logged price_snapshot events (written by every calculatePricing() run)
+  // to show whether Nexus's own price checks for similar items have moved over time.
+  function loadEventsByType(type){
+    return openDb().then(function(db){
+      return new Promise(function(resolve){
+        var out=[],idx,req;
+        try{idx=db.transaction('events').objectStore('events').index('type')}
+        catch(e){resolve([]);return}
+        req=idx.openCursor(IDBKeyRange.only(type));
+        req.onsuccess=function(){
+          var cur=req.result;
+          if(cur){out.push(cur.value);cur.continue()}else resolve(out);
+        };
+        req.onerror=function(){resolve([])};
+      });
+    });
+  }
+  function getPriceTrend(query){
+    var qTokens=tokenize(query);
+    return loadEventsByType('price_snapshot').then(function(events){
+      var relevant=events.filter(function(e){
+        var t=tokenize((e.data&&e.data.query)||'');
+        return trainingScore(qTokens,t)>=0.5;
+      }).sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp)});
+      if(relevant.length<2)return {enough:false,count:relevant.length};
+      var buckets={};
+      relevant.forEach(function(e){
+        var d=new Date(e.timestamp);
+        var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+        var v=(e.data&&(e.data.steered||e.data.recommended||e.data.median))||null;
+        if(v==null)return;
+        if(!buckets[key])buckets[key]=[];
+        buckets[key].push(v);
+      });
+      var keys=Object.keys(buckets).sort();
+      if(keys.length<2)return {enough:false,count:relevant.length};
+      function avg(a){return a.reduce(function(x,y){return x+y},0)/a.length}
+      var first=avg(buckets[keys[0]]),last=avg(buckets[keys[keys.length-1]]);
+      var pct=first?Math.round((last-first)/first*100):0;
+      return {enough:true,count:relevant.length,months:keys.length,firstMonth:keys[0],lastMonth:keys[keys.length-1],firstAvg:first,lastAvg:last,pct:pct};
+    });
   }
   function timeAgo(iso){
     var diffMs=Date.now()-new Date(iso).getTime();
@@ -18069,6 +18232,107 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function labelKeyForShipment(q){
     return [q.tracking,q.orderNumber,q.recipient,q.zip,q.sku].filter(Boolean).join(' ');
   }
+
+  // ── Pulled eBay order queue (drag to set pack/label order) ─────────
+  function requestEbayOrders(){
+    var url=document.getElementById('nexusShipUrl').value.trim();
+    var status=document.getElementById('nexusConnectStatus');
+    if(!/^https:\/\/([a-z0-9-]+\.)*ebay\.com\//i.test(url)){status.textContent='Use an eBay.com shipping or orders page URL.';return}
+    var btn=document.getElementById('nexusPullOrders');
+    btn.disabled=true;btn.textContent='Pulling…';
+    status.textContent='Asking the Nexus browser extension to read every order on the connected tab…';
+    window.postMessage({source:'syg-audit-page',type:'FETCH_EBAY_ORDERS',requestId:Date.now(),payload:{workingUrl:url}},'*');
+  }
+  function orderKeyForEntry(o){
+    return [o.orderNumber,o.buyerName,o.zip,o.sku].filter(Boolean).join(' ');
+  }
+  function syncLabelKeysFromOrders(){
+    var keys=document.getElementById('nexusLabelKeys');
+    if(!keys)return;
+    keys.value=pulledOrders.map(orderKeyForEntry).join('\n');
+  }
+  function renderOrderQueue(){
+    var el=document.getElementById('nexusOrderQueue'),count=document.getElementById('nexusOqCount');
+    count.textContent=pulledOrders.length+(pulledOrders.length===1?' order':' orders');
+    if(!pulledOrders.length){
+      el.innerHTML='<div class="nexus-oq-empty">Connect the eBay tab, then pull orders — every order on the page will show here as a draggable card, matched by SKU, buyer, order #, and value.</div>';
+      return;
+    }
+    el.innerHTML=pulledOrders.map(function(o,i){
+      var orderLink=o.orderUrl?'<a href="'+escapeHtml(o.orderUrl)+'" target="_blank" rel="noopener">'+escapeHtml(o.orderNumber||'—')+'</a>':escapeHtml(o.orderNumber||'—');
+      return '<div class="nexus-oq-card" data-oq-id="'+escapeHtml(o.id)+'">'
+        +'<div class="nexus-oq-handle" title="Drag to reorder">⠿⠿</div>'
+        +'<div class="nexus-oq-num">'+(i+1)+'</div>'
+        +'<div class="nexus-oq-main">'
+          +'<div class="nexus-oq-top"><span class="nexus-oq-sku">'+escapeHtml(o.sku||'NO SKU')+'</span><span class="nexus-oq-value">'+escapeHtml(o.value||'')+'</span></div>'
+          +'<div class="nexus-oq-name">'+escapeHtml(o.buyerName||'Unknown buyer')+'</div>'
+          +(o.address?'<div class="nexus-oq-addr">'+escapeHtml(o.address)+'</div>':'')
+          +'<div class="nexus-oq-order">Order # '+orderLink+'</div>'
+        +'</div>'
+        +'<button class="nexus-oq-rmv" data-oq-rmv="'+escapeHtml(o.id)+'" title="Remove from pack order">✕</button>'
+      +'</div>';
+    }).join('');
+    syncLabelKeysFromOrders();
+    putSetting('shipping_pulled_orders',pulledOrders);
+  }
+  function initOrderQueueDrag(){
+    var list=document.getElementById('nexusOrderQueue');
+    list.addEventListener('click',function(ev){
+      var rmv=ev.target.closest('[data-oq-rmv]');
+      if(!rmv)return;
+      var id=rmv.getAttribute('data-oq-rmv');
+      pulledOrders=pulledOrders.filter(function(o){return String(o.id)!==id});
+      renderOrderQueue();
+    });
+    list.addEventListener('mousedown',function(ev){
+      var handle=ev.target.closest('.nexus-oq-handle');
+      if(!handle)return;
+      var card=handle.closest('.nexus-oq-card');
+      if(!card)return;
+      card.setAttribute('draggable','true');
+      card.addEventListener('dragend',function(){card.removeAttribute('draggable')},{once:true});
+    });
+    list.addEventListener('dragstart',function(ev){
+      var card=ev.target.closest('.nexus-oq-card');
+      if(!card||!card.getAttribute('draggable'))return;
+      _oqDragId=card.getAttribute('data-oq-id');
+      card.classList.add('nexus-oq-dragging');
+      ev.dataTransfer.effectAllowed='move';
+      ev.dataTransfer.setData('text/plain',_oqDragId);
+    });
+    list.addEventListener('dragend',function(ev){
+      var card=ev.target.closest('.nexus-oq-card');
+      if(card){card.classList.remove('nexus-oq-dragging');card.removeAttribute('draggable')}
+      list.querySelectorAll('.nexus-oq-drag-over').forEach(function(el){el.classList.remove('nexus-oq-drag-over')});
+      _oqDragId=null;
+    });
+    list.addEventListener('dragover',function(ev){
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect='move';
+      var card=ev.target.closest('.nexus-oq-card');
+      list.querySelectorAll('.nexus-oq-drag-over').forEach(function(el){el.classList.remove('nexus-oq-drag-over')});
+      if(card&&card.getAttribute('data-oq-id')!==_oqDragId)card.classList.add('nexus-oq-drag-over');
+    });
+    list.addEventListener('dragleave',function(ev){
+      var card=ev.target.closest('.nexus-oq-card');
+      if(card)card.classList.remove('nexus-oq-drag-over');
+    });
+    list.addEventListener('drop',function(ev){
+      ev.preventDefault();
+      var target=ev.target.closest('.nexus-oq-card');
+      if(!target||!_oqDragId)return;
+      target.classList.remove('nexus-oq-drag-over');
+      var targetId=target.getAttribute('data-oq-id');
+      if(targetId===_oqDragId)return;
+      var fromIdx=pulledOrders.findIndex(function(o){return String(o.id)===_oqDragId});
+      var toIdx=pulledOrders.findIndex(function(o){return String(o.id)===targetId});
+      if(fromIdx===-1||toIdx===-1)return;
+      var moved=pulledOrders.splice(fromIdx,1)[0];
+      pulledOrders.splice(toIdx,0,moved);
+      renderOrderQueue();
+    });
+  }
+
   function prefillShipping(){
     if(!selectedOrder||!selectedBox)return;
     var payload={
@@ -18108,9 +18372,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var queryText=document.getElementById('nexusPriceQuery').value.trim();
     var current=parseFloat(String(document.getElementById('nexusCurrentPrice').value||'').replace(/[^0-9.]/g,''));
 
-    var matches=queryText?await findSimilarTraining(queryText):[];
-    var steer=steerRecommendation(recommended,matches);
-    var heroPrice=matches.length?steer.steered:recommended;
+    var trainedMatches=queryText?await findSimilarTraining(queryText):[];
+    var storeMatches=queryText?searchStoreSoldPrices(queryText):[];
+    var liveMatches=queryText?await searchLiveSoldPrices(queryText):[];
+    var trend=queryText?await getPriceTrend(queryText):null;
+    var steer=steerRecommendation(recommended,trainedMatches,storeMatches,liveMatches);
+    var hasSignal=steer.items.length>0;
+    var heroPrice=hasSignal?steer.steered:recommended;
 
     var verdict={cls:'unknown',label:'Add your price',text:'Enter what it\'s currently listed for to see how it compares.'};
     if(isFinite(current)&&current>0){
@@ -18120,40 +18388,57 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       else verdict={cls:'good',label:'Good Price',text:'This is priced right around what similar items have sold for.'};
     }
     var marker=isFinite(current)&&high>low?Math.max(0,Math.min(100,(current-low)/(high-low)*100)):50;
-    var heroSub=matches.length
-      ? 'Steered by '+matches.length+' trained example'+(matches.length===1?'':'s')+' — comps alone suggested '+money(recommended)
+    var heroSub=hasSignal
+      ? 'Steered toward '+steer.items.length+' real sale'+(steer.items.length===1?'':'s')+' (leaning toward the stronger end) — comps alone suggested '+money(recommended)
       : 'Built around the median of '+prices.length+' sold comp'+(prices.length===1?'':'s');
+    var trendHtml='';
+    if(trend&&trend.enough){
+      var dir=trend.pct>3?'up':(trend.pct<-3?'down':'flat');
+      var arrow=dir==='up'?'↑':(dir==='down'?'↓':'→');
+      var trendLabel=dir==='up'?'Trending up':(dir==='down'?'Trending down':'Holding steady');
+      trendHtml='<div class="nexus-price-guidance" style="margin-top:10px"><b>'+arrow+' '+trendLabel+' '+(trend.pct>=0?'+':'')+trend.pct+'%</b> across your own Pricing Lab checks for similar items, '+trend.firstMonth+' → '+trend.lastMonth+' ('+trend.count+' logged checks). Based on your own history, not outside market data.</div>';
+    }else if(trend){
+      trendHtml='<div class="nexus-status" style="margin-top:10px">Not enough history yet to show a price trend for this item — Nexus tracks this automatically every time you calculate here.</div>';
+    }
     out.innerHTML='<div class="nexus-market-head"><div><div class="nexus-health-mini-label">Market read</div><h3 style="font-size:19px;margin:8px 0 0">'+escapeHtml(queryText||'Untitled item')+'</h3></div><span class="nexus-verdict '+verdict.cls+'">'+verdict.label+'</span></div>'+
       '<div class="nexus-price-hero"><div class="nexus-price-hero-label">Recommended selling price</div><div class="nexus-price-hero-value">'+money(heroPrice)+'</div><div class="nexus-price-hero-sub">'+heroSub+'</div></div>'+
       '<div class="nexus-price-stats"><div class="nexus-price-stat"><span>Sold comps</span><b>'+prices.length+'</b></div><div class="nexus-price-stat"><span>Median</span><b>'+money(median)+'</b></div><div class="nexus-price-stat"><span>Average</span><b>'+money(avg)+'</b></div><div class="nexus-price-stat"><span>Range</span><b style="font-size:12px">'+money(low)+'–'+money(high)+'</b></div></div>'+
       '<div class="nexus-range"><div class="nexus-range-track"><div class="nexus-range-marker" style="left:'+marker+'%" data-label="'+(isFinite(current)?'Current '+money(current):'Market center')+'"></div></div><div class="nexus-range-labels"><span>Low '+money(low)+'</span><span>Median '+money(median)+'</span><span>High '+money(high)+'</span></div></div>'+
-      '<div class="nexus-price-guidance"><b>'+verdict.text+'</b><br>For a faster sale, consider '+money(retailRound(median*.92))+'. For more margin with a potentially longer wait, consider '+money(retailRound(median*1.08))+'. '+(prices.length<3?'This is a low-confidence read because fewer than three comps were supplied.':'The median is the primary recommendation because it is less distorted by unusually high or low sales.')+'</div>';
+      '<div class="nexus-price-guidance"><b>'+verdict.text+'</b><br>For a faster sale, consider '+money(retailRound(median*.92))+'. For more margin with a potentially longer wait, consider '+money(retailRound(median*1.08))+'. '+(prices.length<3?'This is a low-confidence read because fewer than three comps were supplied.':'The median is the primary recommendation because it is less distorted by unusually high or low sales.')+'</div>'+
+      trendHtml;
     document.getElementById('nexusPriceStatus').textContent=prices.length<3?'Low confidence — add at least three relevant sold comps.':'Price check ready · '+prices.length+' sold comps analyzed.';
     try{localStorage.setItem('syg_nexus_last_price_check',JSON.stringify({query:queryText,prices:prices,current:current,recommended:recommended,at:new Date().toISOString()}))}catch(e){}
 
     lastCalc={query:queryText,tokens:tokenize(queryText),prices:prices,median:median,recommended:recommended};
     var trainStatus=document.getElementById('nexusTrainStatus');
     if(trainStatus)trainStatus.textContent=queryText?'Know this actually sells for more or less? Confirm it below to train Nexus.':'Add an item query above, then calculate, before training a price.';
-    renderTrainingHistory(matches,queryText);
+    renderPriceTrail(steer.items,queryText);
+    if(queryText)nexusEvent('price_snapshot',null,{query:queryText,median:median,recommended:recommended,steered:heroPrice,trainedCount:trainedMatches.length,storeCount:storeMatches.length,liveCount:liveMatches.length});
   }
-  function renderTrainingHistory(matches,queryText){
+  // One condensed list — every real price feeding the steer, shown as
+  // price + month so it stays scannable and it's obvious what's recent
+  // versus old. Replaces the old split store/training sections.
+  function renderPriceTrail(items,queryText){
     var el=document.getElementById('nexusTrainingHistory');
     if(!el)return;
     if(!queryText){el.innerHTML='';return}
-    if(!matches.length){
-      el.innerHTML='<div class="nexus-status" style="margin-top:14px">No similar trained items yet for "'+escapeHtml(queryText)+'" — be the first to confirm one.</div>';
+    if(!items.length){
+      el.innerHTML='<div class="nexus-status" style="margin-top:14px">No trained examples, store sales, or live comps matched "'+escapeHtml(queryText)+'" yet — be the first to confirm one.</div>';
       return;
     }
-    el.innerHTML='<div class="nexus-health-mini-label" style="margin:16px 0 8px">Similar past training ('+matches.length+')</div>'+
-      matches.slice(0,6).map(function(m){
-        var r=m.record;
-        var delta=r.recommended?Math.round((r.confirmed-r.recommended)/r.recommended*100):0;
-        return '<div class="nexus-price-stat" style="text-align:left;margin-bottom:8px;display:block">'+
-          '<span>'+timeAgo(r.timestamp)+' · '+escapeHtml(r.query)+'</span>'+
-          '<b style="display:block;margin-top:4px">Recommended '+money(r.recommended)+' → Confirmed '+money(r.confirmed)+' ('+(delta>=0?'+':'')+delta+'%)</b>'+
-          (r.note?'<div style="font-size:11px;color:var(--nexus-soft);margin-top:4px">"'+escapeHtml(r.note)+'"</div>':'')+
+    var sourceLabel={trained:'Trained',store:'Store sold',live:'Live comp'};
+    var sorted=items.slice().sort(function(a,b){
+      var ta=a.timestamp?new Date(a.timestamp).getTime():-1,tb=b.timestamp?new Date(b.timestamp).getTime():-1;
+      return tb-ta;
+    });
+    el.innerHTML='<div class="nexus-health-mini-label" style="margin:16px 0 8px">Feeding this recommendation ('+items.length+')</div>'+
+      '<div style="display:grid;gap:6px">'+sorted.slice(0,10).map(function(it){
+        var month=monthLabel(it.timestamp);
+        return '<div class="nexus-price-stat" style="text-align:left;display:flex;align-items:center;justify-content:space-between;padding:10px 14px">'+
+          '<span style="font:800 9px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--nexus-soft)">'+sourceLabel[it.source]+(month?' · '+month:'')+'</span>'+
+          '<b style="font:800 15px var(--mono)">'+money(it.value)+'</b>'+
           '</div>';
-      }).join('');
+      }).join('')+'</div>';
   }
   function saveTrainingExample(){
     var status=document.getElementById('nexusTrainStatus');
@@ -18173,9 +18458,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       status.textContent='Saved — Nexus will lean future similar recommendations toward '+money(confirmed)+'.';
       document.getElementById('nexusTrainPrice').value='';
       document.getElementById('nexusTrainNote').value='';
-      return findSimilarTraining(lastCalc.query);
-    }).then(function(matches){
-      if(matches)renderTrainingHistory(matches,lastCalc.query);
+      return Promise.all([findSimilarTraining(lastCalc.query),searchLiveSoldPrices(lastCalc.query)]);
+    }).then(function(results){
+      if(!results)return;
+      var trainedMatches=results[0],liveMatches=results[1];
+      var storeMatches=searchStoreSoldPrices(lastCalc.query);
+      var steer=steerRecommendation(lastCalc.recommended,trainedMatches,storeMatches,liveMatches);
+      renderPriceTrail(steer.items,lastCalc.query);
     }).catch(function(e){
       status.textContent='Could not save this training example: '+e.message;
     });
@@ -18200,7 +18489,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!res.ok){status.textContent=res.error||'Live comp check failed.';return}
     var prices=(res.listings||[]).map(function(x){return x.price}).filter(function(n){return n>0});
     document.getElementById('nexusCompPrices').value=prices.join('\n');
-    status.textContent='Found '+prices.length+' sold comp'+(prices.length===1?'':'s')+'.';
+    status.textContent='Found '+prices.length+' sold comp'+(prices.length===1?'':'s')+' — saving them so they can steer future checks too…';
+    await saveLiveSoldPrices(q,prices);
     calculatePricing();
   }
   function normalizeLabelText(text){
@@ -18370,22 +18660,61 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       putSetting('shipping_url_'+new Date().toISOString().slice(0,10),url);
       this.textContent='✓ Working page saved';this.classList.add('connected');
       status.textContent='Connected for today. Nexus will send package details to this eBay workflow through the browser extension.';
+      document.getElementById('nexusPullOrders').disabled=false;
     };
-    getSetting('shipping_url_'+new Date().toISOString().slice(0,10)).then(function(url){if(url)document.getElementById('nexusShipUrl').value=url});
+    document.getElementById('nexusPullOrders').onclick=requestEbayOrders;
+    document.getElementById('nexusShipUrl').addEventListener('input',function(){
+      document.getElementById('nexusPullOrders').disabled=!/^https:\/\/([a-z0-9-]+\.)*ebay\.com\//i.test(this.value.trim());
+    });
+    initOrderQueueDrag();
+    getSetting('shipping_url_'+new Date().toISOString().slice(0,10)).then(function(url){
+      if(url){
+        document.getElementById('nexusShipUrl').value=url;
+        document.getElementById('nexusPullOrders').disabled=false;
+      }
+    });
     getSetting('shipping_pack_queue').then(function(q){if(Array.isArray(q)){packQueue=q;renderQueue()}});
+    getSetting('shipping_pulled_orders').then(function(o){if(Array.isArray(o)&&o.length){pulledOrders=o;renderOrderQueue()}});
     window.addEventListener('message',function(e){
-      if(e.source!==window||!e.data||e.data.source!=='syg-audit-extension'||e.data.type!=='PREFILL_EBAY_SHIPPING_RESULT')return;
-      document.getElementById('nexusPrefillStatus').textContent=e.data.ok?'✓ eBay shipping fields were prefilled. Review and purchase the label.':(e.data.error||'The shipping extension has not implemented prefilling yet.');
-      if(e.data.ok&&packQueue.length){
-        var q=packQueue[packQueue.length-1];
-        q.orderNumber=e.data.orderNumber||q.orderNumber;
-        q.recipient=e.data.recipient||q.recipient;
-        q.zip=e.data.zip||q.zip;
-        q.tracking=e.data.tracking||q.tracking;
-        putSetting('shipping_pack_queue',packQueue);
-        var keys=document.getElementById('nexusLabelKeys');
-        if(keys)keys.value=packQueue.map(labelKeyForShipment).join('\n');
-        renderQueue();
+      if(e.source!==window||!e.data||e.data.source!=='syg-audit-extension')return;
+      if(e.data.type==='PREFILL_EBAY_SHIPPING_RESULT'){
+        document.getElementById('nexusPrefillStatus').textContent=e.data.ok?'✓ eBay shipping fields were prefilled. Review and purchase the label.':(e.data.error||'The shipping extension has not implemented prefilling yet.');
+        if(e.data.ok&&packQueue.length){
+          var q=packQueue[packQueue.length-1];
+          q.orderNumber=e.data.orderNumber||q.orderNumber;
+          q.recipient=e.data.recipient||q.recipient;
+          q.zip=e.data.zip||q.zip;
+          q.tracking=e.data.tracking||q.tracking;
+          putSetting('shipping_pack_queue',packQueue);
+          var keys=document.getElementById('nexusLabelKeys');
+          if(keys)keys.value=packQueue.map(labelKeyForShipment).join('\n');
+          renderQueue();
+        }
+        return;
+      }
+      if(e.data.type==='FETCH_EBAY_ORDERS_RESULT'){
+        var btn=document.getElementById('nexusPullOrders'),status=document.getElementById('nexusConnectStatus');
+        btn.disabled=false;btn.textContent='Pull orders from this tab';
+        if(!e.data.ok){
+          status.textContent=e.data.error||'The shipping extension could not read orders from that tab.';
+          return;
+        }
+        var incoming=Array.isArray(e.data.orders)?e.data.orders:[];
+        pulledOrders=incoming.map(function(o,i){
+          return {
+            id:(o.orderNumber||('row'+i))+'-'+i,
+            sku:o.sku||'',
+            qty:o.qty||'',
+            value:o.value||'',
+            buyerName:o.buyerName||o.name||'',
+            address:o.address||'',
+            zip:o.zip||'',
+            orderNumber:o.orderNumber||'',
+            orderUrl:o.orderUrl||''
+          };
+        });
+        renderOrderQueue();
+        status.textContent='✓ Pulled '+pulledOrders.length+' order'+(pulledOrders.length===1?'':'s')+' from the connected tab. Drag to set pack order.';
       }
     });
   }
