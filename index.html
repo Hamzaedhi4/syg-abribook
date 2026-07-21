@@ -17637,6 +17637,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <div class="nexus-price-results" id="nexusPriceResults">
       <div class="nexus-price-empty"><div><strong>What should this sell for?</strong>Add relevant sold prices, then Nexus will show the market center, range, and a recommended selling price.</div></div>
     </div>
+    <div class="nexus-price-inputs" id="nexusPriceTraining" style="grid-column:1/-1">
+      <div class="nexus-health-mini-label" style="margin-bottom:10px">Train the pricing system</div>
+      <p style="font-size:12px;color:var(--nexus-soft);margin:0 0 14px;line-height:1.55">If you know this item can actually sell for more (or less) than the recommendation above — because you checked it, sold one recently, or just know the market — confirm that real price here. Nexus remembers it and leans future recommendations for similar items toward what actually sold.</p>
+      <div class="nexus-price-btns" style="grid-template-columns:1fr 1.4fr auto;align-items:end">
+        <div class="nexus-field" style="margin:0"><label>Confirmed selling price</label><input class="nexus-input" id="nexusTrainPrice" inputmode="decimal" placeholder="850.00"></div>
+        <div class="nexus-field" style="margin:0"><label>Why (optional)</label><input class="nexus-input" id="nexusTrainNote" placeholder="Checked a comparable listing, sold same week"></div>
+        <button class="nexus-price-btn primary" id="nexusSaveTraining">Save training example</button>
+      </div>
+      <div class="nexus-status" id="nexusTrainStatus" style="margin-top:10px">Calculate a price first, then confirm what it actually sells for.</div>
+      <div id="nexusTrainingHistory"></div>
+    </div>
   </div>
 </div>
 
@@ -17653,7 +17664,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (function(){
   'use strict';
   var DB_NAME='your_gadget_nexus';
-  var DB_VERSION=1;
+  var DB_VERSION=2;
   var dbPromise=null;
   var BOXES=[
     {id:'20x20x12',name:'20 × 20 × 12',l:20,w:20,h:12},
@@ -17671,6 +17682,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     {id:'16x10x5', name:'16 × 10 × 5', l:16,w:10,h:5}
   ];
   var selectedBox=null, selectedOrder=null, packQueue=[];
+  var lastCalc=null;
   var labelPdfBytes=null,labelPageTexts=[],labelMapping=[];
   var HEALTH_WEIGHTS={
     desc_wrong:15,desc_missing:8,desc_structure:8,desc_unsupported:15,
@@ -17693,6 +17705,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           events.createIndex('type','type');
         }
         if(!db.objectStoreNames.contains('settings'))db.createObjectStore('settings',{keyPath:'key'});
+        if(!db.objectStoreNames.contains('price_training')){
+          var pt=db.createObjectStore('price_training',{keyPath:'id'});
+          pt.createIndex('timestamp','timestamp');
+        }
       };
       req.onsuccess=function(){resolve(req.result)};
       req.onerror=function(){reject(req.error)};
@@ -17729,6 +17745,73 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     });
   }
   window.NexusLedger={record:nexusEvent,open:openDb};
+
+  // ── Trainable pricing ──────────────────────────────────────────
+  // Lets a human confirm a real achievable selling price for an item.
+  // That confirmation is stored permanently, and future price checks for
+  // similar items are nudged toward what actually sold rather than only
+  // trusting whatever sold comps happen to be pasted in that day.
+  function tokenize(s){
+    return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').filter(function(w){return w.length>=2});
+  }
+  function trainingScore(queryTokens,recordTokens){
+    if(!queryTokens.length||!recordTokens.length)return 0;
+    var set={};recordTokens.forEach(function(t){set[t]=true});
+    var hits=queryTokens.filter(function(t){return set[t]}).length;
+    return hits/queryTokens.length;
+  }
+  function savePriceTraining(rec){
+    return openDb().then(function(db){
+      return new Promise(function(resolve,reject){
+        var tx=db.transaction('price_training','readwrite');
+        tx.objectStore('price_training').put(rec);
+        tx.oncomplete=function(){resolve()};
+        tx.onerror=function(){reject(tx.error)};
+      });
+    });
+  }
+  function loadAllTraining(){
+    return openDb().then(function(db){
+      return new Promise(function(resolve){
+        var out=[],req;
+        try{req=db.transaction('price_training').objectStore('price_training').openCursor()}
+        catch(e){resolve([]);return}
+        req.onsuccess=function(){
+          var cur=req.result;
+          if(cur){out.push(cur.value);cur.continue()}else resolve(out);
+        };
+        req.onerror=function(){resolve([])};
+      });
+    });
+  }
+  function findSimilarTraining(query){
+    var qTokens=tokenize(query);
+    return loadAllTraining().then(function(all){
+      return all.map(function(r){return {record:r,score:trainingScore(qTokens,r.tokens||tokenize(r.query))}})
+        .filter(function(x){return x.score>=0.5})
+        .sort(function(a,b){return b.score-a.score||new Date(b.record.timestamp)-new Date(a.record.timestamp)});
+    });
+  }
+  function steerRecommendation(recommended,matches){
+    if(!matches.length)return {steered:recommended,blend:0,learnedAvg:null};
+    var top=matches.slice(0,5);
+    var totalW=0,weightedSum=0;
+    top.forEach(function(m){totalW+=m.score;weightedSum+=m.record.confirmed*m.score});
+    var learnedAvg=weightedSum/totalW;
+    var blend=Math.min(.6,.2+.15*top.length);
+    var steered=retailRound(recommended*(1-blend)+learnedAvg*blend);
+    return {steered:steered,blend:blend,learnedAvg:learnedAvg,matches:top};
+  }
+  function timeAgo(iso){
+    var diffMs=Date.now()-new Date(iso).getTime();
+    var days=Math.floor(diffMs/86400000);
+    if(days<1)return 'Today';
+    if(days<30)return days+' day'+(days===1?'':'s')+' ago';
+    var months=Math.floor(days/30);
+    if(months<12)return months+' month'+(months===1?'':'s')+' ago';
+    var years=Math.floor(months/12);
+    return years+' year'+(years===1?'':'s')+' ago';
+  }
 
   function issuesFor(entry){
     var issues=[];
@@ -18014,7 +18097,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   function money(n){return '$'+Number(n||0).toFixed(2)}
   function retailRound(n){return Math.max(.99,Math.round(n)-.01)}
-  function calculatePricing(){
+  async function calculatePricing(){
     var prices=parsePriceList(),out=document.getElementById('nexusPriceResults');
     if(!prices.length){document.getElementById('nexusPriceStatus').textContent='Add at least one sold price first.';return}
     prices.sort(function(a,b){return a-b});
@@ -18022,7 +18105,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var median=prices.length%2?prices[mid]:(prices[mid-1]+prices[mid])/2;
     var avg=prices.reduce(function(a,b){return a+b},0)/prices.length;
     var low=prices[0],high=prices[prices.length-1],recommended=retailRound(median);
+    var queryText=document.getElementById('nexusPriceQuery').value.trim();
     var current=parseFloat(String(document.getElementById('nexusCurrentPrice').value||'').replace(/[^0-9.]/g,''));
+
+    var matches=queryText?await findSimilarTraining(queryText):[];
+    var steer=steerRecommendation(recommended,matches);
+    var heroPrice=matches.length?steer.steered:recommended;
+
     var verdict={cls:'unknown',label:'Add your price',text:'Enter what it\'s currently listed for to see how it compares.'};
     if(isFinite(current)&&current>0){
       var diff=(current-median)/median;
@@ -18031,13 +18120,65 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       else verdict={cls:'good',label:'Good Price',text:'This is priced right around what similar items have sold for.'};
     }
     var marker=isFinite(current)&&high>low?Math.max(0,Math.min(100,(current-low)/(high-low)*100)):50;
-    out.innerHTML='<div class="nexus-market-head"><div><div class="nexus-health-mini-label">Market read</div><h3 style="font-size:19px;margin:8px 0 0">'+escapeHtml(document.getElementById('nexusPriceQuery').value||'Untitled item')+'</h3></div><span class="nexus-verdict '+verdict.cls+'">'+verdict.label+'</span></div>'+
-      '<div class="nexus-price-hero"><div class="nexus-price-hero-label">Recommended selling price</div><div class="nexus-price-hero-value">'+money(recommended)+'</div><div class="nexus-price-hero-sub">Built around the median of '+prices.length+' sold comp'+(prices.length===1?'':'s')+'</div></div>'+
+    var heroSub=matches.length
+      ? 'Steered by '+matches.length+' trained example'+(matches.length===1?'':'s')+' — comps alone suggested '+money(recommended)
+      : 'Built around the median of '+prices.length+' sold comp'+(prices.length===1?'':'s');
+    out.innerHTML='<div class="nexus-market-head"><div><div class="nexus-health-mini-label">Market read</div><h3 style="font-size:19px;margin:8px 0 0">'+escapeHtml(queryText||'Untitled item')+'</h3></div><span class="nexus-verdict '+verdict.cls+'">'+verdict.label+'</span></div>'+
+      '<div class="nexus-price-hero"><div class="nexus-price-hero-label">Recommended selling price</div><div class="nexus-price-hero-value">'+money(heroPrice)+'</div><div class="nexus-price-hero-sub">'+heroSub+'</div></div>'+
       '<div class="nexus-price-stats"><div class="nexus-price-stat"><span>Sold comps</span><b>'+prices.length+'</b></div><div class="nexus-price-stat"><span>Median</span><b>'+money(median)+'</b></div><div class="nexus-price-stat"><span>Average</span><b>'+money(avg)+'</b></div><div class="nexus-price-stat"><span>Range</span><b style="font-size:12px">'+money(low)+'–'+money(high)+'</b></div></div>'+
       '<div class="nexus-range"><div class="nexus-range-track"><div class="nexus-range-marker" style="left:'+marker+'%" data-label="'+(isFinite(current)?'Current '+money(current):'Market center')+'"></div></div><div class="nexus-range-labels"><span>Low '+money(low)+'</span><span>Median '+money(median)+'</span><span>High '+money(high)+'</span></div></div>'+
       '<div class="nexus-price-guidance"><b>'+verdict.text+'</b><br>For a faster sale, consider '+money(retailRound(median*.92))+'. For more margin with a potentially longer wait, consider '+money(retailRound(median*1.08))+'. '+(prices.length<3?'This is a low-confidence read because fewer than three comps were supplied.':'The median is the primary recommendation because it is less distorted by unusually high or low sales.')+'</div>';
     document.getElementById('nexusPriceStatus').textContent=prices.length<3?'Low confidence — add at least three relevant sold comps.':'Price check ready · '+prices.length+' sold comps analyzed.';
-    try{localStorage.setItem('syg_nexus_last_price_check',JSON.stringify({query:document.getElementById('nexusPriceQuery').value,prices:prices,current:current,recommended:recommended,at:new Date().toISOString()}))}catch(e){}
+    try{localStorage.setItem('syg_nexus_last_price_check',JSON.stringify({query:queryText,prices:prices,current:current,recommended:recommended,at:new Date().toISOString()}))}catch(e){}
+
+    lastCalc={query:queryText,tokens:tokenize(queryText),prices:prices,median:median,recommended:recommended};
+    var trainStatus=document.getElementById('nexusTrainStatus');
+    if(trainStatus)trainStatus.textContent=queryText?'Know this actually sells for more or less? Confirm it below to train Nexus.':'Add an item query above, then calculate, before training a price.';
+    renderTrainingHistory(matches,queryText);
+  }
+  function renderTrainingHistory(matches,queryText){
+    var el=document.getElementById('nexusTrainingHistory');
+    if(!el)return;
+    if(!queryText){el.innerHTML='';return}
+    if(!matches.length){
+      el.innerHTML='<div class="nexus-status" style="margin-top:14px">No similar trained items yet for "'+escapeHtml(queryText)+'" — be the first to confirm one.</div>';
+      return;
+    }
+    el.innerHTML='<div class="nexus-health-mini-label" style="margin:16px 0 8px">Similar past training ('+matches.length+')</div>'+
+      matches.slice(0,6).map(function(m){
+        var r=m.record;
+        var delta=r.recommended?Math.round((r.confirmed-r.recommended)/r.recommended*100):0;
+        return '<div class="nexus-price-stat" style="text-align:left;margin-bottom:8px;display:block">'+
+          '<span>'+timeAgo(r.timestamp)+' · '+escapeHtml(r.query)+'</span>'+
+          '<b style="display:block;margin-top:4px">Recommended '+money(r.recommended)+' → Confirmed '+money(r.confirmed)+' ('+(delta>=0?'+':'')+delta+'%)</b>'+
+          (r.note?'<div style="font-size:11px;color:var(--nexus-soft);margin-top:4px">"'+escapeHtml(r.note)+'"</div>':'')+
+          '</div>';
+      }).join('');
+  }
+  function saveTrainingExample(){
+    var status=document.getElementById('nexusTrainStatus');
+    if(!lastCalc||!lastCalc.query){status.textContent='Calculate a price first, then confirm what it actually sells for.';return}
+    var confirmed=parseFloat(String(document.getElementById('nexusTrainPrice').value||'').replace(/[^0-9.]/g,''));
+    if(!isFinite(confirmed)||confirmed<=0){status.textContent='Enter a valid confirmed selling price.';return}
+    var note=document.getElementById('nexusTrainNote').value.trim();
+    var rec={
+      id:'pt_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
+      query:lastCalc.query,tokens:lastCalc.tokens,soldComps:lastCalc.prices,
+      median:lastCalc.median,recommended:lastCalc.recommended,
+      confirmed:confirmed,note:note,timestamp:new Date().toISOString()
+    };
+    status.textContent='Saving…';
+    savePriceTraining(rec).then(function(){
+      nexusEvent('price_trained',null,rec);
+      status.textContent='Saved — Nexus will lean future similar recommendations toward '+money(confirmed)+'.';
+      document.getElementById('nexusTrainPrice').value='';
+      document.getElementById('nexusTrainNote').value='';
+      return findSimilarTraining(lastCalc.query);
+    }).then(function(matches){
+      if(matches)renderTrainingHistory(matches,lastCalc.query);
+    }).catch(function(e){
+      status.textContent='Could not save this training example: '+e.message;
+    });
   }
   function nexusAskExtension(type,payload,timeout){
     return new Promise(function(resolve){
@@ -18207,7 +18348,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     document.getElementById('nexusCalculatePrice').onclick=calculatePricing;
     document.getElementById('nexusLiveComps').onclick=getLivePricing;
     document.getElementById('nexusOpenSold').onclick=function(){var q=document.getElementById('nexusPriceQuery').value.trim();if(q)window.open('https://www.ebay.com/sch/i.html?_nkw='+encodeURIComponent(q)+'&LH_Sold=1&LH_Complete=1&_sop=13','_blank')};
-    document.getElementById('nexusClearPrice').onclick=function(){document.getElementById('nexusPriceQuery').value='';document.getElementById('nexusCurrentPrice').value='';document.getElementById('nexusCompPrices').value='';document.getElementById('nexusPriceResults').innerHTML='<div class="nexus-price-empty"><div><strong>What should this sell for?</strong>Add relevant sold prices, then Nexus will show the market center, range, and a recommended selling price.</div></div>';document.getElementById('nexusPriceStatus').textContent='Use at least three relevant sold prices for a reliable recommendation.'};
+    document.getElementById('nexusSaveTraining').onclick=saveTrainingExample;
+    document.getElementById('nexusClearPrice').onclick=function(){document.getElementById('nexusPriceQuery').value='';document.getElementById('nexusCurrentPrice').value='';document.getElementById('nexusCompPrices').value='';document.getElementById('nexusPriceResults').innerHTML='<div class="nexus-price-empty"><div><strong>What should this sell for?</strong>Add relevant sold prices, then Nexus will show the market center, range, and a recommended selling price.</div></div>';document.getElementById('nexusPriceStatus').textContent='Use at least three relevant sold prices for a reliable recommendation.';document.getElementById('nexusTrainPrice').value='';document.getElementById('nexusTrainNote').value='';document.getElementById('nexusTrainingHistory').innerHTML='';document.getElementById('nexusTrainStatus').textContent='Calculate a price first, then confirm what it actually sells for.';lastCalc=null};
     document.getElementById('nexusShipSku').addEventListener('keydown',function(e){if(e.key==='Enter')resolveSku()});
     document.getElementById('nexusWeightLb').oninput=validateShip;
     document.getElementById('nexusWeightOz').oninput=validateShip;
