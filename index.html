@@ -17507,6 +17507,40 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      ═══════════════════════════════════════════════════════════════ -->
 <style>
   :root{--nexus-bg:#080b12;--nexus-panel:#111722;--nexus-panel-2:#171f2d;--nexus-line:rgba(255,255,255,.09);--nexus-text:#f4f7fb;--nexus-soft:#8f9aad;--nexus-blue:#6d7cff;--nexus-cyan:#32d6c5;--nexus-gold:#f4bb55;}
+  /* ── Custom scrollbars for every scrollable Nexus surface ── */
+  .nexus-home,.nexus-shipping,.nexus-command,.nexus-pricing,
+  .nexus-ship-body,.nexus-command-body,.nexus-price-body,
+  .nexus-modal-card,.nexus-about-body,.nexus-about-shell,
+  .nexus-oq-list,.nexus-pagetext-list{
+    scrollbar-width:thin;scrollbar-color:rgba(50,214,197,.35) transparent;
+  }
+  .nexus-home::-webkit-scrollbar,.nexus-shipping::-webkit-scrollbar,.nexus-command::-webkit-scrollbar,.nexus-pricing::-webkit-scrollbar,
+  .nexus-ship-body::-webkit-scrollbar,.nexus-command-body::-webkit-scrollbar,.nexus-price-body::-webkit-scrollbar,
+  .nexus-modal-card::-webkit-scrollbar,.nexus-about-body::-webkit-scrollbar,.nexus-about-shell::-webkit-scrollbar,
+  .nexus-oq-list::-webkit-scrollbar,.nexus-pagetext-list::-webkit-scrollbar{
+    width:9px;height:9px;
+  }
+  .nexus-home::-webkit-scrollbar-track,.nexus-shipping::-webkit-scrollbar-track,.nexus-command::-webkit-scrollbar-track,.nexus-pricing::-webkit-scrollbar-track,
+  .nexus-ship-body::-webkit-scrollbar-track,.nexus-command-body::-webkit-scrollbar-track,.nexus-price-body::-webkit-scrollbar-track,
+  .nexus-modal-card::-webkit-scrollbar-track,.nexus-about-body::-webkit-scrollbar-track,.nexus-about-shell::-webkit-scrollbar-track,
+  .nexus-oq-list::-webkit-scrollbar-track,.nexus-pagetext-list::-webkit-scrollbar-track{
+    background:transparent;
+  }
+  .nexus-home::-webkit-scrollbar-thumb,.nexus-shipping::-webkit-scrollbar-thumb,.nexus-command::-webkit-scrollbar-thumb,.nexus-pricing::-webkit-scrollbar-thumb,
+  .nexus-ship-body::-webkit-scrollbar-thumb,.nexus-command-body::-webkit-scrollbar-thumb,.nexus-price-body::-webkit-scrollbar-thumb,
+  .nexus-modal-card::-webkit-scrollbar-thumb,.nexus-about-body::-webkit-scrollbar-thumb,.nexus-about-shell::-webkit-scrollbar-thumb,
+  .nexus-oq-list::-webkit-scrollbar-thumb,.nexus-pagetext-list::-webkit-scrollbar-thumb{
+    background:rgba(50,214,197,.32);border-radius:999px;border:2px solid transparent;background-clip:padding-box;transition:background .15s;
+  }
+  .nexus-home::-webkit-scrollbar-thumb:hover,.nexus-shipping::-webkit-scrollbar-thumb:hover,.nexus-command::-webkit-scrollbar-thumb:hover,.nexus-pricing::-webkit-scrollbar-thumb:hover,
+  .nexus-ship-body::-webkit-scrollbar-thumb:hover,.nexus-command-body::-webkit-scrollbar-thumb:hover,.nexus-price-body::-webkit-scrollbar-thumb:hover,
+  .nexus-modal-card::-webkit-scrollbar-thumb:hover,.nexus-about-body::-webkit-scrollbar-thumb:hover,.nexus-about-shell::-webkit-scrollbar-thumb:hover,
+  .nexus-oq-list::-webkit-scrollbar-thumb:hover,.nexus-pagetext-list::-webkit-scrollbar-thumb:hover{
+    background:rgba(50,214,197,.55);background-clip:padding-box;
+  }
+  .nexus-pricing .nexus-price-body::-webkit-scrollbar-thumb,.nexus-pricing.nexus-about-body::-webkit-scrollbar-thumb{background:rgba(251,191,36,.32);background-clip:padding-box}
+  .nexus-pricing .nexus-price-body::-webkit-scrollbar-thumb:hover{background:rgba(251,191,36,.55);background-clip:padding-box}
+  .nexus-pricing{scrollbar-color:rgba(251,191,36,.32) transparent}
   .nexus-home{position:absolute;inset:0;display:flex;flex-direction:column;background:
     radial-gradient(circle at 15% 0%,rgba(109,124,255,.16),transparent 35%),
     radial-gradient(circle at 90% 85%,rgba(50,214,197,.08),transparent 32%),var(--nexus-bg);color:var(--nexus-text);overflow:auto;}
@@ -17543,7 +17577,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-oq-list.nexus-oq-bin-over{border-color:var(--nexus-cyan);background:rgba(50,214,197,.04)}
   .nexus-oq-list-packed{border-color:rgba(244,187,85,.25)}
   .nexus-oq-list-packed.nexus-oq-bin-over{border-color:var(--nexus-gold);background:rgba(244,187,85,.05)}
-  .nexus-oq-card{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--nexus-line);border-radius:12px;background:#0b1019;padding:10px 11px;transition:opacity .15s,border-color .15s}
+  .nexus-oq-card{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--nexus-line);border-radius:12px;background:#0b1019;padding:10px 11px;transition:opacity .15s,border-color .15s,box-shadow .15s}
+  .nexus-pagetext-list{max-height:280px;overflow-y:auto;margin-top:8px;border:1px solid var(--nexus-line);border-radius:12px;padding:8px}
+  .nexus-pagetext-row{padding:9px 10px;border-bottom:1px solid var(--nexus-line)}
+  .nexus-pagetext-row:last-child{border-bottom:none}
+  .nexus-pagetext-row b{display:block;font:700 10px var(--mono);color:var(--nexus-cyan);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+  .nexus-pagetext-row div{font:500 11px/1.5 var(--mono);color:var(--nexus-soft);white-space:pre-wrap;word-break:break-word}
+  .nexus-oq-card.nexus-oq-found{border-color:var(--nexus-cyan);box-shadow:0 0 0 2px rgba(50,214,197,.35),0 0 18px rgba(50,214,197,.25);animation:nexusOqPulse 1.1s ease-in-out 2}
+  @keyframes nexusOqPulse{0%,100%{box-shadow:0 0 0 2px rgba(50,214,197,.35),0 0 18px rgba(50,214,197,.25)}50%{box-shadow:0 0 0 3px rgba(50,214,197,.6),0 0 26px rgba(50,214,197,.4)}}
+  .nexus-sku-find{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-140%);z-index:10050;display:flex;align-items:center;gap:9px;
+    background:#0c111b;border:1px solid rgba(50,214,197,.35);border-radius:999px;padding:9px 9px 9px 16px;box-shadow:0 16px 40px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;transition:transform .18s ease,opacity .18s ease;width:min(420px,88vw)}
+  .nexus-sku-find.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+  .nexus-sku-find-icon{color:var(--nexus-cyan);font-size:15px;flex:none}
+  .nexus-sku-find-input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#fff;font:600 13px var(--mono)}
+  .nexus-sku-find-input::placeholder{color:var(--nexus-soft)}
+  .nexus-sku-find-count{flex:none;font:700 10px var(--mono);color:var(--nexus-soft);white-space:nowrap}
+  .nexus-sku-find-close{flex:none;width:24px;height:24px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:var(--nexus-soft);cursor:pointer;font-size:12px;line-height:1}
+  .nexus-sku-find-close:hover{background:rgba(255,255,255,.12);color:#fff}
   .nexus-oq-card.nexus-oq-dragging{opacity:.35;border-style:dashed}
   .nexus-oq-card.nexus-oq-drag-over{border-color:var(--nexus-cyan);box-shadow:0 0 0 2px rgba(50,214,197,.18)}
   .nexus-oq-handle{cursor:grab;color:var(--nexus-soft);font-size:14px;line-height:1;padding:3px 2px;flex:none;user-select:none}
@@ -17582,6 +17633,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 <div class="nexus-shipping" id="nexusShipping">
   <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Nexus Shipping Station</h2><button class="nexus-newsession" id="nexusNewSession" title="Clear Incoming, Packed, and the label PDF to start a fresh batch">↻ New packing session</button><button class="nexus-back" id="nexusShipBack">← Command</button></div>
+  <div class="nexus-sku-find" id="nexusSkuFind">
+    <span class="nexus-sku-find-icon">⌕</span>
+    <input class="nexus-sku-find-input" id="nexusSkuFindInput" placeholder="Find SKU in Incoming / Packed…" autocomplete="off">
+    <span class="nexus-sku-find-count" id="nexusSkuFindCount"></span>
+    <button class="nexus-sku-find-close" id="nexusSkuFindClose" title="Close (Esc)">✕</button>
+  </div>
   <div class="nexus-ship-body">
     <div>
       <div class="nexus-ship-panel">
@@ -17637,6 +17694,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         </div>
         <div class="nexus-status" id="nexusLabelStatus">Every label must occupy its own PDF page.</div>
         <div id="nexusLabelMatches"></div>
+        <button class="nexus-price-btn" id="nexusShowPageText" style="margin-top:8px" disabled>Show raw extracted text (debug)</button>
+        <div class="nexus-pagetext-list" id="nexusPageTextList" style="display:none"></div>
         <button class="nexus-prefill" id="nexusCreateSortedPdf" style="display:none">Download Sorted Label PDF</button>
       </div>
     </div>
@@ -18312,6 +18371,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     document.getElementById('nexusLabelMatches').innerHTML='';
     document.getElementById('nexusCreateSortedPdf').style.display='none';
     document.getElementById('nexusAnalyzeLabels').disabled=true;
+    document.getElementById('nexusShowPageText').disabled=true;
+    document.getElementById('nexusShowPageText').textContent='Show raw extracted text (debug)';
+    document.getElementById('nexusPageTextList').style.display='none';
+    document.getElementById('nexusPageTextList').innerHTML='';
     document.getElementById('nexusLabelPdf').value='';
     var drop=document.getElementById('nexusPdfDrop');
     drop.classList.remove('loaded');
@@ -18476,6 +18539,48 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     });
   }
 
+  // ── SKU find (press F while in Shipping Station) ────────────────────
+  var _skuFindMatchIdx=-1;
+  function openSkuFind(){
+    var bar=document.getElementById('nexusSkuFind');
+    bar.classList.add('show');
+    var input=document.getElementById('nexusSkuFindInput');
+    input.value='';
+    document.getElementById('nexusSkuFindCount').textContent='';
+    clearSkuFindHighlights();
+    setTimeout(function(){input.focus()},10); // after the show transition starts
+  }
+  function closeSkuFind(){
+    document.getElementById('nexusSkuFind').classList.remove('show');
+    clearSkuFindHighlights();
+    document.getElementById('nexusShipSku').focus();
+  }
+  function clearSkuFindHighlights(){
+    document.querySelectorAll('.nexus-oq-card.nexus-oq-found').forEach(function(c){c.classList.remove('nexus-oq-found')});
+  }
+  function runSkuFind(){
+    var q=document.getElementById('nexusSkuFindInput').value.trim().toLowerCase();
+    clearSkuFindHighlights();
+    _skuFindMatchIdx=-1;
+    var countEl=document.getElementById('nexusSkuFindCount');
+    if(!q){countEl.textContent='';return}
+    var cards=document.querySelectorAll('#nexusOrderQueue .nexus-oq-card, #nexusPackedQueue .nexus-oq-card');
+    var matches=[];
+    cards.forEach(function(c){
+      var skuEl=c.querySelector('.nexus-oq-sku');
+      var sku=(skuEl?skuEl.textContent:'').toLowerCase();
+      if(sku.indexOf(q)!==-1){c.classList.add('nexus-oq-found');matches.push(c)}
+    });
+    countEl.textContent=matches.length?matches.length+' match'+(matches.length===1?'':'es')+' · Enter to jump':'No match';
+    if(matches.length){_skuFindMatchIdx=0;matches[0].scrollIntoView({behavior:'smooth',block:'center'})}
+  }
+  function jumpToNextSkuFindMatch(){
+    var matches=document.querySelectorAll('.nexus-oq-card.nexus-oq-found');
+    if(!matches.length)return;
+    _skuFindMatchIdx=(_skuFindMatchIdx+1)%matches.length;
+    matches[_skuFindMatchIdx].scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
   function prefillShipping(){
     if(!selectedOrder||!selectedBox)return;
     var payload={
@@ -18637,8 +18742,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   async function getLivePricing(){
     var q=document.getElementById('nexusPriceQuery').value.trim();
     if(!q){document.getElementById('nexusPriceQuery').focus();return}
-    var status=document.getElementById('nexusPriceStatus');status.textContent='Checking live sold comps through the Nexus extension…';
-    var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:null},15000);
+    var status=document.getElementById('nexusPriceStatus');status.textContent='Checking live sold comps through the Nexus extension — this opens a background eBay tab and can take up to ~25 seconds…';
+    // The extension's own eBay-tab-load wait is internally budgeted up to 15s,
+    // plus a ~1.2s render-settle delay plus the scrape + relay overhead —
+    // giving this only 15s total meant the outer timeout could fire while
+    // the extension was still legitimately mid-scrape. 28s gives real margin
+    // above the extension's own internal budget instead of matching it 1:1.
+    var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:null},28000);
     if(!res.ok){status.textContent=res.error||'Live comp check failed.';return}
     var prices=(res.listings||[]).map(function(x){return x.price}).filter(function(n){return n>0});
     document.getElementById('nexusCompPrices').value=prices.join('\n');
@@ -18683,6 +18793,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
     status.textContent=pdf.numPages+' label page'+(pdf.numPages===1?'':'s')+' ready to match.';
     document.getElementById('nexusAnalyzeLabels').disabled=false;
+    document.getElementById('nexusShowPageText').disabled=false;
     var drop=document.getElementById('nexusPdfDrop');
     drop.classList.add('loaded');
     drop.querySelector('strong').textContent=file.name+' · '+pdf.numPages+' page'+(pdf.numPages===1?'':'s');
@@ -18694,6 +18805,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       status.textContent='PDF ready. Add one label match-key line per packed shipment, then select Analyze and Match.';
     }
   }
+  // Lets you see exactly what pdf.js extracted per page — the same text
+  // scoreLabelMatch() works from. If a page's text here looks garbled or
+  // missing words you can clearly read in the actual PDF (e.g. via Ctrl+F
+  // in your browser's own viewer), that's a pdf.js extraction/encoding gap
+  // for that label vendor's PDF, not a scoring problem — worth flagging
+  // back so the extraction step itself can be adjusted.
+  function renderPageTextDebug(){
+    var el=document.getElementById('nexusPageTextList');
+    el.innerHTML=labelPageTexts.map(function(t,i){
+      return '<div class="nexus-pagetext-row"><b>Page '+(i+1)+'</b><div>'+escapeHtml(t||'(no extractable text on this page)')+'</div></div>';
+    }).join('');
+  }
   function handleLabelFile(file){
     if(!file)return;
     if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name||'')){
@@ -18702,6 +18825,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
     document.getElementById('nexusLabelMatches').innerHTML='';
     document.getElementById('nexusCreateSortedPdf').style.display='none';
+    document.getElementById('nexusShowPageText').disabled=true;
+    document.getElementById('nexusShowPageText').textContent='Show raw extracted text (debug)';
+    var pageTextList=document.getElementById('nexusPageTextList');
+    pageTextList.style.display='none';pageTextList.innerHTML='';
     readLabelPdf(file).catch(function(e){document.getElementById('nexusLabelStatus').textContent='Could not read this PDF: '+e.message});
   }
   function analyzeLabelMatches(){
@@ -18785,6 +18912,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     buildHome();buildBoxes();installAuditHooks();openDb();updateAboutNexus();redesignHaz();
     document.getElementById('nexusShipBack').onclick=function(){document.getElementById('nexusShipping').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
     document.getElementById('nexusNewSession').onclick=resetPackingSession;
+    document.getElementById('nexusSkuFindInput').addEventListener('input',runSkuFind);
+    document.getElementById('nexusSkuFindInput').addEventListener('keydown',function(e){
+      if(e.key==='Escape'){e.preventDefault();closeSkuFind()}
+      else if(e.key==='Enter'){e.preventDefault();jumpToNextSkuFindMatch()}
+    });
+    document.getElementById('nexusSkuFindClose').onclick=closeSkuFind;
+    document.addEventListener('keydown',function(e){
+      if(!document.getElementById('nexusShipping').classList.contains('show'))return;
+      var t=e.target,tag=(t.tagName||'').toLowerCase();
+      var typing=tag==='input'||tag==='textarea'||t.isContentEditable;
+      var findOpen=document.getElementById('nexusSkuFind').classList.contains('show');
+      if(e.key==='f'&&!typing&&!findOpen&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+        e.preventDefault();
+        openSkuFind();
+      }else if(e.key==='Escape'&&findOpen){
+        closeSkuFind();
+      }
+    });
     document.getElementById('nexusCommandBack').onclick=function(){document.getElementById('nexusCommand').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
     document.getElementById('nexusPricingBack').onclick=function(){document.getElementById('nexusPricing').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
     document.getElementById('nexusHealthClose').onclick=function(){document.getElementById('nexusHealthModal').classList.remove('show')};
@@ -18807,6 +18952,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     pdfDrop.ondragleave=function(){pdfDrop.classList.remove('dragover')};
     pdfDrop.ondrop=function(e){e.preventDefault();pdfDrop.classList.remove('dragover');var files=Array.from(e.dataTransfer.files||[]);handleLabelFile(files.find(function(f){return f.type==='application/pdf'||/\.pdf$/i.test(f.name||'')})||files[0])};
     document.getElementById('nexusAnalyzeLabels').onclick=analyzeLabelMatches;
+    document.getElementById('nexusShowPageText').onclick=function(){
+      var el=document.getElementById('nexusPageTextList');
+      var show=el.style.display==='none';
+      if(show)renderPageTextDebug();
+      el.style.display=show?'block':'none';
+      this.textContent=show?'Hide raw extracted text':'Show raw extracted text (debug)';
+    };
     document.getElementById('nexusCreateSortedPdf').onclick=function(){createSortedLabelPdf().catch(function(e){document.getElementById('nexusLabelStatus').textContent='Could not create the sorted PDF: '+e.message})};
     document.getElementById('nexusConnectPage').onclick=function(){
       var url=document.getElementById('nexusShipUrl').value.trim(),status=document.getElementById('nexusConnectStatus');
