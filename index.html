@@ -17509,34 +17509,34 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <style>
   :root{--nexus-bg:#080b12;--nexus-panel:#111722;--nexus-panel-2:#171f2d;--nexus-line:rgba(255,255,255,.09);--nexus-text:#f4f7fb;--nexus-soft:#8f9aad;--nexus-blue:#6d7cff;--nexus-cyan:#32d6c5;--nexus-gold:#f4bb55;}
   /* ── Custom scrollbars for every scrollable Nexus surface ── */
-  .nexus-home,.nexus-shipping,.nexus-command,.nexus-pricing,
-  .nexus-ship-body,.nexus-command-body,.nexus-price-body,
-  .nexus-modal-card,.nexus-about-body,.nexus-about-shell,
-  .nexus-oq-list{
+  .nexus-home,.nexus-shipping,.nexus-command,.nexus-pricing,.nexus-storewide,
+  .nexus-ship-body,.nexus-command-body,.nexus-price-body,.nexus-sw-body,
+  .nexus-modal-card,.nexus-about-body,.nexus-about-shell,.nexus-sw-modal-card,
+  .nexus-oq-list,.nexus-sw-list{
     scrollbar-width:thin;scrollbar-color:rgba(50,214,197,.35) transparent;
   }
-  .nexus-home::-webkit-scrollbar,.nexus-shipping::-webkit-scrollbar,.nexus-command::-webkit-scrollbar,.nexus-pricing::-webkit-scrollbar,
-  .nexus-ship-body::-webkit-scrollbar,.nexus-command-body::-webkit-scrollbar,.nexus-price-body::-webkit-scrollbar,
-  .nexus-modal-card::-webkit-scrollbar,.nexus-about-body::-webkit-scrollbar,.nexus-about-shell::-webkit-scrollbar,
-  .nexus-oq-list::-webkit-scrollbar{
+  .nexus-home::-webkit-scrollbar,.nexus-shipping::-webkit-scrollbar,.nexus-command::-webkit-scrollbar,.nexus-pricing::-webkit-scrollbar,.nexus-storewide::-webkit-scrollbar,
+  .nexus-ship-body::-webkit-scrollbar,.nexus-command-body::-webkit-scrollbar,.nexus-price-body::-webkit-scrollbar,.nexus-sw-body::-webkit-scrollbar,
+  .nexus-modal-card::-webkit-scrollbar,.nexus-about-body::-webkit-scrollbar,.nexus-about-shell::-webkit-scrollbar,.nexus-sw-modal-card::-webkit-scrollbar,
+  .nexus-oq-list::-webkit-scrollbar,.nexus-sw-list::-webkit-scrollbar{
     width:9px;height:9px;
   }
-  .nexus-home::-webkit-scrollbar-track,.nexus-shipping::-webkit-scrollbar-track,.nexus-command::-webkit-scrollbar-track,.nexus-pricing::-webkit-scrollbar-track,
-  .nexus-ship-body::-webkit-scrollbar-track,.nexus-command-body::-webkit-scrollbar-track,.nexus-price-body::-webkit-scrollbar-track,
-  .nexus-modal-card::-webkit-scrollbar-track,.nexus-about-body::-webkit-scrollbar-track,.nexus-about-shell::-webkit-scrollbar-track,
-  .nexus-oq-list::-webkit-scrollbar-track{
+  .nexus-home::-webkit-scrollbar-track,.nexus-shipping::-webkit-scrollbar-track,.nexus-command::-webkit-scrollbar-track,.nexus-pricing::-webkit-scrollbar-track,.nexus-storewide::-webkit-scrollbar-track,
+  .nexus-ship-body::-webkit-scrollbar-track,.nexus-command-body::-webkit-scrollbar-track,.nexus-price-body::-webkit-scrollbar-track,.nexus-sw-body::-webkit-scrollbar-track,
+  .nexus-modal-card::-webkit-scrollbar-track,.nexus-about-body::-webkit-scrollbar-track,.nexus-about-shell::-webkit-scrollbar-track,.nexus-sw-modal-card::-webkit-scrollbar-track,
+  .nexus-oq-list::-webkit-scrollbar-track,.nexus-sw-list::-webkit-scrollbar-track{
     background:transparent;
   }
-  .nexus-home::-webkit-scrollbar-thumb,.nexus-shipping::-webkit-scrollbar-thumb,.nexus-command::-webkit-scrollbar-thumb,.nexus-pricing::-webkit-scrollbar-thumb,
-  .nexus-ship-body::-webkit-scrollbar-thumb,.nexus-command-body::-webkit-scrollbar-thumb,.nexus-price-body::-webkit-scrollbar-thumb,
-  .nexus-modal-card::-webkit-scrollbar-thumb,.nexus-about-body::-webkit-scrollbar-thumb,.nexus-about-shell::-webkit-scrollbar-thumb,
-  .nexus-oq-list::-webkit-scrollbar-thumb{
+  .nexus-home::-webkit-scrollbar-thumb,.nexus-shipping::-webkit-scrollbar-thumb,.nexus-command::-webkit-scrollbar-thumb,.nexus-pricing::-webkit-scrollbar-thumb,.nexus-storewide::-webkit-scrollbar-thumb,
+  .nexus-ship-body::-webkit-scrollbar-thumb,.nexus-command-body::-webkit-scrollbar-thumb,.nexus-price-body::-webkit-scrollbar-thumb,.nexus-sw-body::-webkit-scrollbar-thumb,
+  .nexus-modal-card::-webkit-scrollbar-thumb,.nexus-about-body::-webkit-scrollbar-thumb,.nexus-about-shell::-webkit-scrollbar-thumb,.nexus-sw-modal-card::-webkit-scrollbar-thumb,
+  .nexus-oq-list::-webkit-scrollbar-thumb,.nexus-sw-list::-webkit-scrollbar-thumb{
     background:rgba(50,214,197,.32);border-radius:999px;border:2px solid transparent;background-clip:padding-box;transition:background .15s;
   }
-  .nexus-home::-webkit-scrollbar-thumb:hover,.nexus-shipping::-webkit-scrollbar-thumb:hover,.nexus-command::-webkit-scrollbar-thumb:hover,.nexus-pricing::-webkit-scrollbar-thumb:hover,
-  .nexus-ship-body::-webkit-scrollbar-thumb:hover,.nexus-command-body::-webkit-scrollbar-thumb:hover,.nexus-price-body::-webkit-scrollbar-thumb:hover,
-  .nexus-modal-card::-webkit-scrollbar-thumb:hover,.nexus-about-body::-webkit-scrollbar-thumb:hover,.nexus-about-shell::-webkit-scrollbar-thumb:hover,
-  .nexus-oq-list::-webkit-scrollbar-thumb:hover{
+  .nexus-home::-webkit-scrollbar-thumb:hover,.nexus-shipping::-webkit-scrollbar-thumb:hover,.nexus-command::-webkit-scrollbar-thumb:hover,.nexus-pricing::-webkit-scrollbar-thumb:hover,.nexus-storewide::-webkit-scrollbar-thumb:hover,
+  .nexus-ship-body::-webkit-scrollbar-thumb:hover,.nexus-command-body::-webkit-scrollbar-thumb:hover,.nexus-price-body::-webkit-scrollbar-thumb:hover,.nexus-sw-body::-webkit-scrollbar-thumb:hover,
+  .nexus-modal-card::-webkit-scrollbar-thumb:hover,.nexus-about-body::-webkit-scrollbar-thumb:hover,.nexus-about-shell::-webkit-scrollbar-thumb:hover,.nexus-sw-modal-card::-webkit-scrollbar-thumb:hover,
+  .nexus-oq-list::-webkit-scrollbar-thumb:hover,.nexus-sw-list::-webkit-scrollbar-thumb:hover{
     background:rgba(50,214,197,.55);background-clip:padding-box;
   }
   .nexus-pricing .nexus-price-body::-webkit-scrollbar-thumb,.nexus-pricing.nexus-about-body::-webkit-scrollbar-thumb{background:rgba(251,191,36,.32);background-clip:padding-box}
@@ -17761,6 +17761,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <div class="nexus-sw-toolbar">
       <input class="nexus-sw-search" id="nexusSwSearch" placeholder="Search SKU or title…">
       <button class="nexus-sw-btn" id="nexusSwSelectAll">Select all filtered</button>
+      <button class="nexus-sw-btn" id="nexusSwClearSel">✕ Clear selection</button>
+      <span class="nexus-oq-count" id="nexusSwSelCount">0 selected</span>
       <button class="nexus-sw-btn" id="nexusSwRefresh">🔄 Refresh live stats</button>
       <button class="nexus-sw-btn" id="nexusSwGenPrompt">🧾 Generate audit prompt</button>
       <button class="nexus-sw-btn" id="nexusSwImportBtn">📥 Import audit results</button>
@@ -18469,6 +18471,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   var _swDragId=null;
   var swSortByAge=false;
+  function swUpdateSelCount(){
+    var el=document.getElementById('nexusSwSelCount');
+    if(!el)return;
+    var n=Object.keys(swSelected).length;
+    el.textContent=n+' selected';
+  }
   function swRenderBoard(){
     var good=swEntries.filter(function(e){return e.bin==='good'&&swVisible(e)});
     var attn=swEntries.filter(function(e){return e.bin==='needsAttention'&&swVisible(e)});
@@ -18491,7 +18499,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     attnEl.innerHTML=attn.length?attn.map(swCardHtml).join(''):'<div class="nexus-sw-empty">Nothing here in the current filter.</div>';
     [goodEl,attnEl].forEach(function(listEl){
       listEl.querySelectorAll('[data-sw-check]').forEach(function(chk){
-        chk.onclick=function(ev){ev.stopPropagation();var id=chk.getAttribute('data-sw-check');if(chk.checked)swSelected[id]=true;else delete swSelected[id]};
+        chk.onclick=function(ev){ev.stopPropagation();var id=chk.getAttribute('data-sw-check');if(chk.checked)swSelected[id]=true;else delete swSelected[id];swUpdateSelCount()};
       });
       listEl.querySelectorAll('.nexus-sw-card').forEach(function(card){
         card.setAttribute('draggable','true');
@@ -18504,6 +18512,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         card.addEventListener('dragend',function(){card.classList.remove('dragging');_swDragId=null});
       });
     });
+    swUpdateSelCount();
   }
   function swInitDrag(){
     ['nexusSwGoodList','nexusSwAttnList'].forEach(function(listId){
@@ -19473,6 +19482,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       swEntries.filter(swVisible).forEach(function(e){swSelected[e.id]=true});
       swRenderBoard();
       document.getElementById('nexusSwStatus').textContent='Selected '+Object.keys(swSelected).length+' card'+(Object.keys(swSelected).length===1?'':'s')+'.';
+    };
+    document.getElementById('nexusSwClearSel').onclick=function(){
+      swSelected={};
+      swRenderBoard();
+      document.getElementById('nexusSwStatus').textContent='Selection cleared.';
     };
     document.getElementById('nexusSwRefresh').onclick=function(){swRefreshLiveStats()};
     document.getElementById('nexusSwGenPrompt').onclick=function(){swGeneratePrompt()};
