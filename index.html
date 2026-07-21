@@ -18023,12 +18023,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var avg=prices.reduce(function(a,b){return a+b},0)/prices.length;
     var low=prices[0],high=prices[prices.length-1],recommended=retailRound(median);
     var current=parseFloat(String(document.getElementById('nexusCurrentPrice').value||'').replace(/[^0-9.]/g,''));
-    var verdict={cls:'unknown',label:'Enter current price',text:'No current selling price was supplied.'};
+    var verdict={cls:'unknown',label:'Add your price',text:'Enter what it\'s currently listed for to see how it compares.'};
     if(isFinite(current)&&current>0){
       var diff=(current-median)/median;
-      if(diff>.12)verdict={cls:'high',label:'Priced High',text:'Current price is '+Math.round(diff*100)+'% above the sold median.'};
-      else if(diff<-.12)verdict={cls:'low',label:'Priced Low',text:'Current price is '+Math.abs(Math.round(diff*100))+'% below the sold median.'};
-      else verdict={cls:'good',label:'In Market',text:'Current price is within 12% of the sold median.'};
+      if(diff>.12)verdict={cls:'high',label:'Priced Too High',text:'This is priced '+Math.round(diff*100)+'% higher than similar sold items — it may sit longer before it sells.'};
+      else if(diff<-.12)verdict={cls:'low',label:'Priced Too Low',text:'This is priced '+Math.abs(Math.round(diff*100))+'% lower than similar sold items — you could likely charge more.'};
+      else verdict={cls:'good',label:'Good Price',text:'This is priced right around what similar items have sold for.'};
     }
     var marker=isFinite(current)&&high>low?Math.max(0,Math.min(100,(current-low)/(high-low)*100)):50;
     out.innerHTML='<div class="nexus-market-head"><div><div class="nexus-health-mini-label">Market read</div><h3 style="font-size:19px;margin:8px 0 0">'+escapeHtml(document.getElementById('nexusPriceQuery').value||'Untitled item')+'</h3></div><span class="nexus-verdict '+verdict.cls+'">'+verdict.label+'</span></div>'+
