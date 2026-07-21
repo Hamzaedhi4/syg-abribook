@@ -17530,6 +17530,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-home-actions{display:flex;gap:9px;margin-top:18px}.nexus-quiet-btn{border:1px solid var(--nexus-line);background:rgba(255,255,255,.035);color:var(--nexus-soft);border-radius:999px;padding:9px 14px;font:650 11px var(--sans);cursor:pointer}.nexus-quiet-btn:hover{color:#fff;border-color:rgba(255,255,255,.2)}
   .nexus-shipping{position:fixed;inset:0;z-index:10020;background:var(--nexus-bg);color:var(--nexus-text);display:none;flex-direction:column}.nexus-shipping.show{display:flex}
   .nexus-ship-head{display:flex;align-items:center;gap:13px;padding:18px 24px;border-bottom:1px solid var(--nexus-line);background:#0c111b}.nexus-ship-head h2{margin:0;font-size:16px;flex:1}.nexus-back{border:1px solid var(--nexus-line);border-radius:10px;background:transparent;color:var(--nexus-soft);padding:9px 13px;cursor:pointer}
+  .nexus-newsession{border:1px solid rgba(239,68,68,.28);border-radius:10px;background:transparent;color:#FCA5A5;padding:9px 13px;cursor:pointer;font:600 12px var(--sans);transition:all .15s}.nexus-newsession:hover{background:rgba(239,68,68,.1);border-color:#F87171;color:#fff}
   .nexus-ship-body{display:grid;grid-template-columns:minmax(330px,430px) 1fr;gap:18px;overflow:auto;padding:22px;max-width:1200px;width:100%;margin:0 auto}.nexus-ship-panel{border:1px solid var(--nexus-line);border-radius:17px;background:var(--nexus-panel);padding:18px}.nexus-ship-panel h3{font-size:13px;margin:0 0 14px;color:#fff}
   .nexus-field{margin-bottom:13px}.nexus-field label{display:block;font:700 9.5px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--nexus-soft);margin-bottom:6px}.nexus-input{width:100%;border:1px solid var(--nexus-line);border-radius:10px;background:#090d15;color:#fff;padding:11px 12px;font:600 12px var(--mono);outline:none}.nexus-input:focus{border-color:var(--nexus-blue);box-shadow:0 0 0 3px rgba(109,124,255,.12)}
   .nexus-connect{width:100%;border:0;border-radius:10px;padding:11px;background:var(--nexus-blue);color:#fff;font:750 12px var(--sans);cursor:pointer}.nexus-connect.connected{background:#157f71}
@@ -17580,7 +17581,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </style>
 
 <div class="nexus-shipping" id="nexusShipping">
-  <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Nexus Shipping Station</h2><button class="nexus-back" id="nexusShipBack">← Command</button></div>
+  <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Nexus Shipping Station</h2><button class="nexus-newsession" id="nexusNewSession" title="Clear Incoming, Packed, and the label PDF to start a fresh batch">↻ New packing session</button><button class="nexus-back" id="nexusShipBack">← Command</button></div>
   <div class="nexus-ship-body">
     <div>
       <div class="nexus-ship-panel">
@@ -17855,10 +17856,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   // change recencyWeight() (store comps stay full-weight, matching the pull's
   // "// JULY 2026 MTD SOLD PULL" comment above the HAZ_STORE_PRICES array).
   var HAZ_STORE_SOLD_MONTH_LABEL='Jul 2026';
+  function percentile(sortedAsc,p){
+    if(!sortedAsc.length)return 0;
+    var idx=(sortedAsc.length-1)*p;
+    var lo=Math.floor(idx),hi=Math.ceil(idx);
+    if(lo===hi)return sortedAsc[lo];
+    return sortedAsc[lo]+(sortedAsc[hi]-sortedAsc[lo])*(idx-lo);
+  }
   // Builds one weighted list of every matched real price (trained, store-sold,
-  // live-sold) and steers toward it — leaning toward the stronger end of what's
-  // actually sold, not just a flat average, so the recommendation aims at
-  // maximizing profit while staying grounded in prices that really happened.
+  // live-sold) and steers HARD toward the top of it. The goal is "what's the
+  // highest price this will actually sell for right now", not a flat average
+  // or median — a median gets dragged down by old/low outlier sales even
+  // when the item is clearly reselling higher today.
   function steerRecommendation(recommended,trainedMatches,storeMatches,liveMatches){
     var items=[];
     (trainedMatches||[]).slice(0,5).forEach(function(m){
@@ -17874,16 +17883,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var sorted=items.slice().sort(function(a,b){return a.value-b.value});
     var totalW=sorted.reduce(function(s,i){return s+i.weight},0);
     var avg=sorted.reduce(function(s,i){return s+i.value*i.weight},0)/totalW;
-    var cumulative=0,medianValue=sorted[sorted.length-1].value;
-    for(var i=0;i<sorted.length;i++){cumulative+=sorted[i].weight;if(cumulative>=totalW/2){medianValue=sorted[i].value;break}}
-    var upper=sorted.filter(function(i){return i.value>=medianValue});
+    // Top quartile BY VALUE (not just "above the weighted median") — the
+    // cluster of genuinely strong recent sales, which is what "what can
+    // this sell for right now" should be anchored to.
+    var values=sorted.map(function(i){return i.value});
+    var topThreshold=percentile(values,0.75);
+    var upper=sorted.filter(function(i){return i.value>=topThreshold});
+    if(!upper.length)upper=sorted.slice(-1); // guard: always at least the single highest sale
     var upperW=upper.reduce(function(s,i){return s+i.weight},0);
     var upperAvg=upperW?upper.reduce(function(s,i){return s+i.value*i.weight},0)/upperW:avg;
-    var learnedTarget=avg*.55+upperAvg*.45; // modest lean toward the stronger half of real sales
+    var learnedTarget=avg*.3+upperAvg*.7; // lean hard toward the top cluster, not a flat average
     var signalCount=items.length;
-    var blend=Math.min(.65,.15+.08*signalCount);
+    var blend=Math.min(.85,.25+.1*signalCount); // more real signal = trust the top cluster more
     var steered=retailRound(recommended*(1-blend)+learnedTarget*blend);
-    return {steered:steered,blend:blend,learnedTarget:learnedTarget,avg:avg,upperAvg:upperAvg,items:sorted};
+    return {steered:steered,blend:blend,learnedTarget:learnedTarget,avg:avg,upperAvg:upperAvg,topThreshold:topThreshold,items:sorted};
   }
   // Matches the query against SYG's own confirmed sold history (HAZ_STORE_PRICES,
   // source:'sold' only — real completed sales, not market reference prices).
@@ -18268,6 +18281,47 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var keys=document.getElementById('nexusLabelKeys');
     if(keys&&!keys.value.trim())keys.value=packQueue.map(labelKeyForShipment).join('\n');
   }
+  // Clears every piece of in-progress packing state (Incoming, Packed, the
+  // scan-queue, the loaded label PDF and its match results) so the next
+  // batch starts clean. Leaves the connected eBay working page URL alone —
+  // that's still valid if you're continuing on the same tab.
+  function resetPackingSession(){
+    var total=pulledOrders.length+packedOrders.length+packQueue.length;
+    if(total>0 && !confirm('Start a new packing session? This clears '+pulledOrders.length+' incoming, '+packedOrders.length+' packed, and '+packQueue.length+' scanned shipment'+(packQueue.length===1?'':'s')+' — plus the loaded label PDF. The connected eBay page stays connected.')) return;
+
+    pulledOrders=[];packedOrders=[];packQueue=[];
+    selectedOrder=null;selectedBox=null;
+    labelPdfBytes=null;labelPageTexts=[];labelMapping=[];
+
+    putSetting('shipping_pulled_orders',pulledOrders);
+    putSetting('shipping_packed_orders',packedOrders);
+    putSetting('shipping_pack_queue',packQueue);
+
+    renderOrderQueue();
+    renderQueue();
+
+    document.getElementById('nexusShipSku').value='';
+    document.getElementById('nexusOrderMatch').className='nexus-order-card empty';
+    document.getElementById('nexusOrderMatch').textContent='Waiting for a physical item…';
+    document.getElementById('nexusWeightLb').value='0';
+    document.getElementById('nexusWeightOz').value='';
+    document.querySelectorAll('#nexusBoxGrid .nexus-box').forEach(function(x){x.classList.remove('on')});
+    validateShip();
+
+    document.getElementById('nexusLabelKeys').value='';
+    document.getElementById('nexusLabelMatches').innerHTML='';
+    document.getElementById('nexusCreateSortedPdf').style.display='none';
+    document.getElementById('nexusAnalyzeLabels').disabled=true;
+    document.getElementById('nexusLabelPdf').value='';
+    var drop=document.getElementById('nexusPdfDrop');
+    drop.classList.remove('loaded');
+    drop.querySelector('strong').textContent='Drop the combined eBay label PDF here';
+    drop.querySelector('span').textContent='or click to choose · one label per page · processed only on this computer';
+    document.getElementById('nexusLabelStatus').textContent='Every label must occupy its own PDF page.';
+
+    document.getElementById('nexusPrefillStatus').textContent='Select a matched SKU, package, and weight.';
+    document.getElementById('nexusConnectStatus').textContent='New session started. The connected eBay page is still active — pull orders again when ready.';
+  }
   function labelKeyForShipment(q){
     // Same priority as orderKeyForEntry: name + address match what's actually
     // printed on the label. This flow only captures recipient name + zip
@@ -18457,7 +18511,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var mid=Math.floor(prices.length/2);
     var median=prices.length%2?prices[mid]:(prices[mid-1]+prices[mid])/2;
     var avg=prices.reduce(function(a,b){return a+b},0)/prices.length;
-    var low=prices[0],high=prices[prices.length-1],recommended=retailRound(median);
+    var low=prices[0],high=prices[prices.length-1];
+    // Anchor on the top quartile, not the median — a median gets pulled down
+    // by old/low sales even when the item is clearly reselling higher today.
+    // This is "what's the highest price this will actually sell for", not
+    // "what's the typical price across every sale ever logged".
+    var p75=percentile(prices,0.75);
+    var recommended=retailRound(p75);
     var queryText=document.getElementById('nexusPriceQuery').value.trim();
     var current=parseFloat(String(document.getElementById('nexusCurrentPrice').value||'').replace(/[^0-9.]/g,''));
 
@@ -18469,17 +18529,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var hasSignal=steer.items.length>0;
     var heroPrice=hasSignal?steer.steered:recommended;
 
+    // Compare the current listed price against the actual recommendation
+    // (heroPrice) — not the raw median — since that's the number we're
+    // telling the person to aim for.
     var verdict={cls:'unknown',label:'Add your price',text:'Enter what it\'s currently listed for to see how it compares.'};
     if(isFinite(current)&&current>0){
-      var diff=(current-median)/median;
-      if(diff>.12)verdict={cls:'high',label:'Priced Too High',text:'This is priced '+Math.round(diff*100)+'% higher than similar sold items — it may sit longer before it sells.'};
-      else if(diff<-.12)verdict={cls:'low',label:'Priced Too Low',text:'This is priced '+Math.abs(Math.round(diff*100))+'% lower than similar sold items — you could likely charge more.'};
-      else verdict={cls:'good',label:'Good Price',text:'This is priced right around what similar items have sold for.'};
+      var diff=(current-heroPrice)/heroPrice;
+      if(diff>.12)verdict={cls:'high',label:'Priced Too High',text:'This is priced '+Math.round(diff*100)+'% higher than the recommended price — it may sit longer before it sells.'};
+      else if(diff<-.12)verdict={cls:'low',label:'Priced Too Low',text:'This is priced '+Math.abs(Math.round(diff*100))+'% lower than what the market will likely pay right now — you could very likely charge more.'};
+      else verdict={cls:'good',label:'Good Price',text:'This is priced right around the top of what similar items are actually selling for.'};
     }
     var marker=isFinite(current)&&high>low?Math.max(0,Math.min(100,(current-low)/(high-low)*100)):50;
     var heroSub=hasSignal
-      ? 'Steered toward '+steer.items.length+' real sale'+(steer.items.length===1?'':'s')+' (leaning toward the stronger end) — comps alone suggested '+money(recommended)
-      : 'Built around the median of '+prices.length+' sold comp'+(prices.length===1?'':'s');
+      ? 'Steered toward '+steer.items.length+' real sale'+(steer.items.length===1?'':'s')+' (leaning hard toward the top cluster) — comps alone suggested '+money(recommended)
+      : 'Built around the top quartile of '+prices.length+' sold comp'+(prices.length===1?'':'s')+', not the flat median';
     var trendHtml='';
     if(trend&&trend.enough){
       var dir=trend.pct>3?'up':(trend.pct<-3?'down':'flat');
@@ -18493,7 +18556,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       '<div class="nexus-price-hero"><div class="nexus-price-hero-label">Recommended selling price</div><div class="nexus-price-hero-value">'+money(heroPrice)+'</div><div class="nexus-price-hero-sub">'+heroSub+'</div></div>'+
       '<div class="nexus-price-stats"><div class="nexus-price-stat"><span>Sold comps</span><b>'+prices.length+'</b></div><div class="nexus-price-stat"><span>Median</span><b>'+money(median)+'</b></div><div class="nexus-price-stat"><span>Average</span><b>'+money(avg)+'</b></div><div class="nexus-price-stat"><span>Range</span><b style="font-size:12px">'+money(low)+'–'+money(high)+'</b></div></div>'+
       '<div class="nexus-range"><div class="nexus-range-track"><div class="nexus-range-marker" style="left:'+marker+'%" data-label="'+(isFinite(current)?'Current '+money(current):'Market center')+'"></div></div><div class="nexus-range-labels"><span>Low '+money(low)+'</span><span>Median '+money(median)+'</span><span>High '+money(high)+'</span></div></div>'+
-      '<div class="nexus-price-guidance"><b>'+verdict.text+'</b><br>For a faster sale, consider '+money(retailRound(median*.92))+'. For more margin with a potentially longer wait, consider '+money(retailRound(median*1.08))+'. '+(prices.length<3?'This is a low-confidence read because fewer than three comps were supplied.':'The median is the primary recommendation because it is less distorted by unusually high or low sales.')+'</div>'+
+      '<div class="nexus-price-guidance"><b>'+verdict.text+'</b><br>For a faster sale, consider '+money(retailRound(heroPrice*.92))+'. For maximum margin if you can wait, consider '+money(retailRound(Math.max(heroPrice*1.06,high)))+'. '+(prices.length<3?'This is a low-confidence read because fewer than three comps were supplied.':'The recommendation targets the top of what\'s actually sold, not a flat middle price, so it reflects the strongest price this market will currently bear.')+'</div>'+
       trendHtml;
     document.getElementById('nexusPriceStatus').textContent=prices.length<3?'Low confidence — add at least three relevant sold comps.':'Price check ready · '+prices.length+' sold comps analyzed.';
     try{localStorage.setItem('syg_nexus_last_price_check',JSON.stringify({query:queryText,prices:prices,current:current,recommended:recommended,at:new Date().toISOString()}))}catch(e){}
@@ -18721,6 +18784,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function init(){
     buildHome();buildBoxes();installAuditHooks();openDb();updateAboutNexus();redesignHaz();
     document.getElementById('nexusShipBack').onclick=function(){document.getElementById('nexusShipping').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
+    document.getElementById('nexusNewSession').onclick=resetPackingSession;
     document.getElementById('nexusCommandBack').onclick=function(){document.getElementById('nexusCommand').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
     document.getElementById('nexusPricingBack').onclick=function(){document.getElementById('nexusPricing').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
     document.getElementById('nexusHealthClose').onclick=function(){document.getElementById('nexusHealthModal').classList.remove('show')};
