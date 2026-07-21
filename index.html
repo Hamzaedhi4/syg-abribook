@@ -17536,7 +17536,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-status{font-size:11px;line-height:1.45;color:var(--nexus-soft);margin-top:8px}.nexus-order-card{border:1px solid rgba(50,214,197,.2);border-radius:14px;background:rgba(50,214,197,.055);padding:14px;margin:14px 0}.nexus-order-card.empty{border-color:var(--nexus-line);background:#0b1019;color:var(--nexus-soft)}
   .nexus-order-title{font-weight:750;font-size:13px;margin-bottom:6px}.nexus-order-meta{font:550 11px/1.65 var(--mono);color:var(--nexus-soft)}
   .nexus-oq-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px}.nexus-oq-count{font:700 10px var(--mono);color:var(--nexus-cyan);background:rgba(50,214,197,.12);border:1px solid rgba(50,214,197,.28);border-radius:999px;padding:4px 9px}
-  .nexus-oq-list{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto}
+  .nexus-oq-count.packed{color:var(--nexus-gold);background:rgba(244,187,85,.12);border-color:rgba(244,187,85,.3)}
+  .nexus-oq-subhead{display:flex;align-items:center;justify-content:space-between;font:700 10px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--nexus-soft);margin-bottom:8px}
+  .nexus-oq-list{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;border:1px dashed var(--nexus-line);border-radius:12px;padding:6px;min-height:56px;transition:border-color .15s,background .15s}
+  .nexus-oq-list.nexus-oq-bin-over{border-color:var(--nexus-cyan);background:rgba(50,214,197,.04)}
+  .nexus-oq-list-packed{border-color:rgba(244,187,85,.25)}
+  .nexus-oq-list-packed.nexus-oq-bin-over{border-color:var(--nexus-gold);background:rgba(244,187,85,.05)}
   .nexus-oq-card{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--nexus-line);border-radius:12px;background:#0b1019;padding:10px 11px;transition:opacity .15s,border-color .15s}
   .nexus-oq-card.nexus-oq-dragging{opacity:.35;border-style:dashed}
   .nexus-oq-card.nexus-oq-drag-over{border-color:var(--nexus-cyan);box-shadow:0 0 0 2px rgba(50,214,197,.18)}
@@ -17587,8 +17592,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
         <h3>2 · Arrange the pack order</h3>
-        <div class="nexus-oq-toolbar"><span class="nexus-oq-count" id="nexusOqCount">0 orders</span><span class="nexus-status" style="margin:0">Drag to set the order you'll pack and print labels in.</span></div>
-        <div class="nexus-oq-list" id="nexusOrderQueue"><div class="nexus-oq-empty">Connect the eBay tab, then pull orders — every order on the page will show here as a draggable card, matched by SKU, buyer, order #, and value.</div></div>
+        <div class="nexus-status" style="margin:-2px 0 12px">Drag a card down into <b>Packed</b> once you've physically packed it — the order of the Packed bin becomes the label sort order in step 5.</div>
+        <div class="nexus-oq-subhead"><span>Incoming — pulled from eBay</span><span class="nexus-oq-count" id="nexusOqCount">0</span></div>
+        <div class="nexus-oq-list" id="nexusOrderQueue" data-oq-bin="incoming"><div class="nexus-oq-empty">Connect the eBay tab, then pull orders — every order on the page will show here as a draggable card, matched by SKU, buyer, order #, and value.</div></div>
+        <div class="nexus-oq-subhead" style="margin-top:16px"><span>Packed — sets label order</span><span class="nexus-oq-count packed" id="nexusPackedCount">0</span></div>
+        <div class="nexus-oq-list nexus-oq-list-packed" id="nexusPackedQueue" data-oq-bin="packed"><div class="nexus-oq-empty">Drag orders here once packed — top to bottom becomes the exact label print order.</div></div>
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
         <h3>3 · Scan or enter the physical item SKU</h3>
@@ -17614,7 +17622,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <div class="nexus-ship-panel" style="margin-top:14px">
         <h3>5 · Sort the combined label PDF</h3>
         <div class="nexus-field"><label>Label match keys — one line per packed shipment</label><textarea class="nexus-input" id="nexusLabelKeys" style="min-height:100px;resize:vertical;line-height:1.6" placeholder="Michael Rodriguez 44107 12-11111-22222&#10;Sarah Thompson 07024 12-33333-44444"></textarea></div>
-        <div class="nexus-status" style="margin:-5px 0 10px">Nexus fills this from order data when available. Tracking number or order number gives the strongest match.</div>
+        <div class="nexus-status" style="margin:-5px 0 10px">Auto-filled from the <b>Packed</b> bin's order in step 2 — drag cards there to set this. Order number gives the strongest match.</div>
         <input type="file" id="nexusLabelPdf" accept="application/pdf" style="display:none">
         <div class="nexus-pdf-drop" id="nexusPdfDrop" role="button" tabindex="0">
           <div class="nexus-pdf-drop-icon">⇩</div>
@@ -17707,7 +17715,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     {id:'16x10x5', name:'16 × 10 × 5', l:16,w:10,h:5}
   ];
   var selectedBox=null, selectedOrder=null, packQueue=[];
-  var pulledOrders=[], _oqDragId=null;
+  var pulledOrders=[], packedOrders=[], _oqDragId=null, _oqDragBin=null;
   var lastCalc=null;
   var labelPdfBytes=null,labelPageTexts=[],labelMapping=[];
   var HEALTH_WEIGHTS={
@@ -17839,6 +17847,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var d=new Date(timestampIso);
     return d.toLocaleDateString(undefined,{month:'short',year:'numeric'});
   }
+  // HAZ_STORE_PRICES has no per-sale date (it's a single point-in-time catalog
+  // pull), so there's no real per-item timestamp to show. This is just the
+  // label for when that whole pull was taken — update it whenever HAZ_STORE_PRICES
+  // is refreshed with a new pull. Kept separate from timestamp so it doesn't
+  // change recencyWeight() (store comps stay full-weight, matching the pull's
+  // "// JULY 2026 MTD SOLD PULL" comment above the HAZ_STORE_PRICES array).
+  var HAZ_STORE_SOLD_MONTH_LABEL='Jul 2026';
   // Builds one weighted list of every matched real price (trained, store-sold,
   // live-sold) and steers toward it — leaning toward the stronger end of what's
   // actually sold, not just a flat average, so the recommendation aims at
@@ -17849,7 +17864,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       items.push({value:m.record.confirmed,weight:m.score*1.3*recencyWeight(m.record.timestamp),source:'trained',label:m.record.query,timestamp:m.record.timestamp});
     });
     (storeMatches||[]).slice(0,8).forEach(function(m){
-      items.push({value:m.price,weight:m.score*1.0,source:'store',label:m.title,timestamp:null});
+      items.push({value:m.price,weight:m.score*1.0,source:'store',label:m.title,timestamp:null,monthLabel:HAZ_STORE_SOLD_MONTH_LABEL});
     });
     (liveMatches||[]).slice(0,8).forEach(function(m){
       items.push({value:m.price,weight:m.score*1.15*recencyWeight(m.timestamp),source:'live',label:m.query,timestamp:m.timestamp});
@@ -18233,7 +18248,22 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     return [q.tracking,q.orderNumber,q.recipient,q.zip,q.sku].filter(Boolean).join(' ');
   }
 
-  // ── Pulled eBay order queue (drag to set pack/label order) ─────────
+  // ── Pulled eBay order queue — two bins: Incoming (pulled from eBay) and ──
+  // Packed (drag here once physically packed; its order drives the label sort).
+  var OQ_BIN_CONFIG={
+    incoming:{
+      get list(){return pulledOrders},
+      set list(v){pulledOrders=v},
+      elId:'nexusOrderQueue',countId:'nexusOqCount',
+      emptyHtml:'<div class="nexus-oq-empty">Connect the eBay tab, then pull orders — every order on the page will show here as a draggable card, matched by SKU, buyer, order #, and value.</div>'
+    },
+    packed:{
+      get list(){return packedOrders},
+      set list(v){packedOrders=v},
+      elId:'nexusPackedQueue',countId:'nexusPackedCount',
+      emptyHtml:'<div class="nexus-oq-empty">Drag orders here once packed — top to bottom becomes the exact label print order.</div>'
+    }
+  };
   function requestEbayOrders(){
     var url=document.getElementById('nexusShipUrl').value.trim();
     var status=document.getElementById('nexusConnectStatus');
@@ -18249,19 +18279,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function syncLabelKeysFromOrders(){
     var keys=document.getElementById('nexusLabelKeys');
     if(!keys)return;
-    keys.value=pulledOrders.map(orderKeyForEntry).join('\n');
+    keys.value=packedOrders.map(orderKeyForEntry).join('\n');
   }
-  function renderOrderQueue(){
-    var el=document.getElementById('nexusOrderQueue'),count=document.getElementById('nexusOqCount');
-    count.textContent=pulledOrders.length+(pulledOrders.length===1?' order':' orders');
-    if(!pulledOrders.length){
-      el.innerHTML='<div class="nexus-oq-empty">Connect the eBay tab, then pull orders — every order on the page will show here as a draggable card, matched by SKU, buyer, order #, and value.</div>';
-      return;
-    }
-    el.innerHTML=pulledOrders.map(function(o,i){
+  function renderOqBin(bin){
+    var cfg=OQ_BIN_CONFIG[bin];
+    var el=document.getElementById(cfg.elId),count=document.getElementById(cfg.countId);
+    var arr=cfg.list;
+    count.textContent=String(arr.length);
+    if(!arr.length){el.innerHTML=cfg.emptyHtml;return}
+    el.innerHTML=arr.map(function(o,i){
       var orderLink=o.orderUrl?'<a href="'+escapeHtml(o.orderUrl)+'" target="_blank" rel="noopener">'+escapeHtml(o.orderNumber||'—')+'</a>':escapeHtml(o.orderNumber||'—');
-      return '<div class="nexus-oq-card" data-oq-id="'+escapeHtml(o.id)+'">'
-        +'<div class="nexus-oq-handle" title="Drag to reorder">⠿⠿</div>'
+      var actionBtn=bin==='packed'
+        ?'<button class="nexus-oq-rmv" data-oq-back title="Move back to Incoming">↩</button>'
+        :'<button class="nexus-oq-rmv" data-oq-rmv title="Remove from pack order">✕</button>';
+      return '<div class="nexus-oq-card" data-oq-id="'+escapeHtml(o.id)+'" data-oq-bin="'+bin+'">'
+        +'<div class="nexus-oq-handle" title="Drag to reorder or move bins">⠿⠿</div>'
         +'<div class="nexus-oq-num">'+(i+1)+'</div>'
         +'<div class="nexus-oq-main">'
           +'<div class="nexus-oq-top"><span class="nexus-oq-sku">'+escapeHtml(o.sku||'NO SKU')+'</span><span class="nexus-oq-value">'+escapeHtml(o.value||'')+'</span></div>'
@@ -18269,67 +18301,96 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           +(o.address?'<div class="nexus-oq-addr">'+escapeHtml(o.address)+'</div>':'')
           +'<div class="nexus-oq-order">Order # '+orderLink+'</div>'
         +'</div>'
-        +'<button class="nexus-oq-rmv" data-oq-rmv="'+escapeHtml(o.id)+'" title="Remove from pack order">✕</button>'
+        +actionBtn
       +'</div>';
     }).join('');
+  }
+  function renderOrderQueue(){
+    renderOqBin('incoming');
+    renderOqBin('packed');
     syncLabelKeysFromOrders();
     putSetting('shipping_pulled_orders',pulledOrders);
+    putSetting('shipping_packed_orders',packedOrders);
+  }
+  function removeCard(bin,id){
+    var cfg=OQ_BIN_CONFIG[bin];
+    cfg.list=cfg.list.filter(function(o){return String(o.id)!==id});
+    renderOrderQueue();
+  }
+  function moveCard(fromBin,id,toBin,beforeId){
+    var fromCfg=OQ_BIN_CONFIG[fromBin],toCfg=OQ_BIN_CONFIG[toBin];
+    var fromArr=fromCfg.list.slice();
+    var idx=fromArr.findIndex(function(o){return String(o.id)===id});
+    if(idx===-1)return;
+    var moved=fromArr.splice(idx,1)[0];
+    fromCfg.list=fromArr;
+    var toArr=fromBin===toBin?fromArr:toCfg.list.slice();
+    var insertAt=toArr.length;
+    if(beforeId){
+      var bIdx=toArr.findIndex(function(o){return String(o.id)===beforeId});
+      if(bIdx!==-1)insertAt=bIdx;
+    }
+    toArr.splice(insertAt,0,moved);
+    toCfg.list=toArr;
+    renderOrderQueue();
   }
   function initOrderQueueDrag(){
-    var list=document.getElementById('nexusOrderQueue');
-    list.addEventListener('click',function(ev){
-      var rmv=ev.target.closest('[data-oq-rmv]');
-      if(!rmv)return;
-      var id=rmv.getAttribute('data-oq-rmv');
-      pulledOrders=pulledOrders.filter(function(o){return String(o.id)!==id});
-      renderOrderQueue();
-    });
-    list.addEventListener('mousedown',function(ev){
-      var handle=ev.target.closest('.nexus-oq-handle');
-      if(!handle)return;
-      var card=handle.closest('.nexus-oq-card');
-      if(!card)return;
-      card.setAttribute('draggable','true');
-      card.addEventListener('dragend',function(){card.removeAttribute('draggable')},{once:true});
-    });
-    list.addEventListener('dragstart',function(ev){
-      var card=ev.target.closest('.nexus-oq-card');
-      if(!card||!card.getAttribute('draggable'))return;
-      _oqDragId=card.getAttribute('data-oq-id');
-      card.classList.add('nexus-oq-dragging');
-      ev.dataTransfer.effectAllowed='move';
-      ev.dataTransfer.setData('text/plain',_oqDragId);
-    });
-    list.addEventListener('dragend',function(ev){
-      var card=ev.target.closest('.nexus-oq-card');
-      if(card){card.classList.remove('nexus-oq-dragging');card.removeAttribute('draggable')}
-      list.querySelectorAll('.nexus-oq-drag-over').forEach(function(el){el.classList.remove('nexus-oq-drag-over')});
-      _oqDragId=null;
-    });
-    list.addEventListener('dragover',function(ev){
-      ev.preventDefault();
-      ev.dataTransfer.dropEffect='move';
-      var card=ev.target.closest('.nexus-oq-card');
-      list.querySelectorAll('.nexus-oq-drag-over').forEach(function(el){el.classList.remove('nexus-oq-drag-over')});
-      if(card&&card.getAttribute('data-oq-id')!==_oqDragId)card.classList.add('nexus-oq-drag-over');
-    });
-    list.addEventListener('dragleave',function(ev){
-      var card=ev.target.closest('.nexus-oq-card');
-      if(card)card.classList.remove('nexus-oq-drag-over');
-    });
-    list.addEventListener('drop',function(ev){
-      ev.preventDefault();
-      var target=ev.target.closest('.nexus-oq-card');
-      if(!target||!_oqDragId)return;
-      target.classList.remove('nexus-oq-drag-over');
-      var targetId=target.getAttribute('data-oq-id');
-      if(targetId===_oqDragId)return;
-      var fromIdx=pulledOrders.findIndex(function(o){return String(o.id)===_oqDragId});
-      var toIdx=pulledOrders.findIndex(function(o){return String(o.id)===targetId});
-      if(fromIdx===-1||toIdx===-1)return;
-      var moved=pulledOrders.splice(fromIdx,1)[0];
-      pulledOrders.splice(toIdx,0,moved);
-      renderOrderQueue();
+    ['nexusOrderQueue','nexusPackedQueue'].forEach(function(listId){
+      var list=document.getElementById(listId);
+      list.addEventListener('click',function(ev){
+        var card=ev.target.closest('.nexus-oq-card');
+        if(!card)return;
+        var bin=card.getAttribute('data-oq-bin'),id=card.getAttribute('data-oq-id');
+        if(ev.target.closest('[data-oq-rmv]')){removeCard(bin,id);return}
+        if(ev.target.closest('[data-oq-back]')){moveCard(bin,id,'incoming',null);return}
+      });
+      list.addEventListener('mousedown',function(ev){
+        var handle=ev.target.closest('.nexus-oq-handle');
+        if(!handle)return;
+        var card=handle.closest('.nexus-oq-card');
+        if(!card)return;
+        card.setAttribute('draggable','true');
+        card.addEventListener('dragend',function(){card.removeAttribute('draggable')},{once:true});
+      });
+      list.addEventListener('dragstart',function(ev){
+        var card=ev.target.closest('.nexus-oq-card');
+        if(!card||!card.getAttribute('draggable'))return;
+        _oqDragId=card.getAttribute('data-oq-id');
+        _oqDragBin=card.getAttribute('data-oq-bin');
+        card.classList.add('nexus-oq-dragging');
+        ev.dataTransfer.effectAllowed='move';
+        ev.dataTransfer.setData('text/plain',_oqDragId);
+      });
+      list.addEventListener('dragend',function(ev){
+        var card=ev.target.closest('.nexus-oq-card');
+        if(card){card.classList.remove('nexus-oq-dragging');card.removeAttribute('draggable')}
+        document.querySelectorAll('.nexus-oq-drag-over').forEach(function(el){el.classList.remove('nexus-oq-drag-over')});
+        document.querySelectorAll('.nexus-oq-bin-over').forEach(function(el){el.classList.remove('nexus-oq-bin-over')});
+        _oqDragId=null;_oqDragBin=null;
+      });
+      list.addEventListener('dragover',function(ev){
+        if(!_oqDragId)return;
+        ev.preventDefault();
+        ev.dataTransfer.dropEffect='move';
+        list.classList.add('nexus-oq-bin-over');
+        var card=ev.target.closest('.nexus-oq-card');
+        list.querySelectorAll('.nexus-oq-drag-over').forEach(function(el){el.classList.remove('nexus-oq-drag-over')});
+        if(card&&card.getAttribute('data-oq-id')!==_oqDragId)card.classList.add('nexus-oq-drag-over');
+      });
+      list.addEventListener('dragleave',function(ev){
+        if(ev.target===list)list.classList.remove('nexus-oq-bin-over');
+        var card=ev.target.closest('.nexus-oq-card');
+        if(card)card.classList.remove('nexus-oq-drag-over');
+      });
+      list.addEventListener('drop',function(ev){
+        ev.preventDefault();
+        list.classList.remove('nexus-oq-bin-over');
+        if(!_oqDragId||!_oqDragBin)return;
+        var targetBin=list.getAttribute('data-oq-bin');
+        var targetCard=ev.target.closest('.nexus-oq-card');
+        if(targetCard)targetCard.classList.remove('nexus-oq-drag-over');
+        moveCard(_oqDragBin,_oqDragId,targetBin,targetCard?targetCard.getAttribute('data-oq-id'):null);
+      });
     });
   }
 
@@ -18423,17 +18484,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!el)return;
     if(!queryText){el.innerHTML='';return}
     if(!items.length){
-      el.innerHTML='<div class="nexus-status" style="margin-top:14px">No trained examples, store sales, or live comps matched "'+escapeHtml(queryText)+'" yet — be the first to confirm one.</div>';
+      el.innerHTML='<div class="nexus-status" style="margin-top:14px">No confirmed prices, store sales, or eBay sold prices matched "'+escapeHtml(queryText)+'" yet — be the first to confirm one.</div>';
       return;
     }
-    var sourceLabel={trained:'Trained',store:'Store sold',live:'Live comp'};
+    var sourceLabel={trained:'You confirmed',store:'Your store sale',live:'eBay sold price'};
     var sorted=items.slice().sort(function(a,b){
       var ta=a.timestamp?new Date(a.timestamp).getTime():-1,tb=b.timestamp?new Date(b.timestamp).getTime():-1;
       return tb-ta;
     });
     el.innerHTML='<div class="nexus-health-mini-label" style="margin:16px 0 8px">Feeding this recommendation ('+items.length+')</div>'+
+      '<div class="nexus-status" style="margin:-4px 0 10px">"You confirmed" = a price you personally told Nexus this sold for. "Your store sale" = one of SYG\'s own real completed sales. "eBay sold price" = a real completed eBay sale (any seller) pulled live when you clicked Check live comps.</div>'+
       '<div style="display:grid;gap:6px">'+sorted.slice(0,10).map(function(it){
-        var month=monthLabel(it.timestamp);
+        var month=it.monthLabel||monthLabel(it.timestamp);
         return '<div class="nexus-price-stat" style="text-align:left;display:flex;align-items:center;justify-content:space-between;padding:10px 14px">'+
           '<span style="font:800 9px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--nexus-soft)">'+sourceLabel[it.source]+(month?' · '+month:'')+'</span>'+
           '<b style="font:800 15px var(--mono)">'+money(it.value)+'</b>'+
@@ -18674,7 +18736,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       }
     });
     getSetting('shipping_pack_queue').then(function(q){if(Array.isArray(q)){packQueue=q;renderQueue()}});
-    getSetting('shipping_pulled_orders').then(function(o){if(Array.isArray(o)&&o.length){pulledOrders=o;renderOrderQueue()}});
+    Promise.all([getSetting('shipping_pulled_orders'),getSetting('shipping_packed_orders')]).then(function(r){
+      if(Array.isArray(r[0])&&r[0].length)pulledOrders=r[0];
+      if(Array.isArray(r[1])&&r[1].length)packedOrders=r[1];
+      renderOrderQueue();
+    });
     window.addEventListener('message',function(e){
       if(e.source!==window||!e.data||e.data.source!=='syg-audit-extension')return;
       if(e.data.type==='PREFILL_EBAY_SHIPPING_RESULT'){
@@ -18700,7 +18766,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           return;
         }
         var incoming=Array.isArray(e.data.orders)?e.data.orders:[];
-        pulledOrders=incoming.map(function(o,i){
+        // Don't re-show anything already sitting in the Packed bin — a re-pull
+        // should only bring in orders you haven't dealt with yet.
+        var alreadyPacked={};
+        packedOrders.forEach(function(o){if(o.orderNumber)alreadyPacked[o.orderNumber]=true});
+        pulledOrders=incoming.filter(function(o){return !o.orderNumber||!alreadyPacked[o.orderNumber]}).map(function(o,i){
           return {
             id:(o.orderNumber||('row'+i))+'-'+i,
             sku:o.sku||'',
@@ -18714,7 +18784,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           };
         });
         renderOrderQueue();
-        status.textContent='✓ Pulled '+pulledOrders.length+' order'+(pulledOrders.length===1?'':'s')+' from the connected tab. Drag to set pack order.';
+        status.textContent='✓ Pulled '+pulledOrders.length+' order'+(pulledOrders.length===1?'':'s')+' from the connected tab. Drag into Packed as you pack each one.';
       }
     });
   }
