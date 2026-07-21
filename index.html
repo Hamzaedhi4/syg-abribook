@@ -17622,8 +17622,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
         <h3>5 · Sort the combined label PDF</h3>
-        <div class="nexus-field"><label>Label match keys — one line per packed shipment</label><textarea class="nexus-input" id="nexusLabelKeys" style="min-height:100px;resize:vertical;line-height:1.6" placeholder="Michael Rodriguez 44107 12-11111-22222&#10;Sarah Thompson 07024 12-33333-44444"></textarea></div>
-        <div class="nexus-status" style="margin:-5px 0 10px">Auto-filled from the <b>Packed</b> bin's order in step 2 — drag cards there to set this. Order number gives the strongest match.</div>
+        <div class="nexus-field"><label>Label match keys — one line per packed shipment</label><textarea class="nexus-input" id="nexusLabelKeys" style="min-height:100px;resize:vertical;line-height:1.6" placeholder="Michael Rodriguez 1200 Fulton Pl Cleveland OH 44107&#10;Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
+        <div class="nexus-status" style="margin:-5px 0 10px">Auto-filled from the <b>Packed</b> bin's order in step 2 — drag cards there to set this. Matches by customer name and address, since that's what's actually printed on the label.</div>
         <input type="file" id="nexusLabelPdf" accept="application/pdf" style="display:none">
         <div class="nexus-pdf-drop" id="nexusPdfDrop" role="button" tabindex="0">
           <div class="nexus-pdf-drop-icon">⇩</div>
@@ -18269,7 +18269,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(keys&&!keys.value.trim())keys.value=packQueue.map(labelKeyForShipment).join('\n');
   }
   function labelKeyForShipment(q){
-    return [q.tracking,q.orderNumber,q.recipient,q.zip,q.sku].filter(Boolean).join(' ');
+    // Same priority as orderKeyForEntry: name + address match what's actually
+    // printed on the label. This flow only captures recipient name + zip
+    // (not the full street address), so that's the best available; tracking
+    // is kept as a bonus since it's unique when present post-purchase.
+    return [q.recipient,q.zip,q.tracking].filter(Boolean).join(' ');
   }
 
   // ── Pulled eBay order queue — two bins: Incoming (pulled from eBay) and ──
@@ -18298,7 +18302,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     window.postMessage({source:'syg-audit-page',type:'FETCH_EBAY_ORDERS',requestId:Date.now(),payload:{workingUrl:url}},'*');
   }
   function orderKeyForEntry(o){
-    return [o.orderNumber,o.buyerName,o.zip,o.sku].filter(Boolean).join(' ');
+    return [o.buyerName,o.address].filter(Boolean).join(' ');
   }
   function syncLabelKeysFromOrders(){
     var keys=document.getElementById('nexusLabelKeys');
