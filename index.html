@@ -17618,7 +17618,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-sw-drop{margin-bottom:18px;padding:22px 16px;border:1.5px dashed rgba(50,214,197,.32);border-radius:14px;background:rgba(50,214,197,.035);text-align:center;cursor:pointer;transition:background .15s,border-color .15s}
   .nexus-sw-drop:hover,.nexus-sw-drop.dragover{background:rgba(50,214,197,.09);border-color:var(--nexus-cyan)}
   .nexus-sw-drop-icon{font-size:22px;margin-bottom:6px}.nexus-sw-drop strong{display:block;font-size:12.5px;color:#fff;margin-bottom:4px}.nexus-sw-drop span{display:block;font-size:10.5px;color:var(--nexus-soft)}
-  .nexus-sw-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:16px}
+  .nexus-sw-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:16px}
   .nexus-sw-stat{padding:12px 14px;border:1px solid var(--nexus-line);border-radius:12px;background:var(--nexus-panel)}
   .nexus-sw-stat span{display:block;font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--nexus-soft);margin-bottom:6px}
   .nexus-sw-stat b{font:800 18px var(--mono)}
@@ -17631,7 +17631,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-sw-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
   .nexus-sw-chip{border:1px solid;border-radius:999px;padding:5px 11px;font:600 11px var(--sans);cursor:pointer;background:transparent;transition:opacity .15s}
   .nexus-sw-chip.off{opacity:.35}
-  .nexus-sw-board{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .nexus-sw-board{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
   .nexus-sw-col{border:1px solid var(--nexus-line);border-radius:16px;background:var(--nexus-panel);padding:14px;min-height:200px}
   .nexus-sw-col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .nexus-sw-col-head h3{margin:0;font-size:13px}
@@ -17761,8 +17761,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <div class="nexus-sw-toolbar">
       <input class="nexus-sw-search" id="nexusSwSearch" placeholder="Search SKU or title…">
       <button class="nexus-sw-btn" id="nexusSwSelectAll">Select all filtered</button>
+      <button class="nexus-sw-btn" id="nexusSwSelectAttn">Select all in Needs Attention</button>
       <button class="nexus-sw-btn" id="nexusSwClearSel">✕ Clear selection</button>
       <span class="nexus-oq-count" id="nexusSwSelCount">0 selected</span>
+      <button class="nexus-sw-btn" id="nexusSwSendUnsorted" style="border-color:rgba(50,214,197,.35);color:var(--nexus-cyan)">📤 Send selected to Unsorted</button>
+      <button class="nexus-sw-btn" id="nexusSwBringBack">↩️ Bring selected back</button>
       <button class="nexus-sw-btn" id="nexusSwRefresh">🔄 Refresh live stats</button>
       <button class="nexus-sw-btn" id="nexusSwGenPrompt">🧾 Generate audit prompt</button>
       <button class="nexus-sw-btn" id="nexusSwImportBtn">📥 Import audit results</button>
@@ -17777,7 +17780,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       </div>
       <div class="nexus-sw-col">
         <div class="nexus-sw-col-head"><h3>⚠️ Needs attention</h3><span class="nexus-oq-count packed" id="nexusSwAttnCount">0</span></div>
-        <div class="nexus-sw-list" id="nexusSwAttnList" data-sw-bin="needsAttention"><div class="nexus-sw-empty">Flagged listings land here — pushed into Listing Health's Unsorted strip too.</div></div>
+        <div class="nexus-sw-list" id="nexusSwAttnList" data-sw-bin="needsAttention"><div class="nexus-sw-empty">Flagged listings land here. Select what you want and use "Send selected to Unsorted" when you're ready — nothing pushes to Listing Health automatically.</div></div>
       </div>
     </div>
   </div>
@@ -17813,6 +17816,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <div class="nexus-health-mini-label" style="margin-bottom:16px">Price check</div>
       <div class="nexus-field"><label>Item or search query</label><input class="nexus-input" id="nexusPriceQuery" placeholder="Dell Latitude 5420 i5 16GB 512GB"></div>
       <div class="nexus-field"><label>Current selling price (optional)</label><input class="nexus-input" id="nexusCurrentPrice" inputmode="decimal" placeholder="349.99"></div>
+      <div class="nexus-field"><label>Filter comps by condition</label>
+        <select class="nexus-input" id="nexusConditionFilter" style="cursor:pointer">
+          <option value="">🔍 Auto (guess from item query)</option>
+          <option value="any">Any condition (no filter)</option>
+          <option value="new">New</option>
+          <option value="new-other">Open Box / New Other</option>
+          <option value="certified-refurb">Certified Refurbished</option>
+          <option value="seller-refurb">Seller Refurbished</option>
+          <option value="used">Used</option>
+          <option value="parts">For Parts / Not Working</option>
+        </select>
+      </div>
       <div class="nexus-field"><label>Sold prices — one per line</label><textarea class="nexus-input" id="nexusCompPrices" placeholder="299.99&#10;324.00&#10;349.99&#10;310.00"></textarea></div>
       <div class="nexus-price-btns">
         <button class="nexus-price-btn" id="nexusOpenSold">Open eBay sold</button>
@@ -18346,7 +18361,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function swSetBin(entry,bin){
     if(entry.bin===bin)return;
     entry.bin=bin;
-    if(bin==='needsAttention')swPushToListingHealth(entry); else swPullFromListingHealth(entry);
+    // Pulling back out on a return to Good is safe cleanup — it only removes
+    // something already sitting there, no surprise. Pushing INTO Listing
+    // Health is no longer automatic here — that's now a deliberate, selected,
+    // confirmed action (see swSendToListingHealth / swBringBackFromListingHealth).
+    if(bin==='good')swPullFromListingHealth(entry);
   }
 
   function swImportCsvText(text){
@@ -18374,7 +18393,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         f.structureOk=null;f.structureNotes='';
         f.importedAt=new Date().toISOString();
         swEntries.push(f);
-        if(f.bin==='needsAttention')swPushToListingHealth(f);
         added++;
         byItem[f.itemNumber]=f;
       }
@@ -18463,7 +18481,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       '<div class="nexus-sw-card-main">'+
         '<div class="nexus-sw-card-top"><span class="nexus-sw-card-title">'+escapeHtml(e.title||'Untitled')+'</span><span class="nexus-sw-card-price">'+(e.price!=null?money(e.price):'—')+'</span></div>'+
         '<div class="nexus-sw-card-meta">'+escapeHtml(e.sku||'NO SKU')+(e.location?' · 📍 '+escapeHtml(e.location):'')+(ageStr?' · ⏱ '+ageStr:'')+(interest.length?' · '+interest.join(' · '):'')+'</div>'+
-        '<div class="nexus-sw-flags">'+flagsHtml+'</div>'+
+        '<div class="nexus-sw-flags">'+flagsHtml+(e.pushedEntryId?'<span class="nexus-sw-flag" style="background:rgba(56,189,248,.15);color:#7dd3fc">→ In Listing Health</span>':'')+'</div>'+
         (suggestion?'<div class="nexus-status" style="margin:6px 0 0;color:var(--nexus-gold)">'+escapeHtml(suggestion)+'</div>':'')+
         (e.ebayLink?'<div style="margin-top:6px"><a href="'+e.ebayLink+'" target="_blank" rel="noopener" style="font:700 10px var(--mono);color:var(--nexus-cyan)">eBay ✓</a></div>':'')+
       '</div>'+
@@ -18471,6 +18489,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   var _swDragId=null;
   var swSortByAge=false;
+  function swSendToListingHealth(){
+    var status=document.getElementById('nexusSwStatus');
+    var ids=Object.keys(swSelected);
+    var candidates=ids.length?swEntries.filter(function(e){return swSelected[e.id]&&e.bin==='needsAttention'&&!e.pushedEntryId}):[];
+    if(!ids.length){status.textContent='Select some Needs Attention cards first.';return}
+    if(!candidates.length){status.textContent='Nothing to send — the selected cards are either already in Listing Health, or not in Needs Attention.';return}
+    if(!confirm('Send '+candidates.length+' item'+(candidates.length===1?'':'s')+" to Listing Health's Unsorted strip?"))return;
+    candidates.forEach(function(e){swPushToListingHealth(e)});
+    swSave();
+    swRenderAll();
+    status.textContent='Sent '+candidates.length+' item'+(candidates.length===1?'':'s')+' to Unsorted.';
+  }
+  function swBringBackFromListingHealth(){
+    var status=document.getElementById('nexusSwStatus');
+    var ids=Object.keys(swSelected);
+    var candidates=ids.length?swEntries.filter(function(e){return swSelected[e.id]&&e.pushedEntryId}):[];
+    if(!ids.length){status.textContent='Select some cards first.';return}
+    if(!candidates.length){status.textContent='Nothing to bring back — none of the selected cards are currently in Listing Health.';return}
+    if(!confirm('Bring '+candidates.length+' item'+(candidates.length===1?'':'s')+" back out of Listing Health's Unsorted strip?"))return;
+    candidates.forEach(function(e){swPullFromListingHealth(e)});
+    swSave();
+    swRenderAll();
+    status.textContent='Brought back '+candidates.length+' item'+(candidates.length===1?'':'s')+'.';
+  }
   function swUpdateSelCount(){
     var el=document.getElementById('nexusSwSelCount');
     if(!el)return;
@@ -19192,11 +19234,26 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }else if(trend){
       trendHtml='<div class="nexus-status" style="margin-top:10px">Not enough history yet to show a price trend for this item — Nexus tracks this automatically every time you calculate here.</div>';
     }
-    out.innerHTML='<div class="nexus-market-head"><div><div class="nexus-health-mini-label">Market read</div><h3 style="font-size:19px;margin:8px 0 0">'+escapeHtml(queryText||'Untitled item')+'</h3></div><span class="nexus-verdict '+verdict.cls+'">'+verdict.label+'</span></div>'+
+    var conditionId=nexusResolveConditionId();
+    var conditionLabel=conditionId?(Object.keys(NEXUS_CONDITION_IDS).find(function(k){return NEXUS_CONDITION_IDS[k]===conditionId})||''):'';
+    var conditionText=conditionLabel?conditionLabel.replace('-',' '):'Any / unfiltered';
+    var confidence=prices.length<3?{cls:'low',label:'Low confidence'}:prices.length<6?{cls:'med',label:'Medium confidence'}:{cls:'high',label:'High confidence'};
+    var confColor=confidence.cls==='low'?'#F87171':confidence.cls==='med'?'#FBBF24':'#4ADE80';
+    var badgesHtml='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'+
+      '<span style="font:700 10px var(--mono);padding:3px 9px;border-radius:999px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#FDE68A">Condition: '+escapeHtml(conditionText)+'</span>'+
+      '<span style="font:700 10px var(--mono);padding:3px 9px;border-radius:999px;background:'+confColor+'22;border:1px solid '+confColor+'55;color:'+confColor+'">'+confidence.label+' · '+prices.length+' comp'+(prices.length===1?'':'s')+'</span>'+
+    '</div>';
+    var fastSale=retailRound(heroPrice*.92),maxMargin=retailRound(Math.max(heroPrice*1.06,high));
+    var actionChips='<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+
+      '<div style="flex:1;min-width:140px;padding:10px 12px;border-radius:10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.25)"><div style="font:700 9px var(--mono);text-transform:uppercase;color:#93C5FD;margin-bottom:3px">⚡ For a faster sale</div><div style="font:800 16px var(--mono);color:#fff">'+money(fastSale)+'</div></div>'+
+      '<div style="flex:1;min-width:140px;padding:10px 12px;border-radius:10px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25)"><div style="font:700 9px var(--mono);text-transform:uppercase;color:#86EFAC;margin-bottom:3px">💰 Max margin, can wait</div><div style="font:800 16px var(--mono);color:#fff">'+money(maxMargin)+'</div></div>'+
+    '</div>';
+    out.innerHTML='<div class="nexus-market-head"><div><div class="nexus-health-mini-label">Market read</div><h3 style="font-size:19px;margin:8px 0 0">'+escapeHtml(queryText||'Untitled item')+'</h3>'+badgesHtml+'</div><span class="nexus-verdict '+verdict.cls+'">'+verdict.label+'</span></div>'+
       '<div class="nexus-price-hero"><div class="nexus-price-hero-label">Recommended selling price</div><div class="nexus-price-hero-value">'+money(heroPrice)+'</div><div class="nexus-price-hero-sub">'+heroSub+'</div></div>'+
       '<div class="nexus-price-stats"><div class="nexus-price-stat"><span>Sold comps</span><b>'+prices.length+'</b></div><div class="nexus-price-stat"><span>Median</span><b>'+money(median)+'</b></div><div class="nexus-price-stat"><span>Average</span><b>'+money(avg)+'</b></div><div class="nexus-price-stat"><span>Range</span><b style="font-size:12px">'+money(low)+'–'+money(high)+'</b></div></div>'+
       '<div class="nexus-range"><div class="nexus-range-track"><div class="nexus-range-marker" style="left:'+marker+'%" data-label="'+(isFinite(current)?'Current '+money(current):'Market center')+'"></div></div><div class="nexus-range-labels"><span>Low '+money(low)+'</span><span>Median '+money(median)+'</span><span>High '+money(high)+'</span></div></div>'+
-      '<div class="nexus-price-guidance"><b>'+verdict.text+'</b><br>For a faster sale, consider '+money(retailRound(heroPrice*.92))+'. For maximum margin if you can wait, consider '+money(retailRound(Math.max(heroPrice*1.06,high)))+'. '+(prices.length<3?'This is a low-confidence read because fewer than three comps were supplied.':'The recommendation targets the top of what\'s actually sold, not a flat middle price, so it reflects the strongest price this market will currently bear.')+'</div>'+
+      actionChips+
+      '<div class="nexus-price-guidance" style="margin-top:10px"><b>'+verdict.text+'</b></div>'+
       trendHtml;
     document.getElementById('nexusPriceStatus').textContent=prices.length<3?'Low confidence — add at least three relevant sold comps.':'Price check ready · '+prices.length+' sold comps analyzed.';
     try{localStorage.setItem('syg_nexus_last_price_check',JSON.stringify({query:queryText,prices:prices,current:current,recommended:recommended,at:new Date().toISOString()}))}catch(e){}
@@ -19274,15 +19331,43 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       setTimeout(function(){if(!done){window.removeEventListener('message',listener);resolve({ok:false,error:'The Nexus browser extension did not respond.'})}},timeout||12000);
     });
   }
+  // Mirrors the audit tool popup's PC_CONDITION_IDS / pcGuessConditionKey
+  // exactly — same extension, same eBay LH_ItemCondition= values, so results
+  // stay consistent whether the check comes from the popup or from here.
+  var NEXUS_CONDITION_IDS={'new':1000,'new-other':1500,'certified-refurb':2000,'seller-refurb':2500,'used':3000,'parts':7000};
+  function nexusGuessConditionKey(text){
+    var t=(text||'').toLowerCase();
+    if(/for parts|not working|doesn'?t (power|turn) on|no power|won'?t (power|turn) on|broken|cracked screen|water damage|does not read/.test(t))return 'parts';
+    if(/certified refurb/.test(t))return 'certified-refurb';
+    if(/refurb/.test(t))return 'seller-refurb';
+    if(/open box|new other/.test(t))return 'new-other';
+    if(/\bnew\b/.test(t)&&!/renewed/.test(t))return 'new';
+    if(/\bused\b/.test(t))return 'used';
+    return '';
+  }
+  function nexusResolveConditionId(){
+    var sel=document.getElementById('nexusConditionFilter');
+    var key=sel?sel.value:'';
+    if(key==='')key=nexusGuessConditionKey(document.getElementById('nexusPriceQuery').value);
+    if(!key||key==='any')return null;
+    return NEXUS_CONDITION_IDS[key]||null;
+  }
   async function getLivePricing(){
     var q=document.getElementById('nexusPriceQuery').value.trim();
     if(!q){document.getElementById('nexusPriceQuery').focus();return}
-    var status=document.getElementById('nexusPriceStatus');status.textContent='Checking live sold comps through the Nexus extension…';
-    var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:null},15000);
+    var conditionId=nexusResolveConditionId();
+    var status=document.getElementById('nexusPriceStatus');
+    status.textContent='Checking live sold comps through the extension — this opens a background eBay tab and can take up to ~25-30 seconds…';
+    // Real worst case from the extension's background.js: waitForTabLoad caps
+    // at 20s, plus up to 4 retries x 900ms (~3.6s) waiting for eBay's results
+    // to render, plus IPC/tab overhead — call it ~25s worst case. 32s gives
+    // real margin above that instead of cutting it close.
+    var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:conditionId},32000);
     if(!res.ok){status.textContent=res.error||'Live comp check failed.';return}
     var prices=(res.listings||[]).map(function(x){return x.price}).filter(function(n){return n>0});
     document.getElementById('nexusCompPrices').value=prices.join('\n');
-    status.textContent='Found '+prices.length+' sold comp'+(prices.length===1?'':'s')+' — saving them so they can steer future checks too…';
+    var condLabel=conditionId?(Object.keys(NEXUS_CONDITION_IDS).find(function(k){return NEXUS_CONDITION_IDS[k]===conditionId})||''):'';
+    status.textContent='Found '+prices.length+' sold comp'+(prices.length===1?'':'s')+(condLabel?' (filtered to '+condLabel.replace('-',' ')+')':'')+' — saving them so they can steer future checks too…';
     await saveLiveSoldPrices(q,prices);
     calculatePricing();
   }
@@ -19488,6 +19573,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       swRenderBoard();
       document.getElementById('nexusSwStatus').textContent='Selection cleared.';
     };
+    document.getElementById('nexusSwSelectAttn').onclick=function(){
+      swEntries.filter(function(e){return e.bin==='needsAttention'&&swVisible(e)}).forEach(function(e){swSelected[e.id]=true});
+      swRenderBoard();
+      document.getElementById('nexusSwStatus').textContent='Selected '+Object.keys(swSelected).length+' card'+(Object.keys(swSelected).length===1?'':'s')+' from Needs Attention.';
+    };
+    document.getElementById('nexusSwSendUnsorted').onclick=function(){swSendToListingHealth()};
+    document.getElementById('nexusSwBringBack').onclick=function(){swBringBackFromListingHealth()};
     document.getElementById('nexusSwRefresh').onclick=function(){swRefreshLiveStats()};
     document.getElementById('nexusSwGenPrompt').onclick=function(){swGeneratePrompt()};
     document.getElementById('nexusSwPromptClose').onclick=function(){document.getElementById('nexusSwPromptModal').classList.remove('show')};
@@ -19519,7 +19611,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     document.getElementById('nexusLiveComps').onclick=getLivePricing;
     document.getElementById('nexusOpenSold').onclick=function(){var q=document.getElementById('nexusPriceQuery').value.trim();if(q)window.open('https://www.ebay.com/sch/i.html?_nkw='+encodeURIComponent(q)+'&LH_Sold=1&LH_Complete=1&_sop=13','_blank')};
     document.getElementById('nexusSaveTraining').onclick=saveTrainingExample;
-    document.getElementById('nexusClearPrice').onclick=function(){document.getElementById('nexusPriceQuery').value='';document.getElementById('nexusCurrentPrice').value='';document.getElementById('nexusCompPrices').value='';document.getElementById('nexusPriceResults').innerHTML='<div class="nexus-price-empty"><div><strong>What should this sell for?</strong>Add relevant sold prices, then Nexus will show the market center, range, and a recommended selling price.</div></div>';document.getElementById('nexusPriceStatus').textContent='Use at least three relevant sold prices for a reliable recommendation.';document.getElementById('nexusTrainPrice').value='';document.getElementById('nexusTrainNote').value='';document.getElementById('nexusTrainingHistory').innerHTML='';document.getElementById('nexusTrainStatus').textContent='Calculate a price first, then confirm what it actually sells for.';lastCalc=null};
+    document.getElementById('nexusClearPrice').onclick=function(){document.getElementById('nexusPriceQuery').value='';document.getElementById('nexusCurrentPrice').value='';document.getElementById('nexusCompPrices').value='';document.getElementById('nexusConditionFilter').value='';document.getElementById('nexusPriceResults').innerHTML='<div class="nexus-price-empty"><div><strong>What should this sell for?</strong>Add relevant sold prices, then Nexus will show the market center, range, and a recommended selling price.</div></div>';document.getElementById('nexusPriceStatus').textContent='Use at least three relevant sold prices for a reliable recommendation.';document.getElementById('nexusTrainPrice').value='';document.getElementById('nexusTrainNote').value='';document.getElementById('nexusTrainingHistory').innerHTML='';document.getElementById('nexusTrainStatus').textContent='Calculate a price first, then confirm what it actually sells for.';lastCalc=null};
     document.getElementById('nexusShipSku').addEventListener('keydown',function(e){if(e.key==='Enter')resolveSku()});
     document.getElementById('nexusWeightLb').oninput=validateShip;
     document.getElementById('nexusWeightOz').oninput=validateShip;
