@@ -17719,6 +17719,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
         <h3>Physical pack sequence</h3>
+        <div class="nexus-status" style="margin-bottom:8px">If the eBay page reloads and loses everything you've filled in, use this to resend every weight/size/package you've already entered — no need to redo it by hand.</div>
+        <button class="nexus-price-btn" id="nexusResendAllPrefills" style="margin-bottom:10px">🔁 Resend all filled sizes to eBay</button>
         <div id="nexusPackQueue"><div class="nexus-status">Scanned shipments will appear here in the exact order you packed them.</div></div>
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
@@ -19222,6 +19224,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     matches[_skuFindMatchIdx].scrollIntoView({behavior:'smooth',block:'center'});
   }
 
+  async function resendAllPrefills(){
+    var status=document.getElementById('nexusPrefillStatus');
+    var resendable=packQueue.filter(function(q){return q.payload});
+    var skipped=packQueue.length-resendable.length;
+    if(!resendable.length){
+      status.textContent=skipped?'Nothing to resend — those '+skipped+' item'+(skipped===1?'':'s')+" were packed before this feature existed, so their sizes weren't saved.":'Nothing packed yet this session — pack a few first.';
+      return;
+    }
+    var currentUrl=document.getElementById('nexusShipUrl').value.trim();
+    var btn=document.getElementById('nexusResendAllPrefills');
+    btn.disabled=true;
+    for(var i=0;i<resendable.length;i++){
+      var q=resendable[i];
+      status.textContent='Resending '+(i+1)+' of '+resendable.length+' — '+(q.title||q.sku)+'…';
+      var payload=Object.assign({},q.payload,{workingUrl:currentUrl||q.payload.workingUrl});
+      window.postMessage({source:'syg-audit-page',type:'PREFILL_EBAY_SHIPPING',requestId:Date.now()+'-resend-'+i,payload:payload},'*');
+      await new Promise(function(r){setTimeout(r,450)}); // paced — give each row's fields time to actually update before the next one lands
+    }
+    btn.disabled=false;
+    status.textContent='✓ Resent '+resendable.length+' filled size'+(resendable.length===1?'':'s')+' to eBay.'+(skipped?' ('+skipped+' older item'+(skipped===1?'':'s')+" couldn't be resent — packed before this feature existed.)":'');
+  }
   function prefillShipping(){
     if(!selectedOrder||!selectedBox)return;
     var payload={
@@ -19233,7 +19256,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       packageName:selectedBox.name
     };
     window.postMessage({source:'syg-audit-page',type:'PREFILL_EBAY_SHIPPING',requestId:Date.now(),payload:payload},'*');
-    packQueue.push({sku:payload.sku,title:payload.title||'Matched listing',box:selectedBox.name,at:new Date().toISOString()});
+    packQueue.push({sku:payload.sku,title:payload.title||'Matched listing',box:selectedBox.name,at:new Date().toISOString(),payload:payload});
     putSetting('shipping_pack_queue',packQueue);
     nexusEvent('shipping_prefill_requested',selectedOrder,payload);
     renderQueue();
@@ -19612,8 +19635,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       var t=e.target,tag=(t.tagName||'').toLowerCase();
       var typing=tag==='input'||tag==='textarea'||t.isContentEditable;
       var findOpen=document.getElementById('nexusSkuFind').classList.contains('show');
-      if((e.key==='f'||e.key==='F')&&!typing&&!findOpen&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+      var isShiftF=e.shiftKey&&(e.key==='f'||e.key==='F');
+      var isPlainF=!e.shiftKey&&e.key==='f';
+      if((isShiftF||(isPlainF&&!typing))&&!findOpen&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
         e.preventDefault();
+        if(typing)t.blur(); // Shift+F is deliberate enough to steal focus away from whatever field you were in
         openSkuFind();
       }else if(e.key==='Escape'&&findOpen){
         closeSkuFind();
@@ -19709,6 +19735,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     document.getElementById('nexusPrefill').onclick=prefillShipping;
     document.getElementById('nexusChoosePdf').onclick=function(){document.getElementById('nexusLabelPdf').click()};
     document.getElementById('nexusGenSortPrompt').onclick=buildLabelSortPrompt;
+    document.getElementById('nexusResendAllPrefills').onclick=resendAllPrefills;
     document.getElementById('nexusSortPromptClose').onclick=function(){document.getElementById('nexusSortPromptModal').classList.remove('show')};
     document.getElementById('nexusSortPromptCopy').onclick=function(){
       var ta=document.getElementById('nexusSortPromptText');
