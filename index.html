@@ -17731,10 +17731,25 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           <button class="nexus-price-btn" id="nexusChoosePdf">Choose a different PDF</button>
           <button class="nexus-price-btn primary" id="nexusAnalyzeLabels" disabled>Analyze and match</button>
         </div>
+        <div class="nexus-price-btns" style="margin-top:8px">
+          <button class="nexus-price-btn" id="nexusGenSortPrompt" style="border-color:rgba(50,214,197,.35);color:var(--nexus-cyan)">🧾 Generate Claude sort prompt</button>
+        </div>
+        <div class="nexus-status" style="margin:-5px 0 10px">Skip the local OCR entirely — this builds a prompt from your physical pack sequence. Paste it to Claude along with the eBay label PDF (as an actual upload) and Claude reads the labels directly and tells you the correct print order.</div>
         <div class="nexus-status" id="nexusLabelStatus">Every label must occupy its own PDF page.</div>
         <div id="nexusLabelMatches"></div>
         <button class="nexus-prefill" id="nexusCreateSortedPdf" style="display:none">Download Sorted Label PDF</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="nexus-sw-modal" id="nexusSortPromptModal">
+  <div class="nexus-sw-modal-card">
+    <h3>Label sort prompt — paste this to Claude along with the PDF</h3>
+    <textarea id="nexusSortPromptText" readonly style="min-height:280px"></textarea>
+    <div class="nexus-sw-modal-foot">
+      <button class="nexus-sw-btn" id="nexusSortPromptCopy">Copy</button>
+      <button class="nexus-sw-btn" id="nexusSortPromptClose">Close</button>
     </div>
   </div>
 </div>
@@ -19002,6 +19017,31 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function orderKeyForEntry(o){
     return [o.buyerName,o.address].filter(Boolean).join(' ');
   }
+  function buildLabelSortPrompt(){
+    if(!packedOrders.length){
+      alert('The Packed bin is empty — drag orders there in step 2 to set your physical pack sequence first.');
+      return;
+    }
+    var lines=packedOrders.map(function(o,i){
+      var parts=[(i+1)+'.'];
+      parts.push(o.buyerName||'Unknown buyer');
+      if(o.address)parts.push('— '+o.address);
+      if(o.orderNumber)parts.push('· Order #'+o.orderNumber);
+      if(o.sku)parts.push('· SKU '+o.sku);
+      return parts.join(' ');
+    });
+    var prompt=
+      "I've physically packed these boxes in the order below (position 1 = first box packed, top of the stack). "+
+      "I'm attaching the combined eBay shipping label PDF (one label per page) separately in this message.\n\n"+
+      'Pack sequence:\n'+lines.join('\n')+'\n\n'+
+      'Please:\n'+
+      '1. Read every page of the attached label PDF.\n'+
+      '2. Match each page to a position above by recipient name and address (use the order number too if it\'s printed on the label).\n'+
+      '3. Tell me the final print/arrangement order as a simple list: which PDF page goes in which position, 1 through '+packedOrders.length+'.\n'+
+      "4. Flag anything you can't match confidently instead of guessing.";
+    document.getElementById('nexusSortPromptText').value=prompt;
+    document.getElementById('nexusSortPromptModal').classList.add('show');
+  }
   function syncLabelKeysFromOrders(){
     var keys=document.getElementById('nexusLabelKeys');
     if(!keys)return;
@@ -19648,6 +19688,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     document.getElementById('nexusWeightOz').oninput=validateShip;
     document.getElementById('nexusPrefill').onclick=prefillShipping;
     document.getElementById('nexusChoosePdf').onclick=function(){document.getElementById('nexusLabelPdf').click()};
+    document.getElementById('nexusGenSortPrompt').onclick=buildLabelSortPrompt;
+    document.getElementById('nexusSortPromptClose').onclick=function(){document.getElementById('nexusSortPromptModal').classList.remove('show')};
+    document.getElementById('nexusSortPromptCopy').onclick=function(){
+      var ta=document.getElementById('nexusSortPromptText');
+      ta.select();
+      navigator.clipboard?.writeText(ta.value).catch(function(){});
+      this.textContent='Copied!';
+      var btn=this;setTimeout(function(){btn.textContent='Copy'},1200);
+    };
     document.getElementById('nexusLabelPdf').onchange=function(){if(this.files&&this.files[0])handleLabelFile(this.files[0])};
     var pdfDrop=document.getElementById('nexusPdfDrop');
     pdfDrop.onclick=function(){document.getElementById('nexusLabelPdf').click()};
@@ -19816,7 +19865,7 @@ function buildImportPrompt(){return 'Retrieve all active Shopify products and va
 function buildUpdatePrompt(){return 'Apply only the following verified physical-location reallocations in Shopify.\n\nFor each record: search the exact current SKU; confirm product and variant IDs; change only the final SKU location segment; do not modify price, inventory, title, description, images, status, metafields, or any other field; re-read the variant after updating. If ambiguous, do not update it.\n\nSYG_NEXUS_UPDATES_START\n'+JSON.stringify({changes:state.pendingMoves.map(function(m){var i=state.items.find(function(x){return x.id===m.itemId})||{};return {productId:i.productId||'',variantId:i.variantId||'',title:m.title,currentSku:m.currentSku,requestedSku:m.requestedSku,oldLocation:m.oldLocation,newLocation:m.newLocation}})},null,2)+'\nSYG_NEXUS_UPDATES_END\n\nReturn only:\nSYG_NEXUS_RESULTS_START\n{"results":[{"variantId":"","oldSku":"","finalSku":"","status":"verified|failed|ambiguous","message":""}]}\nSYG_NEXUS_RESULTS_END'}
 function showPrompt(kind){pasteMode=kind;el('nimPromptTitle').textContent=kind==='inventory'?'Import current Shopify locations':'Apply pending reallocations';el('nimPromptHelp').textContent=kind==='inventory'?'Copy this prompt to Claude. Then paste the complete inventory JSON back into Nexus.':'Copy this prompt to Claude. Paste its verification result back; only verified changes become official.';el('nimPromptText').value=kind==='inventory'?buildImportPrompt():buildUpdatePrompt();el('nimPromptModal').classList.add('show')}
 function extractJson(text,start,end){var a=text.indexOf(start),b=text.indexOf(end);var raw=a>=0&&b>a?text.slice(a+start.length,b):text;return JSON.parse(raw.trim())}
-function applyPaste(){var text=el('nimPasteText').value.trim();if(!text)return;try{if(pasteMode==='updates'){applyUpdateResults(extractJson(text,'SYG_NEXUS_RESULTS_START','SYG_NEXUS_RESULTS_END'));return}var data=extractJson(text,'SYG_NEXUS_INVENTORY_START','SYG_NEXUS_INVENTORY_END'),incoming=Array.isArray(data.items)?data.items:[];if(!incoming.length)throw new Error('No inventory items were found');var oldByVariant={},oldBySku={};state.items.forEach(function(i){if(i.variantId)oldByVariant[i.variantId]=i;if(i.sku)oldBySku[i.sku]=i});var duplicates={},seen={};incoming.forEach(function(i){if(i.sku){duplicates[i.sku]=(duplicates[i.sku]||0)+1}});state.items=incoming.map(function(raw){var old=oldByVariant[raw.variantId]||oldBySku[raw.sku]||{};var location=String(raw.location||parseLocation(raw.sku)||'').toUpperCase();seen[location]=1;return Object.assign({},old,{id:old.id||uid('item'),productId:raw.productId||old.productId||'',variantId:raw.variantId||old.variantId||'',title:raw.title||old.title||'',sku:raw.sku||'',officialLocation:location,pendingLocation:old.pendingLocation||'',price:raw.price,quantity:raw.quantity,status:raw.status||'',duplicateSku:raw.sku&&duplicates[raw.sku]>1})});var known={};allCodes().forEach(function(c){known[c]=1});var unknown=Object.keys(seen).filter(function(c){return c&&!known[c]});unknown.forEach(function(c){state.zones.push({id:uid('imported'),name:c,type:'open',x:60+(state.zones.length%7)*160,y:740,w:140,h:80,color:'#f97316',slots:[c]})});state.importHistory.push({at:new Date().toISOString(),count:incoming.length,unknownLocations:unknown});save('inventory_imported');closeModals();toast('Imported '+incoming.length+' items · '+unknown.length+' new locations');render()}catch(e){el('nimPasteHelp').textContent='Could not import: '+e.message;el('nimPasteHelp').style.color='#fb7185'}}
+function applyPaste(){var text=el('nimPasteText').value.trim();if(!text)return;try{if(pasteMode==='updates'){applyUpdateResults(extractJson(text,'SYG_NEXUS_RESULTS_START','SYG_NEXUS_RESULTS_END'));return}var data=extractJson(text,'SYG_NEXUS_INVENTORY_START','SYG_NEXUS_INVENTORY_END'),incoming=Array.isArray(data.items)?data.items:[];if(!incoming.length)throw new Error('No inventory items were found');var oldByVariant={},oldBySku={};state.items.forEach(function(i){if(i.variantId)oldByVariant[i.variantId]=i;if(i.sku)oldBySku[i.sku]=i});var duplicates={},seen={};incoming.forEach(function(i){if(i.sku){duplicates[i.sku]=(duplicates[i.sku]||0)+1}});state.items=incoming.map(function(raw){var old=oldByVariant[raw.variantId]||oldBySku[raw.sku]||{};var location=String(raw.location||parseLocation(raw.sku)||'').toUpperCase();seen[location]=1;return Object.assign({},old,{id:old.id||uid('item'),productId:raw.productId||old.productId||'',variantId:raw.variantId||old.variantId||'',title:raw.title||old.title||'',sku:raw.sku||'',officialLocation:location,pendingLocation:old.pendingLocation||'',price:raw.price,quantity:raw.quantity,status:raw.status||'',duplicateSku:raw.sku&&duplicates[raw.sku]>1})});var known={};allCodes().forEach(function(c){known[c]=1});var unknown=Object.keys(seen).filter(function(c){return c&&!known[c]});var trulyNew=[];unknown.forEach(function(c){var letterMatch=String(c).match(/^([A-Za-z]{1,2})/);var letter=letterMatch?letterMatch[1].toUpperCase():'';var targetZone=letter?state.zones.find(function(z){return String(z.name||'').trim().toUpperCase()===letter}):null;if(targetZone){targetZone.slots=targetZone.slots||[];if(targetZone.slots.indexOf(c)===-1)targetZone.slots.push(c);if(Array.isArray(targetZone.rows))delete targetZone.rows}else{trulyNew.push(c);state.zones.push({id:uid('imported'),name:c,type:'open',x:60+(state.zones.length%7)*160,y:740,w:140,h:80,color:'#f97316',slots:[c]})}});var unknown=trulyNew;state.importHistory.push({at:new Date().toISOString(),count:incoming.length,unknownLocations:unknown});save('inventory_imported');closeModals();toast('Imported '+incoming.length+' items · '+unknown.length+' new locations');render()}catch(e){el('nimPasteHelp').textContent='Could not import: '+e.message;el('nimPasteHelp').style.color='#fb7185'}}
 function parseLocation(sku){var m=String(sku||'').match(/-([A-Za-z]{1,2}\d+(?:\/[A-Za-z0-9]+)?)\s*$/);return m?m[1]:''}
 function applyUpdateResults(data){var results=Array.isArray(data.results)?data.results:[],verified=0;results.forEach(function(r){var item=state.items.find(function(i){return (r.variantId&&i.variantId===r.variantId)||(r.oldSku&&i.sku===r.oldSku)}),move=item&&state.pendingMoves.find(function(m){return m.itemId===item.id});if(!item||!move)return;if(r.status==='verified'&&r.finalSku){item.sku=r.finalSku;item.officialLocation=move.newLocation;item.pendingLocation='';state.movementHistory.push(Object.assign({},move,{verifiedAt:new Date().toISOString(),finalSku:r.finalSku}));state.pendingMoves=state.pendingMoves.filter(function(m){return m.id!==move.id});verified++}else{move.status=r.status||'failed';move.message=r.message||''}});save('update_results');closeModals();toast(verified+' location update'+(verified===1?'':'s')+' verified');render()}
 function closeModals(){document.querySelectorAll('.nim-modal').forEach(function(m){m.classList.remove('show')})}
