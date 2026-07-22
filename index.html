@@ -17599,6 +17599,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-oq-main{flex:1;min-width:0}
   .nexus-oq-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
   .nexus-oq-sku{font:700 10.5px var(--mono);color:#fff;background:rgba(109,124,255,.16);border:1px solid rgba(109,124,255,.3);border-radius:6px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nexus-oq-sku.nexus-sku-copy{cursor:pointer;transition:background .15s,border-color .15s}
+  .nexus-oq-sku.nexus-sku-copy:hover{background:rgba(109,124,255,.32);border-color:rgba(109,124,255,.55)}
+  .nexus-oq-sku.nexus-sku-copy.copied{background:rgba(50,214,197,.35)!important;border-color:var(--nexus-cyan)!important;color:#fff!important}
   .nexus-oq-combined-badge{font:700 10px var(--sans);color:#fbbf24;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.35);border-radius:999px;padding:2px 8px}
   .nexus-oq-card.nexus-oq-combined{border-left:3px solid #fbbf24}
   .nexus-oq-item-row{display:flex;align-items:center;gap:6px;margin:2px 0;flex-wrap:wrap}
@@ -17715,7 +17718,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           <div class="nexus-field"><label>Total ounces</label><input class="nexus-input" id="nexusWeightOz" type="number" min="0" max="15" placeholder="0"></div>
         </div>
         <button class="nexus-prefill" id="nexusPrefill" disabled>Prefill eBay Shipping</button>
-        <div class="nexus-status" id="nexusPrefillStatus">Select a matched SKU, package, and weight.</div>
+        <div class="nexus-status" id="nexusPrefillStatus">Select a matched SKU and a package. Weight is optional.</div>
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
         <h3>Physical pack sequence</h3>
@@ -18926,22 +18929,47 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       card.innerHTML='<div class="nexus-order-title">No order match</div><div class="nexus-order-meta">Pull orders from the connected eBay tab, or import the day’s orders into Listing Health, to resolve '+escapeHtml(sku)+'.</div>';
     }else{
       card.className='nexus-order-card';
-      card.innerHTML='<div class="nexus-order-title">'+escapeHtml(selectedOrder.title||'Matched listing')+'</div><div class="nexus-order-meta">SKU: '+escapeHtml(selectedOrder.sku||'—')+'<br>Price: '+escapeHtml(selectedOrder.price||'—')+'<br>Order/customer details will be returned by the shipping extension.</div>';
+      card.innerHTML='<div class="nexus-order-title">'+escapeHtml(selectedOrder.title||'Matched listing')+'</div><div class="nexus-order-meta">SKU: '+skuChip(selectedOrder.sku)+'<br>Price: '+escapeHtml(selectedOrder.price||'—')+'<br>Order/customer details will be returned by the shipping extension.</div>';
       nexusEvent('shipping_item_scanned',selectedOrder,{sku:sku});
     }
     validateShip();
   }
   function escapeHtml(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
+  // Renders a SKU as a click-to-copy chip. Falls back to plain (non-copyable)
+  // text when there's no real SKU to copy.
+  function skuChip(sku,extraClass){
+    var cls='nexus-oq-sku'+(extraClass?' '+extraClass:'');
+    if(!sku)return '<span class="'+cls+'">NO SKU</span>';
+    return '<span class="'+cls+' nexus-sku-copy" title="Click to copy SKU" data-sku-copy="'+escapeHtml(sku)+'">'+escapeHtml(sku)+'</span>';
+  }
+  function copySkuChip(sku,chipEl){
+    function done(){
+      toast('✓ Copied SKU: '+escapeHtml(sku));
+      if(chipEl){chipEl.classList.add('copied');setTimeout(function(){chipEl.classList.remove('copied')},700)}
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(sku).then(done).catch(function(){fallbackCopySku(sku,done)});
+    }else fallbackCopySku(sku,done);
+  }
+  function fallbackCopySku(sku,cb){
+    var ta=document.createElement('textarea');
+    ta.value=sku;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy')}catch(err){}
+    document.body.removeChild(ta);
+    if(cb)cb();
+  }
   function validateShip(){
-    var oz=parseInt(document.getElementById('nexusWeightOz').value||'0',10);
-    var lb=parseInt(document.getElementById('nexusWeightLb').value||'0',10);
-    document.getElementById('nexusPrefill').disabled=!(selectedOrder&&selectedBox&&(lb>0||oz>0));
+    // Weight is optional — plenty of shipments never get weighed, only
+    // boxed. Dimensions (from the selected package) are the reliable
+    // signal, so that's all that's required to enable the button.
+    document.getElementById('nexusPrefill').disabled=!(selectedOrder&&selectedBox);
   }
   function renderQueue(){
     var el=document.getElementById('nexusPackQueue');
     if(!packQueue.length){el.innerHTML='<div class="nexus-status">Scanned shipments will appear here in the exact order you packed them.</div>';return}
     el.innerHTML=packQueue.map(function(q,i){
-      return '<div class="nexus-queue-row"><div class="nexus-queue-num">'+(i+1)+'</div><div><div class="nexus-queue-name">'+escapeHtml(q.title)+'</div><div class="nexus-queue-meta">'+escapeHtml(q.sku)+' · '+q.box+'</div></div><div class="nexus-queue-state">Sent</div></div>';
+      return '<div class="nexus-queue-row"><div class="nexus-queue-num">'+(i+1)+'</div><div><div class="nexus-queue-name">'+escapeHtml(q.title)+'</div><div class="nexus-queue-meta">'+skuChip(q.sku)+' · '+escapeHtml(q.box)+'</div></div><div class="nexus-queue-state">Sent</div></div>';
     }).join('');
     var keys=document.getElementById('nexusLabelKeys');
     if(keys&&!keys.value.trim())keys.value=packQueue.map(labelKeyForShipment).join('\n');
@@ -18984,7 +19012,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     drop.querySelector('span').textContent='or click to choose · one label per page · processed only on this computer';
     document.getElementById('nexusLabelStatus').textContent='Every label must occupy its own PDF page.';
 
-    document.getElementById('nexusPrefillStatus').textContent='Select a matched SKU, package, and weight.';
+    document.getElementById('nexusPrefillStatus').textContent='Select a matched SKU and a package. Weight is optional.';
     document.getElementById('nexusConnectStatus').textContent='New session started. The connected eBay page is still active — pull orders again when ready.';
   }
   function labelKeyForShipment(q){
@@ -19069,10 +19097,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       var itemsHtml;
       if(Array.isArray(o.items)&&o.items.length>1){
         itemsHtml=o.items.map(function(it){
-          return '<div class="nexus-oq-item-row"><span class="nexus-oq-sku">'+escapeHtml(it.sku||'NO SKU')+'</span>'+(it.qty?' <span class="nexus-oq-qty">×'+escapeHtml(it.qty)+'</span>':'')+'<span class="nexus-oq-value">'+escapeHtml(it.value||'')+'</span></div>';
+          return '<div class="nexus-oq-item-row">'+skuChip(it.sku)+(it.qty?' <span class="nexus-oq-qty">×'+escapeHtml(it.qty)+'</span>':'')+'<span class="nexus-oq-value">'+escapeHtml(it.value||'')+'</span></div>';
         }).join('');
       } else {
-        itemsHtml='<div class="nexus-oq-top"><span class="nexus-oq-sku">'+escapeHtml(o.sku||'NO SKU')+'</span><span class="nexus-oq-value">'+escapeHtml(o.value||'')+'</span></div>';
+        itemsHtml='<div class="nexus-oq-top">'+skuChip(o.sku)+'<span class="nexus-oq-value">'+escapeHtml(o.value||'')+'</span></div>';
       }
       var actionBtn=bin==='packed'
         ?'<button class="nexus-oq-rmv" data-oq-back title="Move back to Incoming">↩</button>'
@@ -19224,37 +19252,79 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     matches[_skuFindMatchIdx].scrollIntoView({behavior:'smooth',block:'center'});
   }
 
+  // For a legacy pack-queue entry saved before .payload existed, rebuild a
+  // real prefill payload from data that WAS already saved, rather than
+  // asking anyone to redo it by hand:
+  //  - box dimensions: the box NAME was always saved (q.box) — look its
+  //    real dimensions back up from the fixed BOXES list. This is always
+  //    available and is what actually drives the eBay package fields.
+  //  - order number: never saved on the entry itself, but the SKU was —
+  //    match it against packedOrders (which persists) to recover it.
+  //  - weight is left out entirely for these older entries (it was never
+  //    saved), which is fine — it's optional, and the extension leaves any
+  //    weight field untouched when the payload simply doesn't include one.
+  function reconstructLegacyPayload(q,currentUrl){
+    var boxMatch=BOXES.find(function(b){return b.name===q.box});
+    var orderMatch=packedOrders.find(function(o){return String(o.sku||'').toUpperCase()===String(q.sku||'').toUpperCase()});
+    return {
+      workingUrl:currentUrl,
+      sku:q.sku,
+      title:q.title,
+      orderNumber:orderMatch?orderMatch.orderNumber:'',
+      dimensions:boxMatch?{length:boxMatch.l,width:boxMatch.w,height:boxMatch.h}:undefined,
+      packageName:boxMatch?boxMatch.name:q.box
+      // weightLb / weightOz deliberately omitted — see note above
+    };
+  }
   async function resendAllPrefills(){
     var status=document.getElementById('nexusPrefillStatus');
-    var resendable=packQueue.filter(function(q){return q.payload});
-    var skipped=packQueue.length-resendable.length;
-    if(!resendable.length){
-      status.textContent=skipped?'Nothing to resend — those '+skipped+' item'+(skipped===1?'':'s')+" were packed before this feature existed, so their sizes weren't saved.":'Nothing packed yet this session — pack a few first.';
+    if(!packQueue.length){
+      status.textContent='Nothing packed yet this session — pack a few first.';
       return;
     }
     var currentUrl=document.getElementById('nexusShipUrl').value.trim();
     var btn=document.getElementById('nexusResendAllPrefills');
     btn.disabled=true;
-    for(var i=0;i<resendable.length;i++){
-      var q=resendable[i];
-      status.textContent='Resending '+(i+1)+' of '+resendable.length+' — '+(q.title||q.sku)+'…';
-      var payload=Object.assign({},q.payload,{workingUrl:currentUrl||q.payload.workingUrl});
+    var fullCount=0,reconstructedCount=0,unrecoverableCount=0;
+    for(var i=0;i<packQueue.length;i++){
+      var q=packQueue[i];
+      var payload,isReconstructed=false;
+      if(q.payload){
+        payload=Object.assign({},q.payload,{workingUrl:currentUrl||q.payload.workingUrl});
+        fullCount++;
+      }else{
+        payload=reconstructLegacyPayload(q,currentUrl);
+        isReconstructed=true;
+        if(!payload.dimensions&&!payload.orderNumber){unrecoverableCount++;continue}
+        reconstructedCount++;
+        q.payload=payload;
+      }
+      status.textContent='Resending '+(i+1)+' of '+packQueue.length+' — '+(q.title||q.sku)+(isReconstructed?' (rebuilt from box + order match)':'')+'…';
       window.postMessage({source:'syg-audit-page',type:'PREFILL_EBAY_SHIPPING',requestId:Date.now()+'-resend-'+i,payload:payload},'*');
-      await new Promise(function(r){setTimeout(r,450)}); // paced — give each row's fields time to actually update before the next one lands
+      await new Promise(function(r){setTimeout(r,450)});
     }
+    putSetting('shipping_pack_queue',packQueue);
     btn.disabled=false;
-    status.textContent='✓ Resent '+resendable.length+' filled size'+(resendable.length===1?'':'s')+' to eBay.'+(skipped?' ('+skipped+' older item'+(skipped===1?'':'s')+" couldn't be resent — packed before this feature existed.)":'');
+    var parts=[];
+    if(fullCount)parts.push(fullCount+' with full saved data');
+    if(reconstructedCount)parts.push(reconstructedCount+' rebuilt from box + order match');
+    if(unrecoverableCount)parts.push(unrecoverableCount+" couldn't be matched to any box or order — skipped");
+    status.textContent='✓ Resent '+(fullCount+reconstructedCount)+' item'+((fullCount+reconstructedCount)===1?'':'s')+' to eBay: '+parts.join('; ')+'.';
   }
   function prefillShipping(){
     if(!selectedOrder||!selectedBox)return;
+    var lb=parseInt(document.getElementById('nexusWeightLb').value||'0',10);
+    var oz=parseInt(document.getElementById('nexusWeightOz').value||'0',10);
     var payload={
       workingUrl:document.getElementById('nexusShipUrl').value.trim(),
       sku:selectedOrder.sku,title:selectedOrder.title,orderNumber:selectedOrder.orderNumber||'',
-      weightLb:parseInt(document.getElementById('nexusWeightLb').value||'0',10),
-      weightOz:parseInt(document.getElementById('nexusWeightOz').value||'0',10),
+      // Dimensions come from the package and are always known. Weight is a
+      // bonus, not a requirement — only send it if it was actually entered,
+      // rather than forcing a fake 0 into eBay's field.
       dimensions:{length:selectedBox.l,width:selectedBox.w,height:selectedBox.h},
       packageName:selectedBox.name
     };
+    if(lb>0||oz>0){payload.weightLb=lb;payload.weightOz=oz}
     window.postMessage({source:'syg-audit-page',type:'PREFILL_EBAY_SHIPPING',requestId:Date.now(),payload:payload},'*');
     packQueue.push({sku:payload.sku,title:payload.title||'Matched listing',box:selectedBox.name,at:new Date().toISOString(),payload:payload});
     putSetting('shipping_pack_queue',packQueue);
@@ -19630,6 +19700,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       else if(e.key==='Enter'){e.preventDefault();jumpToNextSkuFindMatch()}
     });
     document.getElementById('nexusSkuFindClose').onclick=closeSkuFind;
+    document.getElementById('nexusShipping').addEventListener('click',function(e){
+      var chip=e.target.closest('.nexus-sku-copy');
+      if(!chip)return;
+      e.stopPropagation();
+      var sku=chip.getAttribute('data-sku-copy');
+      if(sku)copySkuChip(sku,chip);
+    });
     document.addEventListener('keydown',function(e){
       if(!document.getElementById('nexusShipping').classList.contains('show'))return;
       var t=e.target,tag=(t.tagName||'').toLowerCase();
@@ -19637,7 +19714,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       var findOpen=document.getElementById('nexusSkuFind').classList.contains('show');
       var isShiftF=e.shiftKey&&(e.key==='f'||e.key==='F');
       var isPlainF=!e.shiftKey&&e.key==='f';
-      if((isShiftF||(isPlainF&&!typing))&&!findOpen&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+      // Shift+F always (re)opens and refocuses+reselects the bar, even if it
+      // was already "open" from earlier — that's exactly what fixes the case
+      // where the bar has a value in it and clicking away left it unable to
+      // be refocused. Plain F only opens it fresh (and shouldn't fire again
+      // once it's already open, or it'd steal focus while you're using it).
+      if((isShiftF||(isPlainF&&!typing&&!findOpen))&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
         e.preventDefault();
         if(typing)t.blur(); // Shift+F is deliberate enough to steal focus away from whatever field you were in
         openSkuFind();
@@ -19758,8 +19840,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(!/^https:\/\/([a-z0-9-]+\.)*ebay\.com\//i.test(url)){status.textContent='Use an eBay.com shipping or orders page URL.';return}
       putSetting('shipping_url_'+new Date().toISOString().slice(0,10),url);
       this.textContent='✓ Working page saved';this.classList.add('connected');
-      status.textContent='Connected for today. Nexus will send package details to this eBay workflow through the browser extension.';
       document.getElementById('nexusPullOrders').disabled=false;
+      // The eBay page reloading (or getting reconnected) is exactly the
+      // moment everything you'd already filled in gets wiped out. Rather
+      // than making anyone press "Resend all filled sizes" by hand every
+      // time, just do it automatically as soon as the page connects.
+      if(packQueue.length){
+        status.textContent='Connected — automatically resending '+packQueue.length+' already-packed shipment'+(packQueue.length===1?'':'s')+' from your physical pack sequence…';
+        resendAllPrefills();
+      }else{
+        status.textContent='Connected for today. Nexus will send package details to this eBay workflow through the browser extension.';
+      }
     };
     document.getElementById('nexusPullOrders').onclick=requestEbayOrders;
     document.getElementById('nexusShipUrl').addEventListener('input',function(){
