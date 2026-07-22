@@ -17599,6 +17599,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-oq-main{flex:1;min-width:0}
   .nexus-oq-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
   .nexus-oq-sku{font:700 10.5px var(--mono);color:#fff;background:rgba(109,124,255,.16);border:1px solid rgba(109,124,255,.3);border-radius:6px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nexus-oq-combined-badge{font:700 10px var(--sans);color:#fbbf24;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.35);border-radius:999px;padding:2px 8px}
+  .nexus-oq-card.nexus-oq-combined{border-left:3px solid #fbbf24}
+  .nexus-oq-item-row{display:flex;align-items:center;gap:6px;margin:2px 0;flex-wrap:wrap}
+  .nexus-oq-qty{font:700 10px var(--mono);color:var(--nexus-soft)}
   .nexus-oq-value{font:700 11px var(--mono);color:var(--nexus-gold);flex:none}
   .nexus-oq-name{font:650 12px var(--sans);color:#fff;margin-bottom:2px}
   .nexus-oq-addr{font:500 10px/1.5 var(--mono);color:var(--nexus-soft)}
@@ -19054,18 +19058,32 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     count.textContent=String(arr.length);
     if(!arr.length){el.innerHTML=cfg.emptyHtml;return}
     el.innerHTML=arr.map(function(o,i){
-      var orderLink=o.orderUrl?'<a href="'+escapeHtml(o.orderUrl)+'" target="_blank" rel="noopener">'+escapeHtml(o.orderNumber||'—')+'</a>':escapeHtml(o.orderNumber||'—');
+      var orderNumbers=Array.isArray(o.orderNumbers)&&o.orderNumbers.length?o.orderNumbers:[o.orderNumber].filter(Boolean);
+      var orderLinksHtml=orderNumbers.map(function(num,idx){
+        var url=idx===0?o.orderUrl:''; // scraper only keeps the first sub-order's URL; rest shown as plain text
+        return url?'<a href="'+escapeHtml(url)+'" target="_blank" rel="noopener">'+escapeHtml(num)+'</a>':escapeHtml(num);
+      }).join(', ');
+      var combinedBadge=o.combined?'<span class="nexus-oq-combined-badge" title="One physical package made of '+(o.items?o.items.length:orderNumbers.length)+' combined eBay orders">📦 Combined ×'+(o.items?o.items.length:orderNumbers.length)+'</span>':'';
+      var itemsHtml;
+      if(Array.isArray(o.items)&&o.items.length>1){
+        itemsHtml=o.items.map(function(it){
+          return '<div class="nexus-oq-item-row"><span class="nexus-oq-sku">'+escapeHtml(it.sku||'NO SKU')+'</span>'+(it.qty?' <span class="nexus-oq-qty">×'+escapeHtml(it.qty)+'</span>':'')+'<span class="nexus-oq-value">'+escapeHtml(it.value||'')+'</span></div>';
+        }).join('');
+      } else {
+        itemsHtml='<div class="nexus-oq-top"><span class="nexus-oq-sku">'+escapeHtml(o.sku||'NO SKU')+'</span><span class="nexus-oq-value">'+escapeHtml(o.value||'')+'</span></div>';
+      }
       var actionBtn=bin==='packed'
         ?'<button class="nexus-oq-rmv" data-oq-back title="Move back to Incoming">↩</button>'
         :'<button class="nexus-oq-rmv" data-oq-rmv title="Remove from pack order">✕</button>';
-      return '<div class="nexus-oq-card" data-oq-id="'+escapeHtml(o.id)+'" data-oq-bin="'+bin+'">'
+      return '<div class="nexus-oq-card'+(o.combined?' nexus-oq-combined':'')+'" data-oq-id="'+escapeHtml(o.id)+'" data-oq-bin="'+bin+'">'
         +'<div class="nexus-oq-handle" title="Drag to reorder or move bins">⠿⠿</div>'
         +'<div class="nexus-oq-num">'+(i+1)+'</div>'
         +'<div class="nexus-oq-main">'
-          +'<div class="nexus-oq-top"><span class="nexus-oq-sku">'+escapeHtml(o.sku||'NO SKU')+'</span><span class="nexus-oq-value">'+escapeHtml(o.value||'')+'</span></div>'
+          +(combinedBadge?'<div class="nexus-oq-top">'+combinedBadge+'</div>':'')
+          +itemsHtml
           +'<div class="nexus-oq-name">'+escapeHtml(o.buyerName||'Unknown buyer')+'</div>'
           +(o.address?'<div class="nexus-oq-addr">'+escapeHtml(o.address)+'</div>':'')
-          +'<div class="nexus-oq-order">Order # '+orderLink+'</div>'
+          +'<div class="nexus-oq-order">Order # '+orderLinksHtml+'</div>'
         +'</div>'
         +actionBtn
       +'</div>';
@@ -19770,7 +19788,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
             address:o.address||'',
             zip:o.zip||'',
             orderNumber:o.orderNumber||'',
-            orderUrl:o.orderUrl||''
+            orderUrl:o.orderUrl||'',
+            orderNumbers:Array.isArray(o.orderNumbers)?o.orderNumbers:undefined,
+            items:Array.isArray(o.items)?o.items:undefined,
+            combined:!!o.combined
           };
         });
         renderOrderQueue();
