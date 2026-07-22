@@ -19184,10 +19184,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var bar=document.getElementById('nexusSkuFind');
     bar.classList.add('show');
     var input=document.getElementById('nexusSkuFindInput');
-    input.value='';
-    document.getElementById('nexusSkuFindCount').textContent='';
+    // Keep whatever was searched last time instead of wiping it — select it
+    // all so it's immediately ready to be typed over, or just hit Enter
+    // again to jump through the same matches without retyping anything.
     clearSkuFindHighlights();
-    setTimeout(function(){input.focus()},10); // after the show transition starts
+    if(input.value.trim())runSkuFind();else document.getElementById('nexusSkuFindCount').textContent='';
+    setTimeout(function(){input.focus();input.select()},10); // after the show transition starts
   }
   function closeSkuFind(){
     document.getElementById('nexusSkuFind').classList.remove('show');
@@ -19610,7 +19612,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       var t=e.target,tag=(t.tagName||'').toLowerCase();
       var typing=tag==='input'||tag==='textarea'||t.isContentEditable;
       var findOpen=document.getElementById('nexusSkuFind').classList.contains('show');
-      if(e.key==='f'&&!typing&&!findOpen&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+      if((e.key==='f'||e.key==='F')&&!typing&&!findOpen&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
         e.preventDefault();
         openSkuFind();
       }else if(e.key==='Escape'&&findOpen){
