@@ -9692,6 +9692,27 @@ Before making changes: confirm exactly one product/variant matches this SKU, rea
 After making changes: re-read the product, confirm the new values were actually saved, and report the old values, new values, and verification result.`;
 }
 
+// "For Sale Since" / staleness helpers — local to this script block since
+// pcBatchCardHtml lives in a separate <script> from the Nexus IIFE (which
+// has its own copy of this same logic for Store-Wide, using the same
+// PC_AGING_DAYS threshold so both systems agree on what counts as stale).
+// startDate/date strings come either from a live extension refresh or from
+// eBay's own "Start time" field (e.g. "Jun 16, 2026 03:25:49 PM PDT") —
+// the trailing timezone abbreviation is stripped since JS Date can't parse it.
+var PC_AGING_DAYS=90;
+function pcParseDate(s){
+  if(!s)return null;
+  var cleaned=String(s).replace(/ [A-Z]{2,4}$/,'');
+  var d=new Date(cleaned);
+  return isNaN(d.getTime())?null:d;
+}
+function pcForSaleSince(entry){ return pcParseDate(entry.startDate||entry.date); }
+function pcAgeDays(entry){
+  var d=pcForSaleSince(entry);
+  if(!d)return null;
+  return Math.floor((Date.now()-d.getTime())/86400000);
+}
+
 function pcBatchCardHtml(e){
   if(e.status === 'error'){
     const errLinks = [];
@@ -9739,6 +9760,8 @@ function pcBatchCardHtml(e){
   if(e.sku) metaParts.push(pcCopySpan(e.sku, 'SKU'));
   if(e.condition) metaParts.push(e.condition);
   if(e.price) metaParts.push(pcCopySpan(e.price, 'price'));
+  const forSaleSinceDate = pcForSaleSince(e);
+  if(forSaleSinceDate) metaParts.push(`For Sale Since: ${forSaleSinceDate.toLocaleDateString()}`);
 
   const interestParts = [];
   if(typeof e.views === 'number') interestParts.push(`👀 ${e.views} views`);
@@ -9748,8 +9771,16 @@ function pcBatchCardHtml(e){
   const interestLine = interestParts.length ? `<div class="pc-board-card-interest">${interestParts.join(' · ')}</div>` : '';
   const noInterestHint = (e.ebayLink && e.watchers === null && e.sold === null && e.verifiedAt)
     ? `<div class="pc-board-card-interest muted">No watcher/sold data found on the listing page</div>` : '';
-  const staleHint = (typeof e.watchers === 'number' && e.watchers === 0 && (e.sold === 0 || e.sold === null))
-    ? `<div class="pc-batch-tag warn" title="No watchers, no sales — candidate for a price cut or liquidation">📉 No movement</div>` : '';
+  // Auto-applied "sticker" — only fires once there's been real time (SW_AGING_DAYS)
+  // with zero watchers and zero/unknown sales, not just a zero-watcher snapshot
+  // the moment it's checked. This is the same signal that now costs health
+  // points in issuesFor() — the sticker and the score always agree.
+  const pcStaleAge = pcAgeDays(e);
+  const pcIsStale = pcStaleAge != null && pcStaleAge >= PC_AGING_DAYS && typeof e.watchers === 'number' && e.watchers === 0 && (e.sold === 0 || e.sold == null);
+  const staleHint = pcIsStale
+    ? `<div class="pc-tag-sticker" style="background:#F8717122;border-color:#F8717166;color:#F87171;cursor:default;display:inline-flex;margin-top:6px" title="No watchers or sales in ${pcStaleAge} days">🕓 Stale · ${pcStaleAge}d no movement</div>`
+    : (typeof e.watchers === 'number' && e.watchers === 0 && (e.sold === 0 || e.sold == null)
+      ? `<div class="pc-batch-tag warn" title="No watchers, no sales right now">📉 No movement</div>` : '');
 
   return `<div class="pc-board-card" draggable="true" data-id="${e.id}">
     <button class="pc-card-delete" data-delete-id="${e.id}" title="Delete card">✕</button>
@@ -9988,6 +10019,7 @@ function pcRenderBatch(){
         list[idx].sold = (typeof res.sold === 'number') ? res.sold : null;
         list[idx].views = (typeof res.views === 'number') ? res.views : null;
         list[idx].viewedToday = (typeof res.viewedToday === 'number') ? res.viewedToday : null;
+        if(res.startDate) list[idx].startDate = res.startDate;
         list[idx].verifiedAt = new Date().toISOString();
         pcSaveBatch(list);
         pcRenderBatch();
@@ -17652,6 +17684,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-sw-card-title{font:600 12px var(--sans);color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .nexus-sw-card-price{font:700 11px var(--mono);color:var(--nexus-gold);flex:none}
   .nexus-sw-card-meta{font:500 10px var(--mono);color:var(--nexus-soft);margin-bottom:5px}
+  /* ── Health pulse — calm green breathing dot for healthy cards, a sharper
+     faster red pulse plus a tinted card background for flagged ones, so a
+     flagged card visually disrupts the row instead of just being another
+     color in the list. */
+  .nexus-health-dot{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block}
+  .nexus-health-dot.healthy{background:#34d399;animation:nexusPulseCalm 2.4s ease-in-out infinite}
+  .nexus-health-dot.flagged{background:#f87171;animation:nexusPulseAlert .9s ease-in-out infinite}
+  @keyframes nexusPulseCalm{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes nexusPulseAlert{0%,100%{transform:scale(1)}50%{transform:scale(1.55)}}
+  .nexus-sw-card.sw-flagged{background:rgba(248,113,113,.07)}
   .nexus-sw-flags{display:flex;flex-wrap:wrap;gap:4px}
   .nexus-sw-flag{font:700 9px var(--mono);padding:2px 6px;border-radius:6px;background:rgba(248,113,113,.15);color:#fca5a5}
   .nexus-sw-flag.ok{background:rgba(52,211,153,.15);color:#6ee7c4}
@@ -17918,7 +17960,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     title_wrong:15,title_missing:8,title_structure:3,
     metafield_wrong:15,metafield_missing:8,metafield_duplicate:8,
     condition_wrong:30,condition_misplaced:8,spec_wrong:15,spec_missing:8,
-    price_high:15,price_low:15,no_ebay:8,ebay_mismatch:15,photo_issue:8,archived_dup:30
+    price_high:15,price_low:15,no_ebay:8,ebay_mismatch:15,photo_issue:8,archived_dup:30,
+    stale:15
   };
 
   function openDb(){
@@ -18481,10 +18524,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var clean=total-flagged;
     el.innerHTML=
       '<div class="nexus-sw-stat"><span>Total</span><b>'+total+'</b></div>'+
-      '<div class="nexus-sw-stat" style="border-color:rgba(248,113,113,.3)"><span style="color:#f87171">Needs attention</span><b style="color:#f87171">'+flagged+'</b></div>'+
+      '<div class="nexus-sw-stat" style="border-color:rgba(248,113,113,.3)"><span style="color:#f87171"><span class="nexus-health-dot flagged" style="margin-right:5px;vertical-align:1px"></span>Needs attention</span><b style="color:#f87171">'+flagged+'</b></div>'+
       '<div class="nexus-sw-stat" style="border-color:rgba(251,191,36,.3)"><span style="color:#fbbf24">No movement</span><b style="color:#fbbf24">'+noMove+'</b></div>'+
       '<div class="nexus-sw-stat" style="border-color:rgba(249,115,22,.3)"><span style="color:#f97316">Aging 90+ days</span><b style="color:#f97316">'+aging+'</b></div>'+
-      '<div class="nexus-sw-stat" style="border-color:rgba(52,211,153,.3)"><span style="color:#34d399">Good</span><b style="color:#34d399">'+clean+'</b></div>';
+      '<div class="nexus-sw-stat" style="border-color:rgba(52,211,153,.3)"><span style="color:#34d399"><span class="nexus-health-dot healthy" style="margin-right:5px;vertical-align:1px"></span>Good</span><b style="color:#34d399">'+clean+'</b></div>';
   }
   function swCardHtml(e){
     var color=swCategoryColor(e.category);
@@ -18500,12 +18543,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(typeof e.sold==='number')interest.push(e.sold+' sold');
     var ageDays=swAgeDays(e);
     var ageStr=ageDays!=null?swAgeLabel(ageDays):'';
+    var startDateObj=e.startDate?swParseDate(e.startDate):null;
+    var forSaleSinceStr=startDateObj?'For Sale Since: '+startDateObj.toLocaleDateString():'';
     var suggestion=swSuggestionFor(e);
-    return '<div class="nexus-sw-card" data-sw-id="'+e.id+'" style="border-left-color:'+color+'">'+
+    var isFlagged=e.bin==='needsAttention';
+    var healthDot='<span class="nexus-health-dot '+(isFlagged?'flagged':'healthy')+'" title="'+(isFlagged?'Flagged — needs attention':'Healthy')+'"></span>';
+    return '<div class="nexus-sw-card'+(isFlagged?' sw-flagged':'')+'" data-sw-id="'+e.id+'" style="border-left-color:'+color+'">'+
       '<input type="checkbox" class="nexus-sw-check" data-sw-check="'+e.id+'" '+checked+' style="margin-top:2px">'+
       '<div class="nexus-sw-card-main">'+
-        '<div class="nexus-sw-card-top"><span class="nexus-sw-card-title">'+escapeHtml(e.title||'Untitled')+'</span><span class="nexus-sw-card-price">'+(e.price!=null?money(e.price):'—')+'</span></div>'+
-        '<div class="nexus-sw-card-meta">'+escapeHtml(e.sku||'NO SKU')+(e.location?' · 📍 '+escapeHtml(e.location):'')+(ageStr?' · ⏱ '+ageStr:'')+(interest.length?' · '+interest.join(' · '):'')+'</div>'+
+        '<div class="nexus-sw-card-top">'+healthDot+'<span class="nexus-sw-card-title">'+escapeHtml(e.title||'Untitled')+'</span><span class="nexus-sw-card-price">'+(e.price!=null?money(e.price):'—')+'</span></div>'+
+        '<div class="nexus-sw-card-meta">'+escapeHtml(e.sku||'NO SKU')+(forSaleSinceStr?' · '+forSaleSinceStr:'')+(e.location?' · 📍 '+escapeHtml(e.location):'')+(ageStr?' · ⏱ '+ageStr:'')+(interest.length?' · '+interest.join(' · '):'')+'</div>'+
         '<div class="nexus-sw-flags">'+flagsHtml+(e.pushedEntryId?'<span class="nexus-sw-flag" style="background:rgba(56,189,248,.15);color:#7dd3fc">→ In Listing Health</span>':'')+'</div>'+
         (suggestion?'<div class="nexus-status" style="margin:6px 0 0;color:var(--nexus-gold)">'+escapeHtml(suggestion)+'</div>':'')+
         (e.ebayLink?'<div style="margin-top:6px"><a href="'+e.ebayLink+'" target="_blank" rel="noopener" style="font:700 10px var(--mono);color:var(--nexus-cyan)">eBay ✓</a></div>':'')+
@@ -18657,6 +18704,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(!r)return;
       if(typeof r.watchers==='number')e.watchers=r.watchers;
       if(typeof r.sold==='number')e.sold=r.sold;
+      if(r.startDate)e.startDate=r.startDate;
       swSetBin(e,swBinFor(e));
       updated++;
     });
@@ -18665,6 +18713,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     status.textContent='Refreshed '+updated+' listing'+(updated===1?'':'s')+'.';
   }
 
+  // Reads the "For Sale Since" date off an entry — startDate is the Store-
+  // Wide/live-extension field name, date is what swPushToListingHealth sets
+  // when a card crosses over from Store-Wide. swParseDate already strips the
+  // trailing timezone abbreviation eBay's own "Start time" field uses
+  // (e.g. "Jun 16, 2026 03:25:49 PM PDT"), so both sources parse the same way.
+  function pcForSaleSince(entry){ return swParseDate(entry.startDate||entry.date); }
+  function pcAgeDays(entry){
+    var d=pcForSaleSince(entry);
+    if(!d)return null;
+    return Math.floor((Date.now()-d.getTime())/86400000);
+  }
   function issuesFor(entry){
     var issues=[];
     if(!entry.sku)issues.push({code:'metafield_missing',label:'SKU is missing',points:15});
@@ -18675,6 +18734,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       issues.push({code:entry.ebayUnverified?'ebay_mismatch':'no_ebay',label:entry.ebayUnverified?'eBay match is unverified':'No SKU-confirmed eBay listing',points:entry.ebayUnverified?15:8});
     }
     if(entry.status==='error')issues.push({code:'spec_wrong',label:'Import could not identify the listing',points:30});
+    // Automatic staleness — same threshold and "zero watchers, zero (or
+    // unknown) sold" test Store-Wide already uses, now applied here too so
+    // a stale listing actually costs health points instead of only showing
+    // an instantaneous "no movement right now" hint with no time dimension.
+    var ageDays=pcAgeDays(entry);
+    var stagnant=(typeof entry.watchers==='number'&&entry.watchers===0&&(entry.sold===0||entry.sold==null));
+    if(ageDays!=null&&ageDays>=SW_AGING_DAYS&&stagnant)issues.push({code:'stale',label:'No movement in '+ageDays+' day'+(ageDays===1?'':'s')+' — for sale since '+pcForSaleSince(entry).toLocaleDateString(),points:HEALTH_WEIGHTS.stale||15});
     return issues;
   }
   function healthFor(entry){
@@ -18796,7 +18862,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.click();card.style.boxShadow='0 0 0 3px #A78BFA,0 16px 45px rgba(0,0,0,.35)';setTimeout(function(){card.style.boxShadow=''},2400)}
     },100);
   }
-  function statHtml(value,label){return '<div class="nexus-stat"><b>'+value+'</b><span>'+label+'</span></div>'}
+  function statHtml(value,label){
+    var dot='';
+    if(label==='Healthy')dot='<span class="nexus-health-dot healthy" style="margin-right:5px;vertical-align:1px"></span>';
+    else if(label==='Needs attention'||label==='Unhealthy')dot='<span class="nexus-health-dot flagged" style="margin-right:5px;vertical-align:1px"></span>';
+    return '<div class="nexus-stat"><b>'+value+'</b><span>'+dot+label+'</span></div>';
+  }
   function defectLabel(code){
     var labels={desc_wrong:'Incorrect descriptions',desc_missing:'Incomplete descriptions',desc_structure:'Description structure',title_wrong:'Incorrect titles',title_missing:'Incomplete titles',title_structure:'Title structure',metafield_wrong:'Incorrect metafields',metafield_missing:'Missing metafields',metafield_duplicate:'Duplicate metafields',condition_wrong:'Condition accuracy',condition_misplaced:'Condition placement',spec_wrong:'Incorrect specifications',spec_missing:'Missing specifications',price_high:'Overpricing',price_low:'Pricing gaps',no_ebay:'Missing eBay listings',ebay_mismatch:'eBay mismatches',photo_issue:'Image issues',archived_dup:'Duplicate listings'};
     return labels[code]||code.replace(/_/g,' ');
@@ -19966,8 +20037,14 @@ var defaultZones=[
  {id:'h',name:'H',type:'section',x:1235,y:110,w:105,h:105,color:'#a78bfa',capacity:8,rows:[{code:'H1',kind:'open',count:1},{code:'H2',kind:'open',count:1},{code:'H3',kind:'open',count:1},{code:'H4',kind:'open',count:1}],slots:['H1','H2','H3','H4']},
  {id:'l',name:'L',type:'shelf',x:270,y:330,w:510,h:75,color:'#f4bb55',slots:Array.from({length:24},function(_,i){return 'L'+(i+1)})},
  {id:'k',name:'K',type:'shelf',x:270,y:420,w:510,h:75,color:'#f4bb55',slots:Array.from({length:24},function(_,i){return 'K'+(i+1)})},
- {id:'j',name:'J',type:'shelf',x:830,y:330,w:510,h:75,color:'#fb7185',slots:Array.from({length:24},function(_,i){return 'J'+(i+1)})},
- {id:'i',name:'I',type:'shelf',x:830,y:420,w:510,h:75,color:'#fb7185',slots:Array.from({length:24},function(_,i){return 'I'+(i+1)})},
+ {id:'j',name:'J',type:'section',x:830,y:330,w:510,h:75,color:'#fb7185',capacity:1,
+  rows:[{code:'J-R1',kind:'slots',count:15},{code:'J-R2',kind:'slots',count:15},{code:'J-R3',kind:'slots',count:15},{code:'J-R4',kind:'slots',count:15}],
+  numberMode:'continuous',seqPrefix:'J',seqStart:20,
+  slots:Array.from({length:60},function(_,i){return 'J'+(20+i)})},
+ {id:'i',name:'I',type:'section',x:830,y:420,w:510,h:75,color:'#fb7185',capacity:1,
+  rows:[{code:'I-R1',kind:'bins',count:2},{code:'I-R2',kind:'bins',count:2},{code:'I-R3',kind:'bins',count:2},{code:'I-EMPTY',kind:'open',count:1}],
+  numberMode:'continuous',seqPrefix:'I',seqStart:1,
+  slots:Array.from({length:6},function(_,i){return 'I'+(i+1)}).concat(['I-EMPTY'])},
  {id:'back',name:'Back Area',type:'open',x:1080,y:585,w:260,h:150,color:'#94a3b8',slots:['BACK/OVERSIZED','BACK/LOOSE','BACK/RETURNS']},
  {id:'unlocated',name:'Unlocated',type:'open',x:40,y:610,w:220,h:110,color:'#f97316',slots:['UNLOCATED']}
 ];
@@ -19978,7 +20055,45 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function uid(prefix){return prefix+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function load(){try{var saved=JSON.parse(localStorage.getItem(KEY));if(saved&&Array.isArray(saved.zones)){state=Object.assign(state,saved)}}catch(e){};ensureState()}
-function ensureState(){state.items=Array.isArray(state.items)?state.items:[];state.pendingMoves=Array.isArray(state.pendingMoves)?state.pendingMoves:[];state.movementHistory=Array.isArray(state.movementHistory)?state.movementHistory:[];state.importHistory=Array.isArray(state.importHistory)?state.importHistory:[];state.zones=Array.isArray(state.zones)&&state.zones.length?state.zones:clone(defaultZones);if((+state.version||1)<3){'ABCDEFGH'.split('').forEach(function(letter){var z=state.zones.find(function(zone){return String(zone.name||'').toUpperCase()===letter});if(!z)return;if(!Array.isArray(z.rows)||z.rows.length!==4){var oldSlots=(z.slots||[]).slice();z.rows=[1,2,3,4].map(function(n){var code=letter+n,children=oldSlots.filter(function(loc){return String(loc).toUpperCase().indexOf(code+'/')===0}),allBins=children.length&&children.every(function(loc){return /\/BIN\d+$/i.test(loc)});return {code:code,kind:children.length?(allBins?'bins':'slots'):'open',count:Math.max(1,children.length)}})}z.capacity=z.capacity||8;z.type='section';z.slots=rowsToSlots(z.rows)});state.version=3;try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}}
+function ensureState(){state.items=Array.isArray(state.items)?state.items:[];state.pendingMoves=Array.isArray(state.pendingMoves)?state.pendingMoves:[];state.movementHistory=Array.isArray(state.movementHistory)?state.movementHistory:[];state.importHistory=Array.isArray(state.importHistory)?state.importHistory:[];state.zones=Array.isArray(state.zones)&&state.zones.length?state.zones:clone(defaultZones);if((+state.version||1)<3){'ABCDEFGH'.split('').forEach(function(letter){var z=state.zones.find(function(zone){return String(zone.name||'').toUpperCase()===letter});if(!z)return;if(!Array.isArray(z.rows)||z.rows.length!==4){var oldSlots=(z.slots||[]).slice();z.rows=[1,2,3,4].map(function(n){var code=letter+n,children=oldSlots.filter(function(loc){return String(loc).toUpperCase().indexOf(code+'/')===0}),allBins=children.length&&children.every(function(loc){return /\/BIN\d+$/i.test(loc)});return {code:code,kind:children.length?(allBins?'bins':'slots'):'open',count:Math.max(1,children.length)}})}z.capacity=z.capacity||8;z.type='section';z.slots=rowsToSlots(z.rows)});state.version=3;try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+  // v4: J and I were generic flat 24-slot placeholders — rebuild them to match
+  // the real shelves (J = 4 rows of 15 continuously-numbered slots starting
+  // at J20; I = 3 rows of 6 bins plus a fixed vacant bottom row). Only
+  // touches these two zones, and only overwrites their rows/numbering — any
+  // items already assigned to J/I locations by name are unaffected as long
+  // as those exact codes still exist below.
+  if((+state.version||1)<4){
+    var jz=state.zones.find(function(zone){return String(zone.name||'').toUpperCase()==='J'});
+    if(jz){
+      jz.type='section';jz.capacity=jz.capacity||1;
+      jz.rows=[{code:'J-R1',kind:'slots',count:15},{code:'J-R2',kind:'slots',count:15},{code:'J-R3',kind:'slots',count:15},{code:'J-R4',kind:'slots',count:15}];
+      jz.numberMode='continuous';jz.seqPrefix='J';jz.seqStart=20;
+      jz.slots=[].concat.apply([],seqLocationsForRows(jz.rows,'J',20));
+    }
+    var iz=state.zones.find(function(zone){return String(zone.name||'').toUpperCase()==='I'});
+    if(iz){
+      iz.type='section';iz.capacity=iz.capacity||1;
+      iz.rows=[{code:'I-R1',kind:'bins',count:2},{code:'I-R2',kind:'bins',count:2},{code:'I-R3',kind:'bins',count:2},{code:'I-EMPTY',kind:'open',count:1}];
+      iz.numberMode='continuous';iz.seqPrefix='I';iz.seqStart=1;
+      iz.slots=[].concat.apply([],seqLocationsForRows(iz.rows,'I',1));
+    }
+    state.version=4;
+    try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+  }
+  // v5: fixes a mistake in the v4 seed above — I's three tote rows were set
+  // to 6 bins each (18 total) instead of matching the photo (2 totes per
+  // row, 6 total). Only touches I, and only if it still has the old shape.
+  if((+state.version||1)<5){
+    var iz2=state.zones.find(function(zone){return String(zone.name||'').toUpperCase()==='I'});
+    if(iz2&&Array.isArray(iz2.rows)&&iz2.rows.length&&iz2.rows.every(function(r){return r.kind==='open'||+r.count===6})){
+      iz2.rows=[{code:'I-R1',kind:'bins',count:2},{code:'I-R2',kind:'bins',count:2},{code:'I-R3',kind:'bins',count:2},{code:'I-EMPTY',kind:'open',count:1}];
+      iz2.numberMode='continuous';iz2.seqPrefix='I';iz2.seqStart=1;
+      iz2.slots=[].concat.apply([],seqLocationsForRows(iz2.rows,'I',1));
+    }
+    state.version=5;
+    try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+  }
+}
 function save(reason){state.updatedAt=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(state));el('nimSaved').textContent='Saved '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}catch(e){el('nimSaved').textContent='Storage full — export a backup'}if(reason&&window.NexusLedger)window.NexusLedger.record('inventory_'+reason,null,{items:state.items.length,pending:state.pendingMoves.length})}
 function toast(msg){var t=el('nimToast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},1800)}
 function zoneItems(zone){var set={};(zone.slots||[]).forEach(function(s){set[s]=1});return state.items.filter(function(i){return set[i.pendingLocation||i.officialLocation||i.location]})}
@@ -20017,12 +20132,53 @@ function init(){load();el('nimNavigateMode').onclick=function(){setMode('navigat
 function inferRows(z){if(Array.isArray(z.rows)&&z.rows.length)return z.rows;var groups={},order=[];(z.slots||[]).forEach(function(loc){var parts=String(loc).split('/'),base=parts[0];if(!groups[base]){groups[base]={code:base,children:[]};order.push(base)}if(parts.length>1)groups[base].children.push(parts.slice(1).join('/'))});z.rows=order.map(function(base){var g=groups[base],bins=g.children.filter(function(x){return /^BIN\d+$/i.test(x)});return {code:base,kind:g.children.length?(bins.length===g.children.length?'bins':'slots'):'open',count:Math.max(1,g.children.length)}});return z.rows}
 function rowLocations(row){var code=String(row.code||'').trim().toUpperCase();if(!code)return[];if(row.kind==='open')return[code];var word=row.kind==='bins'?'BIN':'SLOT',out=[];for(var n=1;n<=Math.max(1,+row.count||1);n++)out.push(code+'/'+word+n);return out}
 function rowsToSlots(rows){var out=[];rows.forEach(function(r){out=out.concat(rowLocations(r))});return out}
-function builderRowHtml(r,index){return '<div class="nim-builder-row" data-row-index="'+index+'"><div class="nim-builder-row-top"><input class="nim-row-code" value="'+esc(r.code)+'" aria-label="Row code"><button class="nim-btn danger nim-remove-row" title="Remove row">×</button></div><select class="nim-row-kind" aria-label="Storage inside '+esc(r.code)+'"><option value="open" '+(r.kind==='open'?'selected':'')+'>Open shelf — '+esc(r.code)+' only</option><option value="bins" '+(r.kind==='bins'?'selected':'')+'>Bins — '+esc(r.code)+'/BIN1…</option><option value="slots" '+(r.kind==='slots'?'selected':'')+'>Numbered slots — '+esc(r.code)+'/SLOT1…</option></select><div class="nim-builder-count"><label>How many inside?</label><input class="nim-row-count" type="number" min="1" max="100" value="'+Math.max(1,+r.count||1)+'"></div><small class="nim-row-preview">'+esc(rowLocations(r).join(' · '))+'</small></div>'}
-function refreshRowBuilder(){var host=el('nimRowBuilder');if(!host)return;host.querySelectorAll('.nim-builder-row').forEach(function(row){var kind=row.querySelector('.nim-row-kind'),count=row.querySelector('.nim-builder-count'),code=row.querySelector('.nim-row-code'),preview=row.querySelector('.nim-row-preview');count.style.display=kind.value==='open'?'none':'grid';function update(){var r={code:code.value.trim().toUpperCase(),kind:kind.value,count:+row.querySelector('.nim-row-count').value||1};preview.textContent=rowLocations(r).join(' · ');count.style.display=kind.value==='open'?'none':'grid'}kind.onchange=update;code.oninput=update;row.querySelector('.nim-row-count').oninput=update;row.querySelector('.nim-remove-row').onclick=function(){row.remove()};update()})}
+// ── Continuous numbering (e.g. J20, J21 … J78) ──────────────────────────
+// Some real shelves (J, I) are numbered as one continuous run rather than
+// restarting at 1 in every row — that's what actual SKU floor-location
+// codes already use (bare "J42", not "J/SLOT3"). An 'open' row keeps its
+// own custom code as-is and doesn't consume a number from the sequence —
+// that's how a fixed vacant area (like I's empty bottom shelf) gets a
+// stable label without pretending it's a numbered pickable slot.
+function seqLocationsForRows(rows,prefix,start){
+  var n=+start||1,out=[];
+  rows.forEach(function(r){
+    if(r.kind==='open'){out.push([String(r.code||'').trim().toUpperCase()||'ROW']);return}
+    var count=Math.max(1,+r.count||1),locs=[];
+    for(var k=0;k<count;k++){locs.push(prefix+n);n++}
+    out.push(locs);
+  });
+  return out;
+}
+function isSeqZone(z){return z&&z.numberMode==='continuous'}
+// Reads the numbering mode/prefix/start currently shown in the Build form
+// if it's on screen; otherwise falls back to the zone's saved values. This
+// lets the live row-preview react to an unsaved toggle of the dropdown.
+function currentNumberingSettings(z){
+  var modeSel=el('nimPropNumMode');
+  if(modeSel){
+    var prefixEl=el('nimPropSeqPrefix'),startEl=el('nimPropSeqStart');
+    return {
+      mode:modeSel.value,
+      prefix:((prefixEl?prefixEl.value:'')||z.name||'').toString().trim().toUpperCase(),
+      start:+((startEl||{}).value)||1
+    };
+  }
+  return {
+    mode:z.numberMode==='continuous'?'continuous':'restart',
+    prefix:(z.seqPrefix||z.name||'').toString().trim().toUpperCase(),
+    start:+z.seqStart||1
+  };
+}
+function computeRowPreviews(rows,settings){
+  if(settings.mode==='continuous')return seqLocationsForRows(rows,settings.prefix,settings.start).map(function(locs){return locs.join(' · ')});
+  return rows.map(function(r){return rowLocations(r).join(' · ')});
+}
+function builderRowHtml(r,index,previewText){var preview=previewText!=null?previewText:rowLocations(r).join(' · ');return '<div class="nim-builder-row" data-row-index="'+index+'"><div class="nim-builder-row-top"><input class="nim-row-code" value="'+esc(r.code)+'" aria-label="Row code"><button class="nim-btn danger nim-remove-row" title="Remove row">×</button></div><select class="nim-row-kind" aria-label="Storage inside '+esc(r.code)+'"><option value="open" '+(r.kind==='open'?'selected':'')+'>Open shelf — '+esc(r.code)+' only</option><option value="bins" '+(r.kind==='bins'?'selected':'')+'>Bins — '+esc(r.code)+'/BIN1…</option><option value="slots" '+(r.kind==='slots'?'selected':'')+'>Numbered slots — '+esc(r.code)+'/SLOT1…</option></select><div class="nim-builder-count"><label>How many inside?</label><input class="nim-row-count" type="number" min="1" max="100" value="'+Math.max(1,+r.count||1)+'"></div><small class="nim-row-preview">'+esc(preview)+'</small></div>'}
+function refreshRowBuilder(z){var host=el('nimRowBuilder');if(!host)return;var rowEls=Array.from(host.querySelectorAll('.nim-builder-row'));function readAll(){return rowEls.map(function(rowEl){return {code:rowEl.querySelector('.nim-row-code').value.trim().toUpperCase(),kind:rowEl.querySelector('.nim-row-kind').value,count:Math.max(1,+rowEl.querySelector('.nim-row-count').value||1)}})}function updateAll(){var rows=readAll(),previews=computeRowPreviews(rows,currentNumberingSettings(z));rowEls.forEach(function(rowEl,i){var kind=rowEl.querySelector('.nim-row-kind'),count=rowEl.querySelector('.nim-builder-count'),preview=rowEl.querySelector('.nim-row-preview');count.style.display=kind.value==='open'?'none':'grid';preview.textContent=previews[i]!=null?previews[i]:''})}rowEls.forEach(function(rowEl){var kind=rowEl.querySelector('.nim-row-kind'),code=rowEl.querySelector('.nim-row-code'),count=rowEl.querySelector('.nim-row-count'),removeBtn=rowEl.querySelector('.nim-remove-row');kind.onchange=updateAll;code.oninput=updateAll;count.oninput=updateAll;removeBtn.onclick=function(){rowEl.remove();rowEls=rowEls.filter(function(r){return r!==rowEl});updateAll()}});updateAll()}
 function readBuilderRows(){return Array.from(el('nimRowBuilder').querySelectorAll('.nim-builder-row')).map(function(row){return {code:row.querySelector('.nim-row-code').value.trim().toUpperCase(),kind:row.querySelector('.nim-row-kind').value,count:Math.max(1,+row.querySelector('.nim-row-count').value||1)}}).filter(function(r){return r.code})}
-function renderInspector(){var box=el('nimInspector');if(selectedItem){var item=state.items.find(function(x){return x.id===selectedItem});if(!item){selectedItem=null;return renderInspector()}el('nimInspectorTitle').textContent='Selected item';box.innerHTML='<div class="nim-card '+(item.pendingLocation?'pending':'')+'"><strong>'+esc(item.title||'Untitled item')+'</strong><code>'+esc(item.sku||'No SKU')+'</code><small>Official: '+esc(item.officialLocation||'Unlocated')+'<br>Pending: '+esc(item.pendingLocation||'None')+'</small></div><div class="nim-field"><label>Move to location</label><select id="nimMoveSelect"><option value="">Choose destination…</option>'+allCodes().map(function(c){return '<option>'+esc(c)+'</option>'}).join('')+'</select></div><button class="nim-btn primary" id="nimMoveItem">Add pending move</button>';el('nimMoveItem').onclick=function(){if(el('nimMoveSelect').value)moveItem(item.id,el('nimMoveSelect').value)};return}if(!selectedZone){el('nimInspectorTitle').textContent='Selection';box.innerHTML='<div class="nim-status">Select a floor block to expand it. Drag inventory between locations inside the expanded view.</div>';return}var z=state.zones.find(function(x){return x.id===selectedZone});if(!z)return;el('nimInspectorTitle').textContent=mode==='layout'?'Build '+z.name:'Section';if(mode!=='layout'){var items=zoneItems(z);box.innerHTML='<button class="nim-btn primary" id="nimOpenSection">Expand '+esc(z.name)+'</button><h3>Inventory</h3>'+(items.length?items.slice(0,30).map(itemCard).join(''):'<div class="nim-status">No items assigned here.</div>');el('nimOpenSection').onclick=function(){openSection(z.id)};bindItemCards(box);return}var rows=inferRows(z);box.innerHTML='<div class="nim-field"><label>Section name</label><input id="nimPropName" value="'+esc(z.name)+'"></div><div class="nim-row"><div class="nim-field"><label>Floor block</label><select id="nimPropType">'+['section','shelf','bins','open','wall','label'].map(function(t){return '<option '+(z.type===t?'selected':'')+'>'+t+'</option>'}).join('')+'</select></div><div class="nim-field"><label>Items per location</label><input id="nimPropCap" type="number" min="1" value="'+(z.capacity||1)+'"></div></div><div class="nim-color-row">'+COLORS.map(function(c){return '<button class="nim-color '+(z.color===c?'on':'')+'" data-color="'+c+'" style="background:'+c+'"></button>'}).join('')+'</div><h3>What is inside '+esc(z.name)+'?</h3><div class="nim-status" style="margin-bottom:9px">Add one row for each shelf level. Each row can be an open shelf, bins, or numbered slots.</div><div id="nimRowBuilder">'+rows.map(builderRowHtml).join('')+'</div><button class="nim-btn" id="nimAddRow">＋ Add another row</button><div class="nim-actions" style="justify-content:space-between"><button class="nim-btn danger" id="nimDeleteZone">Delete section</button><button class="nim-btn primary" id="nimSaveProps">Save section</button></div>';refreshRowBuilder();bindProperties(z);boxColors(z)}
-function bindProperties(z){el('nimAddRow').onclick=function(){var current=readBuilderRows(),prefix=(el('nimPropName').value.trim()||z.name).toUpperCase().replace(/\s+/g,''),next=1;current.forEach(function(r){var m=r.code.match(/(\d+)$/);if(m)next=Math.max(next,+m[1]+1)});current.push({code:prefix+next,kind:'open',count:1});el('nimRowBuilder').innerHTML=current.map(builderRowHtml).join('');refreshRowBuilder()};el('nimSaveProps').onclick=function(){var oldSlots=(z.slots||[]).slice(),oldName=z.name,rows=readBuilderRows(),codes=rows.map(function(r){return r.code}),dupe=codes.find(function(c,i){return codes.indexOf(c)!==i});if(dupe)return toast('Duplicate row: '+dupe);var newSlots=rowsToSlots(rows),removed=oldSlots.filter(function(code){return newSlots.indexOf(code)===-1}),occupied=state.items.filter(function(i){return removed.indexOf(i.pendingLocation||i.officialLocation||i.location)!==-1});if(occupied.length&&!confirm(occupied.length+' item'+(occupied.length===1?' is':'s are')+' stored in locations being removed. Move '+(occupied.length===1?'it':'them')+' to Unlocated?'))return;occupied.forEach(function(i){moveItem(i.id,'UNLOCATED')});z.name=el('nimPropName').value.trim()||z.name;z.type=el('nimPropType').value;z.capacity=Math.max(1,+el('nimPropCap').value||1);z.rows=rows;z.slots=newSlots;if(oldName!==z.name)toast('Section renamed; row codes stayed exactly as entered');save('layout_properties');render()};el('nimDeleteZone').onclick=function(){var occupied=zoneItems(z);if(occupied.length&&!confirm(z.name+' contains '+occupied.length+' items. Move them to Unlocated and delete the section?'))return;occupied.forEach(function(i){moveItem(i.id,'UNLOCATED')});state.zones=state.zones.filter(function(x){return x.id!==z.id});selectedZone=null;save('layout_deleted');render()}}
-function renderSection(id){var z=state.zones.find(function(x){return x.id===id});if(!z)return;var rows=inferRows(z);el('nimSectionTitle').textContent=z.name+' · '+rows.length+' row'+(rows.length===1?'':'s')+' · '+(z.slots||[]).length+' locations';el('nimSlots').classList.add('nim-mixed-rows');el('nimSlots').innerHTML=rows.map(function(row){var locations=rowLocations(row);return '<section class="nim-row-group"><div class="nim-row-group-head"><strong>'+esc(row.code)+'</strong><span>'+(row.kind==='open'?'Open shelf':row.kind==='bins'?'Bins':'Numbered slots')+'</span></div><div class="nim-row-locations">'+locations.map(function(code){var its=state.items.filter(function(i){return (i.pendingLocation||i.officialLocation||i.location)===code});return '<div class="nim-slot" data-slot="'+esc(code)+'"><b>'+esc(code)+'</b><span>'+its.length+'/'+(z.capacity||'∞')+'</span>'+its.map(function(i){return '<div class="nim-mini-item '+(i.pendingLocation?'pending':'')+'" draggable="true" data-item="'+i.id+'" title="'+esc(i.sku)+'">'+esc(i.title||i.sku)+'</div>'}).join('')+'</div>'}).join('')+'</div></section>'}).join('')||'<div class="nim-status">This section has no rows. Select Edit interior, then add a row.</div>';bindItemCards(el('nimSlots'));el('nimSlots').querySelectorAll('[data-slot]').forEach(function(s){s.ondragover=function(e){e.preventDefault();s.classList.add('over')};s.ondragleave=function(){s.classList.remove('over')};s.ondrop=function(e){e.preventDefault();s.classList.remove('over');var itemId=dragItemId||e.dataTransfer.getData('text/plain');if(itemId)moveItem(itemId,s.dataset.slot)}})}
+function renderInspector(){var box=el('nimInspector');if(selectedItem){var item=state.items.find(function(x){return x.id===selectedItem});if(!item){selectedItem=null;return renderInspector()}el('nimInspectorTitle').textContent='Selected item';box.innerHTML='<div class="nim-card '+(item.pendingLocation?'pending':'')+'"><strong>'+esc(item.title||'Untitled item')+'</strong><code>'+esc(item.sku||'No SKU')+'</code><small>Official: '+esc(item.officialLocation||'Unlocated')+'<br>Pending: '+esc(item.pendingLocation||'None')+'</small></div><div class="nim-field"><label>Move to location</label><select id="nimMoveSelect"><option value="">Choose destination…</option>'+allCodes().map(function(c){return '<option>'+esc(c)+'</option>'}).join('')+'</select></div><button class="nim-btn primary" id="nimMoveItem">Add pending move</button>';el('nimMoveItem').onclick=function(){if(el('nimMoveSelect').value)moveItem(item.id,el('nimMoveSelect').value)};return}if(!selectedZone){el('nimInspectorTitle').textContent='Selection';box.innerHTML='<div class="nim-status">Select a floor block to expand it. Drag inventory between locations inside the expanded view.</div>';return}var z=state.zones.find(function(x){return x.id===selectedZone});if(!z)return;el('nimInspectorTitle').textContent=mode==='layout'?'Build '+z.name:'Section';if(mode!=='layout'){var items=zoneItems(z);box.innerHTML='<button class="nim-btn primary" id="nimOpenSection">Expand '+esc(z.name)+'</button><h3>Inventory</h3>'+(items.length?items.slice(0,30).map(itemCard).join(''):'<div class="nim-status">No items assigned here.</div>');el('nimOpenSection').onclick=function(){openSection(z.id)};bindItemCards(box);return}var rows=inferRows(z);var numSettings=currentNumberingSettings(z);var previews=computeRowPreviews(rows,numSettings);box.innerHTML='<div class="nim-field"><label>Section name</label><input id="nimPropName" value="'+esc(z.name)+'"></div><div class="nim-row"><div class="nim-field"><label>Floor block</label><select id="nimPropType">'+['section','shelf','bins','open','wall','label'].map(function(t){return '<option '+(z.type===t?'selected':'')+'>'+t+'</option>'}).join('')+'</select></div><div class="nim-field"><label>Items per location</label><input id="nimPropCap" type="number" min="1" value="'+(z.capacity||1)+'"></div></div><div class="nim-color-row">'+COLORS.map(function(c){return '<button class="nim-color '+(z.color===c?'on':'')+'" data-color="'+c+'" style="background:'+c+'"></button>'}).join('')+'</div><div class="nim-field"><label>Slot numbering</label><select id="nimPropNumMode"><option value="restart" '+(numSettings.mode==='restart'?'selected':'')+'>Restart each row — e.g. '+esc(z.name.toUpperCase())+'1/SLOT1, '+esc(z.name.toUpperCase())+'2/SLOT1…</option><option value="continuous" '+(numSettings.mode==='continuous'?'selected':'')+'>Continuous across rows — e.g. '+esc(z.name.toUpperCase())+'20, '+esc(z.name.toUpperCase())+'21…</option></select></div><div class="nim-row" id="nimSeqFields" style="display:'+(numSettings.mode==='continuous'?'flex':'none')+'"><div class="nim-field"><label>Prefix</label><input id="nimPropSeqPrefix" value="'+esc(numSettings.prefix)+'"></div><div class="nim-field"><label>Starting number</label><input id="nimPropSeqStart" type="number" min="0" value="'+numSettings.start+'"></div></div><h3>What is inside '+esc(z.name)+'?</h3><div class="nim-status" style="margin-bottom:9px">Add one row for each shelf level. Each row can be an open shelf, bins, or numbered slots.</div><div id="nimRowBuilder">'+rows.map(function(r,i){return builderRowHtml(r,i,previews[i])}).join('')+'</div><button class="nim-btn" id="nimAddRow">＋ Add another row</button><div class="nim-actions" style="justify-content:space-between"><button class="nim-btn danger" id="nimDeleteZone">Delete section</button><button class="nim-btn primary" id="nimSaveProps">Save section</button></div>';refreshRowBuilder(z);bindProperties(z);boxColors(z)}
+function bindProperties(z){el('nimPropNumMode').onchange=function(){el('nimSeqFields').style.display=this.value==='continuous'?'flex':'none';refreshRowBuilder(z)};el('nimPropSeqPrefix').oninput=function(){refreshRowBuilder(z)};el('nimPropSeqStart').oninput=function(){refreshRowBuilder(z)};el('nimAddRow').onclick=function(){var current=readBuilderRows(),prefix=(el('nimPropName').value.trim()||z.name).toUpperCase().replace(/\s+/g,''),next=1;current.forEach(function(r){var m=r.code.match(/(\d+)$/);if(m)next=Math.max(next,+m[1]+1)});current.push({code:prefix+next,kind:'open',count:1});var previews=computeRowPreviews(current,currentNumberingSettings(z));el('nimRowBuilder').innerHTML=current.map(function(r,i){return builderRowHtml(r,i,previews[i])}).join('');refreshRowBuilder(z)};el('nimSaveProps').onclick=function(){var oldSlots=(z.slots||[]).slice(),oldName=z.name,rows=readBuilderRows(),codes=rows.map(function(r){return r.code}),dupe=codes.find(function(c,i){return codes.indexOf(c)!==i});if(dupe)return toast('Duplicate row: '+dupe);var num=currentNumberingSettings(z);var newSlots=num.mode==='continuous'?[].concat.apply([],seqLocationsForRows(rows,num.prefix,num.start)):rowsToSlots(rows);var removed=oldSlots.filter(function(code){return newSlots.indexOf(code)===-1}),occupied=state.items.filter(function(i){return removed.indexOf(i.pendingLocation||i.officialLocation||i.location)!==-1});if(occupied.length&&!confirm(occupied.length+' item'+(occupied.length===1?' is':'s are')+' stored in locations being removed. Move '+(occupied.length===1?'it':'them')+' to Unlocated?'))return;occupied.forEach(function(i){moveItem(i.id,'UNLOCATED')});z.name=el('nimPropName').value.trim()||z.name;z.type=el('nimPropType').value;z.capacity=Math.max(1,+el('nimPropCap').value||1);z.numberMode=num.mode;if(num.mode==='continuous'){z.seqPrefix=num.prefix;z.seqStart=num.start}else{delete z.seqPrefix;delete z.seqStart}z.rows=rows;z.slots=newSlots;if(oldName!==z.name)toast('Section renamed; row codes stayed exactly as entered');save('layout_properties');render()};el('nimDeleteZone').onclick=function(){var occupied=zoneItems(z);if(occupied.length&&!confirm(z.name+' contains '+occupied.length+' items. Move them to Unlocated and delete the section?'))return;occupied.forEach(function(i){moveItem(i.id,'UNLOCATED')});state.zones=state.zones.filter(function(x){return x.id!==z.id});selectedZone=null;save('layout_deleted');render()}}
+function renderSection(id){var z=state.zones.find(function(x){return x.id===id});if(!z)return;var rows=inferRows(z);var numSettings=currentNumberingSettings(z);var rowLocsAll=numSettings.mode==='continuous'?seqLocationsForRows(rows,numSettings.prefix,numSettings.start):rows.map(rowLocations);el('nimSectionTitle').textContent=z.name+' · '+rows.length+' row'+(rows.length===1?'':'s')+' · '+(z.slots||[]).length+' locations';el('nimSlots').classList.add('nim-mixed-rows');el('nimSlots').innerHTML=rows.map(function(row,ri){var locations=rowLocsAll[ri]||[];return '<section class="nim-row-group"><div class="nim-row-group-head"><strong>'+esc(row.code)+'</strong><span>'+(row.kind==='open'?'Open shelf':row.kind==='bins'?'Bins':'Numbered slots')+'</span></div><div class="nim-row-locations">'+locations.map(function(code){var its=state.items.filter(function(i){return (i.pendingLocation||i.officialLocation||i.location)===code});return '<div class="nim-slot" data-slot="'+esc(code)+'"><b>'+esc(code)+'</b><span>'+its.length+'/'+(z.capacity||'∞')+'</span>'+its.map(function(i){return '<div class="nim-mini-item '+(i.pendingLocation?'pending':'')+'" draggable="true" data-item="'+i.id+'" title="'+esc(i.sku)+'">'+esc(i.title||i.sku)+'</div>'}).join('')+'</div>'}).join('')+'</div></section>'}).join('')||'<div class="nim-status">This section has no rows. Select Edit interior, then add a row.</div>';bindItemCards(el('nimSlots'));el('nimSlots').querySelectorAll('[data-slot]').forEach(function(s){s.ondragover=function(e){e.preventDefault();s.classList.add('over')};s.ondragleave=function(){s.classList.remove('over')};s.ondrop=function(e){e.preventDefault();s.classList.remove('over');var itemId=dragItemId||e.dataTransfer.getData('text/plain');if(itemId)moveItem(itemId,s.dataset.slot)}})}
 var bindMixedPropertiesBase=bindProperties;
 bindProperties=function(z){bindMixedPropertiesBase(z);if(/^[A-H]$/i.test(String(z.name||'').trim())){el('nimAddRow').style.display='none';el('nimRowBuilder').querySelectorAll('.nim-remove-row').forEach(function(btn){btn.style.display='none'});var note=document.createElement('div');note.className='nim-status';note.style.marginTop='9px';note.textContent=z.name.toUpperCase()+' always has four rows. Change what each row contains; the row count stays fixed.';el('nimRowBuilder').after(note)}};
 function bindCanvasPan(){var wrap=el('nimCanvasWrap');if(wrap.dataset.panBound)return;wrap.dataset.panBound='1';var pan=null;wrap.addEventListener('pointerdown',function(e){if(e.target!==wrap&&e.target!==el('nimCanvas'))return;pan={x:e.clientX,y:e.clientY,left:wrap.scrollLeft,top:wrap.scrollTop};wrap.classList.add('panning');wrap.setPointerCapture(e.pointerId)});wrap.addEventListener('pointermove',function(e){if(!pan)return;wrap.scrollLeft=pan.left-(e.clientX-pan.x);wrap.scrollTop=pan.top-(e.clientY-pan.y)});wrap.addEventListener('pointerup',function(){pan=null;wrap.classList.remove('panning')})}
