@@ -20340,7 +20340,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .leads-detail-key{font-weight:700;color:#70798a;width:38%;white-space:nowrap}
 </style>
 <div class="leads-app" id="leadsApp">
-  <header class="leads-head"><div class="nexus-mark">SYG</div><h2>Ckay Connect</h2><div class="leads-spacer"></div><button class="leads-btn primary" id="leadsImportBtn">📋 Paste leads</button><button class="leads-btn" id="leadsBack">← Command</button></header>
+  <header class="leads-head"><div class="nexus-mark">SYG</div><h2>Ckay Connect</h2><div class="leads-spacer"></div><button class="leads-btn primary" id="leadsPullBtn">🔄 Pull &amp; refresh from tab</button><button class="leads-btn primary" id="leadsImportBtn">📋 Paste leads</button><button class="leads-btn" id="leadsBack">← Command</button></header>
   <div class="leads-toolbar">
     <input class="leads-search" id="leadsSearch" placeholder="Search name, email, phone, device…">
     <select id="leadsStatusFilter"><option value="">All statuses</option><option>Auto Replied</option><option>Follow-Up</option><option>Appointment</option><option>No Deal</option><option>Sell Now</option></select>
@@ -20416,7 +20416,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       }
       var noteEl=Array.from(row.querySelectorAll('[data-tippy-original]')).find(function(n){return n!==iconBtn&&n.getAttribute('data-tippy-original')!=='Click for Timeline'});
       var latestNote=noteEl?noteEl.getAttribute('data-tippy-original'):'';
-      var bodyEl=allDivs.find(function(d){return d.textContent.trim().indexOf('===')===0});
+      // The message body isn't always "=== Header ===" style — some lead
+      // types (e.g. "Sell Now Page Lead") start directly with a plain
+      // label line and go straight into Key: Value pairs, no === at all.
+      // Detect by counting actual Key: Value lines instead of requiring a
+      // specific header, then take the SMALLEST matching div — ancestors
+      // also "match" (they contain the same lines nested inside them),
+      // and picking the smallest avoids grabbing one of those instead of
+      // the actual message div.
+      var kvLineRe=/^[A-Za-z][A-Za-z0-9 /]{1,30}:\s*\S/;
+      var bodyCandidates=allDivs.filter(function(d){
+        var lines=d.textContent.split('\n').map(function(s){return s.trim()}).filter(Boolean);
+        return lines.filter(function(l){return kvLineRe.test(l)}).length>=3;
+      }).sort(function(a,b){return a.textContent.length-b.textContent.length});
+      var bodyEl=bodyCandidates[0];
       var messageText=bodyEl?(bodyEl.textContent||''):'';
       var rawLines=bodyEl?bodyEl.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,''):'';
       var fields={};
@@ -20441,6 +20454,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     return out;
   }
 
+  // Uses the Data Fetch extension's FETCH_LEADS_PAGE (assumes the leads
+  // dashboard is already open in a tab, same "connect this tab" pattern
+  // Shipping Station uses for eBay). Feeds the returned HTML through the
+  // exact same importLeads() path as a manual paste — no separate parsing
+  // logic, so a fix to the parser fixes both paths at once.
+  function pullLeadsFromTab(){
+    var status=el('leadsImportStatus');
+    if(!window.nexusAskExtension){
+      el('leadsImportModal').classList.add('show');
+      status.textContent='The Data Fetch extension isn\'t available in this browser — paste the leads HTML manually below instead.';
+      return;
+    }
+    var btn=el('leadsPullBtn');
+    btn.disabled=true;btn.textContent='Pulling…';
+    window.nexusAskExtension('FETCH_LEADS_PAGE',{},20000).then(function(res){
+      btn.disabled=false;btn.textContent='🔄 Pull & refresh from tab';
+      el('leadsImportModal').classList.add('show');
+      if(res&&res.ok&&res.html){
+        importLeads(res.html);
+      }else{
+        status.textContent=(res&&res.error)||'Could not pull from the leads tab — make sure buyer.sellyourgadgets.com/dashboard/leads/leads-entries is open in another tab, then try again.';
+      }
+    });
+  }
   function importLeads(raw){
     if(!raw||!raw.trim()){el('leadsImportStatus').textContent='Paste something first.';return}
     var parsed;
@@ -20602,6 +20639,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   document.addEventListener('DOMContentLoaded',function(){
     el('leadsImportBtn').onclick=function(){el('leadsImportModal').classList.add('show')};
+    el('leadsPullBtn').onclick=pullLeadsFromTab;
     el('leadsImportClose').onclick=function(){el('leadsImportModal').classList.remove('show')};
     el('leadsDetailClose').onclick=function(){el('leadsDetailModal').classList.remove('show')};
     el('leadsParseBtn').onclick=function(){importLeads(el('leadsPasteText').value)};
