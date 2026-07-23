@@ -824,6 +824,11 @@
   .pc-recap-stat{background:#221C10;border:1px solid rgba(251,191,36,.18);border-radius:12px;padding:16px 18px;}
   .pc-tag-legend{display:flex;flex-wrap:wrap;gap:7px;}
   .pc-tag-sticker{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;font:700 10px/1 var(--sans);cursor:grab;border:1px solid;user-select:none;transition:transform .1s,opacity .1s;}
+  .pc-card-select{position:absolute;top:9px;left:9px;width:17px;height:17px;display:none;cursor:pointer;z-index:3;}
+  .pc-board-wrap.pc-select-mode .pc-card-select{display:block;}
+  .pc-board-wrap.pc-select-mode .pc-board-card{padding-left:32px;}
+  .pc-board-card.pc-card-selected{outline:2px solid #FBBF24;outline-offset:-2px;background:rgba(251,191,36,.06);}
+  .pc-scan-stickers{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
   .pc-tag-sticker:active{cursor:grabbing;transform:scale(.94);}
   .pc-tag-sticker.dragging{opacity:.4;}
   .pc-board-card.sticker-hover{box-shadow:0 0 0 2px #FBBF24 inset;}
@@ -3676,6 +3681,9 @@
       <div class="pc-board-toolbar">
         <span class="pc-board-title">🗂 Batch Board <span class="pc-batch-count" id="pcBatchCount">0 items</span></span>
         <div class="pc-board-toolbar-btns">
+          <button class="pc-btn pc-btn-save" id="pcSelectModeToggle">☑️ Select</button>
+          <button class="pc-btn pc-btn-save" id="pcScanSelected" style="display:none">🔍 Scan Selected (<span id="pcSelectedCount">0</span>)</button>
+          <button class="pc-btn pc-btn-save" id="pcImportScanBtn">📥 Import Scan Results</button>
           <button class="pc-btn pc-btn-save" id="pcReviewBatch">📊 Review Batch</button>
           <button class="pc-btn pc-btn-save" id="pcClearBatch">🗑 Clear Batch</button>
         </div>
@@ -3842,6 +3850,24 @@
     <div class="pc-recap-stats" id="pcRecapStats"></div>
     <div class="pc-recap-tags" id="pcRecapTags"></div>
     <div class="pc-recap-sections" id="pcRecapSections"></div>
+  </div>
+</div>
+
+<div class="pc-recap-overlay" id="pcScanImportOverlay">
+  <div class="pc-recap-header">
+    <span class="pc-recap-header-icon">📥</span>
+    <h2>Import Scan Results</h2>
+    <div class="pc-recap-header-btns">
+      <button class="pc-back" id="pcScanImportClose">← Back to Board</button>
+    </div>
+  </div>
+  <div class="pc-recap-body">
+    <p style="color:var(--nexus-soft, #9aa5b8);font-size:13px;line-height:1.6;max-width:640px">Paste the full response from the Claude session you ran the scan prompt in — including the <code>SYG_AUDIT_SCAN_RESULTS_START</code>/<code>END</code> markers. Nexus matches results back to cards by SKU and adds a sticker for each flag found.</p>
+    <textarea id="pcScanImportText" placeholder="Paste the scan results here…" style="width:100%;min-height:280px;margin-top:12px;padding:14px;border-radius:12px;font:12px/1.5 ui-monospace,monospace;background:#0c111a;color:#e8f2ff;border:1px solid rgba(251,191,36,.2)"></textarea>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="pc-btn pc-btn-save" id="pcScanImportApply">Import &amp; apply stickers</button>
+      <span id="pcScanImportStatus" style="align-self:center;font-size:12px;color:var(--nexus-soft, #9aa5b8)"></span>
+    </div>
   </div>
 </div>
 
@@ -9450,6 +9476,70 @@ document.getElementById('pcClearBatch')?.addEventListener('click', ()=>{
   pcRenderBatch();
 });
 
+// ── Select mode + batch scan + import results ────────────────────────
+document.getElementById('pcSelectModeToggle')?.addEventListener('click', ()=>{
+  const board = document.getElementById('pcBoard');
+  const on = board.classList.toggle('pc-select-mode');
+  if(!on){ _pcSelectedIds.clear(); board.querySelectorAll('.pc-board-card').forEach(c=>c.classList.remove('pc-card-selected')); }
+  document.getElementById('pcSelectModeToggle').textContent = on ? '☑️ Selecting…' : '☑️ Select';
+  pcRenderBatch();
+});
+document.getElementById('pcScanSelected')?.addEventListener('click', ()=>{
+  if(!_pcSelectedIds.size) return;
+  const list = pcLoadBatch();
+  const entries = list.filter(x=>_pcSelectedIds.has(String(x.id)));
+  if(!entries.length) return;
+  const prompt = pcBuildScanPrompt(entries);
+  navigator.clipboard?.writeText(prompt).catch(()=>{});
+  const btn = document.getElementById('pcScanSelected');
+  const orig = btn.innerHTML;
+  btn.textContent = `✓ Copied ${entries.length} item scan prompt!`;
+  setTimeout(()=>{ btn.innerHTML = orig; }, 1800);
+});
+document.getElementById('pcImportScanBtn')?.addEventListener('click', ()=>{
+  document.getElementById('pcScanImportText').value = '';
+  document.getElementById('pcScanImportStatus').textContent = '';
+  document.getElementById('pcScanImportOverlay').classList.add('show');
+});
+document.getElementById('pcScanImportClose')?.addEventListener('click', ()=>{
+  document.getElementById('pcScanImportOverlay').classList.remove('show');
+});
+document.getElementById('pcScanImportApply')?.addEventListener('click', ()=>{
+  pcImportScanResults(document.getElementById('pcScanImportText').value);
+});
+// Matches results back to board cards by SKU, stores the flags on each
+// matching entry, and re-renders so the stickers show up immediately.
+// Cards with no flags in the response are left exactly as they were —
+// the scan prompt only returns items that actually have an issue, so
+// "not mentioned" isn't the same as "confirmed clean" and shouldn't
+// silently clear an older sticker that's still true.
+function pcImportScanResults(raw){
+  const status = document.getElementById('pcScanImportStatus');
+  const input = (raw||'').trim();
+  if(!input){ status.textContent = 'Paste something first.'; return; }
+  const startTag = 'SYG_AUDIT_SCAN_RESULTS_START', endTag = 'SYG_AUDIT_SCAN_RESULTS_END';
+  const s = input.indexOf(startTag), e = input.indexOf(endTag);
+  const jsonText = (s !== -1 && e !== -1) ? input.slice(s + startTag.length, e) : input;
+  let payload;
+  try{ payload = JSON.parse(jsonText); }
+  catch(err){ status.textContent = 'Could not read that as JSON — make sure you pasted the full response including the markers.'; return; }
+  const results = Array.isArray(payload.results) ? payload.results : [];
+  if(!results.length){ status.textContent = 'No results found in that paste — nothing to apply.'; return; }
+  const list = pcLoadBatch();
+  let matched = 0, unmatched = [];
+  results.forEach(r=>{
+    if(!r.sku){ return; }
+    const idx = list.findIndex(x => (x.sku||'').trim().toLowerCase() === String(r.sku).trim().toLowerCase());
+    if(idx === -1){ unmatched.push(r.sku); return; }
+    list[idx].flags = Array.isArray(r.flags) ? r.flags : [];
+    list[idx].scannedAt = payload.scannedAt || new Date().toISOString();
+    matched++;
+  });
+  pcSaveBatch(list);
+  pcRenderBatch();
+  status.textContent = `Applied stickers to ${matched} card${matched===1?'':'s'}.` + (unmatched.length ? ` ${unmatched.length} SKU(s) from the results weren't found on the board: ${unmatched.join(', ')}.` : '');
+}
+
 const PC_BIN_LABELS = { unsorted:'📥 Unsorted', working:'🔧 Working On', awaiting:'🟣 Awaiting Activation', good:'🟢 Good', fixed:'🟡 Errored & Fixed', dead:"🔴 Errored — Doesn't Activate" };
 
 // ── Audit reason tags ("stickers") ──────────────────────────────────
@@ -9650,6 +9740,51 @@ function pcCopySpan(text, label){
 // standing instructions (metafields, description, title) are ALWAYS
 // included, no matter what the auditor typed — "notes" only adds to them,
 // it never replaces them.
+// Read-only counterpart to pcBuildCorrectionPrompt() above — this one asks
+// for a DIAGNOSIS (what's wrong), not a fix. Takes 1+ entries so the same
+// function builds both a single-card scan and a multi-select batch scan.
+// Returns JSON so the result can be pasted back in via pcImportScanResults()
+// and rendered as stickers on the matching cards, same "generate → copy →
+// paste into a Claude session → paste result back" loop used everywhere
+// else in Nexus (inventory locations, pick results, etc.).
+function pcBuildScanPrompt(entries){
+  const items = entries.map(e=>{
+    const parts = [`SKU: ${e.sku || '(none on file)'}`, `Title: ${e.title || '(none on file)'}`];
+    if(e.shopifyLink) parts.push(`Shopify: ${e.shopifyLink}`);
+    return `- ${parts.join(' | ')}`;
+  }).join('\n');
+  return `SHOPIFY AUDIT SCAN
+
+Action: SCAN (read-only — do not change anything on Shopify)
+
+For each item below, look it up by SKU and check ONLY for these issues. Do not report anything that passes — only list what's actually wrong.
+
+1. missing_metafields — no metafields set, or missing ones a specced item should have (Brand, Model, and whichever of Processor/RAM/Storage/Screen/OS/Color actually apply to this item type).
+2. old_description_format — description still uses the old two-table layout, has an intro paragraph, a repetitive "Fully Functional" checklist, or a hidden "<!-- Listed by -->" comment, instead of one single spec table.
+3. title_convention — title doesn't follow brand + model + specs + condition-flag format, or is missing/placeholder text.
+4. returns_mismatch — description's Returns row looks inconsistent with the actual condition described (e.g. says "sold as-is" for something that sounds like standard used condition, or vice versa).
+5. price_flag — price looks like a placeholder (e.g. $0, $1, $9999) or clearly hasn't matched the description in a while — note it, don't guess a correct number.
+
+Items to check:
+${items}
+
+Return ONLY valid JSON between the markers. Include an entry only for items that have at least one flag — omit items with no issues entirely. If the SKU can't be found, use flag code "not_found" with no other flags for that item.
+
+SYG_AUDIT_SCAN_RESULTS_START
+{
+  "scannedAt": "ISO timestamp",
+  "results": [
+    {"sku":"","flags":[{"code":"missing_metafields","label":"Missing metafields","detail":""}]}
+  ]
+}
+SYG_AUDIT_SCAN_RESULTS_END
+
+Rules:
+- Only use the flag codes listed above (plus "not_found" when relevant).
+- "detail" should be one short sentence, specific to what you actually found — not generic.
+- Do not include commentary outside the markers.
+- Before responding, confirm the JSON is valid.`;
+}
 function pcBuildCorrectionPrompt(entry, notes){
   const sku = entry.sku || '(no SKU on file — find by title/barcode instead)';
   const lines = (notes || '').split('\n').map(l=>l.trim()).filter(Boolean);
@@ -9783,18 +9918,34 @@ function pcBatchCardHtml(e){
     : (typeof e.watchers === 'number' && e.watchers === 0 && (e.sold === 0 || e.sold == null)
       ? `<div class="pc-batch-tag warn" title="No watchers, no sales right now">📉 No movement</div>` : '');
 
+  // Stickers from an imported audit scan — pcAuditScanFlagMeta() maps each
+  // flag code to an icon/label/color; unknown codes still render (generic
+  // 🏷️ styling) so a new flag type from a future scan doesn't just vanish.
+  const scanStickers = (Array.isArray(e.flags) && e.flags.length)
+    ? `<div class="pc-scan-stickers">${e.flags.map(f=>{
+        const meta = pcAuditScanFlagMeta(f.code);
+        return `<div class="pc-tag-sticker" style="background:${meta.bg};border-color:${meta.border};color:${meta.color};cursor:default" title="${(f.detail||'').replace(/"/g,'&quot;')}">${meta.icon} ${meta.label}</div>`;
+      }).join('')}</div>`
+    : '';
+  const scannedAtHint = e.scannedAt
+    ? `<div class="pc-board-card-interest muted">Last scanned ${new Date(e.scannedAt).toLocaleDateString()}</div>` : '';
+
   return `<div class="pc-board-card" draggable="true" data-id="${e.id}">
+    <input type="checkbox" class="pc-card-select" data-select-id="${e.id}" title="Select for batch scan">
     <button class="pc-card-delete" data-delete-id="${e.id}" title="Delete card">✕</button>
     <div class="pc-board-card-title">${pcCopySpan(e.title || 'Untitled', 'title')}</div>
     <div class="pc-board-card-meta">${metaParts.join(' · ')}</div>
     ${pcCardTagsHtml(e)}
     ${ebayTag}
     ${staleHint}
+    ${scanStickers}
+    ${scannedAtHint}
     ${interestLine}
     ${noInterestHint}
     ${links.length ? `<div class="pc-board-card-links">${links.join('')}</div>` : ''}
     <div class="pc-board-card-verify">
       <button class="pc-verify-btn" data-verify-id="${e.id}">🔍 Verify on eBay</button>
+      <button class="pc-verify-btn" data-scan-id="${e.id}" title="Copy an audit-scan prompt for this item to paste into Claude">🩻 Scan</button>
       <span class="pc-verify-status" id="pcVerifyStatus-${e.id}"></span>
     </div>
     <div class="pc-board-card-edit">
@@ -9810,6 +9961,21 @@ function pcBatchCardHtml(e){
     </div>
   </div>`;
 }
+// Maps a scan flag code to how it renders as a sticker. Unknown codes
+// (e.g. a future flag type this version doesn't know about yet) still
+// render instead of silently disappearing — generic amber styling with
+// the raw code as the label, so nothing imported ever gets swallowed.
+function pcAuditScanFlagMeta(code){
+  const table = {
+    missing_metafields: {icon:'🏷️', label:'Missing metafields', bg:'#FBBF2422', border:'#FBBF2466', color:'#FBBF24'},
+    old_description_format: {icon:'📄', label:'Old description format', bg:'#60A5FA22', border:'#60A5FA66', color:'#60A5FA'},
+    title_convention: {icon:'✏️', label:'Title needs work', bg:'#A78BFA22', border:'#A78BFA66', color:'#A78BFA'},
+    returns_mismatch: {icon:'↩️', label:'Returns mismatch', bg:'#F8717122', border:'#F8717166', color:'#F87171'},
+    price_flag: {icon:'💲', label:'Price flagged', bg:'#FB923C22', border:'#FB923C66', color:'#FB923C'},
+    not_found: {icon:'❓', label:'SKU not found', bg:'#9CA3AF22', border:'#9CA3AF66', color:'#9CA3AF'}
+  };
+  return table[code] || {icon:'🏷️', label:code||'Flagged', bg:'#FBBF2422', border:'#FBBF2466', color:'#FBBF24'};
+}
 
 let _pcDragId = null;
 
@@ -9817,6 +9983,15 @@ let _pcDragId = null;
 // into the checker slot). While active, every other card/column on the
 // board dims out via CSS so the item you're auditing stands out. ──
 let _pcActiveCardId = null;
+// ── Multi-select for batch scanning ──────────────────────────────────
+let _pcSelectedIds = new Set();
+function pcUpdateScanSelectedButton(){
+  const btn = document.getElementById('pcScanSelected');
+  const countEl = document.getElementById('pcSelectedCount');
+  if(!btn) return;
+  countEl.textContent = _pcSelectedIds.size;
+  btn.style.display = document.getElementById('pcBoard')?.classList.contains('pc-select-mode') ? 'inline-flex' : 'none';
+}
 function pcApplyActiveCardHighlight(){
   const board = document.getElementById('pcBoard');
   if(!board) return;
@@ -10064,6 +10239,32 @@ function pcRenderBatch(){
         });
       });
 
+      const selectBox = card.querySelector('.pc-card-select');
+      if(selectBox){
+        selectBox.checked = _pcSelectedIds.has(String(e.id));
+        selectBox.addEventListener('click', ev=> ev.stopPropagation());
+        selectBox.addEventListener('change', ()=>{
+          const id = selectBox.dataset.selectId;
+          if(selectBox.checked) _pcSelectedIds.add(id); else _pcSelectedIds.delete(id);
+          card.classList.toggle('pc-card-selected', selectBox.checked);
+          pcUpdateScanSelectedButton();
+        });
+      }
+
+      const scanBtn = card.querySelector('[data-scan-id]');
+      scanBtn?.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        const id = scanBtn.dataset.scanId;
+        const list = pcLoadBatch();
+        const entry = list.find(x=>String(x.id)===String(id));
+        if(!entry) return;
+        const prompt = pcBuildScanPrompt([entry]);
+        navigator.clipboard?.writeText(prompt).catch(()=>{});
+        const orig = scanBtn.textContent;
+        scanBtn.textContent = '✓ Copied!';
+        setTimeout(()=>{ scanBtn.textContent = orig; }, 1400);
+      });
+
       const genBtn = card.querySelector('[data-genprompt-id]');
       genBtn?.addEventListener('click', (ev)=>{
         ev.stopPropagation();
@@ -10135,6 +10336,7 @@ function pcRenderBatch(){
   });
 
   pcApplyActiveCardHighlight();
+  pcUpdateScanSelectedButton();
 }
 
 function hazOpen(){
@@ -17710,8 +17912,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .pc-health-actions{display:flex;gap:6px;margin-top:7px}.pc-health-action{border:1px solid rgba(253,230,138,.18);border-radius:7px;background:rgba(255,255,255,.035);color:rgba(253,230,138,.62);padding:5px 8px;font:700 9px var(--sans);cursor:pointer}.pc-health-action:hover{color:#fff;border-color:rgba(253,230,138,.4)}
   .nexus-modal{position:fixed;inset:0;z-index:10100;background:rgba(3,5,10,.78);backdrop-filter:blur(9px);display:none;align-items:center;justify-content:center;padding:20px}.nexus-modal.show{display:flex}.nexus-modal-card{width:min(560px,100%);max-height:82vh;overflow:auto;border:1px solid var(--nexus-line);border-radius:18px;background:#111722;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.55)}.nexus-modal-head{display:flex;align-items:center;gap:10px;padding:17px 19px;border-bottom:1px solid var(--nexus-line)}.nexus-modal-head h3{font-size:14px;margin:0;flex:1}.nexus-modal-close{border:0;background:transparent;color:var(--nexus-soft);font-size:20px;cursor:pointer}.nexus-modal-body{padding:18px}.nexus-health-total{display:flex;align-items:end;gap:10px;margin-bottom:17px}.nexus-health-total strong{font:800 34px var(--mono)}.nexus-health-total span{color:var(--nexus-soft);font-size:11px;padding-bottom:5px}.nexus-deduction{display:grid;grid-template-columns:46px 1fr;gap:10px;padding:11px 0;border-top:1px solid var(--nexus-line)}.nexus-deduction-points{font:800 12px var(--mono);color:#f87171}.nexus-deduction b{display:block;font-size:11.5px;margin-bottom:3px}.nexus-deduction p{font-size:10.5px;color:var(--nexus-soft);margin:0;line-height:1.4}
   .nexus-pricing{position:fixed;inset:0;z-index:10030;background:radial-gradient(circle at 90% 0%,rgba(52,211,153,.1),transparent 34%),var(--nexus-bg);color:var(--nexus-text);display:none;flex-direction:column}.nexus-pricing.show{display:flex}.nexus-price-body{width:min(1220px,100%);margin:0 auto;padding:24px;overflow:auto;display:grid;grid-template-columns:380px 1fr;gap:18px}.nexus-price-inputs,.nexus-price-results{border:1px solid var(--nexus-line);border-radius:18px;background:var(--nexus-panel);padding:20px}.nexus-price-inputs textarea{min-height:210px;resize:vertical;line-height:1.7}.nexus-price-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.nexus-price-btn{padding:11px;border:1px solid var(--nexus-line);border-radius:10px;background:#0c111a;color:var(--nexus-soft);font:750 11px var(--sans);cursor:pointer}.nexus-price-btn.primary{border:0;background:#159b79;color:#fff}.nexus-price-btn:hover{filter:brightness(1.1)}.nexus-price-empty{min-height:450px;display:grid;place-items:center;text-align:center;color:var(--nexus-soft)}.nexus-price-empty strong{display:block;color:#fff;font-size:18px;margin-bottom:8px}.nexus-market-head{display:flex;align-items:start;justify-content:space-between;gap:16px}.nexus-verdict{padding:7px 11px;border-radius:999px;font:800 10px var(--mono);text-transform:uppercase}.nexus-verdict.good{color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3)}.nexus-verdict.high{color:#f87171;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3)}.nexus-verdict.low{color:#60a5fa;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3)}.nexus-verdict.unknown{color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3)}.nexus-price-hero{margin:24px 0;padding:24px;border:1px solid rgba(52,211,153,.2);border-radius:18px;background:rgba(52,211,153,.055);text-align:center}.nexus-price-hero-label{font:750 10px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:#6ee7c4}.nexus-price-hero-value{font:850 52px/1 var(--mono);margin:12px 0 8px}.nexus-price-hero-sub{font-size:12px;color:var(--nexus-soft)}.nexus-price-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.nexus-price-stat{padding:14px;border:1px solid var(--nexus-line);border-radius:13px;background:#0c111a}.nexus-price-stat span{display:block;font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--nexus-soft);margin-bottom:8px}.nexus-price-stat b{font:800 17px var(--mono)}.nexus-range{margin-top:20px}.nexus-range-track{height:12px;border-radius:999px;background:linear-gradient(90deg,#60a5fa,#34d399 45%,#fbbf24 70%,#f87171);position:relative;margin:38px 6px 12px}.nexus-range-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border:4px solid #fff;border-radius:50%;background:#111827;box-shadow:0 3px 12px rgba(0,0,0,.5)}.nexus-range-marker:before{content:attr(data-label);position:absolute;bottom:22px;left:50%;transform:translateX(-50%);white-space:nowrap;font:700 9px var(--mono);color:#fff}.nexus-range-labels{display:flex;justify-content:space-between;font:650 9px var(--mono);color:var(--nexus-soft)}.nexus-price-guidance{margin-top:18px;padding:14px 16px;border-radius:13px;background:#0c111a;border:1px solid var(--nexus-line);font-size:12px;line-height:1.55;color:var(--nexus-soft)}.nexus-price-guidance b{color:#fff}
+.nexus-price-vote-row{display:flex;gap:12px;align-items:stretch;margin:24px 0}
+.nexus-price-vote-row .nexus-price-hero{margin:0;flex:1}
+.nexus-vote-stack{display:flex;flex-direction:column;gap:6px;width:108px;flex:none}
+.nexus-vote-btn{flex:1;border:1px solid var(--nexus-line);border-radius:10px;background:#0c111a;color:var(--nexus-soft);font:750 10px var(--sans);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;transition:filter .12s}
+.nexus-vote-btn:hover{filter:brightness(1.2)}
+.nexus-vote-btn .n{font:800 14px var(--mono)}
+.nexus-vote-btn.more{border-color:rgba(96,165,250,.35);color:#93c5fd}
+.nexus-vote-btn.onpoint{border-color:rgba(74,222,128,.35);color:#86efac}
+.nexus-vote-btn.less{border-color:rgba(251,191,36,.35);color:#fde68a}
+.nexus-vote-btn.active{filter:brightness(1.3);box-shadow:0 0 0 2px currentColor inset}
+.nexus-vote-input{display:none;margin-top:10px;padding:12px 14px;border-radius:12px;background:#0c111a;border:1px solid var(--nexus-line)}
+.nexus-vote-input.show{display:block}
+.nexus-vote-input label{display:block;font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--nexus-soft);margin-bottom:7px}
+.nexus-vote-input .row{display:flex;gap:8px}
+.nexus-vote-tally{display:flex;gap:14px;margin-top:10px;font:700 10px var(--mono);color:var(--nexus-soft)}
+.nexus-vote-tally b{color:#fff}
   /* Pricing Lab inherits the Audit Tool's warm, evidence-focused visual language. */
-  .nexus-pricing{background:radial-gradient(circle at 88% 0%,rgba(251,191,36,.1),transparent 34%),#1A1608}.nexus-pricing .nexus-ship-head{background:#14100A;border-bottom:3px solid #FBBF24}.nexus-pricing .nexus-mark{background:linear-gradient(145deg,#FBBF24,#D97706);color:#1A1608;box-shadow:0 10px 30px rgba(251,191,36,.18)}.nexus-pricing .nexus-back{border-color:rgba(251,191,36,.35);color:#FBBF24}.nexus-pricing .nexus-price-inputs,.nexus-pricing .nexus-price-results{background:#221C10;border-color:rgba(251,191,36,.15)}.nexus-pricing .nexus-health-mini-label{color:#FBBF24}.nexus-pricing .nexus-input{background:#14100A;border-color:rgba(251,191,36,.2);color:#FDE68A}.nexus-pricing .nexus-input:focus{border-color:#FBBF24;box-shadow:0 0 0 3px rgba(251,191,36,.1)}.nexus-pricing .nexus-price-btn{background:#14100A;border-color:rgba(251,191,36,.22);color:rgba(253,230,138,.65)}.nexus-pricing .nexus-price-btn.primary{background:#FBBF24;color:#1A1608}.nexus-pricing .nexus-price-hero{border-color:rgba(251,191,36,.24);background:rgba(251,191,36,.065)}.nexus-pricing .nexus-price-hero-label{color:#FBBF24}.nexus-pricing .nexus-price-hero-value{color:#FDE68A}.nexus-pricing .nexus-price-stat,.nexus-pricing .nexus-price-guidance{background:#14100A;border-color:rgba(251,191,36,.15)}.nexus-pricing .nexus-price-stat b{color:#FDE68A}.nexus-pricing .nexus-range-track{background:linear-gradient(90deg,#60A5FA,#FDE68A 47%,#FBBF24 68%,#F87171)}.nexus-pricing .nexus-range-marker{background:#1A1608;border-color:#FDE68A}.nexus-pricing .nexus-status,.nexus-pricing .nexus-price-hero-sub,.nexus-pricing .nexus-range-labels,.nexus-pricing .nexus-price-guidance{color:rgba(253,230,138,.5)}
+  .nexus-pricing{background:radial-gradient(circle at 88% 0%,rgba(251,191,36,.1),transparent 34%),#1A1608}.nexus-pricing .nexus-ship-head{background:#14100A;border-bottom:3px solid #FBBF24}.nexus-pricing .nexus-mark{background:linear-gradient(145deg,#FBBF24,#D97706);color:#1A1608;box-shadow:0 10px 30px rgba(251,191,36,.18)}.nexus-pricing .nexus-back{border-color:rgba(251,191,36,.35);color:#FBBF24}.nexus-pricing .nexus-price-inputs,.nexus-pricing .nexus-price-results{background:#221C10;border-color:rgba(251,191,36,.15)}.nexus-pricing .nexus-health-mini-label{color:#FBBF24}.nexus-pricing .nexus-input{background:#14100A;border-color:rgba(251,191,36,.2);color:#FDE68A}.nexus-pricing .nexus-input:focus{border-color:#FBBF24;box-shadow:0 0 0 3px rgba(251,191,36,.1)}.nexus-pricing .nexus-price-btn{background:#14100A;border-color:rgba(251,191,36,.22);color:rgba(253,230,138,.65)}.nexus-pricing .nexus-price-btn.primary{background:#FBBF24;color:#1A1608}.nexus-pricing .nexus-price-hero{border-color:rgba(251,191,36,.24);background:rgba(251,191,36,.065)}.nexus-pricing .nexus-price-hero-label{color:#FBBF24}.nexus-pricing .nexus-price-hero-value{color:#FDE68A}.nexus-pricing .nexus-price-stat,.nexus-pricing .nexus-price-guidance{background:#14100A;border-color:rgba(251,191,36,.15)}.nexus-pricing .nexus-price-stat b{color:#FDE68A}.nexus-pricing .nexus-range-track{background:linear-gradient(90deg,#60A5FA,#FDE68A 47%,#FBBF24 68%,#F87171)}.nexus-pricing .nexus-range-marker{background:#1A1608;border-color:#FDE68A}.nexus-pricing .nexus-status,.nexus-pricing .nexus-price-hero-sub,.nexus-pricing .nexus-range-labels,.nexus-pricing .nexus-price-guidance{color:rgba(253,230,138,.5)}.nexus-pricing .nexus-vote-btn,.nexus-pricing .nexus-vote-input{background:#14100A;border-color:rgba(251,191,36,.2)}.nexus-pricing .nexus-vote-tally b{color:#FDE68A}
   .nexus-about-shell{background:#0D1119;border:1px solid rgba(251,191,36,.16);border-radius:20px;box-shadow:0 32px 90px rgba(0,0,0,.6);width:min(900px,100%);margin:auto;overflow:hidden;color:#F7F4EA}.nexus-about-head{display:flex;align-items:center;gap:14px;padding:22px 26px;background:#14100A;border-bottom:3px solid #FBBF24}.nexus-about-head h2{margin:0;font-size:18px;letter-spacing:-.03em}.nexus-about-head p{margin:4px 0 0;color:rgba(253,230,138,.48);font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase}.nexus-about-body{padding:26px;max-height:72vh;overflow:auto}.nexus-about-intro{font-size:14px;line-height:1.7;color:rgba(255,255,255,.72);margin:0 0 22px}.nexus-about-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.nexus-about-module{padding:16px;border:1px solid rgba(251,191,36,.12);border-radius:14px;background:#151922}.nexus-about-module span{font-size:18px}.nexus-about-module h3{font-size:12px;color:#FDE68A;margin:10px 0 6px}.nexus-about-module p{font-size:11.5px;line-height:1.55;color:rgba(255,255,255,.48);margin:0}.nexus-about-flow{margin-top:18px;padding:16px;border-radius:14px;background:#14100A;border:1px solid rgba(251,191,36,.16);font:650 11px/1.8 var(--mono);color:rgba(253,230,138,.68)}.nexus-about-close{background:none;border:0;color:rgba(253,230,138,.5);font-size:22px;cursor:pointer}.nexus-about-foot{padding:14px 26px 20px}.nexus-about-done{width:100%;padding:12px;border:1px solid rgba(251,191,36,.25);border-radius:10px;background:rgba(251,191,36,.08);color:#FDE68A;font:750 12px var(--sans);cursor:pointer}@media(max-width:650px){.nexus-about-grid{grid-template-columns:1fr}}
   /* Haz Nexus layout: board above, centered dark conversation console below. */
   #hazWrap{background:#07100B}.haz-wrap .haz-main{display:grid;grid-template-rows:minmax(250px,1fr) minmax(300px,42vh);overflow:hidden;background:#07100B}.haz-wrap .haz-left{grid-row:1;width:100%;border-right:0;border-bottom:1px solid rgba(74,222,128,.13);background:#0A120D}.haz-wrap .haz-right{grid-row:2;width:100%;background:#07100B;border:0;overflow:hidden;padding:12px 18px 16px}.haz-wrap #hazStaffView{width:min(900px,100%);max-width:900px;margin:0 auto;padding:0;overflow:hidden}.haz-wrap .haz-chat-wrap{min-height:0;height:100%;background:#0D1711;border:1px solid rgba(74,222,128,.16);border-radius:18px;box-shadow:0 18px 55px rgba(0,0,0,.35);overflow:hidden}.haz-wrap .haz-chat-messages{background:radial-gradient(circle at 50% 100%,rgba(34,197,94,.045),transparent 45%),#0D1711;padding:15px 18px 8px;gap:11px}.haz-wrap .haz-chat-bubble.haz .haz-chat-text{background:#13251A;color:#C9F7D5;border:1px solid rgba(74,222,128,.12)}.haz-wrap .haz-chat-bubble.staff .haz-chat-text{background:#20272F;color:#F6F8FA;border:1px solid rgba(255,255,255,.06)}.haz-wrap .haz-chat-bubble.haz .haz-chat-avatar{background:#184C2A;color:#7BF29A}.haz-wrap .haz-chat-bubble.staff .haz-chat-avatar{background:#303845;color:#C7CED8}.haz-wrap .haz-chat-input-wrap{order:9;background:#0A120D;border-top:1px solid rgba(74,222,128,.12);padding:10px 12px}.haz-wrap .haz-chat-input{background:#111D16;border:1px solid rgba(74,222,128,.18);color:#EDFDF2;border-radius:12px;min-height:42px;max-height:86px}.haz-wrap .haz-chat-input::placeholder{color:rgba(201,247,213,.3)}.haz-wrap .haz-chat-input:focus{border-color:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.08)}.haz-wrap .haz-chat-send{width:42px;height:42px;background:#22C55E;box-shadow:0 6px 20px rgba(34,197,94,.18)}.haz-wrap .haz-vibe-section{order:8;display:flex;align-items:center;gap:10px;background:#0A120D;border:0;border-top:1px solid rgba(74,222,128,.1);border-radius:0;padding:8px 12px}.haz-wrap .haz-vibe-label{font-size:9px;color:rgba(201,247,213,.38);margin:0;white-space:nowrap}.haz-wrap .haz-vibe-cards{display:flex;gap:6px;flex:1}.haz-wrap .haz-vibe-btn{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;padding:6px 10px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:#121A15}.haz-wrap .haz-vibe-emoji{font-size:13px;margin:0}.haz-wrap .haz-vibe-name{font-size:9.5px;color:rgba(255,255,255,.62);white-space:nowrap}.haz-wrap .haz-vibe-hint{display:none}.haz-wrap .haz-vibe-btn.on.easy{border-color:#22C55E;background:rgba(34,197,94,.13)}.haz-wrap .haz-vibe-btn.on.easy .haz-vibe-name{color:#86EFAC}.haz-wrap .haz-vibe-btn.on.tough{border-color:#EF4444;background:rgba(239,68,68,.12)}.haz-wrap .haz-vibe-btn.on.tough .haz-vibe-name{color:#FCA5A5}.haz-wrap .haz-vibe-btn.on.desperate{border-color:#F59E0B;background:rgba(245,158,11,.12)}.haz-wrap .haz-vibe-btn.on.desperate .haz-vibe-name{color:#FCD34D}.haz-wrap .haz-quick-replies{order:7;background:#0D1711;border-color:rgba(74,222,128,.1)}.haz-wrap .haz-reset{position:absolute;right:18px;bottom:18px;width:auto;background:#111D16;border-color:rgba(74,222,128,.18);color:#86A991;z-index:3}.haz-wrap .haz-board-toolbar{background:#0A120D}.haz-wrap .haz-board-inner{min-width:100%;min-height:100%}
@@ -19626,6 +19844,76 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   function money(n){return '$'+Number(n||0).toFixed(2)}
   function retailRound(n){return Math.max(.99,Math.round(n)-.01)}
+  // ── Price feedback (3-button vote stack) ─────────────────────────
+  // Lightweight point tally lives in localStorage, keyed by normalized
+  // query — this is what "N listers agree" is counted from. Separately,
+  // any vote WITH a suggested price (More/Less) also feeds the existing,
+  // already-proven price_training corpus via savePriceTraining() — same
+  // mechanism "Confirm actual sale" already uses, so it's real steerable
+  // signal (weighted by trainingScore + recencyWeight automatically), not
+  // a second parallel system. On Point uses the current recommended price
+  // itself as the confirmed value.
+  //
+  // IMPORTANT: this never auto-moves the recommended number shown above —
+  // that's deliberate (see the note on steerRecommendation() below it).
+  // The tally and any learned signal are shown for a person to act on,
+  // not applied silently.
+  function voteStoreKey(){return 'syg_nexus_price_votes'}
+  function loadVoteTallies(){try{return JSON.parse(localStorage.getItem(voteStoreKey()))||{}}catch(e){return{}}}
+  function saveVoteTallies(all){try{localStorage.setItem(voteStoreKey(),JSON.stringify(all))}catch(e){}}
+  function voteKeyFor(query){return normalizeLabelText(query||'')}
+  function bindVoteButtons(query,heroPrice){
+    var onPointBtn=document.getElementById('nexusVoteOnPoint'),moreBtn=document.getElementById('nexusVoteMore'),lessBtn=document.getElementById('nexusVoteLess'),cancelBtn=document.getElementById('nexusVoteCancel');
+    if(!onPointBtn)return;
+    onPointBtn.onclick=function(){castOnPointVote(query,heroPrice)};
+    moreBtn.onclick=function(){openVoteInput('more',query)};
+    lessBtn.onclick=function(){openVoteInput('less',query)};
+    cancelBtn.onclick=function(){document.getElementById('nexusVoteInputBox').classList.remove('show')};
+  }
+  function castOnPointVote(query,heroPrice){
+    if(!query){toast('Calculate a price first.');return}
+    var key=voteKeyFor(query),all=loadVoteTallies();
+    var t=all[key]=all[key]||{onPoint:0,more:0,less:0,moreTargets:[],lessTargets:[]};
+    t.onPoint++;
+    saveVoteTallies(all);
+    if(isFinite(heroPrice)){
+      savePriceTraining({id:'pt_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),query:query,tokens:tokenize(query),soldComps:lastCalc?lastCalc.prices:[],median:lastCalc?lastCalc.median:null,recommended:heroPrice,confirmed:heroPrice,note:'On Point vote',timestamp:new Date().toISOString()});
+    }
+    renderVoteTally(query);
+    toast('Marked on point — thanks for confirming.');
+  }
+  function openVoteInput(direction,query){
+    if(!query){toast('Calculate a price first.');return}
+    var box=document.getElementById('nexusVoteInputBox');
+    document.getElementById('nexusVoteInputLabel').textContent='What price would be good instead? ('+(direction==='more'?'higher':'lower')+')';
+    box.classList.add('show');
+    var input=document.getElementById('nexusVoteInputPrice');
+    input.value='';input.focus();
+    document.getElementById('nexusVoteSubmit').onclick=function(){submitVoteWithPrice(direction,query)};
+  }
+  function submitVoteWithPrice(direction,query){
+    var price=parseFloat(String(document.getElementById('nexusVoteInputPrice').value||'').replace(/[^0-9.]/g,''));
+    if(!isFinite(price)||price<=0){document.getElementById('nexusVoteInputPrice').focus();return}
+    var key=voteKeyFor(query),all=loadVoteTallies();
+    var t=all[key]=all[key]||{onPoint:0,more:0,less:0,moreTargets:[],lessTargets:[]};
+    if(direction==='more'){t.more++;t.moreTargets.push(price)}else{t.less++;t.lessTargets.push(price)}
+    saveVoteTallies(all);
+    savePriceTraining({id:'pt_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),query:query,tokens:tokenize(query),soldComps:lastCalc?lastCalc.prices:[],median:lastCalc?lastCalc.median:null,recommended:lastCalc?lastCalc.recommended:null,confirmed:price,note:(direction==='more'?'More vote':'Less vote'),timestamp:new Date().toISOString()});
+    document.getElementById('nexusVoteInputBox').classList.remove('show');
+    renderVoteTally(query);
+    toast((direction==='more'?'Logged — should be higher, around ':'Logged — should be lower, around ')+money(price));
+  }
+  function renderVoteTally(query){
+    var el=document.getElementById('nexusVoteTally');
+    if(!el)return;
+    var t=loadVoteTallies()[voteKeyFor(query)];
+    if(!t||(!t.onPoint&&!t.more&&!t.less)){el.innerHTML='<span>No lister feedback yet on this item — be the first.</span>';return}
+    var parts=[];
+    if(t.onPoint)parts.push('✓ <b>'+t.onPoint+'</b> on point');
+    if(t.more){var avgMore=t.moreTargets.length?money(t.moreTargets.reduce(function(a,b){return a+b},0)/t.moreTargets.length):'';parts.push('▲ <b>'+t.more+'</b> say more'+(avgMore?' (avg suggested '+avgMore+')':''))}
+    if(t.less){var avgLess=t.lessTargets.length?money(t.lessTargets.reduce(function(a,b){return a+b},0)/t.lessTargets.length):'';parts.push('▼ <b>'+t.less+'</b> say less'+(avgLess?' (avg suggested '+avgLess+')':''))}
+    el.innerHTML=parts.join(' &nbsp;·&nbsp; ');
+  }
   async function calculatePricing(){
     var prices=parsePriceList(),out=document.getElementById('nexusPriceResults');
     if(!prices.length){document.getElementById('nexusPriceStatus').textContent='Add at least one sold price first.';return}
@@ -19689,12 +19977,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       '<div style="flex:1;min-width:140px;padding:10px 12px;border-radius:10px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25)"><div style="font:700 9px var(--mono);text-transform:uppercase;color:#86EFAC;margin-bottom:3px">💰 Max margin, can wait</div><div style="font:800 16px var(--mono);color:#fff">'+money(maxMargin)+'</div></div>'+
     '</div>';
     out.innerHTML='<div class="nexus-market-head"><div><div class="nexus-health-mini-label">Market read</div><h3 style="font-size:19px;margin:8px 0 0">'+escapeHtml(queryText||'Untitled item')+'</h3>'+badgesHtml+'</div><span class="nexus-verdict '+verdict.cls+'">'+verdict.label+'</span></div>'+
-      '<div class="nexus-price-hero"><div class="nexus-price-hero-label">Recommended selling price</div><div class="nexus-price-hero-value">'+money(heroPrice)+'</div><div class="nexus-price-hero-sub">'+heroSub+'</div></div>'+
+      '<div class="nexus-price-vote-row"><div class="nexus-price-hero"><div class="nexus-price-hero-label">Recommended selling price</div><div class="nexus-price-hero-value">'+money(heroPrice)+'</div><div class="nexus-price-hero-sub">'+heroSub+'</div></div>'+
+      '<div class="nexus-vote-stack"><button class="nexus-vote-btn more" id="nexusVoteMore" title="This item should be priced higher"><span class="n">▲</span>More</button><button class="nexus-vote-btn onpoint" id="nexusVoteOnPoint" title="This recommendation looks right"><span class="n">✓</span>On Point</button><button class="nexus-vote-btn less" id="nexusVoteLess" title="This item should be priced lower"><span class="n">▼</span>Less</button></div></div>'+
+      '<div class="nexus-vote-input" id="nexusVoteInputBox"><label id="nexusVoteInputLabel">What price would be good instead?</label><div class="row"><input class="nexus-input" id="nexusVoteInputPrice" placeholder="$0.00" style="flex:1"><button class="nexus-price-btn primary" id="nexusVoteSubmit" style="flex:none;padding:11px 16px">Submit</button><button class="nexus-price-btn" id="nexusVoteCancel" style="flex:none;padding:11px 16px">Cancel</button></div></div>'+
+      '<div class="nexus-vote-tally" id="nexusVoteTally"></div>'+
       '<div class="nexus-price-stats"><div class="nexus-price-stat"><span>Sold comps</span><b>'+prices.length+'</b></div><div class="nexus-price-stat"><span>Median</span><b>'+money(median)+'</b></div><div class="nexus-price-stat"><span>Average</span><b>'+money(avg)+'</b></div><div class="nexus-price-stat"><span>Range</span><b style="font-size:12px">'+money(low)+'–'+money(high)+'</b></div></div>'+
       '<div class="nexus-range"><div class="nexus-range-track"><div class="nexus-range-marker" style="left:'+marker+'%" data-label="'+(isFinite(current)?'Current '+money(current):'Market center')+'"></div></div><div class="nexus-range-labels"><span>Low '+money(low)+'</span><span>Median '+money(median)+'</span><span>High '+money(high)+'</span></div></div>'+
       actionChips+
       '<div class="nexus-price-guidance" style="margin-top:10px"><b>'+verdict.text+'</b></div>'+
       trendHtml;
+    bindVoteButtons(queryText,heroPrice);
+    renderVoteTally(queryText);
     document.getElementById('nexusPriceStatus').textContent=prices.length<3?'Low confidence — add at least three relevant sold comps.':'Price check ready · '+prices.length+' sold comps analyzed.';
     try{localStorage.setItem('syg_nexus_last_price_check',JSON.stringify({query:queryText,prices:prices,current:current,recommended:recommended,at:new Date().toISOString()}))}catch(e){}
 
@@ -20313,6 +20606,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .leads-head h2{font-size:16px;margin:0;font-weight:750}
 .leads-spacer{flex:1}
 .leads-btn{border:1px solid #ffffff2a;background:#ffffff12;color:#d0d6e3;padding:9px 14px;border-radius:9px;font:700 12px Inter,sans-serif;cursor:pointer}
+.leads-btn.danger{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
 .leads-btn.primary{background:#a78bfa;border-color:#a78bfa;color:#221240}
 .leads-toolbar{display:flex;gap:10px;padding:14px 20px;background:#fff;border-bottom:1px solid #dbe0e9;align-items:center;flex-wrap:wrap}
 .leads-search{flex:1;min-width:220px;border:1px solid #dbe0e9;border-radius:9px;padding:10px 13px;font-size:13px;outline:0}
@@ -20340,7 +20634,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .leads-detail-key{font-weight:700;color:#70798a;width:38%;white-space:nowrap}
 </style>
 <div class="leads-app" id="leadsApp">
-  <header class="leads-head"><div class="nexus-mark">SYG</div><h2>Ckay Connect</h2><div class="leads-spacer"></div><button class="leads-btn primary" id="leadsPullBtn">🔄 Pull &amp; refresh from tab</button><button class="leads-btn primary" id="leadsImportBtn">📋 Paste leads</button><button class="leads-btn" id="leadsBack">← Command</button></header>
+  <header class="leads-head"><div class="nexus-mark">SYG</div><h2>Ckay Connect</h2><div class="leads-spacer"></div><button class="leads-btn primary" id="leadsPullBtn">🔄 Pull &amp; refresh from tab</button><button class="leads-btn primary" id="leadsImportBtn">📋 Paste leads</button><button class="leads-btn danger" id="leadsClearBtn" title="Deletes every lead stored in this browser — does not touch the live dashboard">🗑️ Clear all</button><button class="leads-btn" id="leadsBack">← Command</button></header>
   <div class="leads-toolbar">
     <input class="leads-search" id="leadsSearch" placeholder="Search name, email, phone, device…">
     <select id="leadsStatusFilter"><option value="">All statuses</option><option>Auto Replied</option><option>Follow-Up</option><option>Appointment</option><option>No Deal</option><option>Sell Now</option></select>
@@ -20373,6 +20667,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function el(id){return document.getElementById(id)}
   function esc(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
   function load(){try{leads=JSON.parse(localStorage.getItem(LEADS_KEY))||[]}catch(e){leads=[]}}
+  function clearAllLeads(){
+    if(!leads.length){return}
+    if(!confirm('Delete all '+leads.length+' lead(s) stored in this browser? This only clears local data — nothing on the live dashboard is touched, and you can pull or paste again afterward. This cannot be undone.'))return;
+    leads=[];
+    save();
+    render();
+  }
   function save(){try{localStorage.setItem(LEADS_KEY,JSON.stringify(leads))}catch(e){}}
 
   var STATUS_COLORS={
@@ -20653,6 +20954,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   document.addEventListener('DOMContentLoaded',function(){
     el('leadsImportBtn').onclick=function(){el('leadsImportModal').classList.add('show')};
     el('leadsPullBtn').onclick=pullLeadsFromTab;
+    el('leadsClearBtn').onclick=clearAllLeads;
     el('leadsImportClose').onclick=function(){el('leadsImportModal').classList.remove('show')};
     el('leadsDetailClose').onclick=function(){el('leadsDetailModal').classList.remove('show')};
     el('leadsParseBtn').onclick=function(){importLeads(el('leadsPasteText').value)};
