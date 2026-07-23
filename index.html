@@ -20730,6 +20730,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   <div class="leads-toolbar">
     <input class="leads-search" id="leadsSearch" placeholder="Search name, email, phone, device…">
     <select id="leadsStatusFilter"><option value="">All statuses</option><option>Auto Replied</option><option>Follow-Up</option><option>Appointment</option><option>No Deal</option><option>Sell Now</option></select>
+    <select id="leadsReadyFilter"><option value="">All leads</option><option value="ready">✅ Ready to check (has item info)</option><option value="notready">❔ No item info yet</option></select>
     <select id="leadsSort"><option value="date">Newest first</option><option value="value">By estimated value</option></select>
     <div class="leads-count" id="leadsCount"></div>
   </div>
@@ -20984,9 +20985,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function render(){
     var q=(el('leadsSearch').value||'').toLowerCase();
     var statusFilter=el('leadsStatusFilter').value;
+    var readyFilter=el('leadsReadyFilter').value;
     var sortMode=el('leadsSort').value;
     var list=leads.filter(function(l){
       if(statusFilter&&l.status!==statusFilter)return false;
+      if(readyFilter){
+        var isReady=leadItemNames(l).length>0;
+        if(readyFilter==='ready'&&!isReady)return false;
+        if(readyFilter==='notready'&&isReady)return false;
+      }
       if(!q)return true;
       var hay=[l.customerName,l.email,l.phone,l.fields['Brand/Model'],l.fields['Device Type'],l.rawMessage].join(' ').toLowerCase();
       return hay.indexOf(q)!==-1;
@@ -21083,6 +21090,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     el('leadsBack').onclick=function(){el('leadsApp').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
     el('leadsSearch').oninput=render;
     el('leadsStatusFilter').onchange=render;
+    el('leadsReadyFilter').onchange=render;
     el('leadsSort').onchange=render;
   });
 })();
