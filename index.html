@@ -17906,7 +17906,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-sw-btn{border:1px solid var(--nexus-line);border-radius:10px;background:#0c111a;color:var(--nexus-soft);padding:9px 13px;font:700 11px var(--sans);cursor:pointer;white-space:nowrap}
   .nexus-sw-btn:hover{border-color:var(--nexus-cyan);color:#fff}
   .nexus-sw-btn:disabled{opacity:.4;cursor:not-allowed}
-  .nexus-sw-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .nexus-sw-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;align-items:center}
+  .nexus-sw-cat-select{border:1px solid;border-radius:999px;padding:4px 9px;font:700 10px var(--sans);cursor:pointer;max-width:170px}
+  .nexus-sw-chip-bulk{border:1px solid var(--nexus-line);border-radius:8px;background:transparent;color:var(--nexus-soft);padding:5px 10px;font:700 10px var(--sans);cursor:pointer;white-space:nowrap}
+  .nexus-sw-chip-bulk:hover{border-color:var(--nexus-cyan);color:#fff}
+  .nexus-sw-cat-row{cursor:pointer}
+  .nexus-sw-cat-row.off{opacity:.35}
   .nexus-sw-chip{border:1px solid;border-radius:999px;padding:5px 11px;font:600 11px var(--sans);cursor:pointer;background:transparent;transition:opacity .15s}
   .nexus-sw-chip.off{opacity:.35}
   .nexus-sw-board{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
@@ -18692,6 +18697,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function swBinFor(entry){ return swIssuesFor(entry).length?'needsAttention':'good'; }
 
   // ── Feed-through to the regular Listing Health board ──
+  // Cards built here come from the eBay CSV, which has no Shopify product
+  // ID at all — so a direct admin product link (…/admin/products/<id>)
+  // genuinely can't be built without guessing, which Nexus never does for
+  // Shopify URLs. What CAN be built safely is Shopify's own admin SEARCH
+  // link (…/admin/products?query=<sku>) — a real, documented feature that
+  // takes you straight to the matching product (or an empty result if the
+  // SKU doesn't exist), never a fabricated or wrong ID.
+  var SHOPIFY_ADMIN_DOMAIN='xpp09p-dz.myshopify.com'; // confirmed via Shopify:get-shop-info, not guessed
+  function shopifySearchLink(sku){
+    return sku?('https://'+SHOPIFY_ADMIN_DOMAIN+'/admin/products?query='+encodeURIComponent(sku)):'';
+  }
   function swPushToListingHealth(entry){
     if(entry.pushedEntryId)return;
     if(typeof window.pcLoadBatch!=='function')return;
@@ -18700,7 +18716,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       id:Date.now()+Math.random(), status:'ok', bin:null,
       title:entry.title, date:entry.startDate||'', condition:entry.condition,
       price:entry.price!=null?String(entry.price):'', sku:entry.sku,
-      shopifyLink:'', ebayLink:entry.ebayLink, ebayUnverified:false, skuConfirmed:true,
+      shopifyLink:shopifySearchLink(entry.sku), ebayLink:entry.ebayLink, ebayUnverified:false, skuConfirmed:true,
       watchers:entry.watchers, sold:entry.sold,
       importedAt:new Date().toISOString(), swSourceId:entry.itemNumber
     };
@@ -18791,7 +18807,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!el)return;
     var counts=swCategoryCounts();
     var cats=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a]});
-    el.innerHTML=cats.map(function(cat){
+    el.innerHTML='<button class="nexus-sw-chip-bulk" id="nexusSwShowAllCats">Show all</button><button class="nexus-sw-chip-bulk" id="nexusSwHideAllCats">Hide all</button>'+cats.map(function(cat){
       var color=swCategoryColor(cat);
       var on=swActiveFilters?swActiveFilters[cat]!==false:true;
       return '<button class="nexus-sw-chip'+(on?'':' off')+'" data-sw-cat="'+escapeHtml(cat)+'" style="border-color:'+color+';color:'+color+';background:'+color+'1a">'+escapeHtml(cat)+' · '+counts[cat]+'</button>';
@@ -18803,6 +18819,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         swRenderAll();
       };
     });
+    var showAllBtn=document.getElementById('nexusSwShowAllCats');
+    if(showAllBtn)showAllBtn.onclick=function(){cats.forEach(function(c){swActiveFilters[c]=true});swRenderAll()};
+    var hideAllBtn=document.getElementById('nexusSwHideAllCats');
+    if(hideAllBtn)hideAllBtn.onclick=function(){cats.forEach(function(c){swActiveFilters[c]=false});swRenderAll()};
   }
   function swRenderStats(){
     var hero=document.getElementById('nexusSwHero');
@@ -18850,6 +18870,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     // ── Top categories by value ── addresses "categories cluttering" by
     // actually organizing by category meaningfully (what's worth the
     // most) instead of scattering flag chips with no shared ordering.
+    // Also doubles as a second, faster way to toggle visibility — clicking
+    // a bar here flips the same swActiveFilters state the chips below use,
+    // so whichever one you touch, both stay in sync.
     if(catsEl){
       var byCategory={};
       swEntries.forEach(function(e){
@@ -18861,8 +18884,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       var catList=Object.keys(byCategory).map(function(c){return {name:c,value:byCategory[c]}}).sort(function(a,b){return b.value-a.value}).slice(0,6);
       var maxVal=catList.length?catList[0].value:1;
       catsEl.innerHTML=catList.length?catList.map(function(c){
-        return '<div class="nexus-sw-cat-row"><div class="nexus-sw-cat-name" title="'+escapeHtml(c.name)+'">'+escapeHtml(c.name)+'</div><div class="nexus-sw-cat-track"><div class="nexus-sw-cat-fill" style="width:'+(maxVal?c.value/maxVal*100:0)+'%"></div></div><div class="nexus-sw-cat-value">'+money(c.value)+'</div></div>';
+        var on=swActiveFilters?swActiveFilters[c.name]!==false:true;
+        return '<div class="nexus-sw-cat-row'+(on?'':' off')+'" data-sw-cat-toggle="'+escapeHtml(c.name)+'" title="Click to '+(on?'hide':'show')+' this category on the board"><div class="nexus-sw-cat-name">'+escapeHtml(c.name)+'</div><div class="nexus-sw-cat-track"><div class="nexus-sw-cat-fill" style="width:'+(maxVal?c.value/maxVal*100:0)+'%"></div></div><div class="nexus-sw-cat-value">'+money(c.value)+'</div></div>';
       }).join(''):'';
+      catsEl.querySelectorAll('[data-sw-cat-toggle]').forEach(function(row){
+        row.onclick=function(){
+          var cat=row.getAttribute('data-sw-cat-toggle');
+          if(swActiveFilters===null)swInitFilters();
+          swActiveFilters[cat]=!(swActiveFilters[cat]!==false);
+          swRenderAll();
+        };
+      });
     }
   }
   function swCardHtml(e){
@@ -18884,11 +18916,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var suggestion=swSuggestionFor(e);
     var isFlagged=e.bin==='needsAttention';
     var healthDot='<span class="nexus-health-dot '+(isFlagged?'flagged':'healthy')+'" title="'+(isFlagged?'Flagged — needs attention':'Healthy')+'"></span>';
+    // Quick category reassignment — pre-populated with every category
+    // already in use (from the CSV or from earlier reassignments), so
+    // changing a miscategorized item is a two-click select, not a CSV
+    // round-trip. "+ New category…" prompts for a name on the spot.
+    var allCats=Object.keys(swCategoryCounts());
+    if(e.category&&allCats.indexOf(e.category)===-1)allCats.push(e.category);
+    allCats.sort();
+    var catOptions=allCats.map(function(c){return '<option value="'+escapeHtml(c)+'"'+(c===e.category?' selected':'')+'>'+escapeHtml(c)+'</option>'}).join('');
+    var catSelect='<select class="nexus-sw-cat-select" data-sw-cat-select="'+e.id+'" style="border-color:'+color+';color:'+color+';background:'+color+'1a" onclick="event.stopPropagation()">'+catOptions+'<option value="__new__">+ New category…</option></select>';
     return '<div class="nexus-sw-card'+(isFlagged?' sw-flagged':'')+'" data-sw-id="'+e.id+'" style="border-left-color:'+color+'">'+
       '<input type="checkbox" class="nexus-sw-check" data-sw-check="'+e.id+'" '+checked+' style="margin-top:2px">'+
       '<div class="nexus-sw-card-main">'+
         '<div class="nexus-sw-card-top">'+healthDot+'<span class="nexus-sw-card-title">'+escapeHtml(e.title||'Untitled')+'</span><span class="nexus-sw-card-price">'+(e.price!=null?money(e.price):'—')+'</span></div>'+
         '<div class="nexus-sw-card-meta">'+escapeHtml(e.sku||'NO SKU')+(forSaleSinceStr?' · '+forSaleSinceStr:'')+(e.location?' · 📍 '+escapeHtml(e.location):'')+(ageStr?' · ⏱ '+ageStr:'')+(interest.length?' · '+interest.join(' · '):'')+'</div>'+
+        '<div style="margin-top:6px">'+catSelect+'</div>'+
         '<div class="nexus-sw-flags">'+flagsHtml+(e.pushedEntryId?'<span class="nexus-sw-flag" style="background:rgba(56,189,248,.15);color:#7dd3fc">→ In Listing Health</span>':'')+'</div>'+
         (suggestion?'<div class="nexus-status" style="margin:6px 0 0;color:var(--nexus-gold)">'+escapeHtml(suggestion)+'</div>':'')+
         (e.ebayLink?'<div style="margin-top:6px"><a href="'+e.ebayLink+'" target="_blank" rel="noopener" style="font:700 10px var(--mono);color:var(--nexus-cyan)">eBay ✓</a></div>':'')+
@@ -18950,6 +18992,22 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     [goodEl,attnEl].forEach(function(listEl){
       listEl.querySelectorAll('[data-sw-check]').forEach(function(chk){
         chk.onclick=function(ev){ev.stopPropagation();var id=chk.getAttribute('data-sw-check');if(chk.checked)swSelected[id]=true;else delete swSelected[id];swUpdateSelCount()};
+      });
+      listEl.querySelectorAll('[data-sw-cat-select]').forEach(function(sel){
+        sel.onchange=function(){
+          var id=sel.getAttribute('data-sw-cat-select');
+          var entry=swEntries.find(function(x){return String(x.id)===String(id)});
+          if(!entry)return;
+          var val=sel.value;
+          if(val==='__new__'){
+            var name=prompt('New category name for this item:',entry.category||'');
+            if(!name||!name.trim()){sel.value=entry.category;return}
+            val=name.trim();
+          }
+          entry.category=val;
+          swSave();
+          swRenderAll(); // recomputes hero value-by-category, chips, and stats too — category feeds all three
+        };
       });
       listEl.querySelectorAll('.nexus-sw-card').forEach(function(card){
         card.setAttribute('draggable','true');
