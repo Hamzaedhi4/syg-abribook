@@ -20424,14 +20424,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       // also "match" (they contain the same lines nested inside them),
       // and picking the smallest avoids grabbing one of those instead of
       // the actual message div.
+      // The message body isn't always "=== Header ===" style — some lead
+      // types (e.g. "Sell Now Page Lead") start directly with a plain
+      // label line and go straight into Key: Value pairs, no === at all.
+      // Detect by counting actual Key: Value lines instead of requiring a
+      // specific header, then take the SMALLEST matching div — ancestors
+      // also "match" (they contain the same lines nested inside them),
+      // and picking the smallest avoids grabbing one of those instead of
+      // the actual message div.
+      // IMPORTANT: this counts lines from innerHTML with <br> converted to
+      // real newlines, NOT .textContent — .textContent silently drops
+      // <br> tags with no separator at all, which was quietly merging
+      // every line into one unmatchable blob and returning zero fields
+      // for every real lead.
+      function normalizedLines(d){return d.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').split('\n').map(function(s){return s.trim()}).filter(Boolean)}
       var kvLineRe=/^[A-Za-z][A-Za-z0-9 /]{1,30}:\s*\S/;
       var bodyCandidates=allDivs.filter(function(d){
-        var lines=d.textContent.split('\n').map(function(s){return s.trim()}).filter(Boolean);
-        return lines.filter(function(l){return kvLineRe.test(l)}).length>=3;
-      }).sort(function(a,b){return a.textContent.length-b.textContent.length});
+        return normalizedLines(d).filter(function(l){return kvLineRe.test(l)}).length>=3;
+      }).sort(function(a,b){return a.innerHTML.length-b.innerHTML.length});
       var bodyEl=bodyCandidates[0];
-      var messageText=bodyEl?(bodyEl.textContent||''):'';
-      var rawLines=bodyEl?bodyEl.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,''):'';
+      var messageText=bodyEl?normalizedLines(bodyEl).join(' '):'';
+      var rawLines=bodyEl?normalizedLines(bodyEl).join('\n'):'';
       var fields={};
       rawLines.split('\n').forEach(function(line){
         line=line.trim();
