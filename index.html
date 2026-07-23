@@ -3538,6 +3538,7 @@
         <button class="nexus-module" data-module="inventory" style="--mod-color:#22d3ee"><div class="nexus-module-foot">Locate</div><div class="nexus-module-icon">▦</div><h2>Inventory Map</h2><p>Navigate the store floor, relocate items and build storage without code.</p></button>
         <button class="nexus-module" data-module="command" style="--mod-color:#c084fc"><div class="nexus-module-foot">Insights</div><div class="nexus-module-icon">⌁</div><h2>Command Center</h2><p>Health trends and smart operational suggestions.</p></button>
         <button class="nexus-module" data-module="shovo" style="--mod-color:#fb7185"><div class="nexus-module-foot">Assist</div><div class="nexus-module-icon">✦</div><h2>Ask Shovo</h2><p>System guidance, shortcuts and operational answers.</p></button>
+        <button class="nexus-module" data-module="leads" style="--mod-color:#a78bfa"><div class="nexus-module-foot">Leads</div><div class="nexus-module-icon">◈</div><h2>Ckay Connect</h2><p>Pull in leads, sort by value, and reply — all in one place.</p></button>
       </div>
       <div class="nexus-home-actions"><button class="nexus-quiet-btn" id="openAboutWelcomeBtn">About Nexus</button><button class="nexus-quiet-btn" id="gModeWelcomeBtn">Guided Tour</button></div>
     </div>
@@ -17735,6 +17736,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <button class="nexus-connect" id="nexusConnectPage">Connect working page</button>
         <button class="nexus-prefill" id="nexusPullOrders" style="margin-top:9px" disabled>Pull orders from this tab</button>
         <button class="nexus-prefill" id="nexusSendCompanion" style="margin-top:9px;background:#1f2937">📱 Send to Companion (phone pick list)</button>
+        <button class="nexus-prefill" id="nexusImportResults" style="margin-top:9px;background:#3b2f1f">📥 Import pick results from phone</button>
         <div class="nexus-status" id="nexusConnectStatus">Saved locally for today. The Nexus browser extension will use this page for prefilling.</div>
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
@@ -17922,6 +17924,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   </div>
 </div>
 
+<div class="nexus-modal" id="nexusResultsModal">
+  <div class="nexus-modal-card">
+    <div class="nexus-modal-head"><h3>📥 Import Pick Results</h3><button class="nexus-modal-close" id="nexusResultsClose">×</button></div>
+    <div class="nexus-modal-body">
+      <div class="nexus-status" style="margin-bottom:12px">Paste the results link the phone showed at the end of the pick run (or just the part after <code>#results=</code>).</div>
+      <div class="nexus-field"><label>Results link</label><input class="nexus-input" id="nexusResultsInput" placeholder="Paste the full link or just the code"></div>
+      <div class="nexus-actions" style="margin-top:12px"><button class="nim-btn primary" id="nexusResultsApply">Apply results</button></div>
+      <div class="nexus-status" id="nexusResultsStatus" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
 <div class="nexus-modal" id="nexusCompanionModal">
   <div class="nexus-modal-card">
     <div class="nexus-modal-head"><h3>📱 Phone Pick List</h3><button class="nexus-modal-close" id="nexusCompanionClose">×</button></div>
@@ -18963,6 +18976,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(id==='inventory'){welcome.classList.add('hidden');if(window.NexusInventoryMap)window.NexusInventoryMap.open();return}
     if(id==='shovo'){if(typeof window.openShovoFromNexus==='function')window.openShovoFromNexus();return}
     if(id==='command'){buildCommandCenter();welcome.classList.add('hidden');document.getElementById('nexusCommand').classList.add('show');return}
+    if(id==='leads'){welcome.classList.add('hidden');if(typeof window.leadsOpen==='function')window.leadsOpen();return}
   }
 
   function buildBoxes(){
@@ -19173,7 +19187,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var lines=[];
     pulledOrders.forEach(function(o){
       var rows=Array.isArray(o.items)&&o.items.length?o.items:[{sku:o.sku,qty:o.qty,value:o.value}];
-      rows.forEach(function(it){
+      rows.forEach(function(it,idx){
         var sku=it.sku||'';
         var nimItem=nimState?nimState.items.find(function(i){return i.sku===sku}):null;
         var location=nimItem?(nimItem.pendingLocation||nimItem.officialLocation||''):'';
@@ -19181,6 +19195,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         var dist=zone?Math.hypot(zoneCenter(zone).x-shipCenter.x,zoneCenter(zone).y-shipCenter.y):-1;
         var extra=skuLookup(sku);
         lines.push({
+          pickId:o.id+'-'+idx,
+          orderId:o.id,
           order:o.orderNumber||'',
           buyer:o.buyerName||'',
           sku:sku,
@@ -19188,6 +19204,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           title:extra.title||nimItem&&nimItem.title||'',
           location:location||'Unknown',
           ebayLink:extra.ebayLink||'',
+          image:nimItem&&nimItem.image||'',
+          price:(nimItem&&nimItem.price!=null)?nimItem.price:(it.value||''),
           dist:dist
         });
       });
@@ -19202,6 +19220,46 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       return b.dist-a.dist;
     });
     return lines;
+  }
+  // Reads the results link the phone generates at the end of a swipe pick
+  // run and closes the loop: orders where every item was swiped "got it"
+  // move straight into Packed (same effect as manually dragging them
+  // there). Orders only partially picked, plus anything swiped "can't
+  // find" or "not in store", are surfaced as text to handle by hand —
+  // this never silently edits Shopify or guesses at a partial pack.
+  function applyPickResults(raw){
+    var status=document.getElementById('nexusResultsStatus');
+    var input=(raw||'').trim();
+    if(!input){status.textContent='Paste something first.';return}
+    var hashIdx=input.indexOf('#results=');
+    var encoded=hashIdx!==-1?input.slice(hashIdx+9):input;
+    var payload;
+    try{payload=JSON.parse(decodeURIComponent(escape(atob(encoded))))}catch(e){status.textContent='Could not read that — make sure you pasted the full results link from the phone.';return}
+    var picked=Array.isArray(payload.picked)?payload.picked:[];
+    var missing=Array.isArray(payload.missing)?payload.missing:[];
+    var oos=Array.isArray(payload.oos)?payload.oos:[];
+    var pickedByOrder={};
+    picked.forEach(function(p){(pickedByOrder[p.orderId]=pickedByOrder[p.orderId]||[]).push(p.pickId)});
+    var movedCount=0,partialOrders=[];
+    Object.keys(pickedByOrder).forEach(function(orderId){
+      var order=pulledOrders.find(function(o){return o.id===orderId});
+      if(!order)return;
+      var totalItems=Array.isArray(order.items)&&order.items.length?order.items.length:1;
+      var pickedCount=pickedByOrder[orderId].length;
+      if(pickedCount>=totalItems){
+        pulledOrders=pulledOrders.filter(function(o){return o.id!==orderId});
+        packedOrders.push(order);
+        movedCount++;
+      }else{
+        partialOrders.push(order.orderNumber||orderId);
+      }
+    });
+    renderOrderQueue();
+    var parts=[movedCount+' order'+(movedCount===1?'':'s')+' moved to Packed'];
+    if(partialOrders.length)parts.push(partialOrders.length+' order(s) only partially found — handle manually: '+partialOrders.join(', '));
+    if(missing.length)parts.push(missing.length+' item(s) could not be found: '+missing.map(function(m){return m.sku||m.title||'?'}).join(', '));
+    if(oos.length)parts.push(oos.length+' item(s) flagged not-in-store: '+oos.map(function(m){return m.sku||m.title||'?'}).join(', '));
+    status.textContent=parts.join(' · ');
   }
   function sendToCompanion(){
     if(!pulledOrders.length){toast('Pull orders first — nothing to send yet');return}
@@ -19656,6 +19714,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       setTimeout(function(){if(!done){window.removeEventListener('message',listener);resolve({ok:false,error:'The Nexus browser extension did not respond.'})}},timeout||12000);
     });
   }
+  window.nexusAskExtension=nexusAskExtension;
   // Mirrors the audit tool popup's PC_CONDITION_IDS / pcGuessConditionKey
   // exactly — same extension, same eBay LH_ItemCondition= values, so results
   // stay consistent whether the check comes from the popup or from here.
@@ -20024,6 +20083,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     document.getElementById('nexusSendCompanion').onclick=sendToCompanion;
     document.getElementById('nexusCompanionClose').onclick=function(){document.getElementById('nexusCompanionModal').classList.remove('show')};
     document.getElementById('nexusCompanionCopy').onclick=function(){var inp=document.getElementById('nexusCompanionLink');inp.select();navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(inp.value).then(function(){toast('Link copied')}):document.execCommand('copy')};
+    document.getElementById('nexusImportResults').onclick=function(){document.getElementById('nexusResultsInput').value='';document.getElementById('nexusResultsStatus').textContent='';document.getElementById('nexusResultsModal').classList.add('show')};
+    document.getElementById('nexusResultsClose').onclick=function(){document.getElementById('nexusResultsModal').classList.remove('show')};
+    document.getElementById('nexusResultsApply').onclick=function(){applyPickResults(document.getElementById('nexusResultsInput').value)};
     document.getElementById('nexusShipUrl').addEventListener('input',function(){
       document.getElementById('nexusPullOrders').disabled=!/^https:\/\/([a-z0-9-]+\.)*ebay\.com\//i.test(this.value.trim());
     });
@@ -20186,7 +20248,275 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .nim-carry-cancel{border:1px solid var(--nl);background:#fff;padding:9px 12px;border-radius:10px;font-weight:700;cursor:pointer}
 .nim-carry-banner{position:absolute;left:15px;right:15px;top:15px;z-index:5;display:none;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;background:#fff6e9;border:1px solid #f0d19c;box-shadow:0 6px 18px rgba(180,120,20,.15)}
 .nim-carry-banner.show{display:flex}.nim-carry-banner b{color:#8a5a00;font-size:12px}.nim-carry-banner span{color:#6f6552;font-size:12px;flex:1}
+/* ── Ckay Connect (leads) ── shares NIM's light palette for visual
+   consistency between the two newer modules. */
+.leads-app{position:fixed;inset:0;z-index:10060;background:#eef1f6;display:none;flex-direction:column;font-family:Inter,system-ui,sans-serif}
+.leads-app.show{display:flex}
+.leads-head{height:64px;flex:none;display:flex;align-items:center;gap:14px;padding:0 20px;background:#151922;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.leads-head h2{font-size:16px;margin:0;font-weight:750}
+.leads-spacer{flex:1}
+.leads-btn{border:1px solid #ffffff2a;background:#ffffff12;color:#d0d6e3;padding:9px 14px;border-radius:9px;font:700 12px Inter,sans-serif;cursor:pointer}
+.leads-btn.primary{background:#a78bfa;border-color:#a78bfa;color:#221240}
+.leads-toolbar{display:flex;gap:10px;padding:14px 20px;background:#fff;border-bottom:1px solid #dbe0e9;align-items:center;flex-wrap:wrap}
+.leads-search{flex:1;min-width:220px;border:1px solid #dbe0e9;border-radius:9px;padding:10px 13px;font-size:13px;outline:0}
+.leads-search:focus{border-color:#a78bfa}
+.leads-toolbar select{border:1px solid #dbe0e9;border-radius:9px;padding:10px 12px;font-size:12px;background:#fff;color:#1b2436}
+.leads-count{font:700 11px ui-monospace,monospace;color:#70798a;white-space:nowrap}
+.leads-list{flex:1;overflow:auto;padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px;align-content:start}
+.leads-card{background:#fff;border:1px solid #dbe0e9;border-radius:16px;padding:18px 20px;cursor:pointer;box-shadow:0 3px 12px rgba(20,30,50,.06);transition:transform .12s,box-shadow .12s}
+.leads-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(20,30,50,.14)}
+.leads-value{font:900 20px ui-monospace,monospace;color:#166534;white-space:nowrap}
+.leads-value.unset{font:700 11px Inter,sans-serif;color:#a78bfa;cursor:pointer;text-decoration:underline}
+.leads-value.loading{color:#8b93a2;font:700 11px Inter,sans-serif}
+.leads-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(20,30,50,.12)}
+.leads-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.leads-card-name{font-weight:800;font-size:17px;color:#1b2436}
+.leads-card-meta{font-size:12.5px;color:#8b93a2;margin-top:3px}
+.leads-pill{font:800 11px Inter,sans-serif;padding:5px 12px;border-radius:999px;white-space:nowrap;flex:none}
+.leads-card-contact{font:700 13px ui-monospace,monospace;color:#3978f6;margin-top:11px}
+.leads-card-note{font-size:12.5px;color:#70798a;margin-top:9px;border-top:1px solid #eef1f6;padding-top:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.leads-empty{grid-column:1/-1;text-align:center;color:#8b93a2;padding:60px 20px;font-size:13px}
+.leads-textarea{width:100%;min-height:220px;border:1px solid #dbe0e9;border-radius:11px;padding:12px;font:11px/1.5 ui-monospace,monospace;resize:vertical;margin-top:10px}
+.leads-status{font-size:12px;color:#70798a;margin-top:10px}
+.leads-detail-table{width:100%;border-collapse:collapse;font-size:12px}
+.leads-detail-table td{padding:8px 10px;border-top:1px solid #eef1f6;vertical-align:top}
+.leads-detail-key{font-weight:700;color:#70798a;width:38%;white-space:nowrap}
 </style>
+<div class="leads-app" id="leadsApp">
+  <header class="leads-head"><div class="nexus-mark">SYG</div><h2>Ckay Connect</h2><div class="leads-spacer"></div><button class="leads-btn primary" id="leadsImportBtn">📋 Paste leads</button><button class="leads-btn" id="leadsBack">← Command</button></header>
+  <div class="leads-toolbar">
+    <input class="leads-search" id="leadsSearch" placeholder="Search name, email, phone, device…">
+    <select id="leadsStatusFilter"><option value="">All statuses</option><option>Auto Replied</option><option>Follow-Up</option><option>Appointment</option><option>No Deal</option><option>Sell Now</option></select>
+    <select id="leadsSort"><option value="date">Newest first</option><option value="value">By estimated value</option></select>
+    <div class="leads-count" id="leadsCount"></div>
+  </div>
+  <div class="leads-list" id="leadsList"></div>
+</div>
+<div class="nexus-modal" id="leadsImportModal">
+  <div class="nexus-modal-card">
+    <div class="nexus-modal-head"><h3>Paste leads from the dashboard</h3><button class="nexus-modal-close" id="leadsImportClose">×</button></div>
+    <div class="nexus-modal-body">
+      <div class="leads-status">Open the leads dashboard, select/copy the entries table's HTML (or use "Inspect" → copy outer HTML of the entries container), and paste it below. This is parsed entirely in your browser — nothing leaves this page.</div>
+      <textarea class="leads-textarea" id="leadsPasteText" placeholder="Paste the leads HTML here…"></textarea>
+      <div class="nexus-actions" style="margin-top:12px"><button class="nim-btn primary" id="leadsParseBtn">Parse &amp; Import</button></div>
+      <div class="leads-status" id="leadsImportStatus"></div>
+    </div>
+  </div>
+</div>
+<div class="nexus-modal" id="leadsDetailModal">
+  <div class="nexus-modal-card" style="max-width:640px">
+    <div class="nexus-modal-head"><h3 id="leadsDetailTitle">Lead</h3><button class="nexus-modal-close" id="leadsDetailClose">×</button></div>
+    <div class="nexus-modal-body" id="leadsDetailBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var LEADS_KEY='syg_nexus_leads';
+  var leads=[];
+  function el(id){return document.getElementById(id)}
+  function esc(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
+  function load(){try{leads=JSON.parse(localStorage.getItem(LEADS_KEY))||[]}catch(e){leads=[]}}
+  function save(){try{localStorage.setItem(LEADS_KEY,JSON.stringify(leads))}catch(e){}}
+
+  var STATUS_COLORS={
+    'Auto Replied':{bg:'#e2e8f0',fg:'#334155'},
+    'Follow-Up':{bg:'#dcfce7',fg:'#166534'},
+    'Appointment':{bg:'#ede9fe',fg:'#5b21b6'},
+    'No Deal':{bg:'#fee2e2',fg:'#991b1b'},
+    'Sell Now':{bg:'#fef3c7',fg:'#92400e'}
+  };
+  function statusColor(s){return STATUS_COLORS[s]||{bg:'#f1f5f9',fg:'#475569'}}
+
+  // ── Parser — reads the raw HTML pasted from the Bubble-built leads
+  // dashboard (buyer.sellyourgadgets.com/dashboard/leads/leads-entries).
+  // This is built off ONE sample paste, not tested against the live page,
+  // so field detection leans on a few heuristics (tooltip text, regex
+  // shape matching for email/phone/store code) rather than fixed CSS
+  // classes, since Bubble's generated class names are opaque/unstable.
+  // Worth spot-checking the first real import against the dashboard.
+  function parseLeadsHtml(raw){
+    var doc=new DOMParser().parseFromString('<div>'+raw+'</div>','text/html');
+    var rows=doc.querySelectorAll('.group-item');
+    var out=[];
+    rows.forEach(function(row){
+      var iconBtn=row.querySelector('button[data-tippy-original]');
+      var source=iconBtn?iconBtn.getAttribute('data-tippy-original'):'';
+      var allDivs=Array.from(row.querySelectorAll('div'));
+      var statusEl=allDivs.find(function(d){
+        var style=d.getAttribute('style')||'';
+        return /border-radius:\s*999px/.test(style)&&d.children.length===0&&d.textContent.trim()&&!/^NJ\d{2}$/i.test(d.textContent.trim());
+      });
+      var status=statusEl?statusEl.textContent.trim():'';
+      var textNodes=allDivs.filter(function(d){return d.children.length===0}).map(function(d){return d.textContent.trim()}).filter(Boolean);
+      var createdDate=textNodes.find(function(t){return /^\d{2}\/\d{2}\/\d{4}/.test(t)})||'';
+      var email=textNodes.find(function(t){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)})||'';
+      var phone=textNodes.find(function(t){return /^[+(]?\d[\d\s().-]{7,}$/.test(t)})||'';
+      var storeCode=textNodes.find(function(t){return /^NJ\d{2}$/i.test(t)})||'';
+      var nameEl=row.querySelector('div[class*="clickable-element"][class*="Text"]');
+      var customerName=nameEl?nameEl.textContent.trim():'';
+      if(!customerName){
+        customerName=textNodes.find(function(t){return t&&t!==status&&t!==email&&t!==phone&&t!==storeCode&&t!==createdDate&&!/\d/.test(t.slice(0,2))&&t.length<60})||'Unknown';
+      }
+      var noteEl=Array.from(row.querySelectorAll('[data-tippy-original]')).find(function(n){return n!==iconBtn&&n.getAttribute('data-tippy-original')!=='Click for Timeline'});
+      var latestNote=noteEl?noteEl.getAttribute('data-tippy-original'):'';
+      var bodyEl=allDivs.find(function(d){return d.textContent.trim().indexOf('===')===0});
+      var messageText=bodyEl?(bodyEl.textContent||''):'';
+      var rawLines=bodyEl?bodyEl.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,''):'';
+      var fields={};
+      rawLines.split('\n').forEach(function(line){
+        line=line.trim();
+        if(!line||/^===/.test(line))return;
+        var idx=line.indexOf(':');
+        if(idx>0){
+          var k=line.slice(0,idx).trim(),v=line.slice(idx+1).trim();
+          if(k&&v&&k.length<40)fields[k]=v;
+        }
+      });
+      if(!customerName&&!email&&!phone)return; // skip rows that clearly didn't parse
+      out.push({
+        id:(customerName+'|'+(email||phone||createdDate)).toLowerCase().replace(/\s+/g,'-'),
+        source:source,status:status,createdDate:createdDate,customerName:customerName,
+        email:email,phone:phone,storeCode:storeCode,latestNote:latestNote,
+        fields:fields,rawMessage:messageText.trim(),
+        importedAt:new Date().toISOString()
+      });
+    });
+    return out;
+  }
+
+  function importLeads(raw){
+    if(!raw||!raw.trim()){el('leadsImportStatus').textContent='Paste something first.';return}
+    var parsed;
+    try{parsed=parseLeadsHtml(raw)}catch(e){el('leadsImportStatus').textContent='Could not parse that — make sure you copied the entries container HTML, not a screenshot or plain text.';return}
+    if(!parsed.length){el('leadsImportStatus').textContent='No leads found in that paste — the page structure may not match what this was built against.';return}
+    var byId={};leads.forEach(function(l){byId[l.id]=l});
+    var added=0,updated=0;
+    parsed.forEach(function(p){
+      if(byId[p.id]){Object.assign(byId[p.id],p);updated++}
+      else{leads.push(p);byId[p.id]=p;added++}
+    });
+    save();
+    el('leadsImportStatus').textContent='Imported '+added+' new, updated '+updated+' existing — '+leads.length+' total leads.';
+    render();
+  }
+
+  // ── Value estimation ─────────────────────────────────────────────
+  // Reuses the exact same eBay live-check the Pricing Lab uses (same
+  // browser extension bridge, exposed globally as window.nexusAskExtension
+  // since Ckay Connect is a separate script/IIFE from the main Nexus app).
+  var LEADS_CONDITION_MAP=[
+    [/parts|not working|broken|cracked screen|no power|for parts/i,7000],
+    [/fair|scratch|wear|used/i,3000],
+    [/new|sealed/i,1000]
+  ];
+  function leadConditionId(l){
+    var c=(l.fields['Condition']||'').toLowerCase();
+    for(var i=0;i<LEADS_CONDITION_MAP.length;i++)if(LEADS_CONDITION_MAP[i][0].test(c))return LEADS_CONDITION_MAP[i][1];
+    return 3000; // default to Used — most leads describe a used personal device
+  }
+  function leadQuery(l){
+    return [l.fields['Brand/Model'],l.fields['Device Type']].filter(Boolean).join(' ').trim()||l.customerName;
+  }
+  function estimateValue(id,stopEl){
+    if(stopEl)stopEl.stopPropagation();
+    var l=leads.find(function(x){return x.id===id});
+    if(!l||!window.nexusAskExtension)return;
+    var q=leadQuery(l);
+    if(!q)return;
+    l.estimating=true;save();render();
+    window.nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:leadConditionId(l)},32000).then(function(res){
+      l.estimating=false;
+      if(res&&res.ok){
+        var prices=(res.listings||[]).map(function(x){return x.price}).filter(function(n){return n>0});
+        if(prices.length){
+          l.estimatedValue=Math.round((prices.reduce(function(a,b){return a+b},0)/prices.length)*100)/100;
+          l.estimatedComps=prices;
+        }else{
+          l.estimatedValue=null;l.estimateError='No sold comps found for "'+q+'"';
+        }
+      }else{
+        l.estimateError=(res&&res.error)||'Live comp check failed.';
+      }
+      l.estimatedAt=new Date().toISOString();
+      save();render();
+    });
+  }
+
+  function render(){
+    var q=(el('leadsSearch').value||'').toLowerCase();
+    var statusFilter=el('leadsStatusFilter').value;
+    var sortMode=el('leadsSort').value;
+    var list=leads.filter(function(l){
+      if(statusFilter&&l.status!==statusFilter)return false;
+      if(!q)return true;
+      var hay=[l.customerName,l.email,l.phone,l.fields['Brand/Model'],l.fields['Device Type'],l.rawMessage].join(' ').toLowerCase();
+      return hay.indexOf(q)!==-1;
+    });
+    if(sortMode==='value'){
+      list.sort(function(a,b){
+        var av=typeof a.estimatedValue==='number'?a.estimatedValue:-1;
+        var bv=typeof b.estimatedValue==='number'?b.estimatedValue:-1;
+        return bv-av;
+      });
+    }else{
+      list.sort(function(a,b){return new Date(b.createdDate||0)-new Date(a.createdDate||0)});
+    }
+    el('leadsCount').textContent=list.length+' of '+leads.length+' lead'+(leads.length===1?'':'s');
+    el('leadsList').innerHTML=list.map(function(l){
+      var c=statusColor(l.status);
+      var device=l.fields['Device Type']||l.fields['Brand/Model']||'';
+      var valueHtml;
+      if(l.estimating)valueHtml='<span class="leads-value loading">estimating…</span>';
+      else if(typeof l.estimatedValue==='number')valueHtml='<span class="leads-value">$'+l.estimatedValue.toFixed(2)+'</span>';
+      else valueHtml='<span class="leads-value unset" data-estimate="'+esc(l.id)+'">💰 Estimate</span>';
+      return '<div class="leads-card" data-lead="'+esc(l.id)+'">'
+        +'<div class="leads-card-top"><div><div class="leads-card-name">'+esc(l.customerName)+'</div>'
+        +'<div class="leads-card-meta">'+esc(l.source||'—')+' · '+esc(l.createdDate||'—')+(device?' · '+esc(device):'')+'</div></div>'
+        +'<span class="leads-pill" style="background:'+c.bg+';color:'+c.fg+'">'+esc(l.status||'—')+'</span></div>'
+        +'<div class="leads-card-contact">'+esc(l.email||'')+(l.phone?' · '+esc(l.phone):'')+(l.storeCode?' · '+esc(l.storeCode):'')+'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px">'+valueHtml+(l.estimatedComps?'<span style="font-size:11px;color:#8b93a2">'+l.estimatedComps.length+' comp'+(l.estimatedComps.length===1?'':'s')+'</span>':'')+'</div>'
+        +(l.latestNote?'<div class="leads-card-note">📝 '+esc(l.latestNote)+'</div>':'')
+        +'</div>';
+    }).join('')||'<div class="leads-empty">No leads yet — click "Paste leads" to import from the dashboard.</div>';
+    el('leadsList').querySelectorAll('[data-lead]').forEach(function(card){card.onclick=function(){openDetail(card.dataset.lead)}});
+    el('leadsList').querySelectorAll('[data-estimate]').forEach(function(span){span.onclick=function(e){estimateValue(span.dataset.estimate,e)}});
+  }
+
+  function openDetail(id){
+    var l=leads.find(function(x){return x.id===id});
+    if(!l)return;
+    el('leadsDetailTitle').textContent=l.customerName;
+    var fieldRows=Object.keys(l.fields).map(function(k){return '<tr><td class="leads-detail-key">'+esc(k)+'</td><td>'+esc(l.fields[k])+'</td></tr>'}).join('');
+    var valueBlock;
+    if(l.estimating)valueBlock='<div class="leads-status">Checking live eBay comps…</div>';
+    else if(typeof l.estimatedValue==='number')valueBlock='<div style="font:900 26px ui-monospace,monospace;color:#166534">$'+l.estimatedValue.toFixed(2)+'</div><div class="leads-status">Average of '+l.estimatedComps.length+' sold comp'+(l.estimatedComps.length===1?'':'s')+': '+l.estimatedComps.map(function(p){return '$'+p.toFixed(2)}).join(', ')+'</div>';
+    else valueBlock='<div class="leads-status">'+(l.estimateError?esc(l.estimateError)+' — ':'')+'<button class="nim-btn primary" id="leadsEstimateBtn" style="margin-top:6px">💰 Estimate value from eBay</button></div>';
+    el('leadsDetailBody').innerHTML=
+      '<div class="leads-status" style="margin-bottom:12px">'+esc(l.source||'')+' · '+esc(l.createdDate||'')+(l.storeCode?' · '+esc(l.storeCode):'')+'</div>'
+      +'<div style="margin-bottom:14px">'+valueBlock+'</div>'
+      +(fieldRows?'<table class="leads-detail-table">'+fieldRows+'</table>':'<div class="leads-status">No structured fields parsed from this lead\'s message.</div>')
+      +'<div class="nexus-actions" style="margin-top:16px"><button class="nim-btn" disabled title="Coming next">✉️ Reply from template</button><button class="nim-btn" disabled title="Coming next">✍️ Custom email</button></div>'
+      +'<div class="leads-status" style="margin-top:10px">Email sending isn\'t wired up yet — that\'s next.</div>';
+    el('leadsDetailModal').classList.add('show');
+    var btn=document.getElementById('leadsEstimateBtn');
+    if(btn)btn.onclick=function(){estimateValue(l.id);openDetail(l.id)};
+  }
+
+  function open(){load();render();el('leadsApp').classList.add('show')}
+  window.leadsOpen=open;
+
+  document.addEventListener('DOMContentLoaded',function(){
+    el('leadsImportBtn').onclick=function(){el('leadsImportModal').classList.add('show')};
+    el('leadsImportClose').onclick=function(){el('leadsImportModal').classList.remove('show')};
+    el('leadsDetailClose').onclick=function(){el('leadsDetailModal').classList.remove('show')};
+    el('leadsParseBtn').onclick=function(){importLeads(el('leadsPasteText').value)};
+    el('leadsBack').onclick=function(){el('leadsApp').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
+    el('leadsSearch').oninput=render;
+    el('leadsStatusFilter').onchange=render;
+    el('leadsSort').onchange=render;
+  });
+})();
+</script>
 <div class="nim" id="nimApp">
   <header class="nim-head"><div class="nexus-mark">SYG</div><h2>Inventory Map</h2><div class="nim-mode"><button id="nimNavigateMode" class="on">Navigate inventory</button><button id="nimLayoutMode">Edit floor layout</button></div><input class="nim-search" id="nimSearch" placeholder="Search SKU, title or location…"><div class="nim-spacer"></div><button class="nim-btn" id="nimImport">Import locations</button><button class="nim-btn danger" id="nimOffloadLocations" title="Clear every item's assigned location and remove any auto-created stray zones from bad imports">Offload locations</button><button class="nim-btn" id="nimBackup">Export backup</button><button class="nim-btn" id="nimChanges">Changes <span class="nim-badge" id="nimChangeCount">0</span></button><button class="nim-btn" id="nimBack">← Command</button></header>
   <div class="nim-work" id="nimWork">
@@ -20460,11 +20790,11 @@ function renderChanges(){el('nimChangeCount').textContent=el('nimDrawerCount').t
 function undoMove(id){var m=state.pendingMoves.find(function(x){return x.id===id});if(m){var i=state.items.find(function(x){return x.id===m.itemId});if(i)i.pendingLocation=''}state.pendingMoves=state.pendingMoves.filter(function(x){return x.id!==id});save('move_undone');render()}
 function setMode(next){mode=next;el('nimNavigateMode').classList.toggle('on',mode==='navigate');el('nimLayoutMode').classList.toggle('on',mode==='layout');el('nimBuildTools').style.display=mode==='layout'?'block':'none';el('nimNavigateTools').style.display=mode==='navigate'?'block':'none';el('nimWork').classList.toggle('nim-layout-mode',mode==='layout');selectedItem=null;render()}
 function addZone(type){layoutSnapshot=clone(state.zones);var names={section:'New Section',shelf:'New Shelf',bins:'New Bin Group',open:'Open Area',wall:'Wall',label:'Label'},z={id:uid('zone'),name:names[type],type:type,x:360+Math.round(Math.random()*240),y:250+Math.round(Math.random()*160),w:type==='wall'?260:150,h:type==='wall'?24:100,color:COLORS[state.zones.length%COLORS.length],slots:[]};state.zones.push(z);selectedZone=z.id;save('layout_added');render()}
-function buildImportPrompt(){return 'Retrieve all active Shopify products and variants for Sell Your Gadgets.\n\nDo not change any Shopify data. Return every active variant with its exact current SKU. Derive physical location only from the final location segment of the SKU. Examples: NJ02-180-PO442-03-J23 → J23; NJ02-90-PO451-02-B4/BIN2 → B4/BIN2. Preserve missing locations as an empty string.\n\nReturn only valid JSON between the markers. If the result is too large, return numbered chunks with the same structure and do not truncate a record.\n\nSYG_NEXUS_INVENTORY_START\n{\n  "exportedAt": "ISO timestamp",\n  "items": [\n    {"productId":"","variantId":"","title":"","sku":"","location":"","price":null,"quantity":0,"status":"active"}\n  ]\n}\nSYG_NEXUS_INVENTORY_END\n\nRules:\n- Include Shopify product ID and variant ID.\n- Preserve every SKU exactly.\n- Do not invent a location.\n- Do not include commentary inside the markers.\n- Before responding, confirm the JSON is valid and complete.'}
+function buildImportPrompt(){return 'Retrieve all active Shopify products and variants for Sell Your Gadgets.\n\nDo not change any Shopify data. Return every active variant with its exact current SKU. Derive physical location only from the final location segment of the SKU. Examples: NJ02-180-PO442-03-J23 → J23; NJ02-90-PO451-02-B4/BIN2 → B4/BIN2. Preserve missing locations as an empty string.\n\nInclude each product\'s featured/first image URL (Shopify\'s own image src, not a re-hosted copy). Leave blank if a product has no image — do not invent one.\n\nReturn only valid JSON between the markers. If the result is too large, return numbered chunks with the same structure and do not truncate a record.\n\nSYG_NEXUS_INVENTORY_START\n{\n  "exportedAt": "ISO timestamp",\n  "items": [\n    {"productId":"","variantId":"","title":"","sku":"","location":"","price":null,"quantity":0,"status":"active","image":""}\n  ]\n}\nSYG_NEXUS_INVENTORY_END\n\nRules:\n- Include Shopify product ID and variant ID.\n- Preserve every SKU exactly.\n- Do not invent a location or an image URL.\n- Do not include commentary inside the markers.\n- Before responding, confirm the JSON is valid and complete.'}
 function buildUpdatePrompt(){return 'Apply only the following verified physical-location reallocations in Shopify.\n\nFor each record: search the exact current SKU; confirm product and variant IDs; change only the final SKU location segment; do not modify price, inventory, title, description, images, status, metafields, or any other field; re-read the variant after updating. If ambiguous, do not update it.\n\nSYG_NEXUS_UPDATES_START\n'+JSON.stringify({changes:state.pendingMoves.map(function(m){var i=state.items.find(function(x){return x.id===m.itemId})||{};return {productId:i.productId||'',variantId:i.variantId||'',title:m.title,currentSku:m.currentSku,requestedSku:m.requestedSku,oldLocation:m.oldLocation,newLocation:m.newLocation}})},null,2)+'\nSYG_NEXUS_UPDATES_END\n\nReturn only:\nSYG_NEXUS_RESULTS_START\n{"results":[{"variantId":"","oldSku":"","finalSku":"","status":"verified|failed|ambiguous","message":""}]}\nSYG_NEXUS_RESULTS_END'}
 function showPrompt(kind){pasteMode=kind;el('nimPromptTitle').textContent=kind==='inventory'?'Import current Shopify locations':'Apply pending reallocations';el('nimPromptHelp').textContent=kind==='inventory'?'Copy this prompt to Claude. Then paste the complete inventory JSON back into Nexus.':'Copy this prompt to Claude. Paste its verification result back; only verified changes become official.';el('nimPromptText').value=kind==='inventory'?buildImportPrompt():buildUpdatePrompt();el('nimPromptModal').classList.add('show')}
 function extractJson(text,start,end){var a=text.indexOf(start),b=text.indexOf(end);var raw=a>=0&&b>a?text.slice(a+start.length,b):text;return JSON.parse(raw.trim())}
-function applyPaste(){var text=el('nimPasteText').value.trim();if(!text)return;try{if(pasteMode==='updates'){applyUpdateResults(extractJson(text,'SYG_NEXUS_RESULTS_START','SYG_NEXUS_RESULTS_END'));return}var data=extractJson(text,'SYG_NEXUS_INVENTORY_START','SYG_NEXUS_INVENTORY_END'),incoming=Array.isArray(data.items)?data.items:[];if(!incoming.length)throw new Error('No inventory items were found');var oldByVariant={},oldBySku={};state.items.forEach(function(i){if(i.variantId)oldByVariant[i.variantId]=i;if(i.sku)oldBySku[i.sku]=i});var duplicates={},seen={};incoming.forEach(function(i){if(i.sku){duplicates[i.sku]=(duplicates[i.sku]||0)+1}});state.items=incoming.map(function(raw){var old=oldByVariant[raw.variantId]||oldBySku[raw.sku]||{};var location=String(raw.location||parseLocation(raw.sku)||'').toUpperCase();seen[location]=1;return Object.assign({},old,{id:old.id||uid('item'),productId:raw.productId||old.productId||'',variantId:raw.variantId||old.variantId||'',title:raw.title||old.title||'',sku:raw.sku||'',officialLocation:location,pendingLocation:old.pendingLocation||'',price:raw.price,quantity:raw.quantity,status:raw.status||'',duplicateSku:raw.sku&&duplicates[raw.sku]>1})});var known={};allCodes().forEach(function(c){known[c]=1});var unknown=Object.keys(seen).filter(function(c){return c&&!known[c]});
+function applyPaste(){var text=el('nimPasteText').value.trim();if(!text)return;try{if(pasteMode==='updates'){applyUpdateResults(extractJson(text,'SYG_NEXUS_RESULTS_START','SYG_NEXUS_RESULTS_END'));return}var data=extractJson(text,'SYG_NEXUS_INVENTORY_START','SYG_NEXUS_INVENTORY_END'),incoming=Array.isArray(data.items)?data.items:[];if(!incoming.length)throw new Error('No inventory items were found');var oldByVariant={},oldBySku={};state.items.forEach(function(i){if(i.variantId)oldByVariant[i.variantId]=i;if(i.sku)oldBySku[i.sku]=i});var duplicates={},seen={};incoming.forEach(function(i){if(i.sku){duplicates[i.sku]=(duplicates[i.sku]||0)+1}});state.items=incoming.map(function(raw){var old=oldByVariant[raw.variantId]||oldBySku[raw.sku]||{};var location=String(raw.location||parseLocation(raw.sku)||'').toUpperCase();seen[location]=1;return Object.assign({},old,{id:old.id||uid('item'),productId:raw.productId||old.productId||'',variantId:raw.variantId||old.variantId||'',title:raw.title||old.title||'',sku:raw.sku||'',officialLocation:location,pendingLocation:old.pendingLocation||'',price:raw.price,quantity:raw.quantity,status:raw.status||'',image:raw.image||old.image||'',duplicateSku:raw.sku&&duplicates[raw.sku]>1})});var known={};allCodes().forEach(function(c){known[c]=1});var unknown=Object.keys(seen).filter(function(c){return c&&!known[c]});
 if(unknown.length){
   // Unrecognized location codes (they don't match any real zone's defined
   // slots) used to scatter into a phantom zone PER CODE — and worse, if the
@@ -20580,14 +20910,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      #pick=<data> hash (from the QR code / link generated by "Send to
      Companion" in the Shipping Station). Self-contained: the whole pick
      list is baked into the URL itself, so this works on any device that
-     opens the link — no login, no live connection back to the desktop. -->
-<div id="companionView" style="display:none;position:fixed;inset:0;z-index:99999;background:#eef1f6;overflow:auto;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased">
-  <div style="background:#151922;color:#fff;padding:16px 18px;position:sticky;top:0;z-index:2;box-shadow:0 2px 10px rgba(0,0,0,.15)">
-    <div style="font-weight:800;font-size:16px">📦 Pick List</div>
-    <div id="companionMeta" style="font-size:11px;color:#c3cade;margin-top:3px"></div>
+     opens the link — no login, no live connection back to the desktop.
+     Swipe right = got it, left = can't find, up = not in store. At the
+     end, generates a #results= link/QR to bring back and scan into
+     "Import pick results" on desktop — that's what actually closes the
+     loop and moves picked orders into the Packed bin. -->
+<div id="companionView" style="display:none;position:fixed;inset:0;z-index:99999;background:#eef1f6;overflow:hidden;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;flex-direction:column">
+  <div style="background:#151922;color:#fff;padding:14px 16px;flex:none;box-shadow:0 2px 10px rgba(0,0,0,.15)">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:800;font-size:15px">📦 Pick Run</div>
+      <div id="companionProgress" style="font:800 12px ui-monospace,monospace;color:#c3cade"></div>
+    </div>
+    <div id="companionMeta" style="font-size:10px;color:#8b93a2;margin-top:2px"></div>
+    <div style="height:4px;background:#ffffff1a;border-radius:3px;margin-top:8px;overflow:hidden"><div id="companionBar" style="height:100%;width:0%;background:#a78bfa;transition:width .25s"></div></div>
   </div>
-  <div id="companionMap" style="padding:14px 14px 4px"></div>
-  <div id="companionList" style="padding:6px 14px 40px"></div>
+  <div id="companionStack" style="flex:1;position:relative;overflow:hidden;padding:16px"></div>
+  <div id="companionButtons" style="flex:none;display:flex;justify-content:center;gap:18px;padding:10px 16px 22px">
+    <button id="companionBtnLeft" style="width:56px;height:56px;border-radius:50%;border:none;background:#fff;box-shadow:0 4px 14px rgba(220,38,38,.25);font-size:22px;color:#dc2626">✕</button>
+    <button id="companionBtnUp" style="width:48px;height:48px;border-radius:50%;border:none;background:#fff;box-shadow:0 4px 14px rgba(180,120,20,.25);font-size:19px;color:#b45309;align-self:flex-start">⬆</button>
+    <button id="companionBtnRight" style="width:56px;height:56px;border-radius:50%;border:none;background:#fff;box-shadow:0 4px 14px rgba(22,163,74,.25);font-size:22px;color:#16a34a">✓</button>
+  </div>
+  <div id="companionDone" style="display:none;flex:1;overflow:auto;padding:24px 20px;text-align:center"></div>
 </div>
 <script>
 (function(){
@@ -20596,58 +20939,128 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   try{
     payload=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(6)))));
   }catch(e){
-    document.getElementById('companionList').innerHTML='<div style="padding:20px;color:#c0394a">This pick list link looks corrupted — ask for a fresh one from Shipping Station.</div>';
-    document.getElementById('companionView').style.display='block';
+    document.getElementById('companionStack').innerHTML='<div style="padding:20px;color:#c0394a">This pick list link looks corrupted — ask for a fresh one from Shipping Station.</div>';
+    document.getElementById('companionView').style.display='flex';
     return;
   }
   var items=Array.isArray(payload.items)?payload.items:[];
-  document.getElementById('companionMeta').textContent=items.length+' item'+(items.length===1?'':'s')+' · generated '+new Date(payload.generatedAt).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' · farthest from shipping first';
+  var idx=0;
+  var results={picked:[],missing:[],oos:[]};
+  document.getElementById('companionMeta').textContent='Generated '+new Date(payload.generatedAt).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' · farthest from shipping first';
 
-  // Mini floor map — reads the same Inventory Map data as the desktop,
-  // if this device has it (same browser/profile). If not (a genuinely
-  // separate phone), the map just doesn't render — the text list alone
-  // is still fully usable, since every card already states the location.
-  (function renderMiniMap(){
-    var nimState=null;
-    try{var s=JSON.parse(localStorage.getItem('syg_nexus_inventory_map'));if(s&&Array.isArray(s.zones))nimState=s}catch(e){}
-    var host=document.getElementById('companionMap');
-    if(!nimState){host.innerHTML='';return}
-    var pickZoneIds={};
-    items.forEach(function(it){
-      if(!it.location)return;
-      var z=nimState.zones.find(function(zone){return Array.isArray(zone.slots)&&zone.slots.some(function(sl){return String(sl).toUpperCase()===String(it.location).toUpperCase()})});
-      if(z)pickZoneIds[z.id]=(pickZoneIds[z.id]||0)+1;
-    });
-    var maxX=0,maxY=0;
-    nimState.zones.forEach(function(z){maxX=Math.max(maxX,(z.x||0)+(z.w||0));maxY=Math.max(maxY,(z.y||0)+(z.h||0))});
-    if(!maxX||!maxY){host.innerHTML='';return}
-    var svg='<svg viewBox="0 0 '+maxX+' '+maxY+'" style="width:100%;height:auto;background:#fff;border-radius:12px;border:1px solid #dbe0e9" xmlns="http://www.w3.org/2000/svg">';
-    nimState.zones.forEach(function(z){
-      var hit=pickZoneIds[z.id];
-      var fill=hit?(z.color||'#3978f6'):'#f3f5f9';
-      var stroke=hit?(z.color||'#3978f6'):'#dbe0e9';
-      svg+='<rect x="'+(z.x||0)+'" y="'+(z.y||0)+'" width="'+(z.w||0)+'" height="'+(z.h||0)+'" fill="'+fill+'" fill-opacity="'+(hit?0.85:0.4)+'" stroke="'+stroke+'" stroke-width="2" rx="6"></rect>';
-      svg+='<text x="'+((z.x||0)+8)+'" y="'+((z.y||0)+20)+'" font-size="16" font-weight="800" fill="'+(hit?'#fff':'#93a0b5')+'">'+z.name+'</text>';
-      if(hit)svg+='<text x="'+((z.x||0)+(z.w||0)-10)+'" y="'+((z.y||0)+(z.h||0)-10)+'" font-size="15" font-weight="900" text-anchor="end" fill="#fff">'+hit+'</text>';
-    });
-    svg+='</svg>';
-    host.innerHTML=svg;
-  })();
+  function esc(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
 
-  document.getElementById('companionList').innerHTML=items.map(function(it,i){
+  function cardHtml(it,z){
     var known=it.location&&it.location!=='Unknown';
-    return '<div style="background:#fff;border:1px solid #dbe0e9;border-left:4px solid '+(known?'#3978f6':'#f97316')+';border-radius:12px;padding:13px 14px;margin-bottom:10px;box-shadow:0 2px 6px rgba(20,30,50,.05)">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'
-      +'<div style="min-width:0"><div style="font:800 11px ui-monospace,monospace;color:#8b93a2">#'+(i+1)+' · ORDER '+(it.order||'—')+(it.buyer?' · '+it.buyer:'')+'</div>'
-      +'<div style="font-weight:700;font-size:14px;margin-top:3px;color:#1b2436">'+(it.title||it.sku||'Untitled item')+'</div>'
-      +'<div style="font:700 11px ui-monospace,monospace;color:#3978f6;margin-top:3px">'+(it.sku||'')+(it.qty?' · ×'+it.qty:'')+'</div></div>'
-      +'<div style="flex:none;text-align:center;background:'+(known?'#eaf1ff':'#fff1e2')+';color:'+(known?'#1d4fd6':'#b45309')+';border-radius:10px;padding:8px 12px;font:900 15px ui-monospace,monospace">'+(it.location||'?')+'</div>'
+    var img=it.image?'<img src="'+esc(it.image)+'" style="width:100%;height:190px;object-fit:cover;border-radius:14px 14px 0 0;background:#f1f5f9">':'<div style="width:100%;height:190px;border-radius:14px 14px 0 0;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:40px;color:#c7ceda">📦</div>';
+    return '<div class="companion-card" style="position:absolute;inset:0;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);overflow:hidden;display:flex;flex-direction:column;z-index:'+z+'">'
+      +img
+      +'<div style="padding:14px 16px;flex:1;display:flex;flex-direction:column">'
+      +'<div style="font:800 10px ui-monospace,monospace;color:#8b93a2">ORDER '+esc(it.order||'—')+(it.buyer?' · '+esc(it.buyer):'')+'</div>'
+      +'<div style="font-weight:800;font-size:16px;margin-top:4px;color:#1b2436;line-height:1.3">'+esc(it.title||it.sku||'Untitled item')+'</div>'
+      +'<div style="font:700 12px ui-monospace,monospace;color:#3978f6;margin-top:5px">'+esc(it.sku||'')+(it.qty?' · ×'+esc(it.qty):'')+'</div>'
+      +'<div style="flex:1"></div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px">'
+      +'<div style="background:'+(known?'#eaf1ff':'#fff1e2')+';color:'+(known?'#1d4fd6':'#b45309')+';border-radius:10px;padding:9px 14px;font:900 18px ui-monospace,monospace">'+esc(it.location||'?')+'</div>'
+      +(it.price?'<div style="font:900 18px ui-monospace,monospace;color:#166534">$'+esc(it.price)+'</div>':'')
       +'</div>'
-      +(it.ebayLink?'<a href="'+it.ebayLink+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;text-align:center;background:#151922;color:#fff;text-decoration:none;padding:9px;border-radius:9px;font-weight:700;font-size:12px">View on eBay ↗</a>':'')
+      +(it.ebayLink?'<a href="'+it.ebayLink+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;text-align:center;background:#151922;color:#fff;text-decoration:none;padding:9px;border-radius:9px;font-weight:700;font-size:11px">View on eBay ↗</a>':'')
+      +'</div>'
+      +'<div class="companion-stamp" style="position:absolute;top:16px;left:16px;padding:6px 14px;border:3px solid;border-radius:8px;font:900 16px Inter,sans-serif;transform:rotate(-18deg);opacity:0;text-transform:uppercase"></div>'
       +'</div>';
-  }).join('')||'<div style="padding:20px;color:#70798a">No items in this pick list.</div>';
+  }
 
-  document.getElementById('companionView').style.display='block';
+  var dragging=null,startX=0,startY=0,curX=0,curY=0;
+
+  function renderStack(){
+    var stack=document.getElementById('companionStack');
+    if(idx>=items.length){finish();return}
+    document.getElementById('companionProgress').textContent=(idx+1)+' / '+items.length;
+    document.getElementById('companionBar').style.width=Math.round(idx/items.length*100)+'%';
+    var html='';
+    if(items[idx+1])html+=cardHtml(items[idx+1],1).replace('position:absolute;inset:0','position:absolute;inset:8px;transform:scale(.96)');
+    html+=cardHtml(items[idx],2);
+    stack.innerHTML=html;
+    bindTopCard();
+  }
+
+  function bindTopCard(){
+    var stack=document.getElementById('companionStack');
+    var cards=stack.querySelectorAll('.companion-card');
+    var card=cards[cards.length-1];
+    if(!card)return;
+    card.style.touchAction='none';
+    card.addEventListener('pointerdown',function(e){
+      dragging=true;startX=e.clientX;startY=e.clientY;curX=0;curY=0;card.setPointerCapture(e.pointerId);
+    });
+    card.addEventListener('pointermove',function(e){
+      if(!dragging)return;
+      curX=e.clientX-startX;curY=e.clientY-startY;
+      var rot=curX/14;
+      card.style.transform='translate('+curX+'px,'+curY+'px) rotate('+rot+'deg)';
+      var stamp=card.querySelector('.companion-stamp');
+      if(curX>40){stamp.style.opacity=Math.min(1,curX/90);stamp.style.color='#16a34a';stamp.style.borderColor='#16a34a';stamp.textContent='GOT IT'}
+      else if(curX<-40){stamp.style.opacity=Math.min(1,-curX/90);stamp.style.color='#dc2626';stamp.style.borderColor='#dc2626';stamp.textContent="CAN'T FIND"}
+      else if(curY<-40){stamp.style.opacity=Math.min(1,-curY/90);stamp.style.color='#b45309';stamp.style.borderColor='#b45309';stamp.textContent='NOT IN STORE'}
+      else{stamp.style.opacity=0}
+    });
+    function release(){
+      if(!dragging)return;
+      dragging=false;
+      var absX=Math.abs(curX),absY=Math.abs(curY);
+      if(curY<-70&&absY>absX){swipe('up');return}
+      if(curX>90){swipe('right');return}
+      if(curX<-90){swipe('left');return}
+      card.style.transition='transform .2s';card.style.transform='';
+      setTimeout(function(){card.style.transition=''},200);
+    }
+    card.addEventListener('pointerup',release);
+    card.addEventListener('pointercancel',release);
+  }
+
+  function swipe(dir){
+    var it=items[idx];
+    var stack=document.getElementById('companionStack');
+    var cards=stack.querySelectorAll('.companion-card');
+    var card=cards[cards.length-1];
+    var entry={pickId:it.pickId,orderId:it.orderId,sku:it.sku,order:it.order,title:it.title};
+    var fly={right:'translate(650px,-40px) rotate(28deg)',left:'translate(-650px,-40px) rotate(-28deg)',up:'translate(0,-900px) rotate(0deg)'}[dir];
+    if(card){card.style.transition='transform .3s ease-in';card.style.transform=fly;}
+    if(dir==='right')results.picked.push(entry);
+    else if(dir==='left')results.missing.push(entry);
+    else results.oos.push(entry);
+    idx++;
+    setTimeout(renderStack,220);
+  }
+
+  document.getElementById('companionBtnRight').onclick=function(){swipe('right')};
+  document.getElementById('companionBtnLeft').onclick=function(){swipe('left')};
+  document.getElementById('companionBtnUp').onclick=function(){swipe('up')};
+
+  function finish(){
+    document.getElementById('companionStack').style.display='none';
+    document.getElementById('companionButtons').style.display='none';
+    var done=document.getElementById('companionDone');
+    var resultsPayload={generatedAt:new Date().toISOString(),picked:results.picked,missing:results.missing,oos:results.oos};
+    var encoded;
+    try{encoded=btoa(unescape(encodeURIComponent(JSON.stringify(resultsPayload))))}catch(e){encoded=''}
+    var url=location.href.split('#')[0]+'#results='+encoded;
+    done.innerHTML=
+      '<div style="font-size:40px;margin-bottom:6px">🎉</div>'
+      +'<div style="font-weight:800;font-size:17px;color:#1b2436">Pick run complete</div>'
+      +'<div style="display:flex;justify-content:center;gap:10px;margin:16px 0">'
+      +'<div style="background:#dcfce7;color:#166534;border-radius:10px;padding:10px 16px;font:800 13px ui-monospace,monospace">✓ '+results.picked.length+' got it</div>'
+      +'<div style="background:#fee2e2;color:#991b1b;border-radius:10px;padding:10px 16px;font:800 13px ui-monospace,monospace">✕ '+results.missing.length+' missing</div>'
+      +'<div style="background:#fff1e2;color:#b45309;border-radius:10px;padding:10px 16px;font:800 13px ui-monospace,monospace">⬆ '+results.oos.length+' not in store</div>'
+      +'</div>'
+      +'<div style="font-size:12px;color:#70798a;margin-bottom:10px">Take this back to the desktop — scan or paste it into "Import pick results" in Shipping Station to move the picked orders into Packed.</div>'
+      +'<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(url)+'" style="width:200px;height:200px"></div>'
+      +'<input readonly value="'+esc(url)+'" onclick="this.select()" style="width:100%;border:1px solid #dbe0e9;border-radius:9px;padding:10px 12px;font:11px ui-monospace,monospace;box-sizing:border-box">';
+    done.style.display='block';
+  }
+
+  document.getElementById('companionView').style.display='flex';
+  renderStack();
 })();
 </script>
 
