@@ -829,6 +829,7 @@
   .pc-board-wrap.pc-select-mode .pc-board-card{padding-left:32px;}
   .pc-board-card.pc-card-selected{outline:2px solid #FBBF24;outline-offset:-2px;background:rgba(251,191,36,.06);}
   .pc-scan-stickers{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+  .pc-scan-copied-flash{display:inline-flex;align-items:center;padding:9px 16px;border-radius:9px;font:700 12px/1 var(--sans);background:#4ADE8022;border:1px solid #4ADE8066;color:#4ADE80;margin-left:8px;}
   .pc-tag-sticker:active{cursor:grabbing;transform:scale(.94);}
   .pc-tag-sticker.dragging{opacity:.4;}
   .pc-board-card.sticker-hover{box-shadow:0 0 0 2px #FBBF24 inset;}
@@ -9492,9 +9493,19 @@ document.getElementById('pcScanSelected')?.addEventListener('click', ()=>{
   const prompt = pcBuildScanPrompt(entries);
   navigator.clipboard?.writeText(prompt).catch(()=>{});
   const btn = document.getElementById('pcScanSelected');
-  const orig = btn.innerHTML;
-  btn.textContent = `✓ Copied ${entries.length} item scan prompt!`;
-  setTimeout(()=>{ btn.innerHTML = orig; }, 1800);
+  // Never touch the button's own innerHTML/textContent here — it has a
+  // nested <span id="pcSelectedCount"> that pcUpdateScanSelectedButton()
+  // needs to keep finding on every render; replacing it (even briefly)
+  // meant that function could throw if it ran during the flash window.
+  // A temporary sibling badge gives the same feedback without that risk.
+  const old = document.getElementById('pcScanCopiedFlash');
+  if(old) old.remove();
+  const flash = document.createElement('span');
+  flash.id = 'pcScanCopiedFlash';
+  flash.className = 'pc-scan-copied-flash';
+  flash.textContent = `✓ Copied ${entries.length} item scan prompt!`;
+  btn.insertAdjacentElement('afterend', flash);
+  setTimeout(()=>{ flash.remove(); }, 1800);
 });
 document.getElementById('pcImportScanBtn')?.addEventListener('click', ()=>{
   document.getElementById('pcScanImportText').value = '';
@@ -10241,7 +10252,7 @@ function pcRenderBatch(){
 
       const selectBox = card.querySelector('.pc-card-select');
       if(selectBox){
-        selectBox.checked = _pcSelectedIds.has(String(e.id));
+        selectBox.checked = _pcSelectedIds.has(String(card.dataset.id));
         selectBox.addEventListener('click', ev=> ev.stopPropagation());
         selectBox.addEventListener('change', ()=>{
           const id = selectBox.dataset.selectId;
