@@ -19180,6 +19180,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }catch(e){}
     return {};
   }
+  // Compact key names used ONLY for the URL/QR transport payload — the rest
+  // of the app keeps using the readable field names above. QR codes have a
+  // real, hard data-capacity ceiling, and camera-scan reliability drops off
+  // well before that ceiling too, so every byte here matters once there's
+  // more than a couple of items (especially with full image URLs added in).
+  // dist isn't included at all — sorting already happened before encoding,
+  // so the phone never needs it.
+  function compactPickLine(l){
+    return {i:l.pickId,o:l.orderId,n:l.order,b:l.buyer,s:l.sku,q:l.qty,t:l.title,l:l.location,e:l.ebayLink,m:l.image,p:l.price};
+  }
+  function expandPickLine(c){
+    return {pickId:c.i,orderId:c.o,order:c.n,buyer:c.b,sku:c.s,qty:c.q,title:c.t,location:c.l,ebayLink:c.e,image:c.m,price:c.p};
+  }
   function buildCompanionPickList(){
     var nimState=loadNimState();
     var shipZone=nimState?nimState.zones.find(function(z){return z.id==='shipping'}):null;
@@ -19235,9 +19248,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var encoded=hashIdx!==-1?input.slice(hashIdx+9):input;
     var payload;
     try{payload=JSON.parse(decodeURIComponent(escape(atob(encoded))))}catch(e){status.textContent='Could not read that — make sure you pasted the full results link from the phone.';return}
-    var picked=Array.isArray(payload.picked)?payload.picked:[];
-    var missing=Array.isArray(payload.missing)?payload.missing:[];
-    var oos=Array.isArray(payload.oos)?payload.oos:[];
+    function expand(arr){return (Array.isArray(arr)?arr:[]).map(function(c){return {pickId:c.i,orderId:c.o,sku:c.s,order:c.n,title:c.t}})}
+    var picked=expand(payload.picked);
+    var missing=expand(payload.missing);
+    var oos=expand(payload.oos);
     var pickedByOrder={};
     picked.forEach(function(p){(pickedByOrder[p.orderId]=pickedByOrder[p.orderId]||[]).push(p.pickId)});
     var movedCount=0,partialOrders=[];
@@ -19261,17 +19275,60 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(oos.length)parts.push(oos.length+' item(s) flagged not-in-store: '+oos.map(function(m){return m.sku||m.title||'?'}).join(', '));
     status.textContent=parts.join(' · ');
   }
-  function sendToCompanion(){
+  // Fetches a listing's primary image via the same browser-extension bridge
+  // used everywhere else (CHECK_EBAY_LIVE, FETCH_EBAY_ORDERS, etc.) — opens
+  // the listing in a background tab and reads its main photo. This is a NEW
+  // message type (FETCH_EBAY_LISTING_IMAGE) that the extension itself needs
+  // to support; if it doesn't yet, this just quietly returns no image
+  // rather than failing the whole send.
+  function fetchEbayListingImage(url){
+    if(!window.nexusAskExtension)return Promise.resolve(null);
+    return window.nexusAskExtension('FETCH_EBAY_LISTING_IMAGE',{url:url},20000).then(function(res){
+      return (res&&res.ok&&res.image)?res.image:null;
+    }).catch(function(){return null});
+  }
+  async function sendToCompanion(){
     if(!pulledOrders.length){toast('Pull orders first — nothing to send yet');return}
     var lines=buildCompanionPickList();
-    var payload={generatedAt:new Date().toISOString(),items:lines};
+    var status=document.getElementById('nexusCompanionSummary');
+    var needImages=lines.filter(function(l){return !l.image&&l.ebayLink});
+    if(needImages.length&&window.nexusAskExtension){
+      document.getElementById('nexusCompanionModal').classList.add('show');
+      document.getElementById('nexusCompanionLink').value='';
+      document.getElementById('nexusCompanionQr').src='';
+      var gotAny=false;
+      for(var i=0;i<needImages.length;i++){
+        status.textContent='Fetching photos from eBay — '+(i+1)+' of '+needImages.length+'…';
+        var img=await fetchEbayListingImage(needImages[i].ebayLink);
+        if(img){needImages[i].image=img;gotAny=true}
+      }
+      if(!gotAny&&needImages.length){
+        status.textContent='The browser extension doesn\'t support pulling eBay photos yet — sending without them for items with no Shopify image on file.';
+      }
+    }
+    var payload={generatedAt:new Date().toISOString(),items:lines.map(compactPickLine)};
     var encoded;
     try{encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))))}catch(e){toast('Could not encode pick list');return}
     var url=location.href.split('#')[0]+'#pick='+encoded;
     var noLocation=lines.filter(function(l){return l.dist<0}).length;
-    document.getElementById('nexusCompanionSummary').textContent=lines.length+' item'+(lines.length===1?'':'s')+' across '+pulledOrders.length+' order'+(pulledOrders.length===1?'':'s')+', sorted farthest-from-shipping first.'+(noLocation?' '+noLocation+' item(s) have no known location and are listed last.':'');
+    var withPhoto=lines.filter(function(l){return l.image}).length;
+    var summary=lines.length+' item'+(lines.length===1?'':'s')+' across '+pulledOrders.length+' order'+(pulledOrders.length===1?'':'s')+', sorted farthest-from-shipping first. '+withPhoto+' of '+lines.length+' have a photo.'+(noLocation?' '+noLocation+' item(s) have no known location and are listed last.':'');
     document.getElementById('nexusCompanionLink').value=url;
-    document.getElementById('nexusCompanionQr').src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(url);
+    // QR codes have a real data ceiling, and scan reliability on a phone
+    // camera drops off well before that ceiling — especially once photo
+    // URLs are involved. Past ~1400 characters, don't hand someone a QR
+    // that might not actually scan; just tell them to use the link instead
+    // (text it, AirDrop it, email it — the link itself has no size limit).
+    var qrImg=document.getElementById('nexusCompanionQr');
+    if(url.length>1400){
+      qrImg.removeAttribute('src');
+      qrImg.style.display='none';
+      summary+=' This pick list is too large for a reliable QR code ('+url.length+' characters) — copy the link below and send it directly instead (text, email, AirDrop).';
+    }else{
+      qrImg.style.display='';
+      qrImg.src='https://api.qrserver.com/v1/create-qr-code/?size=260x260&ecc=L&data='+encodeURIComponent(url);
+    }
+    status.textContent=summary;
     document.getElementById('nexusCompanionModal').classList.add('show');
   }
   function orderKeyForEntry(o){
@@ -20414,32 +20471,56 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     for(var i=0;i<LEADS_CONDITION_MAP.length;i++)if(LEADS_CONDITION_MAP[i][0].test(c))return LEADS_CONDITION_MAP[i][1];
     return 3000; // default to Used — most leads describe a used personal device
   }
-  function leadQuery(l){
-    return [l.fields['Brand/Model'],l.fields['Device Type']].filter(Boolean).join(' ').trim()||l.customerName;
+  // A lead can describe several distinct devices in one field — e.g.
+  // "Brand/Model: iPhone XR, iPhone 8, iPhone 11" from the pickup-lead
+  // format. Averaging those together would be meaningless (an XR and an
+  // 11 aren't worth the same), so each comma-separated entry becomes its
+  // own eBay query, and the lead's total is the SUM of each item's value,
+  // not one blended average across all of them.
+  function leadItemNames(l){
+    var raw=l.fields['Brand/Model']||l.fields['Device Type']||l.customerName;
+    var device=l.fields['Device Type']||'';
+    var parts=String(raw).split(',').map(function(s){return s.trim()}).filter(Boolean);
+    if(!parts.length)return [device||l.customerName];
+    // If Device Type is a generic category (e.g. "iPhone") and each part
+    // already names a specific model, don't double it up in the query.
+    return parts.map(function(p){
+      var lower=p.toLowerCase();
+      if(device&&lower.indexOf(device.toLowerCase())===-1)return (device+' '+p).trim();
+      return p;
+    });
   }
-  function estimateValue(id,stopEl){
+  async function estimateValue(id,stopEl){
     if(stopEl)stopEl.stopPropagation();
     var l=leads.find(function(x){return x.id===id});
     if(!l||!window.nexusAskExtension)return;
-    var q=leadQuery(l);
-    if(!q)return;
-    l.estimating=true;save();render();
-    window.nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:leadConditionId(l)},32000).then(function(res){
-      l.estimating=false;
-      if(res&&res.ok){
-        var prices=(res.listings||[]).map(function(x){return x.price}).filter(function(n){return n>0});
-        if(prices.length){
-          l.estimatedValue=Math.round((prices.reduce(function(a,b){return a+b},0)/prices.length)*100)/100;
-          l.estimatedComps=prices;
-        }else{
-          l.estimatedValue=null;l.estimateError='No sold comps found for "'+q+'"';
-        }
-      }else{
-        l.estimateError=(res&&res.error)||'Live comp check failed.';
-      }
-      l.estimatedAt=new Date().toISOString();
-      save();render();
-    });
+    var itemNames=leadItemNames(l);
+    if(!itemNames.length)return;
+    l.estimating=true;l.estimateError=null;save();render();
+    var conditionId=leadConditionId(l);
+    var results=[];
+    for(var i=0;i<itemNames.length;i++){
+      var name=itemNames[i];
+      var res=await window.nexusAskExtension('CHECK_EBAY_LIVE',{query:name,conditionId:conditionId},32000);
+      var prices=(res&&res.ok)?(res.listings||[]).map(function(x){return x.price}).filter(function(n){return n>0}):[];
+      results.push({
+        name:name,
+        value:prices.length?Math.round((prices.reduce(function(a,b){return a+b},0)/prices.length)*100)/100:null,
+        comps:prices
+      });
+    }
+    l.estimating=false;
+    var found=results.filter(function(r){return r.value!=null});
+    if(found.length){
+      l.estimatedValue=Math.round(found.reduce(function(sum,r){return sum+r.value},0)*100)/100;
+      l.estimatedItems=results;
+      l.estimatedComps=[].concat.apply([],results.map(function(r){return r.comps}));
+    }else{
+      l.estimatedValue=null;
+      l.estimateError='No sold comps found for: '+itemNames.join(', ');
+    }
+    l.estimatedAt=new Date().toISOString();
+    save();render();
   }
 
   function render(){
@@ -20474,7 +20555,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         +'<div class="leads-card-meta">'+esc(l.source||'—')+' · '+esc(l.createdDate||'—')+(device?' · '+esc(device):'')+'</div></div>'
         +'<span class="leads-pill" style="background:'+c.bg+';color:'+c.fg+'">'+esc(l.status||'—')+'</span></div>'
         +'<div class="leads-card-contact">'+esc(l.email||'')+(l.phone?' · '+esc(l.phone):'')+(l.storeCode?' · '+esc(l.storeCode):'')+'</div>'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px">'+valueHtml+(l.estimatedComps?'<span style="font-size:11px;color:#8b93a2">'+l.estimatedComps.length+' comp'+(l.estimatedComps.length===1?'':'s')+'</span>':'')+'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px">'+valueHtml+(l.estimatedItems&&l.estimatedItems.length>1?'<span style="font-size:11px;color:#8b93a2">'+l.estimatedItems.length+' items</span>':(l.estimatedComps?'<span style="font-size:11px;color:#8b93a2">'+l.estimatedComps.length+' comp'+(l.estimatedComps.length===1?'':'s')+'</span>':''))+'</div>'
         +(l.latestNote?'<div class="leads-card-note">📝 '+esc(l.latestNote)+'</div>':'')
         +'</div>';
     }).join('')||'<div class="leads-empty">No leads yet — click "Paste leads" to import from the dashboard.</div>';
@@ -20488,8 +20569,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     el('leadsDetailTitle').textContent=l.customerName;
     var fieldRows=Object.keys(l.fields).map(function(k){return '<tr><td class="leads-detail-key">'+esc(k)+'</td><td>'+esc(l.fields[k])+'</td></tr>'}).join('');
     var valueBlock;
-    if(l.estimating)valueBlock='<div class="leads-status">Checking live eBay comps…</div>';
-    else if(typeof l.estimatedValue==='number')valueBlock='<div style="font:900 26px ui-monospace,monospace;color:#166534">$'+l.estimatedValue.toFixed(2)+'</div><div class="leads-status">Average of '+l.estimatedComps.length+' sold comp'+(l.estimatedComps.length===1?'':'s')+': '+l.estimatedComps.map(function(p){return '$'+p.toFixed(2)}).join(', ')+'</div>';
+    if(l.estimating)valueBlock='<div class="leads-status">Checking live eBay comps — this runs one query per item, so it can take a bit for multi-item leads…</div>';
+    else if(typeof l.estimatedValue==='number'){
+      var itemRows=(l.estimatedItems||[]).map(function(r){
+        return '<tr><td>'+esc(r.name)+'</td><td style="text-align:right">'+(r.value!=null?'$'+r.value.toFixed(2)+' <span style="color:#8b93a2">('+r.comps.length+' comp'+(r.comps.length===1?'':'s')+')</span>':'<span style="color:#8b93a2">no comps found</span>')+'</td></tr>';
+      }).join('');
+      valueBlock='<div style="font:900 26px ui-monospace,monospace;color:#166534">$'+l.estimatedValue.toFixed(2)+'</div>'
+        +(l.estimatedItems&&l.estimatedItems.length>1?'<div class="leads-status" style="margin-bottom:6px">Total across '+l.estimatedItems.length+' items:</div><table class="leads-detail-table">'+itemRows+'</table>':'<div class="leads-status">Average of '+(l.estimatedComps||[]).length+' sold comp'+((l.estimatedComps||[]).length===1?'':'s')+'</div>');
+    }
     else valueBlock='<div class="leads-status">'+(l.estimateError?esc(l.estimateError)+' — ':'')+'<button class="nim-btn primary" id="leadsEstimateBtn" style="margin-top:6px">💰 Estimate value from eBay</button></div>';
     el('leadsDetailBody').innerHTML=
       '<div class="leads-status" style="margin-bottom:12px">'+esc(l.source||'')+' · '+esc(l.createdDate||'')+(l.storeCode?' · '+esc(l.storeCode):'')+'</div>'
@@ -20943,7 +21030,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     document.getElementById('companionView').style.display='flex';
     return;
   }
-  var items=Array.isArray(payload.items)?payload.items:[];
+  var items=Array.isArray(payload.items)?payload.items.map(function(c){
+    return {pickId:c.i,orderId:c.o,order:c.n,buyer:c.b,sku:c.s,qty:c.q,title:c.t,location:c.l,ebayLink:c.e,image:c.m,price:c.p};
+  }):[];
   var idx=0;
   var results={picked:[],missing:[],oos:[]};
   document.getElementById('companionMeta').textContent='Generated '+new Date(payload.generatedAt).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' · farthest from shipping first';
@@ -21041,20 +21130,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     document.getElementById('companionStack').style.display='none';
     document.getElementById('companionButtons').style.display='none';
     var done=document.getElementById('companionDone');
-    var resultsPayload={generatedAt:new Date().toISOString(),picked:results.picked,missing:results.missing,oos:results.oos};
+    function compact(arr){return arr.map(function(r){return {i:r.pickId,o:r.orderId,s:r.sku,n:r.order,t:r.title}})}
+    var resultsPayload={generatedAt:new Date().toISOString(),picked:compact(results.picked),missing:compact(results.missing),oos:compact(results.oos)};
     var encoded;
     try{encoded=btoa(unescape(encodeURIComponent(JSON.stringify(resultsPayload))))}catch(e){encoded=''}
     var url=location.href.split('#')[0]+'#results='+encoded;
+    var qrBlock=url.length>1400
+      ?'<div style="background:#fff1e2;color:#92400e;border-radius:12px;padding:14px;margin-bottom:14px;font-size:12px">Too many results for a reliable QR code — use the link below instead.</div>'
+      :'<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px"><img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&ecc=L&data='+encodeURIComponent(url)+'" style="width:100%;max-width:260px"></div>';
     done.innerHTML=
       '<div style="font-size:40px;margin-bottom:6px">🎉</div>'
       +'<div style="font-weight:800;font-size:17px;color:#1b2436">Pick run complete</div>'
-      +'<div style="display:flex;justify-content:center;gap:10px;margin:16px 0">'
+      +'<div style="display:flex;justify-content:center;gap:10px;margin:16px 0;flex-wrap:wrap">'
       +'<div style="background:#dcfce7;color:#166534;border-radius:10px;padding:10px 16px;font:800 13px ui-monospace,monospace">✓ '+results.picked.length+' got it</div>'
       +'<div style="background:#fee2e2;color:#991b1b;border-radius:10px;padding:10px 16px;font:800 13px ui-monospace,monospace">✕ '+results.missing.length+' missing</div>'
       +'<div style="background:#fff1e2;color:#b45309;border-radius:10px;padding:10px 16px;font:800 13px ui-monospace,monospace">⬆ '+results.oos.length+' not in store</div>'
       +'</div>'
       +'<div style="font-size:12px;color:#70798a;margin-bottom:10px">Take this back to the desktop — scan or paste it into "Import pick results" in Shipping Station to move the picked orders into Packed.</div>'
-      +'<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(url)+'" style="width:200px;height:200px"></div>'
+      +qrBlock
       +'<input readonly value="'+esc(url)+'" onclick="this.select()" style="width:100%;border:1px solid #dbe0e9;border-radius:9px;padding:10px 12px;font:11px ui-monospace,monospace;box-sizing:border-box">';
     done.style.display='block';
   }
