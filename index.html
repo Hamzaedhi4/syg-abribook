@@ -17734,6 +17734,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <div class="nexus-field"><label>Working page URL</label><input class="nexus-input" id="nexusShipUrl" placeholder="Paste the eBay orders shipping URL"></div>
         <button class="nexus-connect" id="nexusConnectPage">Connect working page</button>
         <button class="nexus-prefill" id="nexusPullOrders" style="margin-top:9px" disabled>Pull orders from this tab</button>
+        <button class="nexus-prefill" id="nexusSendCompanion" style="margin-top:9px;background:#1f2937">📱 Send to Companion (phone pick list)</button>
         <div class="nexus-status" id="nexusConnectStatus">Saved locally for today. The Nexus browser extension will use this page for prefilling.</div>
       </div>
       <div class="nexus-ship-panel" style="margin-top:14px">
@@ -17921,6 +17922,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   </div>
 </div>
 
+<div class="nexus-modal" id="nexusCompanionModal">
+  <div class="nexus-modal-card">
+    <div class="nexus-modal-head"><h3>📱 Phone Pick List</h3><button class="nexus-modal-close" id="nexusCompanionClose">×</button></div>
+    <div class="nexus-modal-body">
+      <div class="nexus-status" id="nexusCompanionSummary" style="margin-bottom:14px"></div>
+      <div style="text-align:center;background:#fff;border-radius:14px;padding:16px;margin-bottom:14px"><img id="nexusCompanionQr" style="width:220px;height:220px" alt="Scan on your phone"></div>
+      <div class="nexus-field"><label>Or open this link directly on your phone</label><input class="nexus-input" id="nexusCompanionLink" readonly onclick="this.select()"></div>
+      <div class="nexus-actions" style="margin-top:12px"><button class="nim-btn primary" id="nexusCompanionCopy">Copy link</button></div>
+      <div class="nexus-status" style="margin-top:12px;color:var(--nexus-soft)">This is a snapshot of the orders currently pulled — ordered farthest-from-shipping to closest. Re-send if you pull more orders.</div>
+    </div>
+  </div>
+</div>
 <div class="nexus-modal" id="nexusHealthModal">
   <div class="nexus-modal-card">
     <div class="nexus-modal-head"><h3>Listing Health explanation</h3><button class="nexus-modal-close" id="nexusHealthClose">×</button></div>
@@ -19119,6 +19132,90 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     status.textContent='Asking the Nexus browser extension to read every order on the connected tab…';
     window.postMessage({source:'syg-audit-page',type:'FETCH_EBAY_ORDERS',requestId:Date.now(),payload:{workingUrl:url}},'*');
   }
+  // ── Phone Companion pick list ────────────────────────────────────────
+  // Cross-references the orders already pulled into Shipping Station
+  // against the SAME data the Inventory Map and Listing Health/Store-Wide
+  // boards use (all in localStorage, same origin) — no separate database,
+  // no duplicated source of truth. Since Nexus has no backend, "sending"
+  // to a phone means baking the whole pick list into a URL (as a hash
+  // fragment, so it's never sent to any server) and turning that into a
+  // QR code — scan it and the same hosted page renders a phone-only view.
+  function loadNimState(){
+    try{var s=JSON.parse(localStorage.getItem('syg_nexus_inventory_map'));if(s&&Array.isArray(s.zones))return s}catch(e){}
+    return null;
+  }
+  function findZoneForLocation(nimState,loc){
+    if(!nimState||!loc)return null;
+    var upper=String(loc).trim().toUpperCase();
+    return nimState.zones.find(function(z){return Array.isArray(z.slots)&&z.slots.some(function(s){return String(s).trim().toUpperCase()===upper})})||null;
+  }
+  function zoneCenter(z){return {x:(z.x||0)+(z.w||0)/2,y:(z.y||0)+(z.h||0)/2}}
+  function skuLookup(sku){
+    // Checks Listing Health then Store-Wide for a real eBay link and title
+    // already verified for this SKU — reused, not re-derived.
+    if(!sku)return {};
+    try{
+      var pc=JSON.parse(localStorage.getItem('abribook_auditBatch'))||[];
+      var m=pc.find(function(e){return e.sku===sku});
+      if(m)return {ebayLink:m.ebayLink||'',title:m.title||''};
+    }catch(e){}
+    try{
+      var sw=JSON.parse(localStorage.getItem('abribook_storeWideBatch'))||[];
+      var m2=sw.find(function(e){return e.sku===sku});
+      if(m2)return {ebayLink:m2.ebayLink||'',title:m2.title||''};
+    }catch(e){}
+    return {};
+  }
+  function buildCompanionPickList(){
+    var nimState=loadNimState();
+    var shipZone=nimState?nimState.zones.find(function(z){return z.id==='shipping'}):null;
+    var shipCenter=shipZone?zoneCenter(shipZone):{x:0,y:0};
+    var lines=[];
+    pulledOrders.forEach(function(o){
+      var rows=Array.isArray(o.items)&&o.items.length?o.items:[{sku:o.sku,qty:o.qty,value:o.value}];
+      rows.forEach(function(it){
+        var sku=it.sku||'';
+        var nimItem=nimState?nimState.items.find(function(i){return i.sku===sku}):null;
+        var location=nimItem?(nimItem.pendingLocation||nimItem.officialLocation||''):'';
+        var zone=findZoneForLocation(nimState,location);
+        var dist=zone?Math.hypot(zoneCenter(zone).x-shipCenter.x,zoneCenter(zone).y-shipCenter.y):-1;
+        var extra=skuLookup(sku);
+        lines.push({
+          order:o.orderNumber||'',
+          buyer:o.buyerName||'',
+          sku:sku,
+          qty:it.qty||'',
+          title:extra.title||nimItem&&nimItem.title||'',
+          location:location||'Unknown',
+          ebayLink:extra.ebayLink||'',
+          dist:dist
+        });
+      });
+    });
+    // Farthest from shipping first — walk out, pick everything, end back
+    // near shipping ready to pack. Anything with no known location (dist
+    // -1) sorts to the very end since there's nowhere to route it to yet.
+    lines.sort(function(a,b){
+      if(a.dist<0&&b.dist<0)return 0;
+      if(a.dist<0)return 1;
+      if(b.dist<0)return -1;
+      return b.dist-a.dist;
+    });
+    return lines;
+  }
+  function sendToCompanion(){
+    if(!pulledOrders.length){toast('Pull orders first — nothing to send yet');return}
+    var lines=buildCompanionPickList();
+    var payload={generatedAt:new Date().toISOString(),items:lines};
+    var encoded;
+    try{encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))))}catch(e){toast('Could not encode pick list');return}
+    var url=location.href.split('#')[0]+'#pick='+encoded;
+    var noLocation=lines.filter(function(l){return l.dist<0}).length;
+    document.getElementById('nexusCompanionSummary').textContent=lines.length+' item'+(lines.length===1?'':'s')+' across '+pulledOrders.length+' order'+(pulledOrders.length===1?'':'s')+', sorted farthest-from-shipping first.'+(noLocation?' '+noLocation+' item(s) have no known location and are listed last.':'');
+    document.getElementById('nexusCompanionLink').value=url;
+    document.getElementById('nexusCompanionQr').src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(url);
+    document.getElementById('nexusCompanionModal').classList.add('show');
+  }
   function orderKeyForEntry(o){
     return [o.buyerName,o.address].filter(Boolean).join(' ');
   }
@@ -19924,6 +20021,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       }
     };
     document.getElementById('nexusPullOrders').onclick=requestEbayOrders;
+    document.getElementById('nexusSendCompanion').onclick=sendToCompanion;
+    document.getElementById('nexusCompanionClose').onclick=function(){document.getElementById('nexusCompanionModal').classList.remove('show')};
+    document.getElementById('nexusCompanionCopy').onclick=function(){var inp=document.getElementById('nexusCompanionLink');inp.select();navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(inp.value).then(function(){toast('Link copied')}):document.execCommand('copy')};
     document.getElementById('nexusShipUrl').addEventListener('input',function(){
       document.getElementById('nexusPullOrders').disabled=!/^https:\/\/([a-z0-9-]+\.)*ebay\.com\//i.test(this.value.trim());
     });
@@ -20472,6 +20572,82 @@ bindProperties=function(z){bindMixedPropertiesBase(z);if(/^[A-H]$/i.test(String(
 function bindCanvasPan(){var wrap=el('nimCanvasWrap');if(wrap.dataset.panBound)return;wrap.dataset.panBound='1';var pan=null;wrap.addEventListener('pointerdown',function(e){if(e.target!==wrap&&e.target!==el('nimCanvas'))return;pan={x:e.clientX,y:e.clientY,left:wrap.scrollLeft,top:wrap.scrollTop};wrap.classList.add('panning');wrap.setPointerCapture(e.pointerId)});wrap.addEventListener('pointermove',function(e){if(!pan)return;wrap.scrollLeft=pan.left-(e.clientX-pan.x);wrap.scrollTop=pan.top-(e.clientY-pan.y)});wrap.addEventListener('pointerup',function(){pan=null;wrap.classList.remove('panning')})}
 window.NexusInventoryMap={open:function(){el('nimApp').classList.add('show');bindCanvasPan();render()},state:function(){return clone(state)},resetLayout:function(){state.zones=clone(defaultZones);save('layout_reset');render()}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+<!-- ── Phone Companion view ──────────────────────────────────────────
+     Renders on top of everything else when the page is opened with a
+     #pick=<data> hash (from the QR code / link generated by "Send to
+     Companion" in the Shipping Station). Self-contained: the whole pick
+     list is baked into the URL itself, so this works on any device that
+     opens the link — no login, no live connection back to the desktop. -->
+<div id="companionView" style="display:none;position:fixed;inset:0;z-index:99999;background:#eef1f6;overflow:auto;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased">
+  <div style="background:#151922;color:#fff;padding:16px 18px;position:sticky;top:0;z-index:2;box-shadow:0 2px 10px rgba(0,0,0,.15)">
+    <div style="font-weight:800;font-size:16px">📦 Pick List</div>
+    <div id="companionMeta" style="font-size:11px;color:#c3cade;margin-top:3px"></div>
+  </div>
+  <div id="companionMap" style="padding:14px 14px 4px"></div>
+  <div id="companionList" style="padding:6px 14px 40px"></div>
+</div>
+<script>
+(function(){
+  if(location.hash.indexOf('#pick=')!==0)return;
+  var payload;
+  try{
+    payload=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(6)))));
+  }catch(e){
+    document.getElementById('companionList').innerHTML='<div style="padding:20px;color:#c0394a">This pick list link looks corrupted — ask for a fresh one from Shipping Station.</div>';
+    document.getElementById('companionView').style.display='block';
+    return;
+  }
+  var items=Array.isArray(payload.items)?payload.items:[];
+  document.getElementById('companionMeta').textContent=items.length+' item'+(items.length===1?'':'s')+' · generated '+new Date(payload.generatedAt).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' · farthest from shipping first';
+
+  // Mini floor map — reads the same Inventory Map data as the desktop,
+  // if this device has it (same browser/profile). If not (a genuinely
+  // separate phone), the map just doesn't render — the text list alone
+  // is still fully usable, since every card already states the location.
+  (function renderMiniMap(){
+    var nimState=null;
+    try{var s=JSON.parse(localStorage.getItem('syg_nexus_inventory_map'));if(s&&Array.isArray(s.zones))nimState=s}catch(e){}
+    var host=document.getElementById('companionMap');
+    if(!nimState){host.innerHTML='';return}
+    var pickZoneIds={};
+    items.forEach(function(it){
+      if(!it.location)return;
+      var z=nimState.zones.find(function(zone){return Array.isArray(zone.slots)&&zone.slots.some(function(sl){return String(sl).toUpperCase()===String(it.location).toUpperCase()})});
+      if(z)pickZoneIds[z.id]=(pickZoneIds[z.id]||0)+1;
+    });
+    var maxX=0,maxY=0;
+    nimState.zones.forEach(function(z){maxX=Math.max(maxX,(z.x||0)+(z.w||0));maxY=Math.max(maxY,(z.y||0)+(z.h||0))});
+    if(!maxX||!maxY){host.innerHTML='';return}
+    var svg='<svg viewBox="0 0 '+maxX+' '+maxY+'" style="width:100%;height:auto;background:#fff;border-radius:12px;border:1px solid #dbe0e9" xmlns="http://www.w3.org/2000/svg">';
+    nimState.zones.forEach(function(z){
+      var hit=pickZoneIds[z.id];
+      var fill=hit?(z.color||'#3978f6'):'#f3f5f9';
+      var stroke=hit?(z.color||'#3978f6'):'#dbe0e9';
+      svg+='<rect x="'+(z.x||0)+'" y="'+(z.y||0)+'" width="'+(z.w||0)+'" height="'+(z.h||0)+'" fill="'+fill+'" fill-opacity="'+(hit?0.85:0.4)+'" stroke="'+stroke+'" stroke-width="2" rx="6"></rect>';
+      svg+='<text x="'+((z.x||0)+8)+'" y="'+((z.y||0)+20)+'" font-size="16" font-weight="800" fill="'+(hit?'#fff':'#93a0b5')+'">'+z.name+'</text>';
+      if(hit)svg+='<text x="'+((z.x||0)+(z.w||0)-10)+'" y="'+((z.y||0)+(z.h||0)-10)+'" font-size="15" font-weight="900" text-anchor="end" fill="#fff">'+hit+'</text>';
+    });
+    svg+='</svg>';
+    host.innerHTML=svg;
+  })();
+
+  document.getElementById('companionList').innerHTML=items.map(function(it,i){
+    var known=it.location&&it.location!=='Unknown';
+    return '<div style="background:#fff;border:1px solid #dbe0e9;border-left:4px solid '+(known?'#3978f6':'#f97316')+';border-radius:12px;padding:13px 14px;margin-bottom:10px;box-shadow:0 2px 6px rgba(20,30,50,.05)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'
+      +'<div style="min-width:0"><div style="font:800 11px ui-monospace,monospace;color:#8b93a2">#'+(i+1)+' · ORDER '+(it.order||'—')+(it.buyer?' · '+it.buyer:'')+'</div>'
+      +'<div style="font-weight:700;font-size:14px;margin-top:3px;color:#1b2436">'+(it.title||it.sku||'Untitled item')+'</div>'
+      +'<div style="font:700 11px ui-monospace,monospace;color:#3978f6;margin-top:3px">'+(it.sku||'')+(it.qty?' · ×'+it.qty:'')+'</div></div>'
+      +'<div style="flex:none;text-align:center;background:'+(known?'#eaf1ff':'#fff1e2')+';color:'+(known?'#1d4fd6':'#b45309')+';border-radius:10px;padding:8px 12px;font:900 15px ui-monospace,monospace">'+(it.location||'?')+'</div>'
+      +'</div>'
+      +(it.ebayLink?'<a href="'+it.ebayLink+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;text-align:center;background:#151922;color:#fff;text-decoration:none;padding:9px;border-radius:9px;font-weight:700;font-size:12px">View on eBay ↗</a>':'')
+      +'</div>';
+  }).join('')||'<div style="padding:20px;color:#70798a">No items in this pick list.</div>';
+
+  document.getElementById('companionView').style.display='block';
 })();
 </script>
 
