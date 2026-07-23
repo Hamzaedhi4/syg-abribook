@@ -17876,6 +17876,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-sw-stat{padding:12px 14px;border:1px solid var(--nexus-line);border-radius:12px;background:var(--nexus-panel)}
   .nexus-sw-stat span{display:block;font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--nexus-soft);margin-bottom:6px}
   .nexus-sw-stat b{font:800 18px var(--mono)}
+  /* ── Redesigned overview: hero value metrics, a compact single-bar health
+     breakdown instead of 5 separate boxes, and a category value list —
+     replaces the flat wall of same-size boxes that felt cluttered. ── */
+  .nexus-sw-hero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+  .nexus-sw-hero-card{padding:16px 18px;border-radius:16px;background:var(--nexus-panel);border:1px solid var(--nexus-line);position:relative;overflow:hidden}
+  .nexus-sw-hero-card.value{border-color:rgba(52,211,153,.3);background:linear-gradient(160deg,rgba(52,211,153,.08),var(--nexus-panel) 60%)}
+  .nexus-sw-hero-label{font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--nexus-soft);margin-bottom:8px}
+  .nexus-sw-hero-value{font:850 26px/1 var(--mono);color:#fff}
+  .nexus-sw-hero-sub{font-size:11px;color:var(--nexus-soft);margin-top:6px}
+  .nexus-sw-health-strip{display:flex;align-items:center;gap:14px;padding:12px 16px;border:1px solid var(--nexus-line);border-radius:14px;background:var(--nexus-panel);margin-bottom:14px;flex-wrap:wrap}
+  .nexus-sw-health-track{flex:1;min-width:160px;height:10px;border-radius:999px;overflow:hidden;display:flex;background:#0c111a}
+  .nexus-sw-health-seg{height:100%;transition:width .3s}
+  .nexus-sw-health-legend{display:flex;gap:14px;flex-wrap:wrap;font:700 10px var(--mono)}
+  .nexus-sw-health-legend span{display:flex;align-items:center;gap:5px}
+  .nexus-sw-health-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .nexus-sw-categories{display:grid;gap:6px;margin-bottom:16px}
+  .nexus-sw-cat-row{display:grid;grid-template-columns:120px 1fr auto;align-items:center;gap:10px;font-size:11px}
+  .nexus-sw-cat-name{color:var(--nexus-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+  .nexus-sw-cat-track{height:8px;border-radius:999px;background:#0c111a;overflow:hidden}
+  .nexus-sw-cat-fill{height:100%;background:linear-gradient(90deg,var(--nexus-cyan),var(--nexus-blue));border-radius:999px}
+  .nexus-sw-cat-value{font:700 11px var(--mono);color:#fff;white-space:nowrap}
+  .nexus-sw-toolbar-groups{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--nexus-line)}
+  .nexus-sw-tg{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .nexus-sw-tg-label{font:800 9px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--nexus-soft);margin-right:2px}
   .nexus-sw-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
   .nexus-sw-search{flex:1;min-width:180px;border:1px solid var(--nexus-line);border-radius:10px;background:#090d15;color:#fff;padding:9px 12px;font:600 12px var(--mono);outline:none}
   .nexus-sw-search:focus{border-color:var(--nexus-blue)}
@@ -18056,19 +18080,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <span id="nexusSwDropSub">or click to choose · builds and checks every card automatically</span>
     </div>
     <input type="file" id="nexusSwFile" accept=".csv,text/csv" style="display:none">
-    <div class="nexus-sw-stats" id="nexusSwStats"></div>
-    <div class="nexus-sw-toolbar">
-      <input class="nexus-sw-search" id="nexusSwSearch" placeholder="Search SKU or title…">
-      <button class="nexus-sw-btn" id="nexusSwSelectAll">Select all filtered</button>
-      <button class="nexus-sw-btn" id="nexusSwSelectAttn">Select all in Needs Attention</button>
-      <button class="nexus-sw-btn" id="nexusSwClearSel">✕ Clear selection</button>
-      <span class="nexus-oq-count" id="nexusSwSelCount">0 selected</span>
-      <button class="nexus-sw-btn" id="nexusSwSendUnsorted" style="border-color:rgba(50,214,197,.35);color:var(--nexus-cyan)">📤 Send selected to Unsorted</button>
-      <button class="nexus-sw-btn" id="nexusSwBringBack">↩️ Bring selected back</button>
-      <button class="nexus-sw-btn" id="nexusSwRefresh">🔄 Refresh live stats</button>
-      <button class="nexus-sw-btn" id="nexusSwGenPrompt">🧾 Generate audit prompt</button>
-      <button class="nexus-sw-btn" id="nexusSwImportBtn">📥 Import audit results</button>
-      <button class="nexus-sw-btn" id="nexusSwSortAge">⏱ Sort: oldest first</button>
+    <div class="nexus-sw-hero" id="nexusSwHero"></div>
+    <div class="nexus-sw-health-strip" id="nexusSwHealthStrip"></div>
+    <div class="nexus-sw-categories" id="nexusSwCategories"></div>
+    <div class="nexus-sw-stats" id="nexusSwStats" style="display:none"></div>
+    <div class="nexus-sw-toolbar-groups">
+      <input class="nexus-sw-search" id="nexusSwSearch" placeholder="Search SKU or title…" style="flex:1;min-width:200px">
+      <div class="nexus-sw-tg"><span class="nexus-sw-tg-label">Select</span>
+        <button class="nexus-sw-btn" id="nexusSwSelectAll">All filtered</button>
+        <button class="nexus-sw-btn" id="nexusSwSelectAttn">Needs attention</button>
+        <button class="nexus-sw-btn" id="nexusSwClearSel">✕ Clear</button>
+        <span class="nexus-oq-count" id="nexusSwSelCount">0 selected</span>
+      </div>
+      <div class="nexus-sw-tg"><span class="nexus-sw-tg-label">Move</span>
+        <button class="nexus-sw-btn" id="nexusSwSendUnsorted" style="border-color:rgba(50,214,197,.35);color:var(--nexus-cyan)">📤 To Unsorted</button>
+        <button class="nexus-sw-btn" id="nexusSwBringBack">↩️ Bring back</button>
+      </div>
+      <div class="nexus-sw-tg"><span class="nexus-sw-tg-label">Audit</span>
+        <button class="nexus-sw-btn" id="nexusSwGenPrompt">🧾 Generate prompt</button>
+        <button class="nexus-sw-btn" id="nexusSwImportBtn">📥 Import results</button>
+      </div>
+      <div class="nexus-sw-tg"><span class="nexus-sw-tg-label">View</span>
+        <button class="nexus-sw-btn" id="nexusSwRefresh">🔄 Refresh</button>
+        <button class="nexus-sw-btn" id="nexusSwSortAge">⏱ Oldest first</button>
+      </div>
     </div>
     <div class="nexus-sw-chips" id="nexusSwChips"></div>
     <div class="nexus-status" id="nexusSwStatus" style="margin:-6px 0 14px"></div>
@@ -18770,19 +18805,65 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     });
   }
   function swRenderStats(){
-    var el=document.getElementById('nexusSwStats');
-    if(!el)return;
+    var hero=document.getElementById('nexusSwHero');
+    var healthEl=document.getElementById('nexusSwHealthStrip');
+    var catsEl=document.getElementById('nexusSwCategories');
+    if(!hero)return;
     var total=swEntries.length;
     var flagged=swEntries.filter(function(e){return e.bin==='needsAttention'}).length;
-    var noMove=swEntries.filter(function(e){return e.watchers===0&&e.sold===0}).length;
+    var noMove=swEntries.filter(function(e){return e.watchers===0&&e.sold===0&&e.bin!=='needsAttention'}).length;
     var aging=swEntries.filter(function(e){var d=swAgeDays(e);return d!=null&&d>=SW_AGING_DAYS&&e.watchers===0&&e.sold===0}).length;
-    var clean=total-flagged;
-    el.innerHTML=
-      '<div class="nexus-sw-stat"><span>Total</span><b>'+total+'</b></div>'+
-      '<div class="nexus-sw-stat" style="border-color:rgba(248,113,113,.3)"><span style="color:#f87171"><span class="nexus-health-dot flagged" style="margin-right:5px;vertical-align:1px"></span>Needs attention</span><b style="color:#f87171">'+flagged+'</b></div>'+
-      '<div class="nexus-sw-stat" style="border-color:rgba(251,191,36,.3)"><span style="color:#fbbf24">No movement</span><b style="color:#fbbf24">'+noMove+'</b></div>'+
-      '<div class="nexus-sw-stat" style="border-color:rgba(249,115,22,.3)"><span style="color:#f97316">Aging 90+ days</span><b style="color:#f97316">'+aging+'</b></div>'+
-      '<div class="nexus-sw-stat" style="border-color:rgba(52,211,153,.3)"><span style="color:#34d399"><span class="nexus-health-dot healthy" style="margin-right:5px;vertical-align:1px"></span>Good</span><b style="color:#34d399">'+clean+'</b></div>';
+    var clean=Math.max(0,total-flagged-noMove);
+
+    // ── Hero value metrics ── inventory value = price × available qty,
+    // summed across every listing. This is the number that wasn't shown
+    // anywhere before — everything else here already existed in some form.
+    var totalValue=0,totalUnits=0,pricedCount=0,priceSum=0;
+    swEntries.forEach(function(e){
+      var qty=typeof e.availableQty==='number'?e.availableQty:0;
+      var price=typeof e.price==='number'?e.price:0;
+      totalUnits+=qty;
+      if(price>0){totalValue+=price*qty;priceSum+=price;pricedCount++}
+    });
+    var avgPrice=pricedCount?priceSum/pricedCount:0;
+    hero.innerHTML=
+      '<div class="nexus-sw-hero-card value"><div class="nexus-sw-hero-label">💰 Total inventory value</div><div class="nexus-sw-hero-value">'+money(totalValue)+'</div><div class="nexus-sw-hero-sub">Price × quantity, across every active listing</div></div>'+
+      '<div class="nexus-sw-hero-card"><div class="nexus-sw-hero-label">📦 Units in stock</div><div class="nexus-sw-hero-value">'+totalUnits.toLocaleString()+'</div><div class="nexus-sw-hero-sub">Across '+total.toLocaleString()+' listing'+(total===1?'':'s')+'</div></div>'+
+      '<div class="nexus-sw-hero-card"><div class="nexus-sw-hero-label">🏷️ Avg. listing price</div><div class="nexus-sw-hero-value">'+money(avgPrice)+'</div><div class="nexus-sw-hero-sub">Across '+pricedCount.toLocaleString()+' priced listing'+(pricedCount===1?'':'s')+'</div></div>'+
+      '<div class="nexus-sw-hero-card"><div class="nexus-sw-hero-label">⚠️ Needs attention</div><div class="nexus-sw-hero-value" style="color:'+(flagged?'#f87171':'#fff')+'">'+flagged.toLocaleString()+'</div><div class="nexus-sw-hero-sub">'+(total?Math.round(flagged/total*100):0)+'% of listings</div></div>';
+
+    // ── Compact health strip ── one proportional bar instead of 5 boxes
+    // of roughly-equal visual weight regardless of how big each group is.
+    if(healthEl){
+      var segs=[
+        {n:clean,color:'#34d399',label:'Good'},
+        {n:noMove,color:'#fbbf24',label:'No movement'},
+        {n:aging,color:'#f97316',label:'Aging 90+d'},
+        {n:flagged,color:'#f87171',label:'Needs attention'}
+      ];
+      var denom=total||1;
+      healthEl.innerHTML=
+        '<div class="nexus-sw-health-track">'+segs.map(function(s){return s.n?'<div class="nexus-sw-health-seg" style="width:'+(s.n/denom*100)+'%;background:'+s.color+'"></div>':'';}).join('')+'</div>'+
+        '<div class="nexus-sw-health-legend">'+segs.map(function(s){return '<span><i style="background:'+s.color+'"></i>'+s.label+' · '+s.n+'</span>';}).join('')+'</div>';
+    }
+
+    // ── Top categories by value ── addresses "categories cluttering" by
+    // actually organizing by category meaningfully (what's worth the
+    // most) instead of scattering flag chips with no shared ordering.
+    if(catsEl){
+      var byCategory={};
+      swEntries.forEach(function(e){
+        var cat=e.category||'Other';
+        var qty=typeof e.availableQty==='number'?e.availableQty:0;
+        var price=typeof e.price==='number'?e.price:0;
+        byCategory[cat]=(byCategory[cat]||0)+price*qty;
+      });
+      var catList=Object.keys(byCategory).map(function(c){return {name:c,value:byCategory[c]}}).sort(function(a,b){return b.value-a.value}).slice(0,6);
+      var maxVal=catList.length?catList[0].value:1;
+      catsEl.innerHTML=catList.length?catList.map(function(c){
+        return '<div class="nexus-sw-cat-row"><div class="nexus-sw-cat-name" title="'+escapeHtml(c.name)+'">'+escapeHtml(c.name)+'</div><div class="nexus-sw-cat-track"><div class="nexus-sw-cat-fill" style="width:'+(maxVal?c.value/maxVal*100:0)+'%"></div></div><div class="nexus-sw-cat-value">'+money(c.value)+'</div></div>';
+      }).join(''):'';
+    }
   }
   function swCardHtml(e){
     var color=swCategoryColor(e.category);
