@@ -20817,14 +20817,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       // also "match" (they contain the same lines nested inside them),
       // and picking the smallest avoids grabbing one of those instead of
       // the actual message div.
-      // The message body isn't always "=== Header ===" style — some lead
-      // types (e.g. "Sell Now Page Lead") start directly with a plain
-      // label line and go straight into Key: Value pairs, no === at all.
-      // Detect by counting actual Key: Value lines instead of requiring a
-      // specific header, then take the SMALLEST matching div — ancestors
-      // also "match" (they contain the same lines nested inside them),
-      // and picking the smallest avoids grabbing one of those instead of
-      // the actual message div.
       // IMPORTANT: this counts lines from innerHTML with <br> converted to
       // real newlines, NOT .textContent — .textContent silently drops
       // <br> tags with no separator at all, which was quietly merging
@@ -20836,6 +20828,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         return normalizedLines(d).filter(function(l){return kvLineRe.test(l)}).length>=3;
       }).sort(function(a,b){return a.innerHTML.length-b.innerHTML.length});
       var bodyEl=bodyCandidates[0];
+      // Some leads are genuinely just free-form text — someone typing
+      // whatever, no "Key: Value" structure at all (not every lead is a
+      // real device inquiry). The check above finds nothing for those,
+      // but there's still real text worth showing. Fall back to the
+      // longest leftover LEAF div (no nested divs, so it can't be an
+      // ancestor wrapper) that isn't already accounted for by the header
+      // fields already pulled out above.
+      if(!bodyEl){
+        var usedTexts=[customerName,email,phone,storeCode,status,createdDate,latestNote].filter(Boolean).map(function(s){return s.trim()});
+        var leafCandidates=allDivs.filter(function(d){
+          var t=(d.textContent||'').trim();
+          return d.querySelectorAll('div').length===0&&t.length>=15&&usedTexts.indexOf(t)===-1;
+        }).sort(function(a,b){return b.textContent.trim().length-a.textContent.trim().length});
+        bodyEl=leafCandidates[0];
+      }
       var messageText=bodyEl?normalizedLines(bodyEl).join(' '):'';
       var rawLines=bodyEl?normalizedLines(bodyEl).join('\n'):'';
       var fields={};
@@ -21029,12 +21036,35 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         +(l.estimatedItems&&l.estimatedItems.length>1?'<div class="leads-status" style="margin-bottom:6px">Total across '+l.estimatedItems.length+' items:</div><table class="leads-detail-table">'+itemRows+'</table>':'<div class="leads-status">Average of '+(l.estimatedComps||[]).length+' sold comp'+((l.estimatedComps||[]).length===1?'':'s')+'</div>');
     }
     else valueBlock='<div class="leads-status">'+(l.estimateError?esc(l.estimateError)+' — ':'')+'<button class="nim-btn primary" id="leadsEstimateBtn" style="margin-top:6px">💰 Estimate value from eBay</button></div>';
+    var rawMessageBlock='';
+    if(l.rawMessage){
+      if(fieldRows){
+        // Fields parsed fine — still surface the raw text too, just tucked
+        // under a toggle, in case the structured parse missed something
+        // or the message has extra context beyond the Key: Value lines.
+        rawMessageBlock='<div style="margin-top:14px"><button class="nim-btn" id="leadsToggleRaw" style="font-size:11px">▸ Show full message text</button><pre id="leadsRawText" style="display:none;white-space:pre-wrap;word-break:break-word;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-top:8px;font:12px/1.5 ui-monospace,monospace;color:#334155">'+esc(l.rawMessage)+'</pre></div>';
+      }else{
+        // Nothing structured parsed — this is the primary content now.
+        // Could be a genuinely unstructured lead (a Facebook chat, someone
+        // typing whatever), not necessarily a parser bug — so show it
+        // plainly instead of just saying "nothing found."
+        rawMessageBlock='<div class="leads-status" style="margin-bottom:6px">No Key: Value fields found — showing the raw message as-is:</div><pre style="white-space:pre-wrap;word-break:break-word;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;font:12px/1.5 ui-monospace,monospace;color:#334155">'+esc(l.rawMessage)+'</pre>';
+      }
+    }
     el('leadsDetailBody').innerHTML=
       '<div class="leads-status" style="margin-bottom:12px">'+esc(l.source||'')+' · '+esc(l.createdDate||'')+(l.storeCode?' · '+esc(l.storeCode):'')+'</div>'
       +'<div style="margin-bottom:14px">'+valueBlock+'</div>'
-      +(fieldRows?'<table class="leads-detail-table">'+fieldRows+'</table>':'<div class="leads-status">No structured fields parsed from this lead\'s message.</div>')
+      +(fieldRows?'<table class="leads-detail-table">'+fieldRows+'</table>':(l.rawMessage?'':'<div class="leads-status">No message content found for this lead at all.</div>'))
+      +rawMessageBlock
       +'<div class="nexus-actions" style="margin-top:16px"><button class="nim-btn" disabled title="Coming next">✉️ Reply from template</button><button class="nim-btn" disabled title="Coming next">✍️ Custom email</button></div>'
       +'<div class="leads-status" style="margin-top:10px">Email sending isn\'t wired up yet — that\'s next.</div>';
+    var toggleBtn=document.getElementById('leadsToggleRaw');
+    if(toggleBtn)toggleBtn.onclick=function(){
+      var pre=document.getElementById('leadsRawText');
+      var showing=pre.style.display!=='none';
+      pre.style.display=showing?'none':'block';
+      toggleBtn.textContent=showing?'▸ Show full message text':'▾ Hide full message text';
+    };
     el('leadsDetailModal').classList.add('show');
     var btn=document.getElementById('leadsEstimateBtn');
     if(btn)btn.onclick=function(){estimateValue(l.id);openDetail(l.id)};
