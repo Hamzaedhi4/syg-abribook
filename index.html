@@ -814,6 +814,38 @@
 
   /* ── Audit Recap (full-screen) ── */
   .pc-recap-overlay{position:fixed;inset:0;background:#120E06;z-index:260;display:none;flex-direction:column;}
+  /* ── Listing detail viewer — dark, industrial, techy ── */
+  .pc-listing-detail{position:fixed;inset:0;background:#0A0C10;z-index:270;display:none;flex-direction:column;font-family:'Courier New',ui-monospace,monospace;}
+  .pc-listing-detail.show{display:flex;}
+  .pld-header{display:flex;align-items:center;gap:16px;padding:16px 24px;background:#0F1319;border-bottom:1px solid rgba(56,189,248,.25);box-shadow:0 2px 20px rgba(56,189,248,.08);}
+  .pld-close{background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:9px 14px;border-radius:6px;font:700 11px inherit;cursor:pointer;letter-spacing:.05em;}
+  .pld-close:hover{border-color:#F87171;color:#F87171;}
+  .pld-title{flex:1;color:#E2E8F0;font-size:15px;font-weight:700;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pld-ebay-link{background:linear-gradient(135deg,#38BDF8,#0EA5E9);color:#03151F;padding:9px 16px;border-radius:6px;font:800 11px inherit;text-decoration:none;letter-spacing:.05em;box-shadow:0 0 20px rgba(56,189,248,.35);}
+  .pld-body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden;}
+  .pld-gallery{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;background:radial-gradient(circle at 50% 40%,#12161d,#0A0C10 70%);border-right:1px solid rgba(56,189,248,.15);}
+  .pld-image-wrap{position:relative;width:100%;max-width:520px;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#14181f;border:1px solid rgba(255,255,255,.08);box-shadow:0 0 40px rgba(0,0,0,.5) inset;}
+  .pld-image-wrap img{width:100%;height:100%;object-fit:contain;background:#14181f;}
+  .pld-arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:1px solid rgba(56,189,248,.4);background:rgba(10,12,16,.75);color:#38BDF8;font-size:20px;cursor:pointer;backdrop-filter:blur(4px);}
+  .pld-arrow:hover{background:rgba(56,189,248,.15);box-shadow:0 0 16px rgba(56,189,248,.4);}
+  .pld-arrow.left{left:12px;} .pld-arrow.right{right:12px;}
+  .pld-dots{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap;justify-content:center;max-width:400px;}
+  .pld-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;}
+  .pld-dots span.on{background:#38BDF8;box-shadow:0 0 6px #38BDF8;}
+  .pld-analysis{padding:30px 34px;overflow-y:auto;}
+  .pld-verdict{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:10px 14px;border-radius:6px;margin-bottom:20px;display:inline-block;}
+  .pld-verdict.good{background:rgba(74,222,128,.12);color:#4ADE80;border:1px solid rgba(74,222,128,.3);}
+  .pld-verdict.bad{background:rgba(251,191,36,.12);color:#FBBF24;border:1px solid rgba(251,191,36,.3);}
+  .pld-check{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+  .pld-check-icon{font-size:15px;flex:none;width:20px;text-align:center;}
+  .pld-check-label{color:#E2E8F0;font-weight:700;font-size:12px;letter-spacing:.03em;text-transform:uppercase;}
+  .pld-check-detail{color:rgba(226,232,240,.5);font-size:12.5px;margin-top:3px;line-height:1.5;}
+  .pld-strategy{margin-top:22px;padding:16px 18px;border-radius:8px;background:linear-gradient(135deg,rgba(251,191,36,.08),transparent);border:1px solid rgba(251,191,36,.25);}
+  .pld-strategy-label{color:#FBBF24;font-weight:800;font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px;}
+  .pld-strategy ul{margin:0;padding-left:18px;color:rgba(253,230,138,.85);font-size:12.5px;line-height:1.8;}
+  .pld-radial-wrap{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;}
+  .pld-radial-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#E2E8F0;font:800 13px inherit;pointer-events:none;text-shadow:0 0 8px rgba(56,189,248,.6);}
+  .pc-auto-audit-row:hover{border-color:rgba(56,189,248,.4)!important;}
   .pc-recap-overlay.show{display:flex;}
   .pc-recap-header{background:#14100A;border-bottom:3px solid #FBBF24;padding:14px 22px;display:flex;align-items:center;gap:12px;flex:none;}
   .pc-recap-header-icon{font-size:20px;}
@@ -3685,6 +3717,7 @@
           <button class="pc-btn pc-btn-save" id="pcSelectModeToggle">☑️ Select</button>
           <button class="pc-btn pc-btn-save" id="pcScanSelected" style="display:none">🔍 Scan Selected (<span id="pcSelectedCount">0</span>)</button>
           <button class="pc-btn pc-btn-save" id="pcImportScanBtn">📥 Import Scan Results</button>
+          <button class="pc-btn pc-btn-save" id="pcAutoAuditBtn" style="background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#1a1a1a;border:none">⚡ Auto-Audit</button>
           <button class="pc-btn pc-btn-save" id="pcReviewBatch">📊 Review Batch</button>
           <button class="pc-btn pc-btn-save" id="pcClearBatch">🗑 Clear Batch</button>
         </div>
@@ -3868,6 +3901,71 @@
     <div style="display:flex;gap:10px;margin-top:12px">
       <button class="pc-btn pc-btn-save" id="pcScanImportApply">Import &amp; apply stickers</button>
       <span id="pcScanImportStatus" style="align-self:center;font-size:12px;color:var(--nexus-soft, #9aa5b8)"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Auto-Audit — visually minimal, runs everything that CAN run without
+     a Claude session automatically (live eBay verify + instant client-side
+     checks), then hands you one prompt for the one thing that genuinely
+     can't run from here (the Shopify-side metafield/description scan). ── -->
+<!-- ── Full-screen listing detail — photo gallery left, live analysis +
+     strategy right, radial dial at the bottom to cycle through whatever
+     list opened it (Auto-Audit's flagged items, typically). ── -->
+<div class="pc-listing-detail" id="pcListingDetailOverlay">
+  <div class="pld-header">
+    <button class="pld-close" id="pldClose">✕ Close</button>
+    <div class="pld-title" id="pldTitle">—</div>
+    <a class="pld-ebay-link" id="pldEbayLink" href="#" target="_blank" rel="noopener">View on eBay ↗</a>
+  </div>
+  <div class="pld-body">
+    <div class="pld-gallery">
+      <div class="pld-image-wrap">
+        <img id="pldImage" src="" alt="">
+        <button class="pld-arrow left" id="pldPrevImg">‹</button>
+        <button class="pld-arrow right" id="pldNextImg">›</button>
+      </div>
+      <div class="pld-dots" id="pldDots"></div>
+    </div>
+    <div class="pld-analysis">
+      <div class="pld-verdict" id="pldVerdict"></div>
+      <div class="pld-checks" id="pldChecks"></div>
+      <div class="pld-strategy" id="pldStrategy" style="display:none">
+        <div class="pld-strategy-label">⚡ Strategy to move this faster</div>
+        <ul id="pldStrategyList"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="pld-radial-wrap">
+    <svg id="pldRadial" viewBox="0 0 200 200" width="140" height="140"></svg>
+    <div class="pld-radial-label" id="pldRadialLabel">1 / 1</div>
+  </div>
+</div>
+
+<div class="pc-recap-overlay" id="pcAutoAuditOverlay">
+  <div class="pc-recap-header">
+    <span class="pc-recap-header-icon">⚡</span>
+    <h2>Auto-Audit</h2>
+    <div class="pc-recap-header-btns">
+      <button class="pc-back" id="pcAutoAuditClose">← Back to Board</button>
+    </div>
+  </div>
+  <div class="pc-recap-body" style="display:flex;flex-direction:column;align-items:center;padding-top:40px">
+    <div id="pcAutoAuditStart" style="text-align:center;max-width:480px">
+      <div style="font-size:44px;margin-bottom:10px">⚡</div>
+      <h3 style="margin:0 0 10px;font-size:19px">Run everything that can run on its own</h3>
+      <p style="color:var(--nexus-soft,#9aa5b8);font-size:13px;line-height:1.7;margin-bottom:24px">Checks every card on the board live against eBay (is it actually listed, watchers, sold count), plus instant checks that need no network call at all — stale listings, missing or malformed SKUs, duplicates. No clicking through cards one at a time.</p>
+      <button class="pc-btn pc-btn-save" id="pcAutoAuditRun" style="font-size:14px;padding:14px 28px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#1a1a1a;border:none">▶ Run Full Audit</button>
+    </div>
+    <div id="pcAutoAuditRunning" style="display:none;text-align:center;max-width:480px;width:100%">
+      <div style="font-size:34px;margin-bottom:14px">🔍</div>
+      <div id="pcAutoAuditProgressLabel" style="font-size:13px;color:var(--nexus-soft,#9aa5b8);margin-bottom:10px">Starting…</div>
+      <div style="height:8px;border-radius:999px;background:#0c111a;overflow:hidden"><div id="pcAutoAuditProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#FBBF24,#F59E0B);transition:width .2s"></div></div>
+    </div>
+    <div id="pcAutoAuditResults" style="display:none;width:100%;max-width:720px">
+      <div id="pcAutoAuditSummary" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:22px"></div>
+      <div id="pcAutoAuditActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px"></div>
+      <div id="pcAutoAuditList"></div>
     </div>
   </div>
 </div>
@@ -9472,6 +9570,344 @@ document.getElementById('pcImportBatch')?.addEventListener('click', ()=>{
   pcRenderBatch();
 });
 
+// ── Listing analysis ──────────────────────────────────────────────────
+// Pure rules against real scraped data (title, condition, description,
+// photo count, live price, watcher/sold activity) — no AI judgment call,
+// just checks a person would also make by eye, done consistently. The
+// "strategy" section only generates for listings that are actually stale
+// — a listing with real interest doesn't need a plan to move faster.
+function pcAnalyzeListing(entry){
+  var checks=[];
+  var title=(entry.title||'').trim();
+
+  if(!title||title.length<12||/\b(draft|placeholder|test|tbd)\b/i.test(title)){
+    checks.push({label:'Title',ok:false,detail:'Missing, very short, or looks like a placeholder.'});
+  }else if(!/\d/.test(title)&&!/\b(gb|tb|inch|in\.|")\b/i.test(title)){
+    checks.push({label:'Title',ok:false,detail:'No specs (storage/size/etc.) detected — may be too generic to rank well in search.'});
+  }else{
+    checks.push({label:'Title',ok:true,detail:'Looks reasonably descriptive.'});
+  }
+
+  if(!entry.ebayCondition){
+    checks.push({label:'Condition',ok:false,detail:'Could not confirm a condition is set on the live listing.'});
+  }else{
+    checks.push({label:'Condition',ok:true,detail:entry.ebayCondition});
+  }
+
+  var desc=entry.ebayDescription||'';
+  var missingSpecs=[];
+  if(!desc||desc.length<80){
+    checks.push({label:'Description',ok:false,detail:desc?('Only '+desc.length+' characters — likely too thin.'):'Missing entirely.'});
+  }else{
+    var isComputerish=/laptop|desktop|\bpc\b|computer|\bcpu\b|motherboard/i.test(title+' '+desc);
+    if(isComputerish){
+      if(!/ram|memory/i.test(desc))missingSpecs.push('RAM');
+      if(!/storage|ssd|hdd|nvme/i.test(desc))missingSpecs.push('Storage');
+      if(!/processor|\bcpu\b|intel|amd|ryzen|core i/i.test(desc))missingSpecs.push('Processor');
+    }
+    if(missingSpecs.length){
+      checks.push({label:'Description',ok:false,detail:'No mention of '+missingSpecs.join('/')+' — buyers often bounce without this.'});
+    }else{
+      checks.push({label:'Description',ok:true,detail:desc.length+' characters, covers the basics.'});
+    }
+  }
+
+  var photoCount=(entry.ebayImages||[]).length;
+  if(photoCount===0){
+    checks.push({label:'Photos',ok:false,detail:'None could be read from the live listing.'});
+  }else if(photoCount<4){
+    checks.push({label:'Photos',ok:false,detail:'Only '+photoCount+' — more generally converts better.'});
+  }else{
+    checks.push({label:'Photos',ok:true,detail:photoCount+' photos.'});
+  }
+
+  var priceMismatch=false;
+  var ourPrice=parseFloat(entry.price);
+  if(!isNaN(ourPrice)&&typeof entry.ebayItemPrice==='number'&&Math.abs(ourPrice-entry.ebayItemPrice)>0.5){
+    priceMismatch=true;
+    checks.push({label:'Price',ok:false,detail:'Our records say $'+ourPrice.toFixed(2)+', live listing shows $'+entry.ebayItemPrice.toFixed(2)+'.'});
+  }
+
+  var age=pcAgeDays(entry);
+  var isStale=age!=null&&age>=PC_AGING_DAYS&&typeof entry.watchers==='number'&&entry.watchers===0&&(entry.sold===0||entry.sold==null);
+  if(age!=null){
+    var activityBits=[];
+    if(typeof entry.watchers==='number')activityBits.push(entry.watchers+' watching');
+    if(typeof entry.sold==='number')activityBits.push(entry.sold+' sold');
+    checks.push({label:'Activity',ok:!isStale,detail:age+'d live'+(activityBits.length?' · '+activityBits.join(' · '):' · no activity data yet')});
+  }
+
+  var strategy=[];
+  if(isStale){
+    checks.forEach(function(c){
+      if(c.ok||c.label==='Activity')return;
+      if(c.label==='Title')strategy.push('Rewrite the title with specific specs (brand, model, storage/size) — generic titles rank worse in eBay search.');
+      if(c.label==='Description')strategy.push('Fill in the missing spec details — a thin description is a common reason buyers bounce.');
+      if(c.label==='Photos')strategy.push('Add more photos — 1-3 photos gets skipped more than a fuller gallery.');
+      if(c.label==='Price')strategy.push('Reconcile the price mismatch first — a stale mismatch could quietly be hurting visibility or trust.');
+      if(c.label==='Condition')strategy.push('Confirm condition is actually set on the live listing — missing condition can suppress search placement.');
+    });
+    if(!strategy.length){
+      strategy.push('The listing itself looks complete — likely just priced above current demand. Consider a price drop.');
+    }
+    strategy.push('Consider ending and relisting — eBay\u2019s search tends to favor newer listings over old ones sitting at zero interest.');
+  }
+
+  return {checks:checks,strategy:strategy,isStale:isStale,priceMismatch:priceMismatch};
+}
+
+// ── Listing detail viewer — full-screen photo gallery + analysis, with a
+// radial dial to cycle through whatever list opened it. ─────────────────
+var pldList=[],pldIndex=0,pldImgIndex=0;
+function pldOpen(list,startIndex){
+  pldList=list;pldIndex=startIndex||0;pldImgIndex=0;
+  document.getElementById('pcListingDetailOverlay').classList.add('show');
+  pldRenderCurrent();
+}
+function pldClose(){document.getElementById('pcListingDetailOverlay').classList.remove('show');}
+function pldNavigate(delta){
+  if(!pldList.length)return;
+  pldIndex=(pldIndex+delta+pldList.length)%pldList.length;
+  pldImgIndex=0;
+  pldRenderCurrent();
+}
+function pldJumpTo(i){pldIndex=i;pldImgIndex=0;pldRenderCurrent();}
+function pldNavigateImage(delta){
+  var entry=pldList[pldIndex];
+  var imgs=(entry&&entry.ebayImages)||[];
+  if(!imgs.length)return;
+  pldImgIndex=(pldImgIndex+delta+imgs.length)%imgs.length;
+  pldRenderImage();
+}
+function pldRenderImage(){
+  var entry=pldList[pldIndex];
+  var imgs=(entry&&entry.ebayImages)||[];
+  var img=document.getElementById('pldImage');
+  img.src=imgs.length?imgs[pldImgIndex]:'';
+  img.style.visibility=imgs.length?'visible':'hidden';
+  var dotsEl=document.getElementById('pldDots');
+  dotsEl.innerHTML=imgs.map(function(u,i){return '<span class="'+(i===pldImgIndex?'on':'')+'" data-pld-dot="'+i+'"></span>';}).join('');
+  dotsEl.querySelectorAll('[data-pld-dot]').forEach(function(dot){
+    dot.onclick=function(){pldImgIndex=parseInt(dot.getAttribute('data-pld-dot'),10);pldRenderImage();};
+  });
+}
+// Radial dial — outer ring of tick marks (one per item in the list, current
+// one glowing), split into two big click zones (left = prev, right = next).
+// Built fresh each render since the list length can change between opens.
+function pldBuildRadialSvg(list,currentIdx){
+  var svg=document.getElementById('pldRadial');
+  if(!svg)return;
+  var n=list.length||1,cx=100,cy=100,rTick=82;
+  var ticks='';
+  for(var i=0;i<n;i++){
+    var angle=(i/n)*Math.PI*2-Math.PI/2;
+    var x=cx+rTick*Math.cos(angle),y=cy+rTick*Math.sin(angle);
+    var isCurrent=i===currentIdx;
+    ticks+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(isCurrent?5:3)+'" fill="'+(isCurrent?'#38BDF8':'rgba(255,255,255,.28)')+'" style="cursor:pointer;'+(isCurrent?'filter:drop-shadow(0 0 6px #38BDF8)':'')+'" data-pld-jump="'+i+'"></circle>';
+  }
+  svg.innerHTML=
+    '<circle cx="100" cy="100" r="94" fill="none" stroke="rgba(56,189,248,.15)" stroke-width="1"/>'+
+    '<circle cx="100" cy="100" r="60" fill="none" stroke="rgba(56,189,248,.25)" stroke-width="1"/>'+
+    '<path d="M 100 40 A 60 60 0 0 0 100 160 Z" fill="rgba(56,189,248,.05)" stroke="rgba(56,189,248,.3)" stroke-width="1" id="pldPrevZone" style="cursor:pointer"/>'+
+    '<path d="M 100 40 A 60 60 0 0 1 100 160 Z" fill="rgba(56,189,248,.05)" stroke="rgba(56,189,248,.3)" stroke-width="1" id="pldNextZone" style="cursor:pointer"/>'+
+    '<text x="52" y="105" fill="#38BDF8" font-size="18" text-anchor="middle" style="pointer-events:none">\u2039</text>'+
+    '<text x="148" y="105" fill="#38BDF8" font-size="18" text-anchor="middle" style="pointer-events:none">\u203a</text>'+
+    ticks;
+  document.getElementById('pldRadialLabel').textContent=(currentIdx+1)+' / '+n;
+  var prevZone=document.getElementById('pldPrevZone');if(prevZone)prevZone.onclick=function(){pldNavigate(-1);};
+  var nextZone=document.getElementById('pldNextZone');if(nextZone)nextZone.onclick=function(){pldNavigate(1);};
+  svg.querySelectorAll('[data-pld-jump]').forEach(function(dot){
+    dot.onclick=function(){pldJumpTo(parseInt(dot.getAttribute('data-pld-jump'),10));};
+  });
+}
+function pldRenderCurrent(){
+  var entry=pldList[pldIndex];
+  if(!entry)return;
+  document.getElementById('pldTitle').textContent=entry.title||'Untitled';
+  var linkEl=document.getElementById('pldEbayLink');
+  if(entry.ebayLink){linkEl.href=entry.ebayLink;linkEl.style.display='inline-block';}else{linkEl.style.display='none';}
+  pldRenderImage();
+
+  var analysis=pcAnalyzeListing(entry);
+  var verdictEl=document.getElementById('pldVerdict');
+  var badCount=analysis.checks.filter(function(c){return !c.ok;}).length;
+  verdictEl.className='pld-verdict '+(badCount===0?'good':'bad');
+  verdictEl.textContent=badCount===0?'\u2713 Looks good':badCount+' issue'+(badCount===1?'':'s')+' found';
+
+  document.getElementById('pldChecks').innerHTML=analysis.checks.map(function(c){
+    return '<div class="pld-check"><div class="pld-check-icon">'+(c.ok?'\u2705':'\u26a0\ufe0f')+'</div><div><div class="pld-check-label">'+escapeHtml(c.label)+'</div><div class="pld-check-detail">'+escapeHtml(c.detail)+'</div></div></div>';
+  }).join('');
+
+  var stratEl=document.getElementById('pldStrategy');
+  if(analysis.strategy.length){
+    document.getElementById('pldStrategyList').innerHTML=analysis.strategy.map(function(s){return '<li>'+escapeHtml(s)+'</li>';}).join('');
+    stratEl.style.display='block';
+  }else{
+    stratEl.style.display='none';
+  }
+  pldBuildRadialSvg(pldList,pldIndex);
+}
+document.getElementById('pldClose')?.addEventListener('click',pldClose);
+document.getElementById('pldPrevImg')?.addEventListener('click',function(){pldNavigateImage(-1);});
+document.getElementById('pldNextImg')?.addEventListener('click',function(){pldNavigateImage(1);});
+document.addEventListener('keydown',function(ev){
+  if(!document.getElementById('pcListingDetailOverlay')?.classList.contains('show'))return;
+  if(ev.key==='Escape')pldClose();
+  else if(ev.key==='ArrowUp')pldNavigate(-1);
+  else if(ev.key==='ArrowDown')pldNavigate(1);
+  else if(ev.key==='ArrowLeft')pldNavigateImage(-1);
+  else if(ev.key==='ArrowRight')pldNavigateImage(1);
+});
+
+// Everything in here either needs zero network calls (pure math on data
+// already in the batch) or is a browser-extension call identical to what
+// the single-card "Verify on eBay" button already does — just looped
+// across the whole board with a short pause between requests instead of
+// requiring a click per card. The one thing that genuinely can't run from
+// here (Shopify metafields/description — needs real API access, which
+// only exists in an actual Claude session) still ends in a copy-paste
+// step, but it's reduced to one button instead of a manual multi-select.
+function pcLooksJunkSku(sku){ return !sku || !/^NJ\d{2}/i.test(sku.trim()); }
+function pcAutoAuditClientFlags(list){
+  var skuCounts={};
+  list.forEach(function(e){ if(e.sku) skuCounts[e.sku]=(skuCounts[e.sku]||0)+1; });
+  return list.map(function(e){
+    var flags=[];
+    var age=pcAgeDays(e);
+    if(age!=null && age>=PC_AGING_DAYS && typeof e.watchers==='number' && e.watchers===0 && (e.sold===0||e.sold==null)){
+      flags.push({code:'stale',label:'🕓 Stale · '+age+'d no movement'});
+    }
+    if(!e.sku){ flags.push({code:'no_sku',label:'🏷️ No SKU on file'}); }
+    else if(pcLooksJunkSku(e.sku)){ flags.push({code:'junk_sku',label:'🏷️ SKU doesn\u2019t match NJ0X convention'}); }
+    else if(skuCounts[e.sku]>1){ flags.push({code:'dup_sku',label:'🏷️ Duplicate SKU on this board ('+skuCounts[e.sku]+'x)'}); }
+    return {entry:e,flags:flags};
+  });
+}
+async function pcRunAutoAudit(){
+  var startEl=document.getElementById('pcAutoAuditStart');
+  var runningEl=document.getElementById('pcAutoAuditRunning');
+  var resultsEl=document.getElementById('pcAutoAuditResults');
+  var progLabel=document.getElementById('pcAutoAuditProgressLabel');
+  var progBar=document.getElementById('pcAutoAuditProgressBar');
+  startEl.style.display='none';
+  resultsEl.style.display='none';
+  runningEl.style.display='block';
+
+  var list=pcLoadBatch();
+  var targets=list.filter(function(e){return e.status!=='error' && (e.title||e.sku);});
+
+  for(var i=0;i<targets.length;i++){
+    var entry=targets[i];
+    progLabel.textContent='Checking '+(i+1)+' of '+targets.length+' — '+(entry.title||entry.sku||'Untitled').slice(0,60);
+    progBar.style.width=Math.round(i/targets.length*100)+'%';
+    if(entry.title||entry.sku){
+      try{
+        var res=await pcAskExtension('VERIFY_EBAY_SELLER',{title:entry.title,sku:entry.sku});
+        var freshList=pcLoadBatch();
+        var idx=freshList.findIndex(function(x){return String(x.id)===String(entry.id)});
+        if(idx!==-1 && res && res.ok){
+          if(!res.found){
+            freshList[idx].ebayLink='';freshList[idx].ebayUnverified=false;freshList[idx].skuConfirmed=false;
+            freshList[idx].watchers=undefined;freshList[idx].sold=undefined;freshList[idx].views=undefined;freshList[idx].viewedToday=undefined;
+          }else{
+            freshList[idx].ebayLink=res.skuConfirmed?res.url:'';
+            freshList[idx].ebayUnverified=!res.skuConfirmed;
+            freshList[idx].skuConfirmed=!!res.skuConfirmed;
+            freshList[idx].titleOnlyMatchUrl=res.skuConfirmed?undefined:res.url;
+            freshList[idx].watchers=(typeof res.watchers==='number')?res.watchers:null;
+            freshList[idx].sold=(typeof res.sold==='number')?res.sold:null;
+            freshList[idx].views=(typeof res.views==='number')?res.views:null;
+            freshList[idx].viewedToday=(typeof res.viewedToday==='number')?res.viewedToday:null;
+            if(res.condition)freshList[idx].ebayCondition=res.condition;
+            if(res.description)freshList[idx].ebayDescription=res.description;
+            if(Array.isArray(res.images)&&res.images.length)freshList[idx].ebayImages=res.images;
+            if(typeof res.itemPrice==='number')freshList[idx].ebayItemPrice=res.itemPrice;
+            if(res.startDate)freshList[idx].startDate=res.startDate;
+          }
+          freshList[idx].verifiedAt=new Date().toISOString();
+          pcSaveBatch(freshList);
+        }
+      }catch(err){ /* one card failing shouldn't stop the run */ }
+      await new Promise(function(r){setTimeout(r,600)}); // gentle pacing — not a request storm
+    }
+  }
+  progBar.style.width='100%';
+  pcRenderBatch();
+  pcRenderAutoAuditResults();
+}
+function pcRenderAutoAuditResults(){
+  var runningEl=document.getElementById('pcAutoAuditRunning');
+  var resultsEl=document.getElementById('pcAutoAuditResults');
+  runningEl.style.display='none';
+  resultsEl.style.display='block';
+
+  var list=pcLoadBatch().filter(function(e){return e.status!=='error' && (e.title||e.sku);});
+  var withFlags=pcAutoAuditClientFlags(list);
+  var liveConfirmed=list.filter(function(e){return e.skuConfirmed;}).length;
+  var notFound=list.filter(function(e){return e.verifiedAt && !e.ebayLink && !e.titleOnlyMatchUrl;}).length;
+  var skuIssues=withFlags.filter(function(w){return w.flags.some(function(f){return f.code==='no_sku'||f.code==='junk_sku'||f.code==='dup_sku';});}).length;
+  var staleCount=withFlags.filter(function(w){return w.flags.some(function(f){return f.code==='stale';});}).length;
+
+  document.getElementById('pcAutoAuditSummary').innerHTML=
+    '<div class="nexus-sw-hero-card value"><div class="nexus-sw-hero-label">✓ Live on eBay</div><div class="nexus-sw-hero-value">'+liveConfirmed+'</div></div>'+
+    '<div class="nexus-sw-hero-card"><div class="nexus-sw-hero-label">⚠ Not found</div><div class="nexus-sw-hero-value" style="color:'+(notFound?'#f87171':'#fff')+'">'+notFound+'</div></div>'+
+    '<div class="nexus-sw-hero-card"><div class="nexus-sw-hero-label">🕓 Stale</div><div class="nexus-sw-hero-value" style="color:'+(staleCount?'#fbbf24':'#fff')+'">'+staleCount+'</div></div>'+
+    '<div class="nexus-sw-hero-card"><div class="nexus-sw-hero-label">🏷️ SKU issues</div><div class="nexus-sw-hero-value" style="color:'+(skuIssues?'#f87171':'#fff')+'">'+skuIssues+'</div></div>';
+
+  var flaggedOnly=withFlags.filter(function(w){return w.flags.length || (w.entry.verifiedAt && !w.entry.ebayLink && !w.entry.titleOnlyMatchUrl);});
+  document.getElementById('pcAutoAuditActions').innerHTML=
+    '<button class="pc-btn pc-btn-save" id="pcAutoAuditScanPrompt">📋 Copy Shopify scan prompt for these '+flaggedOnly.length+'</button>'+
+    '<button class="pc-btn pc-btn-save" id="pcAutoAuditImport">📥 Import scan results</button>'+
+    '<button class="pc-btn pc-btn-save" id="pcAutoAuditRerun">🔄 Run again</button>';
+
+  document.getElementById('pcAutoAuditList').innerHTML=flaggedOnly.length?flaggedOnly.map(function(w,i){
+    var e=w.entry;
+    var badges=w.flags.map(function(f){return '<span class="pc-tag-sticker" style="background:#FBBF2422;border-color:#FBBF2466;color:#FBBF24;cursor:default">'+f.label+'</span>';}).join('');
+    if(e.verifiedAt && !e.ebayLink && !e.titleOnlyMatchUrl) badges+='<span class="pc-tag-sticker" style="background:#F8717122;border-color:#F8717166;color:#F87171;cursor:default">⚠ Not found on eBay</span>';
+    return '<div class="pc-auto-audit-row" data-pld-open="'+i+'" style="padding:12px 14px;border:1px solid var(--nexus-line);border-radius:12px;margin-bottom:8px;background:var(--nexus-panel);cursor:pointer">'+
+      '<div style="font-weight:700;font-size:13px;margin-bottom:4px">'+escapeHtml(e.title||'Untitled')+'</div>'+
+      '<div style="font:700 11px var(--mono);color:var(--nexus-soft);margin-bottom:8px">'+escapeHtml(e.sku||'No SKU')+'</div>'+
+      '<div class="pc-scan-stickers">'+badges+'</div>'+
+    '</div>';
+  }).join(''):'<div style="text-align:center;color:var(--nexus-soft);padding:30px">Nothing flagged — everything checked out clean on the automated checks.</div>';
+
+  document.getElementById('pcAutoAuditList').querySelectorAll('[data-pld-open]').forEach(function(row){
+    row.onclick=function(){
+      var idx=parseInt(row.getAttribute('data-pld-open'),10);
+      pldOpen(flaggedOnly.map(function(w){return w.entry;}),idx);
+    };
+  });
+
+  var scanBtn=document.getElementById('pcAutoAuditScanPrompt');
+  if(scanBtn)scanBtn.onclick=function(){
+    var entries=flaggedOnly.map(function(w){return w.entry;});
+    if(!entries.length)return;
+    var prompt=pcBuildScanPrompt(entries);
+    navigator.clipboard?.writeText(prompt).catch(function(){});
+    scanBtn.textContent='✓ Copied!';
+    setTimeout(function(){scanBtn.textContent='📋 Copy Shopify scan prompt for these '+flaggedOnly.length;},1600);
+  };
+  var importBtn=document.getElementById('pcAutoAuditImport');
+  if(importBtn)importBtn.onclick=function(){
+    document.getElementById('pcAutoAuditOverlay').classList.remove('show');
+    document.getElementById('pcScanImportText').value='';
+    document.getElementById('pcScanImportStatus').textContent='';
+    document.getElementById('pcScanImportOverlay').classList.add('show');
+  };
+  var rerunBtn=document.getElementById('pcAutoAuditRerun');
+  if(rerunBtn)rerunBtn.onclick=pcRunAutoAudit;
+}
+document.getElementById('pcAutoAuditBtn')?.addEventListener('click', ()=>{
+  document.getElementById('pcAutoAuditStart').style.display='block';
+  document.getElementById('pcAutoAuditRunning').style.display='none';
+  document.getElementById('pcAutoAuditResults').style.display='none';
+  document.getElementById('pcAutoAuditOverlay').classList.add('show');
+});
+document.getElementById('pcAutoAuditClose')?.addEventListener('click', ()=>{
+  document.getElementById('pcAutoAuditOverlay').classList.remove('show');
+});
+document.getElementById('pcAutoAuditRun')?.addEventListener('click', pcRunAutoAudit);
+
 document.getElementById('pcClearBatch')?.addEventListener('click', ()=>{
   pcSaveBatch([]);
   pcRenderBatch();
@@ -10206,6 +10642,10 @@ function pcRenderBatch(){
         list[idx].sold = (typeof res.sold === 'number') ? res.sold : null;
         list[idx].views = (typeof res.views === 'number') ? res.views : null;
         list[idx].viewedToday = (typeof res.viewedToday === 'number') ? res.viewedToday : null;
+        if(res.condition) list[idx].ebayCondition = res.condition;
+        if(res.description) list[idx].ebayDescription = res.description;
+        if(Array.isArray(res.images) && res.images.length) list[idx].ebayImages = res.images;
+        if(typeof res.itemPrice === 'number') list[idx].ebayItemPrice = res.itemPrice;
         if(res.startDate) list[idx].startDate = res.startDate;
         list[idx].verifiedAt = new Date().toISOString();
         pcSaveBatch(list);
