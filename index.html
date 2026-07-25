@@ -3567,7 +3567,7 @@
     <div class="nexus-home-head"><div class="nexus-mark">SYG</div><div><div class="nexus-brand">SYG <span>Nexus</span></div><div class="nexus-kicker">Sell Your Gadgets · Elmwood Park</div></div><div class="nexus-date"><b>Operations Center</b>Intake · Listings · Health · Shipping</div></div>
     <div class="nexus-home-body">
       <div class="nexus-hero"><div><h1>Store operations, connected.</h1><p>Move from intake to healthy listings to physical-first shipping.</p></div><div class="nexus-health-mini"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-health-mini-row"><strong id="nexusOverallHealth">100%</strong><span id="nexusHealthSub">Ready for first audit</span></div></div></div>
-      <div class="nexus-grid">
+      <div class="nexus-grid" id="nexusGridView0">
         <button class="nexus-module" id="welcomeWan" style="--mod-color:var(--nexus-blue)"><div class="nexus-module-foot">List</div><div class="nexus-module-icon">📖</div><h2>Wan Workspace</h2><p>Listing intake, Abribook registry, manifests and batch tools.</p></button>
         <button class="nexus-module" id="welcomePc" style="--mod-color:#f4bb55"><div class="nexus-module-foot">Audit</div><div class="nexus-module-icon">◉</div><h2>Listing Health</h2><p>Scan, audit, correct and understand every listing.</p></button>
         <button class="nexus-module" id="welcomeHaz" style="--mod-color:#4ade80"><div class="nexus-module-foot">Buy</div><div class="nexus-module-icon">◇</div><h2>Haz Buying</h2><p>Customer intake, offer calculations and buying board.</p></button>
@@ -15643,6 +15643,22 @@ const LS_STICKIES = 'wan_stickies_v2';
 // ══════════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════════
+// FIXED 2026-07-25: this used to run its FULL body (including
+// createPanel() for all four panels) on every single visit to WAN, not
+// just the first. createPanel() has no guard against being called twice
+// for the same id — it creates a brand-new wrapper div and MOVES the
+// real content element (draftPanel, cartPanelContent, the search .wrap,
+// the Photo Mirror holder) into it, but never removes the OLD wrapper
+// from wanCanvasInner first. So every re-entry left a stale, now-empty
+// shell panel behind while the actual content moved to a fresh one —
+// which is what looked like "my work got deleted" (it technically wasn't,
+// but accumulating duplicate panels and confused stacking made it look
+// and often behave that way) — and forced the lock-in welcome overlay to
+// re-evaluate from a freshly-created panel every single time too.
+// Fix: only do the real build once per page session (wanCanvasBuilt);
+// every re-entry after that just re-shows the existing canvas as-is —
+// same panels, same content, same lock-in state, untouched.
+let wanCanvasBuilt = false;
 function initCanvas() {
   const toolbar = document.getElementById('wanToolbar');
   const canvas  = document.getElementById('wanCanvas');
@@ -15657,6 +15673,14 @@ function initCanvas() {
   canvas.style.position = 'fixed';
   canvas.style.left     = '0';
   canvas.style.right    = '0';
+
+  if (wanCanvasBuilt) {
+    // Already built this session — just re-showing, not re-creating.
+    // Everything (panels, their content, lock-in state) stays exactly
+    // as the person left it.
+    return;
+  }
+  wanCanvasBuilt = true;
 
   // Load saved layout or use defaults
   const saved = loadLayout();
@@ -19754,7 +19778,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     box.className='nexus-home';
     box.innerHTML='<div class="nexus-home-head"><div class="nexus-mark">SYG</div><div><div class="nexus-brand">SYG <span>Nexus</span></div><div class="nexus-kicker">Sell Your Gadgets · Elmwood Park</div></div><div class="nexus-date"><b>'+date.toLocaleDateString(undefined,{weekday:'long'})+'</b>'+date.toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})+'</div></div>'+
       '<div class="nexus-home-body"><div class="nexus-hero"><div><h1>Store operations, connected.</h1><p>Move from intake to healthy listings to physical-first shipping.</p></div><div class="nexus-health-mini"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-health-mini-row"><strong id="nexusOverallHealth">100%</strong><span id="nexusHealthSub">Ready for first audit</span></div></div></div>'+
-      '<div class="nexus-grid">'+
+      '<div class="nexus-grid" id="nexusGridView">'+
       moduleHtml('wan','📖','Wan Workspace','Listing intake, Abribook registry, manifests and batch tools.','LIST','var(--nexus-blue)')+
       moduleHtml('audit','◉','Listing Health','Scan, audit, correct and understand every listing.','AUDIT','#f4bb55')+
       moduleHtml('haz','◇','Haz Buying','Customer intake, offer calculations and buying board.','BUY','#4ade80')+
@@ -19763,7 +19787,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       moduleHtml('inventory','▦','Inventory Map','Navigate the store floor, relocate items and build storage without code.','LOCATE','#22d3ee')+
       moduleHtml('command','⌁','Command Center','Health trends and smart operational suggestions.','INSIGHTS','#c084fc')+
       moduleHtml('shovo','✦','Ask Shovo','System guidance, shortcuts and operational answers.','ASSIST','#fb7185')+
-      '</div><div class="nexus-home-actions"><button class="nexus-quiet-btn" id="nexusAbout">About Nexus</button><button class="nexus-quiet-btn" id="nexusTour">Guided Tour</button></div></div>';
+      '</div>'+
+      '<div class="nexus-home-actions"><button class="nexus-quiet-btn" id="nexusAbout">About Nexus</button><button class="nexus-quiet-btn" id="nexusTour">Guided Tour</button></div></div>';
     box.querySelectorAll('[data-module]').forEach(function(btn){
       btn.addEventListener('click',function(){openModule(btn.dataset.module)});
     });
@@ -19774,6 +19799,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function moduleHtml(id,icon,title,desc,label,color){
     return '<button class="nexus-module" data-module="'+id+'" style="--mod-color:'+color+'"><div class="nexus-module-foot">'+label+'</div><div class="nexus-module-icon">'+icon+'</div><h2>'+title+'</h2><p>'+desc+'</p></button>';
   }
+  // FIXED 2026-07-25: the static grid's data-module tiles (shipping,
+  // pricing, inventory, command, shovo, leads) never had ANY click wiring
+  // on a genuinely fresh load. Only wan/haz/audit worked initially (they
+  // use dedicated id-based buttons wired elsewhere). The other six only
+  // got wired later, inside buildCommandCenter() — which only runs after
+  // Command Center has already been opened once. On a true first load,
+  // clicking any of those six did nothing at all.
+  document.querySelectorAll('#nexusGridView0 [data-module]').forEach(function(btn){
+    btn.addEventListener('click',function(){openModule(btn.dataset.module)});
+  });
   function openModule(id){
     var welcome=document.getElementById('welcomeBackdrop');
     if(id==='wan'){welcome.classList.add('hidden');return}
