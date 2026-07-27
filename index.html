@@ -18911,6 +18911,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-sup-sum-note{font:550 10.5px var(--mono);color:var(--nexus-soft)}
   .nexus-sup-tools{display:flex;gap:8px;margin-bottom:12px}
   .nexus-sup-tools .nexus-price-btn{flex:1}
+  .nexus-ol-progress{float:right;font:700 10px var(--mono);color:var(--nexus-soft);letter-spacing:.04em}
+  .nexus-ol-bar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:2px 0 14px}
+  .nexus-ol-bar span{display:block;height:100%;background:var(--nexus-cyan);width:0;border-radius:999px}
+  .nexus-ol-list{max-height:46vh;overflow:auto;margin-bottom:12px}
+  .nexus-ol-row{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border:1px solid var(--nexus-line);border-radius:11px;margin-bottom:7px;background:#0b1019;cursor:pointer}
+  .nexus-ol-row:hover{border-color:rgba(50,214,197,.4)}
+  .nexus-ol-row.done{opacity:.5}
+  .nexus-ol-row.done .nexus-ol-name{text-decoration:line-through}
+  .nexus-ol-box{width:17px;height:17px;border-radius:5px;border:1px solid var(--nexus-line);flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font:700 11px var(--sans);color:transparent}
+  .nexus-ol-row.done .nexus-ol-box{background:var(--nexus-cyan);border-color:var(--nexus-cyan);color:#04121a}
+  .nexus-ol-main{flex:1;min-width:0}
+  .nexus-ol-name{font-weight:700;font-size:12.5px}
+  .nexus-ol-meta{font:550 10px var(--mono);color:var(--nexus-soft);margin-top:3px}
+  .nexus-ol-model{font:700 10px var(--mono);color:var(--nexus-cyan);border:1px solid rgba(50,214,197,.3);border-radius:6px;padding:2px 6px;margin-right:7px;cursor:pointer}
+  .nexus-ol-model:hover{background:rgba(50,214,197,.12)}
+  .nexus-ol-qty{font:700 11px var(--mono);color:#fcd34d;white-space:nowrap;margin-left:auto;padding-left:10px}
+  .nexus-ol-empty{font-size:11px;color:var(--nexus-soft);padding:6px 2px}
   .nexus-sup-sync{float:right;font:700 9px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--nexus-line);color:var(--nexus-soft)}
   .nexus-sup-sync.syncing{color:#fbbf24;border-color:rgba(251,191,36,.4)}
   .nexus-sup-sync.ok{color:#5DCAA5;border-color:rgba(93,202,165,.4)}
@@ -19234,6 +19251,7 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
         <div class="nexus-sup-summary" id="nexusSupSummary"></div>
         <div class="nexus-sup-tools">
           <button class="nexus-price-btn" id="nexusSupCopyOrder">Copy reorder list</button>
+          <button class="nexus-price-btn" id="nexusSupChecklist">Order checklist</button>
           <button class="nexus-price-btn primary" id="nexusSupUline">Order from Uline &#8599;</button>
         </div>
         <div class="nexus-sup-list" id="nexusSupList"></div>
@@ -19246,6 +19264,26 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
         </div>
         <div class="nexus-status" id="nexusSupStatus">Counted the way the shelf is counted — whole bundles plus loose boxes from an open one. Sending a size to eBay takes a loose box first, then breaks a bundle.</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="nexus-sw-modal" id="nexusOrderListModal">
+  <div class="nexus-sw-modal-card">
+    <h3>Order checklist <span class="nexus-ol-progress" id="nexusOlProgress"></span></h3>
+    <div class="nexus-ol-paste" id="nexusOlPaste">
+      <textarea id="nexusOlText" placeholder="Paste a reorder list here" style="min-height:120px"></textarea>
+      <div class="nexus-sw-modal-foot" style="justify-content:flex-start">
+        <button class="nexus-sw-btn" id="nexusOlLoad">Load list</button>
+        <button class="nexus-sw-btn" id="nexusOlFromStock">Fill from current stock</button>
+      </div>
+    </div>
+    <div class="nexus-ol-bar" id="nexusOlBar" style="display:none"><span id="nexusOlBarFill"></span></div>
+    <div class="nexus-ol-list" id="nexusOlList"></div>
+    <div class="nexus-sw-modal-foot">
+      <button class="nexus-sw-btn" id="nexusOlNew">Paste a different list</button>
+      <button class="nexus-sw-btn" id="nexusOlClear">Clear</button>
+      <button class="nexus-sw-btn" id="nexusOlClose">Close</button>
     </div>
   </div>
 </div>
@@ -20824,6 +20862,111 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done).catch(function(){fallbackCopySku(txt,done)});
     else fallbackCopySku(txt,done);
   }
+  // ── Order checklist ─────────────────────────────────────────────
+  // Whoever is doing the buying pastes a reorder list and ticks items off
+  // as they go, so a long list doesn't lose a line halfway through. Tick
+  // state is saved, so closing the modal or the tab doesn't lose progress.
+  var orderList=[];
+  // Tolerates em dash, en dash or " - ", with or without a leading model #.
+  function parseOrderList(text){
+    var out=[];
+    String(text||'').split(/\r?\n/).forEach(function(raw){
+      var line=raw.trim();
+      if(!line)return;
+      var parts=line.split(/\s+[\u2014\u2013-]{1,2}\s+/);
+      if(parts.length<2)return;
+      var orderPart='',havePart='';
+      parts.forEach(function(p){
+        if(/^order\s/i.test(p))orderPart=p;
+        else if(/^have\b/i.test(p))havePart=p.replace(/^have\s*/i,'');
+      });
+      if(!orderPart)return; // skips the "SYG Elmwood Park" header line
+      var head=parts[0].trim();
+      var model='',name=head;
+      var m=head.match(/^([A-Z]-\d+[A-Z]?)\s+(.+)$/i);
+      if(m){model=m[1];name=m[2].trim()}
+      var q=orderPart.match(/order\s+(\d+)/i);
+      var per=orderPart.match(/\((\d+)\s*\/\s*bundle\)/i);
+      out.push({model:model,name:name,
+                qty:q?parseInt(q[1],10):1,
+                per:per?parseInt(per[1],10):1,
+                have:havePart,done:false});
+    });
+    return out;
+  }
+  function saveOrderList(){putSetting('shipping_order_list',orderList)}
+  function renderOrderList(){
+    var list=document.getElementById('nexusOlList'),prog=document.getElementById('nexusOlProgress'),
+        bar=document.getElementById('nexusOlBar'),fill=document.getElementById('nexusOlBarFill'),
+        paste=document.getElementById('nexusOlPaste');
+    if(!list)return;
+    if(!orderList.length){
+      list.innerHTML='<div class="nexus-ol-empty">Nothing loaded yet. Paste a list above, or pull the current low stock.</div>';
+      prog.textContent='';bar.style.display='none';
+      if(paste)paste.style.display='';
+      return;
+    }
+    if(paste)paste.style.display='none';
+    var done=orderList.filter(function(x){return x.done}).length;
+    var bundles=orderList.reduce(function(a,x){return a+x.qty},0);
+    var got=orderList.filter(function(x){return x.done}).reduce(function(a,x){return a+x.qty},0);
+    prog.textContent=done+' / '+orderList.length+' lines \u00b7 '+got+' / '+bundles+' bundles';
+    bar.style.display='';
+    fill.style.width=orderList.length?Math.round(done/orderList.length*100)+'%':'0';
+    list.innerHTML=orderList.map(function(x,i){
+      return '<div class="nexus-ol-row'+(x.done?' done':'')+'" data-ol-idx="'+i+'">'
+        +'<span class="nexus-ol-box">\u2713</span>'
+        +'<div class="nexus-ol-main">'
+          +'<div class="nexus-ol-name">'+(x.model?'<span class="nexus-ol-model" data-ol-model="'+escapeHtml(x.model)+'">'+escapeHtml(x.model)+'</span>':'')+escapeHtml(x.name)+'</div>'
+          +'<div class="nexus-ol-meta">'+x.per+' per bundle'+(x.have?' \u00b7 have '+escapeHtml(x.have):'')+'</div>'
+        +'</div>'
+        +'<span class="nexus-ol-qty">'+x.qty+' \u00d7</span>'
+        +'</div>';
+    }).join('');
+  }
+  function openOrderList(){
+    document.getElementById('nexusOrderListModal').classList.add('show');
+    renderOrderList();
+  }
+  function bindOrderList(){
+    getSetting('shipping_order_list').then(function(v){
+      if(Array.isArray(v)&&v.length){orderList=v;renderOrderList()}
+    });
+    document.getElementById('nexusSupChecklist').onclick=openOrderList;
+    document.getElementById('nexusOlClose').onclick=function(){
+      document.getElementById('nexusOrderListModal').classList.remove('show');
+    };
+    document.getElementById('nexusOlLoad').onclick=function(){
+      var parsed=parseOrderList(document.getElementById('nexusOlText').value);
+      if(!parsed.length){supStatus('Could not read any order lines from that.');return}
+      orderList=parsed;saveOrderList();renderOrderList();
+    };
+    document.getElementById('nexusOlFromStock').onclick=function(){
+      document.getElementById('nexusOlText').value=reorderLines().join('\n');
+    };
+    document.getElementById('nexusOlNew').onclick=function(){
+      var paste=document.getElementById('nexusOlPaste');
+      if(paste)paste.style.display='';
+      document.getElementById('nexusOlText').focus();
+    };
+    document.getElementById('nexusOlClear').onclick=function(){
+      if(!orderList.length||confirm('Clear the order checklist?')){
+        orderList=[];saveOrderList();
+        document.getElementById('nexusOlText').value='';
+        renderOrderList();
+      }
+    };
+    document.getElementById('nexusOlList').addEventListener('click',function(ev){
+      var chip=ev.target.closest('[data-ol-model]');
+      if(chip){ev.stopPropagation();copySkuChip(chip.getAttribute('data-ol-model'),chip);return}
+      var row=ev.target.closest('[data-ol-idx]');
+      if(!row)return;
+      var i=Number(row.getAttribute('data-ol-idx'));
+      if(!orderList[i])return;
+      orderList[i].done=!orderList[i].done;
+      saveOrderList();renderOrderList();
+    });
+  }
   function bindSupplies(){
     if(suppliesBound)return;
     var list=document.getElementById('nexusSupList');
@@ -20891,6 +21034,7 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
     document.getElementById('nexusCustomBox').addEventListener('keydown',function(e){
       if(e.key==='Enter'){e.preventDefault();document.getElementById('nexusCustomBoxUse').click()}
     });
+    bindOrderList();
     suppliesBound=true;
   }
   // ── Floor plan shell ────────────────────────────────────────────────
