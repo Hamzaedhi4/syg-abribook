@@ -19801,12 +19801,16 @@ var NexusSpec = (function () {
     [/\bcarrying case\b|\blaptop bag\b|\bsleeve\b|\bscreen protector\b|\bphone case\b|\bmagsafe case\b/, 'case/cover'],
     [/\bcaddy\b|\bdrive tray\b|\bmounting bracket\b|\bbracket only\b|\benclosure\b|\briser card\b|\badapter card\b/, 'caddy/bracket'],
     [/\bcable\b|\bribbon\b|\bconnector\b(?!.*\bssd\b)/, 'cable'],
+    [/\bear ?pads?\b|\bear ?cushions?\b|\bear ?tips?\b|\bear ?buds? tips\b/, 'ear pads/tips'],
     [/\bstylus\b|\bcooler\b|\bwater block\b|\bthermal paste\b/, 'accessory'],
     [/\bmanual\b|\bdriver (disc|cd)\b|\bempty box\b|\bbox only\b/, 'packaging/docs']
   ];
   // The quantity clauses use (?!1\b) rather than [2-9] so "Qty 12" is caught
   // while a legitimate "Qty 1" is not.
-  var LOT = /\blot of\s*(\d+)\b|\bbundle of\s*(\d+)\b|\b(\d+)\s*[- ]?pack\b|\bqty\s*:?\s*(?!1\b)(\d+)\b|\bset of\s*(\d+)\b|\b(?!1\b)(\d+)\s*x\s*(?=[a-z])|\blot\b/;
+  // The "3x Samsung" quantity form needs a lookbehind and a REQUIRED space
+  // after the x. Without them it matched inside model numbers — WH-1000XM4
+  // read as "1000x m", which silently dropped every headphone comp.
+  var LOT = /\blot of\s*(\d+)\b|\bbundle of\s*(\d+)\b|\b(\d+)\s*[- ]?pack\b|\bqty\s*:?\s*(?!1\b)(\d+)\b|\bset of\s*(\d+)\b|(?<![-a-z0-9])(?!1\b)(\d+)\s*x\s+(?=[a-z])|\blot\b/;
   var BAREBONES = /\bbarebones?\b|\bno (ssd|hdd|hard drive|ram|memory|os|drive)\b|\bshell only\b|\bempty (chassis|shell)\b|\bincomplete\b/;
   var PARTS = /\bfor parts\b|\bnot working\b|\bparts only\b|\bparts\/repair\b|\bdoes not (power|turn) on\b|\bno power\b|\bcracked\b|\bwater damage\b/;
 
@@ -23356,7 +23360,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
 .leads-detail-key{font-weight:700;color:#70798a;width:38%;white-space:nowrap}
 </style>
 <div class="leads-app" id="leadsApp">
-  <header class="leads-head"><div class="nexus-mark">SYG</div><h2>Ckay Connect</h2><div class="leads-spacer"></div><button class="leads-btn primary" id="leadsPullBtn">🔄 Pull &amp; refresh from tab</button><button class="leads-btn primary" id="leadsImportBtn">📋 Paste leads</button><button class="leads-btn danger" id="leadsClearBtn" title="Deletes every lead stored in this browser — does not touch the live dashboard">🗑️ Clear all</button><button class="leads-btn" id="leadsBack">← Command</button></header>
+  <header class="leads-head"><div class="nexus-mark">SYG</div><h2>Ckay Connect</h2><div class="leads-spacer"></div><button class="leads-btn primary" id="leadsTriageBtn">Start triage</button><button class="leads-btn primary" id="leadsPullBtn">🔄 Pull &amp; refresh from tab</button><button class="leads-btn primary" id="leadsImportBtn">📋 Paste leads</button><button class="leads-btn danger" id="leadsClearBtn" title="Deletes every lead stored in this browser — does not touch the live dashboard">🗑️ Clear all</button><button class="leads-btn" id="leadsBack">← Command</button></header>
   <div class="leads-toolbar">
     <input class="leads-search" id="leadsSearch" placeholder="Search name, email, phone, device…">
     <select id="leadsStatusFilter"><option value="">All statuses</option><option>Auto Replied</option><option>Follow-Up</option><option>Appointment</option><option>No Deal</option><option>Sell Now</option></select>
@@ -23366,6 +23370,78 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   </div>
   <div id="leadsStatusBar" style="padding:0 18px 4px"></div>
   <div class="leads-list" id="leadsList"></div>
+</div>
+<style>
+.ckay-deck{position:fixed;inset:0;z-index:10060;background:#f1f5f9;display:none;flex-direction:column}
+.ckay-deck.show{display:flex}
+.ckay-deck-head{display:flex;align-items:center;gap:14px;padding:14px 18px;background:#fff;border-bottom:1px solid #e2e8f0}
+.ckay-deck-head h2{font-size:16px;margin:0;color:#0f172a}
+.ckay-counters{display:flex;gap:8px;flex:1;justify-content:center;flex-wrap:wrap}
+.ckay-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:6px 12px;min-width:92px}
+.ckay-stat span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8b93a2}
+.ckay-stat b{font:600 15px ui-monospace,monospace;color:#0f172a}
+.ckay-progress{padding:28px 18px;max-width:520px;margin:0 auto;width:100%}
+.ckay-prog-label{font-size:13px;color:#334155;margin-bottom:10px}
+.ckay-prog-track{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.ckay-prog-fill{height:100%;background:#0EA5E9;transition:width .3s ease}
+.ckay-arena{flex:1;display:flex;align-items:center;justify-content:center;gap:18px;padding:18px;overflow:auto}
+.ckay-hint{font:600 12px ui-monospace,monospace;color:#64748b;opacity:.25;transition:opacity .15s;white-space:nowrap}
+.ckay-stage{width:min(520px,100%)}
+.ckay-card{background:#fff;border:1px solid #e2e8f0;border-left:4px solid #94A3B8;border-radius:14px;padding:16px 18px;cursor:grab;touch-action:none;user-select:none}
+.ckay-card:active{cursor:grabbing}
+.ckay-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.ckay-name{font:600 16px system-ui;color:#0f172a}
+.ckay-meta{font-size:11.5px;color:#8b93a2;margin-top:2px}
+.ckay-pill{font-size:10.5px;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.ckay-items{border-top:1px solid #f1f5f9;padding-top:10px;margin-bottom:10px}
+.ckay-items-head{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:#8b93a2;margin-bottom:6px}
+.ckay-item{display:flex;align-items:center;gap:9px;padding:6px 0;border-top:1px solid #f8fafc;font-size:13px;color:#0f172a}
+.ckay-item.missing{background:#fffbeb;margin:0 -18px;padding-left:18px;padding-right:18px;color:#92400e}
+.ckay-item-ok{color:#15803d;font-weight:700}
+.ckay-item-q{color:#a16207;font-weight:700}
+.ckay-item-body{flex:1;min-width:0}
+.ckay-item-sub{font-size:10.5px;color:#8b93a2}
+.ckay-item.missing .ckay-item-sub{color:#a16207}
+.ckay-item-nc{font-size:10.5px;color:#a16207}
+.ckay-note{background:#f8fafc;border-radius:10px;padding:9px 12px;font-size:12px;color:#334155;line-height:1.55;margin-bottom:10px}
+.ckay-note-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8b93a2;margin-bottom:3px}
+.ckay-value{border-top:1px solid #f1f5f9;padding-top:10px}
+.ckay-value-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:#64748b}
+.ckay-value-row b{font:600 20px ui-monospace,monospace;color:#0f172a}
+.ckay-prompt{margin-top:10px;border-radius:10px;padding:9px 12px;font-size:12px;line-height:1.55}
+.ckay-prompt.call{background:#f0fdf4;color:#15803d}
+.ckay-prompt.review{background:#fffbeb;color:#92400e}
+.ckay-contact{margin-top:10px;font-size:11px;color:#8b93a2}
+.ckay-controls{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:#fff;border-top:1px solid #e2e8f0;flex-wrap:wrap}
+.ckay-controls .leads-btn.call{border-color:#bbf7d0;color:#15803d}
+.ckay-controls .leads-btn.review{border-color:#fde68a;color:#a16207}
+.ckay-done{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px}
+.ckay-done-head{font:600 16px system-ui;color:#0f172a;margin-bottom:14px}
+.ckay-bin{margin-bottom:14px}
+.ckay-bin-head{font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.ckay-bin-head.call{color:#15803d}
+.ckay-bin-head.review{color:#a16207}
+.ckay-bin-head.nodeal{color:#8b93a2}
+.ckay-bin-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #f1f5f9;font-size:13px}
+.ckay-bin-sub{font-size:11px;color:#8b93a2}
+</style>
+<div class="ckay-deck" id="ckayDeck">
+  <header class="ckay-deck-head"><div class="nexus-mark">SYG</div><h2>Triage</h2>
+    <div class="ckay-counters" id="ckayCounters"></div>
+    <button class="leads-btn" id="ckayDeckClose">&larr; Leads</button></header>
+  <div class="ckay-progress" id="ckayProgress" style="display:none"></div>
+  <div class="ckay-arena">
+    <div class="ckay-hint" id="ckayHintLeft">&larr; Review</div>
+    <div class="ckay-stage" id="ckayStage"></div>
+    <div class="ckay-hint" id="ckayHintRight">Call &rarr;</div>
+  </div>
+  <div class="ckay-controls" id="ckayControls">
+    <button class="leads-btn review" id="ckayBtnReview">&larr; Review</button>
+    <button class="leads-btn" id="ckayBtnNo">&darr; No deal</button>
+    <button class="leads-btn call" id="ckayBtnCall">Call &rarr;</button>
+    <button class="leads-btn" id="ckayBtnUndo">Undo</button>
+    <span class="ckay-hint" id="ckayHintDown" style="margin-left:8px">Arrow keys work too</span>
+  </div>
 </div>
 <div class="nexus-modal" id="leadsImportModal">
   <div class="nexus-modal-card">
@@ -24087,6 +24163,263 @@ if (typeof module !== 'undefined' && module.exports) module.exports = CkayLeads;
     if(btn)btn.onclick=function(){estimateValue(l.id);openDetail(l.id)};
   }
 
+/* ══════════════════ CKAY TRIAGE DECK ══════════════════
+   One card at a time, one decision each. Right = call, left = review,
+   down = no deal. Everything the decision needs is on the card, so the
+   person never has to open a detail modal mid-run. */
+
+// Source colouring is keyword-based because the dashboard's tippy labels
+// aren't a fixed vocabulary — anything unrecognised falls to neutral.
+var CKAY_SOURCE=[
+  [/facebook|fb|messenger|meta/i,{c:'#1877F2',label:'Facebook',icon:'f'}],
+  [/website|web|site|form|landing|sell ?now/i,{c:'#0EA5E9',label:'Website',icon:'w'}],
+  [/google|gmb|maps/i,{c:'#EA4335',label:'Google',icon:'g'}],
+  [/phone|call|walk|in ?store/i,{c:'#8B5CF6',label:'Walk-in',icon:'p'}]
+];
+function ckaySource(s){
+  for(var i=0;i<CKAY_SOURCE.length;i++)if(CKAY_SOURCE[i][0].test(s||''))return CKAY_SOURCE[i][1];
+  return {c:'#94A3B8',label:s||'Other',icon:'?'};
+}
+function ckayMoney(n){return '$'+(Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}
+
+var deckQueue=[],deckIndex=0,deckHistory=[],deckCancel=false,deckRunning=false;
+
+function deckEl(id){return document.getElementById(id)}
+
+// ── Entry ──────────────────────────────────────────────────────────
+// Values everything unpriced up front rather than lazily, so a card never
+// arrives mid-spinner and nobody swipes on a number that isn't there yet.
+async function startTriage(){
+  var pending=leads.filter(function(l){return !l.triage});
+  if(!pending.length){
+    deckQueue=[];deckIndex=0;deckHistory=[];
+    deckEl('ckayDeck').classList.add('show');
+    renderDeckDone('Nothing left to triage — every lead already has a decision.');
+    return;
+  }
+  deckQueue=pending.slice();
+  deckIndex=0;deckHistory=[];deckCancel=false;
+  deckEl('ckayDeck').classList.add('show');
+  var needsValue=deckQueue.filter(function(l){return !l.estimatedItems});
+  if(needsValue.length){
+    deckRunning=true;
+    deckEl('ckayStage').innerHTML='';
+    deckEl('ckayControls').style.display='none';
+    var prog=deckEl('ckayProgress');
+    prog.style.display='block';
+    for(var i=0;i<needsValue.length;i++){
+      if(deckCancel)break;
+      var l=needsValue[i];
+      prog.innerHTML='<div class="ckay-prog-label">Valuing lead '+(i+1)+' of '+needsValue.length+
+        ' · '+esc(l.customerName)+'</div>'+
+        '<div class="ckay-prog-track"><div class="ckay-prog-fill" style="width:'+Math.round(i/needsValue.length*100)+'%"></div></div>'+
+        '<button class="leads-btn" id="ckayCancelEst" style="margin-top:10px;font-size:11px">Stop and use what\'s done</button>';
+      deckEl('ckayCancelEst').onclick=function(){deckCancel=true};
+      await estimateValue(l.id);
+    }
+    deckRunning=false;
+    prog.style.display='none';
+    deckEl('ckayControls').style.display='';
+    // Anything skipped by a cancel simply has no estimate; routeLead treats
+    // that as "nothing priceable" and sends it to review, which is correct.
+    deckQueue.forEach(function(l){if(!l.route)l.route=CkayLeads.routeLead(l)});
+    save();
+  }
+  renderCard();
+}
+
+// ── Counters ───────────────────────────────────────────────────────
+function renderDeckCounters(){
+  var remaining=deckQueue.length-deckIndex;
+  var decided=deckQueue.slice(0,deckIndex);
+  var total=deckQueue.reduce(function(s,l){return s+((l.route&&l.route.confirmed)||0)},0);
+  var avg=deckQueue.length?total/deckQueue.length:0;
+  var callLeads=decided.filter(function(l){return l.triage==='call'});
+  var callTotal=callLeads.reduce(function(s,l){return s+((l.route&&l.route.confirmed)||0)},0);
+  deckEl('ckayCounters').innerHTML=
+    '<div class="ckay-stat"><span>Deck left</span><b>'+remaining+'</b></div>'+
+    '<div class="ckay-stat"><span>Total value</span><b>'+ckayMoney(total)+'</b></div>'+
+    '<div class="ckay-stat"><span>Avg / lead</span><b>'+ckayMoney(avg)+'</b></div>'+
+    '<div class="ckay-stat"><span>Call bin</span><b>'+callLeads.length+' · '+ckayMoney(callTotal)+'</b></div>';
+}
+
+// ── Card ───────────────────────────────────────────────────────────
+function renderCard(){
+  renderDeckCounters();
+  if(deckIndex>=deckQueue.length){renderDeckDone();return}
+  var l=deckQueue[deckIndex];
+  if(!l.route)l.route=CkayLeads.routeLead(l);
+  var r=l.route,src=ckaySource(l.source);
+  var age=CkayLeads.leadAge(l);
+  var tint=r.bin==='call'?'#15803d':'#a16207';
+
+  var items=(l.estimatedItems||[]);
+  var itemRows=items.map(function(it){
+    var priced=typeof it.value==='number'&&it.value>0;
+    if(priced){
+      return '<div class="ckay-item"><span class="ckay-item-ok">✓</span>'+
+        '<div class="ckay-item-body"><div>'+esc(it.name)+'</div>'+
+        '<div class="ckay-item-sub">'+(it.confidenceDetail?esc(it.confidenceDetail):'')+'</div></div>'+
+        '<b>'+ckayMoney(it.value)+'</b></div>';
+    }
+    return '<div class="ckay-item missing"><span class="ckay-item-q">?</span>'+
+      '<div class="ckay-item-body"><div>'+esc(it.name)+'</div>'+
+      '<div class="ckay-item-sub">Needs '+esc((it.missing||[]).join(', ')||'more detail')+'</div></div>'+
+      '<span class="ckay-item-nc">Not counted</span></div>';
+  }).join('');
+
+  var prompt='';
+  if(r.bin==='call'&&r.followUp){
+    prompt='<div class="ckay-prompt call">Worth calling on the '+r.pricedCount+' confirmed item'+
+      (r.pricedCount===1?'':'s')+' — ask about '+esc(r.missing.map(function(m){return m.split(': ')[1]}).join(', '))+
+      ' while you have them on the phone.</div>';
+  }else if(r.bin==='call'){
+    prompt='<div class="ckay-prompt call">Confirmed value clears the $'+CkayLeads.CALL_FLOOR+' floor — worth a call.</div>';
+  }else if(r.template==='low_value'){
+    prompt='<div class="ckay-prompt review">Under the $'+CkayLeads.CALL_FLOOR+' floor. Invite them into the store for an accurate check — good chance to see what else they have.</div>';
+  }else{
+    prompt='<div class="ckay-prompt review">Not enough detail to price this. Email and ask for the specifics.</div>';
+  }
+
+  deckEl('ckayStage').innerHTML=
+    '<div class="ckay-card" id="ckayCard" style="border-left-color:'+src.c+';box-shadow:inset 0 0 0 1px '+tint+'22">'+
+      '<div class="ckay-card-head">'+
+        '<div><div class="ckay-name">'+esc(l.customerName)+'</div>'+
+        '<div class="ckay-meta"><span style="color:'+src.c+'">●</span> '+esc(src.label)+
+        (age?' · '+age.label:'')+(l.leadType?' · '+esc(l.leadType):'')+'</div></div>'+
+        (l.status?'<span class="ckay-pill" style="background:'+statusColor(l.status).bg+';color:'+statusColor(l.status).fg+'">'+esc(l.status)+'</span>':'')+
+      '</div>'+
+      (items.length?'<div class="ckay-items"><div class="ckay-items-head">'+items.length+' item'+(items.length===1?'':'s')+' · '+r.pricedCount+' priced</div>'+itemRows+'</div>':
+        '<div class="ckay-items"><div class="ckay-items-head">No item details in this lead</div></div>')+
+      (l.latestNote?'<div class="ckay-note"><div class="ckay-note-label">Internal note</div>'+esc(l.latestNote)+'</div>':'')+
+      '<div class="ckay-value"><div class="ckay-value-row"><span>Confirmed value'+
+        (r.unpricedCount?' · '+r.pricedCount+' of '+r.totalItems+' items':'')+'</span><b>'+ckayMoney(r.confirmed)+'</b></div></div>'+
+      prompt+
+      '<div class="ckay-contact">'+esc(l.email||'')+(l.phone?' · '+esc(l.phone):'')+'</div>'+
+    '</div>';
+  bindDrag();
+}
+
+// ── Decisions ──────────────────────────────────────────────────────
+function decide(bin){
+  if(deckRunning||deckIndex>=deckQueue.length)return;
+  var l=deckQueue[deckIndex];
+  deckHistory.push({id:l.id,prev:l.triage||null});
+  l.triage=bin;
+  l.triagedAt=new Date().toISOString();
+  save();
+  var card=deckEl('ckayCard');
+  if(card){
+    var x=bin==='call'?700:bin==='review'?-700:0,y=bin==='nodeal'?600:0;
+    card.style.transition='transform .28s ease, opacity .28s ease';
+    card.style.transform='translate('+x+'px,'+y+'px) rotate('+(x/28)+'deg)';
+    card.style.opacity='0';
+  }
+  setTimeout(function(){deckIndex++;renderCard();render()},180);
+}
+
+function undoDecision(){
+  if(!deckHistory.length)return;
+  var last=deckHistory.pop();
+  var l=leads.find(function(x){return x.id===last.id});
+  if(l){if(last.prev)l.triage=last.prev;else delete l.triage;delete l.triagedAt;save()}
+  deckIndex=Math.max(0,deckIndex-1);
+  renderCard();render();
+}
+
+// ── Drag ───────────────────────────────────────────────────────────
+function bindDrag(){
+  var card=deckEl('ckayCard');
+  if(!card)return;
+  var startX=0,startY=0,dx=0,dy=0,dragging=false;
+  card.addEventListener('pointerdown',function(e){
+    dragging=true;startX=e.clientX;startY=e.clientY;
+    card.setPointerCapture(e.pointerId);card.style.transition='none';
+  });
+  card.addEventListener('pointermove',function(e){
+    if(!dragging)return;
+    dx=e.clientX-startX;dy=e.clientY-startY;
+    card.style.transform='translate('+dx+'px,'+dy+'px) rotate('+(dx/28)+'deg)';
+    deckEl('ckayHintLeft').style.opacity=dx<-40?'1':'.25';
+    deckEl('ckayHintRight').style.opacity=dx>40?'1':'.25';
+    deckEl('ckayHintDown').style.opacity=(dy>70&&Math.abs(dx)<60)?'1':'.25';
+  });
+  function end(){
+    if(!dragging)return;
+    dragging=false;
+    card.style.transition='transform .2s ease';
+    if(dy>110&&Math.abs(dx)<80)decide('nodeal');
+    else if(dx>110)decide('call');
+    else if(dx<-110)decide('review');
+    else card.style.transform='';
+    ['ckayHintLeft','ckayHintRight','ckayHintDown'].forEach(function(i){deckEl(i).style.opacity='.25'});
+  }
+  card.addEventListener('pointerup',end);
+  card.addEventListener('pointercancel',end);
+}
+
+// ── Done ───────────────────────────────────────────────────────────
+function renderDeckDone(msg){
+  renderDeckCounters();
+  var done=deckQueue.slice(0,deckIndex);
+  var callBin=done.filter(function(l){return l.triage==='call'});
+  var reviewBin=done.filter(function(l){return l.triage==='review'});
+  var noBin=done.filter(function(l){return l.triage==='nodeal'});
+  var callHtml=callBin.map(function(l){
+    return '<div class="ckay-bin-row"><div><b>'+esc(l.customerName)+'</b>'+
+      '<div class="ckay-bin-sub">'+ckayMoney((l.route&&l.route.confirmed)||0)+
+      (l.route&&l.route.followUp?' · also ask about '+esc(l.route.missing.map(function(m){return m.split(': ')[1]}).join(', ')):'')+'</div></div>'+
+      (l.phone?'<a class="leads-btn" href="tel:'+esc(l.phone)+'">Call</a>':'<span class="ckay-bin-sub">No phone</span>')+'</div>';
+  }).join('')||'<div class="leads-status">Nothing in this bin.</div>';
+  var reviewHtml=reviewBin.map(function(l){
+    return '<div class="ckay-bin-row"><div><b>'+esc(l.customerName)+'</b>'+
+      '<div class="ckay-bin-sub">'+esc((l.route&&l.route.reason)||'')+'</div></div>'+
+      (l.email?'<button class="leads-btn" data-draft="'+esc(l.id)+'">Open draft</button>':'<span class="ckay-bin-sub">No email</span>')+'</div>';
+  }).join('')||'<div class="leads-status">Nothing in this bin.</div>';
+
+  deckEl('ckayStage').innerHTML='<div class="ckay-done">'+
+    (msg?'<div class="leads-status" style="margin-bottom:12px">'+esc(msg)+'</div>':
+      '<div class="ckay-done-head">Deck cleared · '+done.length+' lead'+(done.length===1?'':'s')+' sorted</div>')+
+    '<div class="ckay-bin"><div class="ckay-bin-head call">Call · '+callBin.length+'</div>'+callHtml+'</div>'+
+    '<div class="ckay-bin"><div class="ckay-bin-head review">Review · '+reviewBin.length+
+      (reviewBin.length?' <button class="leads-btn" id="ckayOpenAll" style="font-size:11px;margin-left:8px">Open all drafts</button>':'')+
+      '</div>'+reviewHtml+'</div>'+
+    (noBin.length?'<div class="ckay-bin"><div class="ckay-bin-head nodeal">No deal · '+noBin.length+'</div></div>':'')+
+  '</div>';
+  deckEl('ckayControls').style.display='none';
+  deckEl('ckayStage').querySelectorAll('[data-draft]').forEach(function(b){
+    b.onclick=function(){openDraft(b.dataset.draft)};
+  });
+  var all=deckEl('ckayOpenAll');
+  // Opened one at a time on purpose — firing twelve tabs at once gets the
+  // whole batch swallowed by the popup blocker.
+  if(all)all.onclick=function(){
+    var queue=reviewBin.filter(function(l){return l.email}),i=0;
+    (function next(){
+      if(i>=queue.length)return;
+      openDraft(queue[i].id);i++;
+      setTimeout(next,600);
+    })();
+  };
+}
+
+function openDraft(id){
+  var l=leads.find(function(x){return x.id===id});
+  if(!l||!l.email)return;
+  var route=l.route||CkayLeads.routeLead(l);
+  var mail=CkayLeads.buildEmail(l,route);
+  window.open(CkayLeads.gmailComposeUrl(mail,0),'_blank');
+  l.emailedAt=new Date().toISOString();
+  save();
+}
+
+function closeDeck(){
+  deckCancel=true;
+  deckEl('ckayDeck').classList.remove('show');
+  deckEl('ckayControls').style.display='';
+  render();
+}
+
   function open(){load();render();el('leadsApp').classList.add('show')}
   window.leadsOpen=open;
 
@@ -24102,6 +24435,26 @@ if (typeof module !== 'undefined' && module.exports) module.exports = CkayLeads;
     el('leadsStatusFilter').onchange=render;
     el('leadsReadyFilter').onchange=render;
     el('leadsSort').onchange=render;
+    el('leadsTriageBtn').onclick=startTriage;
+    el('ckayDeckClose').onclick=closeDeck;
+    el('ckayBtnReview').onclick=function(){decide('review')};
+    el('ckayBtnCall').onclick=function(){decide('call')};
+    el('ckayBtnNo').onclick=function(){decide('nodeal')};
+    el('ckayBtnUndo').onclick=undoDecision;
+    // Keyboard only while the deck is up, so it can't hijack the leads list.
+    // Guarded: if bindings ever ran twice, every keypress would decide twice
+    // and quietly eat a lead per swipe.
+    if(!window.__ckayKeysBound){
+    window.__ckayKeysBound=true;
+    document.addEventListener('keydown',function(e){
+      if(!el('ckayDeck').classList.contains('show'))return;
+      if(e.key==='ArrowLeft'){e.preventDefault();decide('review')}
+      else if(e.key==='ArrowRight'){e.preventDefault();decide('call')}
+      else if(e.key==='ArrowDown'){e.preventDefault();decide('nodeal')}
+      else if(e.key==='Backspace'||e.key==='u'){e.preventDefault();undoDecision()}
+      else if(e.key==='Escape'){closeDeck()}
+    });
+    }
   });
 })();
 </script>
