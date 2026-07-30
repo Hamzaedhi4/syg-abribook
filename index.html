@@ -19462,6 +19462,621 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
 <script src="./SYG Nexus_files/pdf.min.js.download"></script>
 <script src="./SYG Nexus_files/pdf-lib.min.js.download"></script>
 <script>
+/* ══════════════════ NEXUS PRICING · SPEC MATCH ENGINE ══════════════════
+   Pure, side-effect-free. Detects item category, parses specs from free
+   text (lister query OR scraped eBay comp title), and grades every comp
+   against the target so the Pricing Lab stops averaging docking stations
+   and wrong-config machines into the recommended price.
+
+   Nothing here touches the DOM or IndexedDB — so it runs identically in
+   the browser and in Node, which is how the test suite verifies it.
+   ══════════════════════════════════════════════════════════════════════ */
+var NexusSpec = (function () {
+  'use strict';
+
+  // ── Text normalization ────────────────────────────────────────────
+  function norm(s) {
+    return String(s || '')
+      .toLowerCase()
+      .replace(/[\u2018\u2019\u201c\u201d]/g, '"')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // ══════════════════ CATEGORY DETECTION ══════════════════
+  // Ordered — first hit wins. Deliberately checks the narrow, high-signal
+  // categories before the broad ones (a "990 Pro 2TB NVMe" must land on
+  // storage, not get swept up by a generic electronics catch-all).
+  // ORDER IS LOad-BEARING. A laptop title almost always names a drive
+  // ("...16GB 512GB SSD"), so a naive storage-first check classifies half
+  // the laptops on eBay as SSDs and then compares them on the wrong fields.
+  // Machines are therefore identified by chassis noun or CPU *before*
+  // drive/memory nouns are ever consulted.
+  var RE_MEMORY   = /\b(dimm|rdimm|udimm|lrdimm|sodimm|so-dimm|pc[34][- ]?\d{3,5}|ddr[2345]\b|\d\s?rx\s?\d\b|memory module)\b/;
+  var RE_CHASSIS  = /\b(macbook|thinkpad|latitude|elitebook|probook|inspiron|ideapad|chromebook|zbook|pavilion|vostro|aspire|optiplex|prodesk|elitedesk|thinkcentre|precision \d{4}|xps \d{2})\b/;
+  var RE_FORM     = /\b(laptop|notebook|desktop|all-in-one|tower pc|gaming pc)\b/;
+  var RE_CPUFAM   = /\b(i[3579]\b|ryzen\s?[3579]\b|celeron|pentium|athlon|xeon|m[1234]\s?(pro|max|ultra)?\b)/;
+  var RE_DESKTOP  = /\b(desktop|optiplex|prodesk|elitedesk|thinkcentre|all-in-one|tower pc|gaming pc)\b/;
+  var RE_STORAGE  = /\b(ssd|nvme|hdd|hard drive|m\.?2\b|sata\b|sas\b|solid state|emmc|u\.2)\b/;
+  var RE_GPU      = /\b(rtx|gtx|radeon|geforce|quadro|rx\s?\d{3,4}\b|graphics card|video card)\b/;
+  var RE_PHONE    = /\b(iphone|galaxy s\d|galaxy note|pixel \d|smartphone|moto g|oneplus)\b/;
+  var RE_TABLET   = /\b(ipad|galaxy tab|surface pro|tablet)\b/;
+  var RE_CONSOLE  = /\b(playstation|ps[45]\b|xbox|nintendo switch|wii\b)\b/;
+
+  function detectCategory(text) {
+    var t = norm(text);
+    if (RE_MEMORY.test(t)) return 'ram';
+    // A bare CPU listing says so explicitly; a computer names a chassis.
+    if (/\b(cpu|processor)\b/.test(t) && !RE_CHASSIS.test(t) && !RE_FORM.test(t)) return 'cpu';
+    if (RE_CHASSIS.test(t) || RE_FORM.test(t) || RE_CPUFAM.test(t)) {
+      return RE_DESKTOP.test(t) ? 'desktop' : 'laptop';
+    }
+    if (RE_GPU.test(t)) return 'gpu';
+    if (RE_PHONE.test(t)) return 'phone';
+    if (RE_TABLET.test(t)) return 'tablet';
+    if (RE_CONSOLE.test(t)) return 'console';
+    if (RE_STORAGE.test(t)) return 'storage';
+    return 'unknown';
+  }
+
+  // ══════════════════ CAPACITY PARSING ══════════════════
+  // The single hardest part: "16GB 512GB" has no labels, and getting RAM
+  // and storage backwards is exactly the failure this whole engine exists
+  // to prevent. Labeled values win; unlabeled ones get resolved by size.
+  var RAM_KW = /\b(ram|memory|ddr[2345]?|dimm)\b/;
+  var ST_KW = /\b(ssd|hdd|nvme|emmc|storage|hard drive|m\.?2|sata|sas|flash)\b/;
+
+  function parseCapacities(t) {
+    var raw = [], re = /(\d+(?:\.\d+)?)\s*(tb|gb|mb)\b/g, m;
+    while ((m = re.exec(t))) {
+      var val = parseFloat(m[1]), unit = m[2];
+      raw.push({
+        gb: unit === 'tb' ? val * 1024 : unit === 'mb' ? val / 1024 : val,
+        unit: unit, start: m.index, end: m.index + m[0].length, role: null
+      });
+    }
+    // Pass 1 — a qualifier binds to the number it FOLLOWS ("16GB RAM").
+    // The window stops at the next digit so "8GB 256GB SSD" can't hand
+    // the word SSD to the 8GB.
+    raw.forEach(function (c) {
+      var after = t.slice(c.end, c.end + 20).split(/\d/)[0];
+      if (RAM_KW.test(after)) c.role = 'ram';
+      else if (ST_KW.test(after)) c.role = 'storage';
+      c.claimed = !!c.role;
+    });
+    // Pass 2 — a LEADING qualifier ("Storage: 512GB") only counts if the
+    // previous capacity hasn't already claimed the text between them.
+    // Without this, "32GB RAM 1TB NVMe" hands RAM backwards to the 1TB.
+    raw.forEach(function (c, i) {
+      if (c.role) return;
+      var prev = raw[i - 1];
+      if (prev && prev.claimed) { if (c.unit === 'tb') c.role = 'storage'; return; }
+      var from = prev ? prev.end : 0;
+      var before = t.slice(Math.max(from, c.start - 20), c.start);
+      if (RAM_KW.test(before)) c.role = 'ram';
+      else if (ST_KW.test(before)) c.role = 'storage';
+      else if (c.unit === 'tb') c.role = 'storage'; // nobody here ships a TB of RAM
+    });
+    return raw.map(function (c) { return { gb: c.gb, role: c.role, index: c.start }; });
+  }
+
+  function resolveRamStorage(caps) {
+    var ram = null, storage = null, unlabeled = [];
+    caps.forEach(function (c) {
+      if (c.role === 'ram' && ram == null) ram = c.gb;
+      else if (c.role === 'storage' && storage == null) storage = c.gb;
+      else if (!c.role) unlabeled.push(c);
+    });
+    if (unlabeled.length) {
+      if (ram == null && storage == null && unlabeled.length >= 2) {
+        // Classic "i5 16GB 512GB" ordering — small value is memory,
+        // large value is the drive. Only trust it when the gap is real.
+        var a = unlabeled[0], b = unlabeled[1];
+        if (a.gb <= 64 && b.gb >= 128) { ram = a.gb; storage = b.gb; }
+        else if (b.gb <= 64 && a.gb >= 128) { ram = b.gb; storage = a.gb; }
+        else { ram = Math.min(a.gb, b.gb); storage = Math.max(a.gb, b.gb); }
+      } else {
+        unlabeled.forEach(function (c) {
+          if (c.gb >= 128 && storage == null) storage = c.gb;
+          else if (c.gb <= 64 && ram == null) ram = c.gb;
+          else if (storage == null) storage = c.gb;
+        });
+      }
+    }
+    return { ram: ram, storage: storage };
+  }
+
+  // ══════════════════ FIELD PARSERS ══════════════════
+  function parseCpu(t) {
+    var m = t.match(/\b(i[3579])\s*[- ]?\s*(\d{4,5})(?:[a-z]{1,2}\d?)?\b/);
+    if (m) return { family: m[1], model: m[2], gen: cpuGenFromModel(m[2]) };
+    m = t.match(/\b(i[3579])\b/);
+    if (m) {
+      var g = t.match(/\b(\d{1,2})(?:th|rd|nd|st)\s*gen/);
+      return { family: m[1], model: null, gen: g ? parseInt(g[1], 10) : null };
+    }
+    m = t.match(/\bryzen\s*([3579])\s*(\d{4}[a-z]{0,2})?\b/);
+    if (m) return { family: 'ryzen' + m[1], model: m[2] || null, gen: null };
+    m = t.match(/\b(m[1234])\s*(pro|max|ultra)?\b/);
+    if (m) return { family: m[1] + (m[2] ? ' ' + m[2] : ''), model: null, gen: null };
+    m = t.match(/\b(xeon|celeron|pentium|athlon)\b/);
+    if (m) return { family: m[1], model: null, gen: null };
+    return null;
+  }
+
+  function cpuGenFromModel(model) {
+    if (!model) return null;
+    if (model.length >= 5) return parseInt(model.slice(0, 2), 10);
+    // i5-1145G7 is 11th gen; i5-8250U is 8th. Both are four digits, so the
+    // leading pair only counts as the generation when it lands in 10-14.
+    var two = parseInt(model.slice(0, 2), 10);
+    if (two >= 10 && two <= 14) return two;
+    return parseInt(model.slice(0, 1), 10);
+  }
+
+  function parseScreen(t) {
+    var m = t.match(/\b(1[0-9](?:\.\d)?)\s*(?:"|inch|in\b|-inch)/);
+    if (m) return parseFloat(m[1]);
+    m = t.match(/\b(1[0-9]\.\d)\b/); // bare 13.3 / 15.6 / 17.3
+    if (m) return parseFloat(m[1]);
+    return null;
+  }
+
+  function parseHealth(t) {
+    var m = t.match(/\b(\d{1,3})\s*%\s*(?:health|bh|battery|life|remaining)?/);
+    if (m) {
+      var v = parseInt(m[1], 10);
+      if (v >= 0 && v <= 100) return v;
+    }
+    if (/\b(not detected|no health|0%)\b/.test(t)) return 0;
+    return null;
+  }
+
+  function healthBand(pct) {
+    if (pct == null) return null;
+    if (pct <= 25) return 'bad';
+    if (pct <= 65) return 'med';
+    return 'good';
+  }
+
+  function parseDriveInterface(t) {
+    if (/\bnvme\b|\bm\.?2\b(?!.*\bsata\b)|\bpcie\b/.test(t)) return 'nvme';
+    if (/\bsas\b/.test(t)) return 'sas';
+    if (/\bsata\b/.test(t)) return 'sata';
+    if (/\bide\b|\bpata\b/.test(t)) return 'ide';
+    return null;
+  }
+
+  function parseDriveForm(t) {
+    if (/\bm\.?2\b|\b2280\b|\b2242\b/.test(t)) return 'm2';
+    if (/\b2\.5\b/.test(t)) return '2.5';
+    if (/\b3\.5\b/.test(t)) return '3.5';
+    if (/\bu\.2\b/.test(t)) return 'u2';
+    return null;
+  }
+
+  // Some sellers quote bandwidth (PC4-25600) instead of speed (PC4-3200).
+  // Same stick, different notation — normalize or they read as a conflict.
+  var PC4_BANDWIDTH = { '12800': '1600', '14900': '1866', '17000': '2133', '19200': '2400', '21300': '2666', '23400': '2933', '25600': '3200' };
+  function parseRamSpeed(t) {
+    var m = t.match(/\bpc([34])[- ]?(\d{4,5})/);
+    if (m) {
+      var v = m[2];
+      if (PC4_BANDWIDTH[v]) v = PC4_BANDWIDTH[v];
+      return 'pc' + m[1] + '-' + v;
+    }
+    m = t.match(/\bddr([2345])[- ]?(\d{4})/);
+    if (m) return 'pc' + (m[1] === '4' ? '4' : m[1]) + '-' + m[2];
+    m = t.match(/\b(\d{4})\s*mhz\b/);
+    if (m) return 'mhz-' + m[1];
+    return null;
+  }
+
+  function parseRamKind(t) {
+    // ECC vs non-ECC and registered vs unbuffered decide the price more
+    // than anything except capacity — an RDIMM and a UDIMM of identical
+    // size and speed are different products with different buyers.
+    var ecc = /\becc\b/.test(t) && !/\bnon[- ]?ecc\b/.test(t);
+    var form = null;
+    if (/\blrdimm\b/.test(t)) form = 'lrdimm';
+    else if (/\brdimm\b|\breg(istered)?\b/.test(t)) form = 'rdimm';
+    else if (/\bsodimm\b|\bso-dimm\b|\blaptop memory\b/.test(t)) form = 'sodimm';
+    else if (/\budimm\b|\bunbuffered\b|\bdesktop memory\b/.test(t)) form = 'udimm';
+    if (form == null && ecc) form = 'rdimm'; // ECC server sticks are registered by default here
+    return { ecc: ecc, form: form };
+  }
+
+  function parseRamRank(t) {
+    var m = t.match(/\b(\d)\s*r\s*x\s*(\d)\b/);
+    return m ? m[1] + 'rx' + m[2] : null;
+  }
+
+  function parsePhone(t) {
+    var m = t.match(/\biphone\s*(\d{1,2})\s*(pro max|pro|plus|mini|se)?\b/);
+    if (m) return { model: 'iphone ' + m[1] + (m[2] ? ' ' + m[2] : '') };
+    m = t.match(/\bgalaxy\s*(s\d{1,2}|note\s*\d{1,2})\s*(ultra|plus|\+)?\b/);
+    if (m) return { model: 'galaxy ' + m[1].replace(/\s+/g, '') + (m[2] ? ' ' + m[2].replace('+', 'plus') : '') };
+    m = t.match(/\bpixel\s*(\d[a]?)\s*(pro|xl)?\b/);
+    if (m) return { model: 'pixel ' + m[1] + (m[2] ? ' ' + m[2] : '') };
+    return null;
+  }
+
+  function parseGpu(t) {
+    var m = t.match(/\b(rtx|gtx|rx)\s*(\d{3,4})\s*(ti super|ti|super|xt|xtx)?\b/);
+    if (m) return { model: m[1] + ' ' + m[2] + (m[3] ? ' ' + m[3] : '') };
+    return null;
+  }
+
+  function parseCarrier(t) {
+    if (/\bunlocked\b|\bfactory unlocked\b/.test(t)) return 'unlocked';
+    if (/\bverizon\b/.test(t)) return 'verizon';
+    if (/\bat&?t\b/.test(t)) return 'att';
+    if (/\bt-?mobile\b/.test(t)) return 'tmobile';
+    if (/\bsprint\b/.test(t)) return 'sprint';
+    return null;
+  }
+
+  // Highest-entropy alphanumeric token — the model/part number. Mirrors the
+  // identifier heuristic already used by scoreLabelMatch() in the Shipping
+  // Station so the two stay conceptually consistent.
+  function parseModelNumber(t) {
+    var ids = t.match(/\b[a-z]{0,4}\d[a-z0-9]{2,}(?:-[a-z0-9]+)*\b/g) || [];
+    var best = null;
+    ids.forEach(function (id) {
+      if (/^(?:\d{1,2}(?:gb|tb|mb))$/.test(id)) return;
+      if (/^(?:pc[34]|ddr[2345])/.test(id)) return;
+      if (/^(?:i[3579])/.test(id)) return;
+      if (/^\d{1,2}$/.test(id)) return;
+      if (!best || id.length > best.length) best = id;
+    });
+    return best;
+  }
+
+  function parseCondition(t) {
+    if (/\bfor parts\b|\bnot working\b|\bparts only\b|\bparts\/repair\b|\bdoes not (power|turn) on\b/.test(t)) return 'parts';
+    if (/\bcertified refurb/.test(t)) return 'certified-refurb';
+    if (/\brefurb/.test(t)) return 'seller-refurb';
+    if (/\bopen box\b|\bnew other\b/.test(t)) return 'new-other';
+    if (/\bnew\b|\bsealed\b/.test(t) && !/\brenewed\b/.test(t)) return 'new';
+    if (/\bused\b|\bpre-?owned\b/.test(t)) return 'used';
+    return null;
+  }
+
+  // ══════════════════ MAIN PARSER ══════════════════
+  function parseItemSpec(text, forcedCategory) {
+    var t = norm(text);
+    var cat = forcedCategory || detectCategory(t);
+    var spec = { category: cat, text: t, modelNumber: parseModelNumber(t), condition: parseCondition(t) };
+    var caps = parseCapacities(t);
+
+    if (cat === 'laptop' || cat === 'desktop') {
+      var rs = resolveRamStorage(caps);
+      spec.ram = rs.ram;
+      spec.storage = rs.storage;
+      spec.cpu = parseCpu(t);
+      spec.screen = cat === 'laptop' ? parseScreen(t) : null;
+      spec.gpu = parseGpu(t);
+    } else if (cat === 'storage') {
+      var big = caps.filter(function (c) { return c.role !== 'ram'; });
+      spec.capacity = big.length ? big[0].gb : (caps.length ? caps[0].gb : null);
+      spec.iface = parseDriveInterface(t);
+      spec.form = parseDriveForm(t);
+      spec.health = parseHealth(t);
+      spec.healthBand = healthBand(spec.health);
+    } else if (cat === 'ram') {
+      spec.capacity = caps.length ? caps[0].gb : null;
+      spec.speed = parseRamSpeed(t);
+      var k = parseRamKind(t);
+      spec.ecc = k.ecc;
+      spec.form = k.form;
+      spec.rank = parseRamRank(t);
+    } else if (cat === 'phone' || cat === 'tablet') {
+      var p = parsePhone(t);
+      spec.model = p ? p.model : null;
+      var st = caps.filter(function (c) { return c.gb >= 16; });
+      spec.storage = st.length ? st[0].gb : null;
+      spec.carrier = parseCarrier(t);
+      spec.health = parseHealth(t);
+    } else if (cat === 'gpu') {
+      var g = parseGpu(t);
+      spec.model = g ? g.model : null;
+      spec.vram = caps.length ? caps[0].gb : null;
+    } else if (cat === 'cpu') {
+      spec.cpu = parseCpu(t);
+    }
+    return spec;
+  }
+
+  // ══════════════════ EXCLUSION ══════════════════
+  // Comps that are not the item at all. This runs before spec grading
+  // because a docking station has no meaningful spec to compare.
+  var ACCESSORY = [
+    [/\bdock(ing)?\s*station\b|\bport replicator\b|\bwd\d{2}\b/, 'docking station'],
+    [/\b(ac|power)\s*adapter\b|\bcharger only\b|\bcharger for\b|\bpower cord\b|\bpower brick\b/, 'charger/adapter'],
+    [/\bscreen only\b|\blcd (screen|panel|assembly|display)\b|\bdisplay assembly\b|\bdigitizer\b|\breplacement screen\b|\bscreen replacement\b/, 'screen/panel'],
+    [/\b(motherboard|mainboard|logic board|system board)\b/, 'motherboard'],
+    [/\bbezel\b|\bpalmrest\b|\btop cover\b|\bbottom (case|cover)\b|\bhinge(s)?\b|\bheatsink\b|\bcooling fan\b|\bheat ?spreader\b/, 'chassis part'],
+    [/\breplacement keyboard\b|\bkeyboard for\b|\bkeyboard replacement\b/, 'keyboard'],
+    [/\bbattery (only|for|replacement)\b|\breplacement battery\b/, 'battery'],
+    [/\bcarrying case\b|\blaptop bag\b|\bsleeve\b|\bscreen protector\b|\bphone case\b|\bmagsafe case\b/, 'case/cover'],
+    [/\bcaddy\b|\bdrive tray\b|\bmounting bracket\b|\bbracket only\b|\benclosure\b|\briser card\b|\badapter card\b/, 'caddy/bracket'],
+    [/\bcable\b|\bribbon\b|\bconnector\b(?!.*\bssd\b)/, 'cable'],
+    [/\bstylus\b|\bcooler\b|\bwater block\b|\bthermal paste\b/, 'accessory'],
+    [/\bmanual\b|\bdriver (disc|cd)\b|\bempty box\b|\bbox only\b/, 'packaging/docs']
+  ];
+  // The quantity clauses use (?!1\b) rather than [2-9] so "Qty 12" is caught
+  // while a legitimate "Qty 1" is not.
+  var LOT = /\blot of\s*(\d+)\b|\bbundle of\s*(\d+)\b|\b(\d+)\s*[- ]?pack\b|\bqty\s*:?\s*(?!1\b)(\d+)\b|\bset of\s*(\d+)\b|\b(?!1\b)(\d+)\s*x\s*(?=[a-z])|\blot\b/;
+  var BAREBONES = /\bbarebones?\b|\bno (ssd|hdd|hard drive|ram|memory|os|drive)\b|\bshell only\b|\bempty (chassis|shell)\b|\bincomplete\b/;
+  var PARTS = /\bfor parts\b|\bnot working\b|\bparts only\b|\bparts\/repair\b|\bdoes not (power|turn) on\b|\bno power\b|\bcracked\b|\bwater damage\b/;
+
+  function screenComp(title, targetIsParts) {
+    var t = norm(title);
+    for (var i = 0; i < ACCESSORY.length; i++) {
+      if (ACCESSORY[i][0].test(t)) return { verdict: 'accessory', reason: ACCESSORY[i][1] };
+    }
+    if (LOT.test(t)) return { verdict: 'lot', reason: 'lot/bundle listing' };
+    if (BAREBONES.test(t)) return { verdict: 'barebones', reason: 'incomplete unit' };
+    if (!targetIsParts && PARTS.test(t)) return { verdict: 'parts', reason: 'for parts / not working' };
+    return null;
+  }
+
+  // ══════════════════ FIELD RULES PER CATEGORY ══════════════════
+  // This is the whole point of detecting category first: "what makes two
+  // of these the same item" is a different question for a laptop than for
+  // a RAM stick, and one rulebook cannot answer both.
+  var RULES = {
+    laptop:  { critical: ['cpu', 'ram', 'screen'], soft: ['storage', 'gpu'] },
+    desktop: { critical: ['cpu', 'ram'],           soft: ['storage', 'gpu'] },
+    storage: { critical: ['capacity', 'iface', 'healthBand'], soft: ['form'] },
+    ram:     { critical: ['capacity', 'speed', 'eccForm'],    soft: ['rank'] },
+    phone:   { critical: ['model', 'storage'],     soft: ['carrier', 'healthBand'] },
+    tablet:  { critical: ['model', 'storage'],     soft: ['carrier'] },
+    gpu:     { critical: ['model', 'vram'],        soft: [] },
+    cpu:     { critical: ['cpu'],                  soft: [] },
+    console: { critical: ['modelNumber'],          soft: [] },
+    unknown: { critical: ['modelNumber'],          soft: [] }
+  };
+
+  function fieldValue(spec, field) {
+    if (field === 'eccForm') {
+      if (spec.form == null && spec.ecc == null) return null;
+      return (spec.ecc ? 'ecc' : 'nonecc') + ':' + (spec.form || '?');
+    }
+    if (field === 'healthBand') return spec.healthBand != null ? spec.healthBand : healthBand(spec.health);
+    if (field === 'cpu') return spec.cpu || null;
+    return spec[field] != null ? spec[field] : null;
+  }
+
+  // Returns 'match' | 'near' | 'conflict'
+  function compareField(field, a, b) {
+    if (field === 'cpu') {
+      if (a.family !== b.family) return 'conflict';
+      if (a.model && b.model) return a.model === b.model ? 'match' : (Math.abs((a.gen || 0) - (b.gen || 0)) <= 1 ? 'near' : 'conflict');
+      if (a.gen != null && b.gen != null) return Math.abs(a.gen - b.gen) <= 1 ? 'match' : 'conflict';
+      return 'match';
+    }
+    if (field === 'screen') return Math.abs(a - b) <= 0.6 ? 'match' : 'conflict';
+    // Capacities compare exactly. Whether a difference is fatal or merely
+    // notable is decided by RULES (critical vs soft), not softened here --
+    // 512 vs 256 on a laptop drive is "close", 1TB vs 2TB on a drive
+    // LISTING is a different product entirely.
+    return a === b ? 'match' : 'conflict';
+  }
+
+  function gradeComp(target, compSpec) {
+    var rules = RULES[target.category] || RULES.unknown;
+    var unknownCount = 0, softMiss = 0, reason = null;
+
+    for (var i = 0; i < rules.critical.length; i++) {
+      var f = rules.critical[i];
+      var tv = fieldValue(target, f), cv = fieldValue(compSpec, f);
+      if (tv == null) continue;              // target didn't specify — can't judge
+      if (cv == null) { unknownCount++; continue; } // comp silent — NOT agreement
+      var cmp = compareField(f, tv, cv);
+      if (cmp === 'conflict') return { verdict: 'wrong', reason: f + ' mismatch' };
+      if (cmp === 'near') softMiss++;
+    }
+    for (var j = 0; j < rules.soft.length; j++) {
+      var sf = rules.soft[j];
+      var stv = fieldValue(target, sf), scv = fieldValue(compSpec, sf);
+      if (stv == null || scv == null) continue;
+      if (compareField(sf, stv, scv) !== 'match') { softMiss++; if (!reason) reason = sf + ' differs'; }
+    }
+    if (unknownCount > 0) return { verdict: 'unknown', reason: 'spec not stated' };
+    if (softMiss > 0) return { verdict: 'close', reason: reason || 'minor spec difference' };
+    return { verdict: 'exact', reason: null };
+  }
+
+  // ══════════════════ TOP-LEVEL PIPELINE ══════════════════
+  var WEIGHT = { exact: 1.0, close: 0.7, unknown: 0.5 };
+  var MIN_COMPS = 3;
+
+  function classifyAll(query, listings) {
+    var target = parseItemSpec(query);
+    var targetIsParts = target.condition === 'parts';
+    return (listings || []).map(function (l) {
+      var title = l && (l.title || l.name || '');
+      var price = l && typeof l.price === 'number' ? l.price : parseFloat(String((l && l.price) || '').replace(/[^0-9.]/g, ''));
+      var row = { title: title, price: price, verdict: null, reason: null };
+      if (!(price > 0)) { row.verdict = 'invalid'; row.reason = 'no usable price'; return row; }
+      var screened = screenComp(title, targetIsParts);
+      if (screened) { row.verdict = screened.verdict; row.reason = screened.reason; return row; }
+      if (!title) { row.verdict = 'unknown'; row.reason = 'no title returned'; return row; }
+      var g = gradeComp(target, parseItemSpec(title, target.category));
+      row.verdict = g.verdict; row.reason = g.reason;
+      return row;
+    });
+  }
+
+  // Auto-widen: take the tightest tier that still yields enough comps.
+  var TIERS = [
+    { name: 'exact',   accept: ['exact'] },
+    { name: 'close',   accept: ['exact', 'close'] },
+    { name: 'unknown', accept: ['exact', 'close', 'unknown'] }
+  ];
+
+  function pickTier(rows) {
+    for (var i = 0; i < TIERS.length; i++) {
+      var n = rows.filter(function (r) { return TIERS[i].accept.indexOf(r.verdict) !== -1; }).length;
+      if (n >= MIN_COMPS) return TIERS[i];
+    }
+    return TIERS[TIERS.length - 1];
+  }
+
+  function spreadOf(prices) {
+    if (prices.length < 2) return 0;
+    var s = prices.slice().sort(function (a, b) { return a - b; });
+    var mid = Math.floor(s.length / 2);
+    var med = s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+    if (!med) return 0;
+    return (s[s.length - 1] - s[0]) / med;
+  }
+
+  // Confidence now means match QUALITY, not comp count. Eight docking
+  // stations used to read "High confidence" — they now can't.
+  function scoreConfidence(counts, prices, tierName) {
+    var effective = counts.exact * WEIGHT.exact + counts.close * WEIGHT.close + counts.unknown * WEIGHT.unknown;
+    var used = counts.exact + counts.close + counts.unknown;
+    var spread = spreadOf(prices);
+    var level;
+    if (spread > 0.80 && used >= 2) level = 'low';
+    else if (effective >= 4 && used > 0 && counts.exact / used >= 0.5 && spread < 0.40) level = 'high';
+    else if (effective >= 3) level = 'med';
+    else level = 'low';
+    if (tierName === 'unknown' && level === 'high') level = 'med'; // had to widen — cap it
+    var bits = [used + ' comp' + (used === 1 ? '' : 's')];
+    if (counts.exact) bits.push(counts.exact + ' exact');
+    if (spread > 0.80) bits.push('wide spread');
+    return {
+      level: level,
+      label: level === 'high' ? 'High confidence' : level === 'med' ? 'Medium confidence' : 'Low confidence',
+      detail: bits.join(', '),
+      effective: Math.round(effective * 10) / 10,
+      spread: Math.round(spread * 100) / 100
+    };
+  }
+
+  function tally(rows) {
+    var c = { exact: 0, close: 0, unknown: 0, wrong: 0, accessory: 0, lot: 0, barebones: 0, parts: 0, invalid: 0 };
+    rows.forEach(function (r) { if (c[r.verdict] != null) c[r.verdict]++; });
+    return c;
+  }
+
+  // The one function the Pricing Lab calls. Everything above is internal.
+  function filterComps(query, listings) {
+    var rows = classifyAll(query, listings);
+    var tier = pickTier(rows);
+    var used = rows.filter(function (r) { return tier.accept.indexOf(r.verdict) !== -1; });
+    var prices = used.map(function (r) { return r.price; });
+    var counts = tally(rows);
+    var usedCounts = {
+      exact: used.filter(function (r) { return r.verdict === 'exact'; }).length,
+      close: used.filter(function (r) { return r.verdict === 'close'; }).length,
+      unknown: used.filter(function (r) { return r.verdict === 'unknown'; }).length
+    };
+    var reasons = {};
+    rows.forEach(function (r) {
+      if (['accessory', 'lot', 'barebones', 'parts', 'wrong'].indexOf(r.verdict) === -1) return;
+      var key = r.verdict === 'wrong' ? (r.reason || 'wrong config') : r.reason;
+      reasons[key] = (reasons[key] || 0) + 1;
+    });
+    return {
+      target: parseItemSpec(query),
+      rows: rows,
+      prices: prices,
+      tier: tier.name,
+      pulled: rows.length,
+      used: used.length,
+      counts: counts,
+      usedCounts: usedCounts,
+      excludedReasons: reasons,
+      confidence: scoreConfidence(usedCounts, prices, tier.name)
+    };
+  }
+
+  // ══════════════════ SELF TEST ══════════════════
+  // Callable from the browser console as NexusSpec.selfTest(). Mirrors the
+  // highest-value cases from the Node suite so the engine can be verified
+  // inside Nexus itself, with no build step and no network.
+  function selfTest(verbose) {
+    var pass = 0, failures = [];
+    function t(name, got, want) {
+      if (JSON.stringify(got) === JSON.stringify(want)) pass++;
+      else failures.push(name + ' — got ' + JSON.stringify(got) + ', want ' + JSON.stringify(want));
+    }
+    t('category: laptop', detectCategory('Dell Latitude 5420 i5 16GB 512GB SSD'), 'laptop');
+    t('category: storage', detectCategory('Samsung 990 Pro 2TB NVMe M.2 SSD'), 'storage');
+    t('category: ram', detectCategory('Kingston 16GB 2Rx8 PC4-3200AA ECC RDIMM'), 'ram');
+    t('category: phone', detectCategory('Unlocked Apple iPhone 13 Pro 256GB'), 'phone');
+
+    var a = parseItemSpec('Dell Latitude 5420 i5 16GB 512GB');
+    t('16GB reads as RAM', a.ram, 16);
+    t('512GB reads as storage', a.storage, 512);
+    var b = parseItemSpec('HP EliteBook 840 i7 32GB RAM 1TB NVMe SSD');
+    t('1TB reads as storage', b.storage, 1024);
+    t('32GB reads as RAM', b.ram, 32);
+    t('11th gen decode', parseItemSpec('Dell 5420 i5-1145G7 16GB').cpu.gen, 11);
+    t('8th gen decode', parseItemSpec('Dell 5480 i5-8250U 8GB').cpu.gen, 8);
+    t('em-dash health', parseItemSpec('WD Blue SN550 1TB NVMe SSD — (33% Health)').health, 33);
+    t('PC4 JEDEC speed', parseItemSpec('Kingston 16GB PC4-3200AA-EE1-12 ECC RDIMM').speed, 'pc4-3200');
+    t('PC4 bandwidth alias', parseItemSpec('Samsung 16GB PC4-25600 ECC RDIMM').speed, 'pc4-3200');
+
+    t('dock excluded', screenComp('Dell Latitude 5420 Docking Station WD19', false).verdict, 'accessory');
+    t('lot excluded', screenComp('Lot of 28 Mixed 16GB DDR4 RDIMM ECC', false).verdict, 'lot');
+    t('qty 12 excluded', screenComp('Qty 12 Micron 7450 1.92TB NVMe SSD', false).verdict, 'lot');
+    t('no-charger kept', screenComp('Dell Latitude 5420 i5 16GB 512GB No Charger', false), null);
+
+    var r = filterComps('Dell Latitude 5420 14" i5 16GB 512GB', [
+      { title: 'Dell Latitude 5420 14" i5-1145G7 16GB 512GB SSD', price: 340 },
+      { title: 'Dell Latitude 5420 14" i5-1135G7 16GB 512GB NVMe', price: 355 },
+      { title: 'Dell Latitude 5420 14" i5-1145G7 16GB 512GB SSD Win11', price: 348 },
+      { title: 'Dell Latitude 5420 14" i7-1185G7 32GB 1TB SSD', price: 610 },
+      { title: 'Dell Latitude 5420 Docking Station WD19', price: 45 },
+      { title: 'Lot of 5 Dell Latitude 5420 Laptops', price: 1450 }
+    ]);
+    t('pipeline: 3 exact', r.counts.exact, 3);
+    t('pipeline: wrong config dropped', r.prices.indexOf(610), -1);
+    t('pipeline: dock dropped', r.prices.indexOf(45), -1);
+    t('pipeline: lot dropped', r.prices.indexOf(1450), -1);
+
+    var junk = filterComps('Dell Latitude 5420 14" i5 16GB 512GB', [
+      { title: 'Dell Latitude 5420 Docking Station WD19', price: 45 },
+      { title: 'Dell Latitude 5420 LCD Screen Assembly', price: 62 },
+      { title: 'Dell Latitude 5420 Motherboard', price: 85 },
+      { title: 'Dell Latitude 5420 65W AC Adapter Charger', price: 18 }
+    ]);
+    t('all-junk pull uses nothing', junk.used, 0);
+    t('all-junk pull is low confidence', junk.confidence.level, 'low');
+
+    var out = { passed: pass, failed: failures.length, failures: failures };
+    if (typeof console !== 'undefined') {
+      console.log('%cNexusSpec self-test: ' + pass + ' passed, ' + failures.length + ' failed',
+        'font-weight:700;color:' + (failures.length ? '#F87171' : '#4ADE80'));
+      if (failures.length || verbose) failures.forEach(function (f) { console.log('  ✗ ' + f); });
+    }
+    return out;
+  }
+
+  return {
+    selfTest: selfTest,
+    norm: norm,
+    detectCategory: detectCategory,
+    parseItemSpec: parseItemSpec,
+    screenComp: screenComp,
+    gradeComp: gradeComp,
+    classifyAll: classifyAll,
+    filterComps: filterComps,
+    healthBand: healthBand,
+    RULES: RULES,
+    MIN_COMPS: MIN_COMPS
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
+
+</script>
+<script>
 (function(){
   'use strict';
   var DB_NAME='your_gadget_nexus';
@@ -19485,6 +20100,10 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
   var selectedBox=null, selectedOrder=null, packQueue=[];
   var pulledOrders=[], packedOrders=[], _oqDragId=null, _oqDragBin=null;
   var lastCalc=null;
+  // Comp breakdown from the last live pull. Kept separate from lastCalc because
+  // Calculate can re-run without re-scraping, and cleared the moment prices are
+  // hand-edited — a stale breakdown would be worse than none.
+  var lastCompBreakdown=null;
   var labelPdfBytes=null,labelPageTexts=[],labelPageModes=[],labelMapping=[],labelPdfDoc=null,labelOcrWorker=null;
   var HEALTH_WEIGHTS={
     desc_wrong:15,desc_missing:8,desc_structure:8,desc_unsupported:15,
@@ -22009,11 +22628,22 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
     var conditionId=nexusResolveConditionId();
     var conditionLabel=conditionId?(Object.keys(NEXUS_CONDITION_IDS).find(function(k){return NEXUS_CONDITION_IDS[k]===conditionId})||''):'';
     var conditionText=conditionLabel?conditionLabel.replace('-',' '):'Any / unfiltered';
-    var confidence=prices.length<3?{cls:'low',label:'Low confidence'}:prices.length<6?{cls:'med',label:'Medium confidence'}:{cls:'high',label:'High confidence'};
+    // Confidence now reflects match QUALITY whenever a live pull is backing
+    // these prices — eight docking stations used to read "High confidence".
+    // Hand-typed prices have no titles to grade, so they keep the count rule.
+    var confidence,confDetail='';
+    if(lastCompBreakdown&&lastCompBreakdown.prices.length===prices.length){
+      var cf=lastCompBreakdown.confidence;
+      confidence={cls:cf.level,label:cf.label};
+      confDetail=cf.detail;
+    }else{
+      confidence=prices.length<3?{cls:'low',label:'Low confidence'}:prices.length<6?{cls:'med',label:'Medium confidence'}:{cls:'high',label:'High confidence'};
+      confDetail=prices.length+' comp'+(prices.length===1?'':'s');
+    }
     var confColor=confidence.cls==='low'?'#F87171':confidence.cls==='med'?'#FBBF24':'#4ADE80';
     var badgesHtml='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'+
       '<span style="font:700 10px var(--mono);padding:3px 9px;border-radius:999px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#FDE68A">Condition: '+escapeHtml(conditionText)+'</span>'+
-      '<span style="font:700 10px var(--mono);padding:3px 9px;border-radius:999px;background:'+confColor+'22;border:1px solid '+confColor+'55;color:'+confColor+'">'+confidence.label+' · '+prices.length+' comp'+(prices.length===1?'':'s')+'</span>'+
+      '<span style="font:700 10px var(--mono);padding:3px 9px;border-radius:999px;background:'+confColor+'22;border:1px solid '+confColor+'55;color:'+confColor+'">'+confidence.label+' · '+escapeHtml(confDetail)+'</span>'+
     '</div>';
     var fastSale=retailRound(heroPrice*.92),maxMargin=retailRound(Math.max(heroPrice*1.06,high));
     var actionChips='<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+
@@ -22029,6 +22659,7 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
       '<div class="nexus-range"><div class="nexus-range-track"><div class="nexus-range-marker" style="left:'+marker+'%" data-label="'+(isFinite(current)?'Current '+money(current):'Market center')+'"></div></div><div class="nexus-range-labels"><span>Low '+money(low)+'</span><span>Median '+money(median)+'</span><span>High '+money(high)+'</span></div></div>'+
       actionChips+
       '<div class="nexus-price-guidance" style="margin-top:10px"><b>'+verdict.text+'</b></div>'+
+      renderCompBreakdown()+
       trendHtml;
     bindVoteButtons(queryText,heroPrice);
     renderVoteTally(queryText);
@@ -22044,6 +22675,37 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
   // One condensed list — every real price feeding the steer, shown as
   // price + month so it stays scannable and it's obvious what's recent
   // versus old. Replaces the old split store/training sections.
+  // Summary level only — counts and reasons, nothing to click through. A
+  // lister should be able to see at a glance WHY the number landed where it
+  // did without auditing individual listings.
+  function renderCompBreakdown(){
+    var b=lastCompBreakdown;
+    if(!b||!b.pulled)return '';
+    var u=b.usedCounts,rows=[];
+    function row(sym,color,n,label,note){
+      if(!n)return '';
+      return '<div style="display:flex;align-items:center;gap:9px;padding:5px 0">'+
+        '<span style="font:800 12px var(--mono);color:'+color+';width:13px">'+sym+'</span>'+
+        '<b style="font:800 13px var(--mono);color:#FDE68A;width:26px;text-align:right">'+n+'</b>'+
+        '<span style="font-size:11.5px;color:rgba(253,230,138,.72)">'+label+
+        (note?'<span style="color:rgba(253,230,138,.4)"> · '+note+'</span>':'')+'</span></div>';
+    }
+    rows.push(row('✓','#4ADE80',u.exact,'Exact spec match',null));
+    rows.push(row('~','#FBBF24',u.close,'Close — minor spec difference',null));
+    rows.push(row('?','#93C5FD',u.unknown,'Spec not stated','half weight'));
+    var excluded=b.pulled-b.used;
+    var reasons=Object.keys(b.excludedReasons).sort(function(x,y){return b.excludedReasons[y]-b.excludedReasons[x]})
+      .map(function(k){return b.excludedReasons[k]+' '+escapeHtml(k)}).join(' · ');
+    rows.push(row('✗','#F87171',excluded,'Excluded',reasons));
+    var tierNote='';
+    if(b.tier==='close')tierNote='Not enough exact matches — widened to include close configurations.';
+    else if(b.tier==='unknown')tierNote='Few exact matches — widened to include listings that don\'t state their specs. Treat this number as directional.';
+    return '<div class="nexus-price-guidance" style="margin-top:10px;padding:13px 16px">'+
+      '<div style="font:800 9px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:#FBBF24;margin-bottom:7px">Comp breakdown — '+b.pulled+' pulled, '+b.used+' used</div>'+
+      rows.join('')+
+      (tierNote?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(251,191,36,.14);font-size:11px;color:rgba(253,230,138,.55)">'+tierNote+'</div>':'')+
+      '</div>';
+  }
   function renderPriceTrail(items,queryText){
     var el=document.getElementById('nexusTrainingHistory');
     if(!el)return;
@@ -22142,10 +22804,18 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
     // real margin above that instead of cutting it close.
     var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:conditionId},32000);
     if(!res.ok){status.textContent=res.error||'Live comp check failed.';return}
-    var prices=(res.listings||[]).map(function(x){return x.price}).filter(function(n){return n>0});
-    document.getElementById('nexusCompPrices').value=prices.join('\n');
+    // Titles used to be discarded right here, which is why a search could
+    // quietly price a laptop off docking stations and wrong-spec machines.
+    // The scrape now passes through the spec engine before a price is kept.
+    var breakdown=NexusSpec.filterComps(q,res.listings||[]);
+    lastCompBreakdown=breakdown;
+    var prices=breakdown.prices;
+    var compBox=document.getElementById('nexusCompPrices');
+    compBox.value=prices.join('\n');
+    compBox.dataset.autofilled=prices.join('\n');
     var condLabel=conditionId?(Object.keys(NEXUS_CONDITION_IDS).find(function(k){return NEXUS_CONDITION_IDS[k]===conditionId})||''):'';
-    status.textContent='Found '+prices.length+' sold comp'+(prices.length===1?'':'s')+(condLabel?' (filtered to '+condLabel.replace('-',' ')+')':'')+' — saving them so they can steer future checks too…';
+    var dropped=breakdown.pulled-breakdown.used;
+    status.textContent='Found '+breakdown.pulled+' sold listing'+(breakdown.pulled===1?'':'s')+(condLabel?' ('+condLabel.replace('-',' ')+')':'')+' — kept '+breakdown.used+' matching your item'+(dropped>0?', filtered out '+dropped:'')+'…';
     await saveLiveSoldPrices(q,prices);
     calculatePricing();
   }
@@ -22427,11 +23097,17 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
     document.getElementById('nexusPricingBack').onclick=function(){document.getElementById('nexusPricing').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
     document.getElementById('nexusHealthClose').onclick=function(){document.getElementById('nexusHealthModal').classList.remove('show')};
     document.getElementById('nexusHealthModal').onclick=function(e){if(e.target===this)this.classList.remove('show')};
+    // Once prices are edited by hand they no longer correspond to the graded
+    // pull, so the breakdown and its confidence are dropped rather than shown
+    // against numbers they don't describe.
+    document.getElementById('nexusCompPrices').addEventListener('input',function(){
+      if(lastCompBreakdown&&this.value!==this.dataset.autofilled)lastCompBreakdown=null;
+    });
     document.getElementById('nexusCalculatePrice').onclick=calculatePricing;
     document.getElementById('nexusLiveComps').onclick=getLivePricing;
     document.getElementById('nexusOpenSold').onclick=function(){var q=document.getElementById('nexusPriceQuery').value.trim();if(q)window.open('https://www.ebay.com/sch/i.html?_nkw='+encodeURIComponent(q)+'&LH_Sold=1&LH_Complete=1&_sop=13','_blank')};
     document.getElementById('nexusSaveTraining').onclick=saveTrainingExample;
-    document.getElementById('nexusClearPrice').onclick=function(){document.getElementById('nexusPriceQuery').value='';document.getElementById('nexusCurrentPrice').value='';document.getElementById('nexusCompPrices').value='';document.getElementById('nexusConditionFilter').value='';document.getElementById('nexusPriceResults').innerHTML='<div class="nexus-price-empty"><div><strong>What should this sell for?</strong>Add relevant sold prices, then Nexus will show the market center, range, and a recommended selling price.</div></div>';document.getElementById('nexusPriceStatus').textContent='Use at least three relevant sold prices for a reliable recommendation.';document.getElementById('nexusTrainPrice').value='';document.getElementById('nexusTrainNote').value='';document.getElementById('nexusTrainingHistory').innerHTML='';document.getElementById('nexusTrainStatus').textContent='Calculate a price first, then confirm what it actually sells for.';lastCalc=null};
+    document.getElementById('nexusClearPrice').onclick=function(){document.getElementById('nexusPriceQuery').value='';document.getElementById('nexusCurrentPrice').value='';document.getElementById('nexusCompPrices').value='';document.getElementById('nexusConditionFilter').value='';document.getElementById('nexusPriceResults').innerHTML='<div class="nexus-price-empty"><div><strong>What should this sell for?</strong>Add relevant sold prices, then Nexus will show the market center, range, and a recommended selling price.</div></div>';document.getElementById('nexusPriceStatus').textContent='Use at least three relevant sold prices for a reliable recommendation.';document.getElementById('nexusTrainPrice').value='';document.getElementById('nexusTrainNote').value='';document.getElementById('nexusTrainingHistory').innerHTML='';document.getElementById('nexusTrainStatus').textContent='Calculate a price first, then confirm what it actually sells for.';lastCalc=null;lastCompBreakdown=null};
     document.getElementById('nexusShipSku').addEventListener('keydown',function(e){if(e.key==='Enter')resolveSku()});
     document.getElementById('nexusWeightLb').oninput=validateShip;
     document.getElementById('nexusWeightOz').oninput=validateShip;
