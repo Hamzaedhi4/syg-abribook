@@ -23364,6 +23364,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     <select id="leadsSort"><option value="date">Newest first</option><option value="value">By estimated value</option></select>
     <div class="leads-count" id="leadsCount"></div>
   </div>
+  <div id="leadsStatusBar" style="padding:0 18px 4px"></div>
   <div class="leads-list" id="leadsList"></div>
 </div>
 <div class="nexus-modal" id="leadsImportModal">
@@ -23383,6 +23384,327 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     <div class="nexus-modal-body" id="leadsDetailBody"></div>
   </div>
 </div>
+<script>
+/* ══════════════════ CKAY CONNECT · LEAD LOGIC ══════════════════
+   Pure functions for turning a raw dashboard lead into something the
+   swipe deck can act on: parsed message fields, honest completeness,
+   a usable eBay query, and a Call/Review routing decision.
+
+   No DOM, no storage, no network — same as the pricing engine, so the
+   whole thing is verifiable in Node before any UI or extension exists.
+   Depends on NexusSpec for category rules and spec parsing.
+   ═══════════════════════════════════════════════════════════════ */
+var CkayLeads = (function (Spec) {
+  'use strict';
+
+  var CALL_FLOOR = 50; // confirmed value at or above this is worth a phone call
+
+  // ══════════════════ SENTINELS ══════════════════
+  // "Notes: n/a" is a field with text in it and no information in it.
+  // Treating these as present is what would make every lead score complete.
+  var SENTINEL = /^(n\/?a|na|none|no|nope|null|nil|-+|—+|\.+|\?+|unknown|unsure|not sure|dont know|don'?t know|idk|tbd|see above)$/i;
+  function isBlank(v) {
+    if (v == null) return true;
+    var s = String(v).trim();
+    return !s || SENTINEL.test(s);
+  }
+
+  // ══════════════════ MESSAGE PARSING ══════════════════
+  // The dashboard body looks like:
+  //   === Location Lead (Elmwood Park) ===
+  //   Store: Elmwood Park, NJ
+  //   === Device Details ===
+  //   Device Type: Gaming Console
+  //   ...
+  // The === lines were previously discarded. They name the lead type, which
+  // is better categorization than the source icon, so they're kept now.
+  function parseLeadMessage(raw) {
+    var text = String(raw || '').replace(/<br\s*\/?>/gi, '\n').replace(/\r/g, '');
+    var lines = text.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    var out = { leadType: null, sections: [], fields: {}, blankFields: [], submitted: null, store: null };
+    lines.forEach(function (line) {
+      var head = line.match(/^=+\s*(.+?)\s*=+$/);
+      if (head) {
+        out.sections.push(head[1]);
+        if (!out.leadType) out.leadType = head[1];
+        return;
+      }
+      var idx = line.indexOf(':');
+      if (idx <= 0) return;
+      var k = line.slice(0, idx).trim(), v = line.slice(idx + 1).trim();
+      if (!k || k.length > 40) return;
+      if (isBlank(v)) { out.blankFields.push(k); return; }
+      out.fields[k] = v;
+    });
+    if (out.fields['Submitted']) out.submitted = parseSubmitted(out.fields['Submitted']);
+    if (out.fields['Store']) out.store = out.fields['Store'];
+    else if (out.leadType) {
+      var m = out.leadType.match(/\(([^)]+)\)/);
+      if (m) out.store = m[1];
+    }
+    return out;
+  }
+
+  // "7/30/2026, 10:18:43 AM" — the only real timestamp available. createdDate
+  // off the row is date-only, so this is what makes an accurate age possible.
+  function parseSubmitted(s) {
+    var m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?)?/i);
+    if (!m) return null;
+    var hh = m[4] ? parseInt(m[4], 10) : 0;
+    var ap = (m[7] || '').toLowerCase();
+    if (ap === 'pm' && hh < 12) hh += 12;
+    if (ap === 'am' && hh === 12) hh = 0;
+    var d = new Date(parseInt(m[3], 10), parseInt(m[1], 10) - 1, parseInt(m[2], 10),
+                     hh, m[5] ? parseInt(m[5], 10) : 0, m[6] ? parseInt(m[6], 10) : 0);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  }
+
+  // ══════════════════ ITEM NAMES ══════════════════
+  // "Gaming Console" + "Nintendo switch" was being sent to eBay as
+  // "Gaming Console Nintendo switch" — the category word is pure noise in a
+  // search query. Generic types are dropped; qualifying types are kept.
+  var GENERIC_TYPE = /^(gaming console|game console|console|laptop|notebook|computer|desktop|pc|tablet|phone|cell ?phone|smart ?phone|mobile|device|electronics|other|misc(ellaneous)?|camera|monitor|tv|television|audio|headphones|watch|drive|storage|memory|ram)$/i;
+
+  function buildItemNames(fields) {
+    fields = fields || {};
+    var device = String(fields['Device Type'] || '').trim();
+    var brandModel = String(fields['Brand/Model'] || fields['Brand'] || fields['Model'] || '').trim();
+    if (isBlank(brandModel)) return isBlank(device) || GENERIC_TYPE.test(device) ? [] : [device];
+    var generic = GENERIC_TYPE.test(device);
+    return brandModel.split(/\s*,\s*|\s*\/\s*|\s+and\s+/i)
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean)
+      .map(function (part) {
+        if (!device || generic) return part;
+        return part.toLowerCase().indexOf(device.toLowerCase()) !== -1 ? part : (device + ' ' + part).trim();
+      });
+  }
+
+  // ══════════════════ CONDITION ══════════════════
+  // The old map tested parts -> fair|scratch|wear|used -> new|sealed, so
+  // "Like New" fell through the middle rules and matched \bnew\b, pricing
+  // a used console against factory-sealed comps. Order matters here.
+  var CONDITION_RULES = [
+    [/for parts|not working|broken|cracked|water damage|no power|doesn'?t (power|turn) on|dead/i, 7000, 'parts'],
+    [/certified refurb/i, 2000, 'certified-refurb'],
+    [/refurb/i, 2500, 'seller-refurb'],
+    [/like new|open ?box|mint|excellent|barely used|as new/i, 1500, 'new-other'],
+    [/brand new|sealed|unopened|never (used|opened)/i, 1000, 'new'],
+    [/fair|poor|scratch|scuff|wear|dent|damaged|rough/i, 3000, 'used'],
+    [/good|used|pre-?owned|working|functional/i, 3000, 'used']
+  ];
+  function conditionId(text) {
+    var t = String(text || '');
+    for (var i = 0; i < CONDITION_RULES.length; i++) {
+      if (CONDITION_RULES[i][0].test(t)) return CONDITION_RULES[i][1];
+    }
+    return 3000; // most leads describe a used personal device
+  }
+  function conditionKey(text) {
+    var t = String(text || '');
+    for (var i = 0; i < CONDITION_RULES.length; i++) {
+      if (CONDITION_RULES[i][0].test(t)) return CONDITION_RULES[i][2];
+    }
+    return 'used';
+  }
+
+  // ══════════════════ COMPLETENESS ══════════════════
+  // Reuses NexusSpec.RULES — "what makes two of these the same item" and
+  // "what's missing from this lead" are the same question, so there's one
+  // rulebook rather than two that can drift apart.
+  var FIELD_LABEL = {
+    cpu: 'processor', ram: 'RAM', screen: 'screen size', storage: 'storage size',
+    capacity: 'capacity', iface: 'interface', healthBand: 'health', speed: 'speed',
+    eccForm: 'ECC / module type', model: 'model', vram: 'VRAM', modelNumber: 'model number'
+  };
+
+  function itemCompleteness(itemName, conditionText) {
+    var spec = Spec.parseItemSpec(itemName);
+    var rules = Spec.RULES[spec.category] || Spec.RULES.unknown;
+    var missing = [];
+    rules.critical.forEach(function (f) {
+      var v = f === 'eccForm' ? (spec.form == null && spec.ecc == null ? null : 'x')
+            : f === 'healthBand' ? (spec.healthBand != null ? 'x' : null)
+            : (spec[f] != null ? 'x' : null);
+      if (v == null) missing.push(FIELD_LABEL[f] || f);
+    });
+    if (isBlank(conditionText)) missing.push('condition');
+    return {
+      category: spec.category,
+      missing: missing,
+      complete: missing.length === 0,
+      // A lead is quotable when the model is identifiable, even if a spec or
+      // two is absent — those become questions for the call, not blockers.
+      identifiable: !!(spec.model || spec.modelNumber || spec.category !== 'unknown')
+    };
+  }
+
+  // ══════════════════ ROUTING ══════════════════
+  // Confirmed value counts ONLY items that actually priced. Guessing at the
+  // unpriced ones would quietly corrupt the deck's total and average.
+  function routeLead(lead, floor) {
+    floor = typeof floor === 'number' ? floor : CALL_FLOOR;
+    var items = (lead && lead.estimatedItems) || [];
+    var priced = items.filter(function (i) { return typeof i.value === 'number' && i.value > 0; });
+    var unpriced = items.filter(function (i) { return !(typeof i.value === 'number' && i.value > 0); });
+    var confirmed = priced.reduce(function (s, i) { return s + i.value; }, 0);
+    confirmed = Math.round(confirmed * 100) / 100;
+
+    var missingAll = [];
+    unpriced.forEach(function (i) {
+      (i.missing || []).forEach(function (f) {
+        var entry = i.name + ': ' + f;
+        if (missingAll.indexOf(entry) === -1) missingAll.push(entry);
+      });
+    });
+
+    var res = {
+      confirmed: confirmed, pricedCount: priced.length, unpricedCount: unpriced.length,
+      totalItems: items.length, missing: missingAll
+    };
+    if (confirmed >= floor) {
+      res.bin = 'call';
+      res.reason = unpriced.length
+        ? 'Worth calling on ' + priced.length + ' confirmed item' + (priced.length === 1 ? '' : 's')
+        : 'Confirmed value clears the $' + floor + ' floor';
+      res.followUp = unpriced.length > 0;
+      res.template = null;
+    } else if (confirmed > 0) {
+      res.bin = 'review';
+      res.reason = 'Under the $' + floor + ' call floor';
+      res.followUp = false;
+      res.template = 'low_value';
+    } else {
+      res.bin = 'review';
+      res.reason = items.length ? 'Nothing priceable yet' : 'No item info in the lead';
+      res.followUp = false;
+      res.template = 'missing_info';
+    }
+    return res;
+  }
+
+  // ══════════════════ EMAIL TEMPLATES ══════════════════
+  function firstName(full) {
+    return String(full || '').trim().split(/\s+/)[0] || 'there';
+  }
+  function listPhrase(arr) {
+    if (!arr.length) return '';
+    if (arr.length === 1) return arr[0];
+    return arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+  }
+
+  function buildEmail(lead, route) {
+    var name = firstName(lead.customerName);
+    var store = lead.store || 'Elmwood Park';
+    var items = (lead.estimatedItems || []).map(function (i) { return i.name; });
+    var subject, body;
+
+    if (route.template === 'low_value') {
+      subject = 'About the ' + (items[0] || 'item') + ' you asked about';
+      body = 'Hi ' + name + ',\n\n' +
+        'Thanks for reaching out about your ' + (listPhrase(items) || 'item') + '.\n\n' +
+        'Items like this are hard to price accurately from a description alone — condition and what\'s ' +
+        'included make a real difference to the number. Swing by our ' + store + ' store and we\'ll check ' +
+        'it over in person and give you a firm price on the spot.\n\n' +
+        'If you have anything else you\'ve been thinking about selling, bring it along and we\'ll price it ' +
+        'all at once.\n\n' +
+        'Sell Your Gadgets · ' + store;
+    } else {
+      var asks = route.missing.map(function (m) {
+        var parts = m.split(': ');
+        return parts.length > 1 ? parts[1] + ' (' + parts[0] + ')' : m;
+      });
+      subject = 'A couple of details on your ' + (items[0] || 'item');
+      body = 'Hi ' + name + ',\n\n' +
+        'Thanks for reaching out about your ' + (listPhrase(items) || 'item') + '.\n\n' +
+        (asks.length
+          ? 'To give you an accurate price I need a bit more detail — specifically the ' +
+            listPhrase(asks) + '. Send those over and I\'ll get you a firm number the same day.\n\n'
+          : 'To give you an accurate price I need a bit more detail about the item — the exact model, ' +
+            'and what condition it\'s in. Send that over and I\'ll get you a firm number the same day.\n\n') +
+        'You\'re also welcome to bring it into our ' + store + ' store and we\'ll check it over in person.\n\n' +
+        'Sell Your Gadgets · ' + store;
+    }
+    return { subject: subject, body: body, to: lead.email || '' };
+  }
+
+  // Compose URL rather than the Gmail API: no OAuth, no token storage, and a
+  // person always reads the draft before it sends. accountIndex maps to the
+  // /u/N/ segment, which decides WHICH signed-in account the draft opens under.
+  function gmailComposeUrl(email, accountIndex) {
+    var u = typeof accountIndex === 'number' ? accountIndex : 0;
+    return 'https://mail.google.com/mail/u/' + u + '/?view=cm&fs=1' +
+      '&to=' + encodeURIComponent(email.to || '') +
+      '&su=' + encodeURIComponent(email.subject || '') +
+      '&body=' + encodeURIComponent(email.body || '');
+  }
+
+  // ══════════════════ AGE ══════════════════
+  function leadAge(lead, now) {
+    var t = lead.submitted || lead.importedAt;
+    if (!t) return null;
+    var ms = (now || Date.now()) - new Date(t).getTime();
+    if (isNaN(ms) || ms < 0) return null;
+    var h = ms / 3600000;
+    if (h < 1) return { hours: h, label: Math.max(1, Math.round(ms / 60000)) + 'm old' };
+    if (h < 24) return { hours: h, label: Math.round(h) + 'h old' };
+    var d = Math.round(h / 24);
+    return { hours: h, label: d + 'd old' };
+  }
+
+  // ══════════════════ SELF TEST ══════════════════
+  function selfTest(verbose) {
+    var pass = 0, failures = [];
+    function t(n, got, want) {
+      if (JSON.stringify(got) === JSON.stringify(want)) pass++;
+      else failures.push(n + ' — got ' + JSON.stringify(got) + ', want ' + JSON.stringify(want));
+    }
+    var msg = '=== Location Lead (Elmwood Park) ===\nStore: Elmwood Park, NJ\nStore Code: NJ02\n\n' +
+      '=== Device Details ===\nDevice Type: Gaming Console\nCondition: Like New\n' +
+      'Brand/Model: Nintendo switch\nNotes: n/a\n\n=== Contact ===\nName: Nicole\n' +
+      'Phone: 5517955146\nEmail: nicolemamay@gmail.com\nSubmitted: 7/30/2026, 10:18:43 AM';
+    var p = parseLeadMessage(msg);
+    t('leadType captured', p.leadType, 'Location Lead (Elmwood Park)');
+    t('n/a dropped', p.fields['Notes'], undefined);
+    t('n/a recorded as blank', p.blankFields.indexOf('Notes') !== -1, true);
+    t('store parsed', p.store, 'Elmwood Park, NJ');
+    t('condition kept', p.fields['Condition'], 'Like New');
+    t('generic type stripped', buildItemNames(p.fields), ['Nintendo switch']);
+    t('Like New is not sealed', conditionId('Like New'), 1500);
+    t('for parts', conditionId('Cracked screen, not working'), 7000);
+    t('$50 floor: call', routeLead({ estimatedItems: [{ name: 'x', value: 142 }] }).bin, 'call');
+    t('$50 floor: review', routeLead({ estimatedItems: [{ name: 'x', value: 42 }] }).bin, 'review');
+    t('low value template', routeLead({ estimatedItems: [{ name: 'x', value: 42 }] }).template, 'low_value');
+    t('no info template', routeLead({ estimatedItems: [] }).template, 'missing_info');
+    var out = { passed: pass, failed: failures.length, failures: failures };
+    if (typeof console !== 'undefined') {
+      console.log('%cCkayLeads self-test: ' + pass + ' passed, ' + failures.length + ' failed',
+        'font-weight:700;color:' + (failures.length ? '#F87171' : '#4ADE80'));
+      if (failures.length || verbose) failures.forEach(function (f) { console.log('  ✗ ' + f); });
+    }
+    return out;
+  }
+
+  return {
+    CALL_FLOOR: CALL_FLOOR,
+    isBlank: isBlank,
+    parseLeadMessage: parseLeadMessage,
+    parseSubmitted: parseSubmitted,
+    buildItemNames: buildItemNames,
+    conditionId: conditionId,
+    conditionKey: conditionKey,
+    itemCompleteness: itemCompleteness,
+    routeLead: routeLead,
+    buildEmail: buildEmail,
+    gmailComposeUrl: gmailComposeUrl,
+    leadAge: leadAge,
+    selfTest: selfTest
+  };
+})(typeof NexusSpec !== 'undefined' ? NexusSpec : (typeof require !== 'undefined' ? require('./nexus-spec.js') : null));
+
+if (typeof module !== 'undefined' && module.exports) module.exports = CkayLeads;
+
+</script>
 <script>
 (function(){
   var LEADS_KEY='syg_nexus_leads';
@@ -23476,22 +23798,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       }
       var messageText=bodyEl?normalizedLines(bodyEl).join(' '):'';
       var rawLines=bodyEl?normalizedLines(bodyEl).join('\n'):'';
-      var fields={};
-      rawLines.split('\n').forEach(function(line){
-        line=line.trim();
-        if(!line||/^===/.test(line))return;
-        var idx=line.indexOf(':');
-        if(idx>0){
-          var k=line.slice(0,idx).trim(),v=line.slice(idx+1).trim();
-          if(k&&v&&k.length<40)fields[k]=v;
-        }
-      });
+      // Parsing moved into CkayLeads so sentinel values ("Notes: n/a") stop
+      // counting as real answers, the === headers become a lead type, and the
+      // Submitted: line gives a real timestamp instead of a date-only string.
+      var parsed=CkayLeads.parseLeadMessage(rawLines);
+      var fields=parsed.fields;
       if(!customerName&&!email&&!phone)return; // skip rows that clearly didn't parse
       out.push({
         id:(customerName+'|'+(email||phone||createdDate)).toLowerCase().replace(/\s+/g,'-'),
         source:source,status:status,createdDate:createdDate,customerName:customerName,
         email:email,phone:phone,storeCode:storeCode,latestNote:latestNote,
         fields:fields,rawMessage:messageText.trim(),
+        leadType:parsed.leadType,submitted:parsed.submitted,store:parsed.store,
+        blankFields:parsed.blankFields,
         importedAt:new Date().toISOString()
       });
     });
@@ -23517,6 +23836,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       el('leadsImportModal').classList.add('show');
       if(res&&res.ok&&res.html){
         importLeads(res.html);
+        writePullInfo({at:new Date().toISOString(),pages:res.pages||1,count:res.count||leads.length});
       }else{
         status.textContent=(res&&res.error)||'Could not pull from the leads tab — make sure buyer.sellyourgadgets.com/dashboard/leads/leads-entries is open in another tab, then try again.';
       }
@@ -23542,38 +23862,21 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   // Reuses the exact same eBay live-check the Pricing Lab uses (same
   // browser extension bridge, exposed globally as window.nexusAskExtension
   // since Ckay Connect is a separate script/IIFE from the main Nexus app).
-  var LEADS_CONDITION_MAP=[
-    [/parts|not working|broken|cracked screen|no power|for parts/i,7000],
-    [/fair|scratch|wear|used/i,3000],
-    [/new|sealed/i,1000]
-  ];
-  function leadConditionId(l){
-    var c=(l.fields['Condition']||'').toLowerCase();
-    for(var i=0;i<LEADS_CONDITION_MAP.length;i++)if(LEADS_CONDITION_MAP[i][0].test(c))return LEADS_CONDITION_MAP[i][1];
-    return 3000; // default to Used — most leads describe a used personal device
-  }
+  // Was a three-rule map that tested parts -> fair|used -> new|sealed, so
+  // "Like New" fell past the middle rules, matched \bnew\b, and priced used
+  // consoles against factory-sealed comps. CkayLeads orders it correctly.
+  function leadConditionId(l){return CkayLeads.conditionId(l.fields['Condition'])}
   // A lead can describe several distinct devices in one field — e.g.
   // "Brand/Model: iPhone XR, iPhone 8, iPhone 11" from the pickup-lead
   // format. Averaging those together would be meaningless (an XR and an
   // 11 aren't worth the same), so each comma-separated entry becomes its
   // own eBay query, and the lead's total is the SUM of each item's value,
   // not one blended average across all of them.
-  function leadItemNames(l){
-    var device=(l.fields['Device Type']||'').trim();
-    var brandModelRaw=(l.fields['Brand/Model']||'').trim();
-    if(brandModelRaw){
-      var parts=brandModelRaw.split(',').map(function(s){return s.trim()}).filter(Boolean);
-      // If Device Type is a generic category (e.g. "iPhone") and each part
-      // already names a specific model, don't double it up in the query.
-      return parts.map(function(p){
-        var lower=p.toLowerCase();
-        if(device&&lower.indexOf(device.toLowerCase())===-1)return (device+' '+p).trim();
-        return p;
-      });
-    }
-    if(device)return [device];
-    return []; // nothing usable — deliberately never falls back to the customer's name
-  }
+  // "Gaming Console" + "Nintendo switch" was searching eBay for
+  // "Gaming Console Nintendo switch". Generic category words are noise in a
+  // query; CkayLeads drops them and keeps qualifying types like "iPhone".
+  function leadItemNames(l){return CkayLeads.buildItemNames(l.fields)}
+
   async function estimateValue(id,stopEl){
     if(stopEl)stopEl.stopPropagation();
     var l=leads.find(function(x){return x.id===id});
@@ -23591,11 +23894,27 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     for(var i=0;i<itemNames.length;i++){
       var name=itemNames[i];
       var res=await window.nexusAskExtension('CHECK_EBAY_LIVE',{query:name,conditionId:conditionId},32000);
-      var prices=(res&&res.ok)?(res.listings||[]).map(function(x){return x.price}).filter(function(n){return n>0}):[];
+      // Was a flat average of every price the scrape returned — docking
+      // stations, wrong configs and lot listings included. Same filter the
+      // Pricing Lab uses now, so a lead estimate and a price check agree.
+      var listings=(res&&res.ok)?(res.listings||[]):[];
+      var bd=NexusSpec.filterComps(name,listings);
+      var prices=bd.prices;
+      var value=null;
+      if(prices.length){
+        var s=prices.slice().sort(function(a,b){return a-b});
+        var mid=Math.floor(s.length/2);
+        var med=s.length%2?s[mid]:(s[mid-1]+s[mid])/2;
+        var avg=s.reduce(function(a,b){return a+b},0)/s.length;
+        value=Math.round(((med+avg)/2)*100)/100;
+      }
+      var comp=CkayLeads.itemCompleteness(name,l.fields['Condition']);
       results.push({
-        name:name,
-        value:prices.length?Math.round((prices.reduce(function(a,b){return a+b},0)/prices.length)*100)/100:null,
-        comps:prices
+        name:name,value:value,comps:prices,
+        missing:comp.missing,category:comp.category,
+        pulled:bd.pulled,used:bd.used,
+        confidence:bd.confidence.level,confidenceLabel:bd.confidence.label,
+        confidenceDetail:bd.confidence.detail
       });
     }
     l.estimating=false;
@@ -23609,10 +23928,71 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       l.estimateError='No sold comps found for: '+itemNames.join(', ');
     }
     l.estimatedAt=new Date().toISOString();
+    l.route=CkayLeads.routeLead(l);
     save();render();
   }
 
+  // ── Ckay status ──────────────────────────────────────────────
+  // Audit's own status line says nothing about lead pulls, so Ckay reports
+  // its own health: is the bridge there, when did we last pull, and how much
+  // of what we hold is actually usable.
+  var PULL_KEY='syg_ckay_last_pull';
+  function readPullInfo(){try{return JSON.parse(localStorage.getItem(PULL_KEY))||null}catch(e){return null}}
+  function writePullInfo(o){try{localStorage.setItem(PULL_KEY,JSON.stringify(o))}catch(e){}}
+  function ago(iso){
+    if(!iso)return 'never';
+    var m=(Date.now()-new Date(iso).getTime())/60000;
+    if(m<1)return 'just now';
+    if(m<60)return Math.round(m)+'m ago';
+    if(m<1440)return Math.round(m/60)+'h ago';
+    return Math.round(m/1440)+'d ago';
+  }
+  function renderStatusBar(){
+    var box=el('leadsStatusBar');
+    if(!box)return;
+    var total=leads.length;
+    var withFields=leads.filter(function(l){return l.fields&&Object.keys(l.fields).length>0}).length;
+    var withNote=leads.filter(function(l){return !!l.latestNote}).length;
+    var priced=leads.filter(function(l){return typeof l.estimatedValue==='number'}).length;
+    var callN=leads.filter(function(l){return l.route&&l.route.bin==='call'}).length;
+    var reviewN=leads.filter(function(l){return l.route&&l.route.bin==='review'}).length;
+    var bridge=!!window.nexusAskExtension;
+    var pull=readPullInfo();
+    function tile(label,value,tone){
+      var color=tone==='bad'?'#b91c1c':tone==='warn'?'#a16207':tone==='good'?'#15803d':'#334155';
+      return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 11px;min-width:0">'+
+        '<div style="font-size:10px;color:#8b93a2;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</div>'+
+        '<div style="font:600 14px ui-monospace,monospace;color:'+color+';margin-top:2px">'+value+'</div></div>';
+    }
+    var coverage=total?Math.round(withFields/total*100):0;
+    var html='<div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:8px">'+
+      tile('Extension',bridge?'Connected':'Not found',bridge?'good':'bad')+
+      tile('Last pull',ago(pull&&pull.at),pull?'':'warn')+
+      tile('Item info',withFields+' / '+total,coverage>=70?'good':coverage>=30?'warn':'bad')+
+      tile('Internal notes',withNote+' / '+total,'')+
+      tile('Priced',priced+' / '+total,'')+
+      tile('Call / Review',callN+' / '+reviewN,'')+
+    '</div>';
+    if(total&&coverage<70){
+      html+='<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:9px 12px;font-size:11.5px;color:#92400e;line-height:1.5">'+
+        '<b>'+(total-withFields)+' lead'+(total-withFields===1?' has':'s have')+' no item details.</b> '+
+        'The dashboard only renders the message block once a row is expanded, so a plain page pull can\'t see it. '+
+        'Expanding rows during the pull is what the extension update adds \u2014 until then, paste an expanded row to fill one in.</div>';
+    }
+    if(pull&&pull.pages)html+='<div class="leads-status" style="margin-top:6px">Last pull walked '+pull.pages+' page'+(pull.pages===1?'':'s')+' and returned '+pull.count+' lead'+(pull.count===1?'':'s')+'.</div>';
+    html+='<div style="margin-top:6px"><button class="leads-btn" id="ckaySelfTest" style="font-size:11px">Run self-test</button> <span id="ckaySelfTestOut" class="leads-status" style="display:inline"></span></div>';
+    box.innerHTML=html;
+    var btn=document.getElementById('ckaySelfTest');
+    if(btn)btn.onclick=function(){
+      var a=NexusSpec.selfTest(),b=CkayLeads.selfTest();
+      var ok=!a.failed&&!b.failed;
+      document.getElementById('ckaySelfTestOut').innerHTML='<span style="color:'+(ok?'#15803d':'#b91c1c')+'">'+
+        (a.passed+b.passed)+' passed, '+(a.failed+b.failed)+' failed'+(ok?'':' \u2014 see console')+'</span>';
+    };
+  }
+
   function render(){
+    renderStatusBar();
     var q=(el('leadsSearch').value||'').toLowerCase();
     var statusFilter=el('leadsStatusFilter').value;
     var readyFilter=el('leadsReadyFilter').value;
