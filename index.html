@@ -19825,6 +19825,157 @@ var NexusSpec = (function () {
     return null;
   }
 
+
+  // ══════════════════ UNIVERSAL LAYER ══════════════════
+  // Runs when no category rulebook applies. Previously that path compared a
+  // single "longest number-ish token", which on a camera lens resolved to the
+  // focal length — so hoods, caps and filters all scored as perfect matches
+  // and dragged an $1,800 lens down to $743. These rules need no category
+  // knowledge at all; they read structure that every listing title shares.
+
+  // A listing that is "X FOR Y" is an accessory OF the item, not the item.
+  // "For parts" is excluded — that's a condition, handled upstream.
+  var COMPANION = /\b(?:for|fits|compatible with|replacement for|to fit|designed for)\s+(?!parts|repair|spares|scrap)[a-z0-9]/i;
+
+  // Finite, category-agnostic, and the only external knowledge here.
+  var BRANDS = ('apple samsung dell hp lenovo asus acer msi gigabyte asrock evga intel amd nvidia ' +
+    'corsair kingston crucial micron adata xpg patriot teamgroup gskill hynix ' +
+    'western digital wd seagate toshiba sandisk hitachi ' +
+    'canon nikon sony sigma tamron fujifilm olympus panasonic leica pentax tokina rokinon ' +
+    'lg microsoft google motorola oneplus xiaomi huawei nokia nintendo ' +
+    'logitech razer steelseries hyperx netgear tplink cisco ubiquiti supermicro ' +
+    'thermaltake nzxt seasonic coolermaster antec ' +
+    'kamrui beelink minisforum ' +
+    'dewalt milwaukee makita bosch ryobi ridgid fluke klein ' +
+    'bose jbl sennheiser shure focusrite behringer yamaha audio-technica').split(' ');
+
+  // Returns the brand appearing EARLIEST in the title, not the first one that
+  // happens to sit early in the list. "Sigma 70-200mm ... Canon EF" is a Sigma
+  // lens that merely states its mount; scanning by list order called it Canon
+  // and let a third-party lens price a first-party one.
+  function extractBrand(t) {
+    var n = norm(t).replace(/-/g, ' ');
+    if (/\bwestern digital\b/.test(norm(t))) return 'wd';
+    var best = null, bestAt = Infinity;
+    for (var i = 0; i < BRANDS.length; i++) {
+      var b = BRANDS[i].replace(/-/g, ' ');
+      var m = n.match(new RegExp('\\b' + b + '\\b'));
+      if (m && m.index < bestAt) { best = BRANDS[i].replace(/-/g, ''); bestAt = m.index; }
+    }
+    return best;
+  }
+
+  // Generalises parseCapacities beyond GB/TB. A number bound to a unit is the
+  // same kind of assertion whether it reads 16GB, 750W, f/2.8 or 70-200mm, so
+  // one rule covers apertures, wattages, clocks and screen sizes at once.
+  function parseUnits(t) {
+    var s = norm(t), out = {}, m;
+    var re = /(\d+(?:\.\d+)?)\s*(tb|gb|mb|mah|wh|ghz|mhz|rpm|mm|cm|inch|w|v|ah)\b/g;
+    while ((m = re.exec(s))) {
+      var u = m[2];
+      (out[u] = out[u] || []).push(parseFloat(m[1]));
+    }
+    var f = s.match(/f\/(\d+(?:\.\d+)?)/);
+    if (f) out['aperture'] = [parseFloat(f[1])];
+    var inch = s.match(/(\d+(?:\.\d+)?)\s*"/);
+    if (inch) (out['inch'] = out['inch'] || []).push(parseFloat(inch[1]));
+    Object.keys(out).forEach(function (k) { out[k] = out[k].sort(function (a, b) { return a - b; }); });
+    return out;
+  }
+
+  // The last real noun is usually the product type: "…Lens Cap Set" ends in
+  // SET, "…Docking Station" in STATION, the genuine article in LENS.
+  var HEAD_STOP = /^(new|used|mint|excellent|good|fair|poor|boxed|tested|working|functional|genuine|oem|original|authentic|only|lot|set|kit|bundle|condition|great|nice|clean|pro|plus|max|ultra|read|parts|repair|black|white|silver|grey|gray|blue|red|green|gold|pink|is|usm|stm|vr|oss|ii|iii|iv|dg|os|hsm|art|sports|and|with|the|for|from)$/i;
+  function headNoun(t) {
+    var w = String(t || '').replace(/\(.*?\)|\[.*?\]/g, ' ').replace(/[^a-zA-Z0-9\-\. ]/g, ' ').split(/\s+/).filter(Boolean);
+    for (var i = w.length - 1; i >= 0; i--) {
+      var x = w[i];
+      if (/\d/.test(x) || x.length < 3 || HEAD_STOP.test(x)) continue;
+      return x.toLowerCase();
+    }
+    return null;
+  }
+
+  // Short alphanumeric markers (RF, EF, IS, USM, XT, Ti) carry variant meaning
+  // out of proportion to their length.
+  function distinctiveTokens(t) {
+    return (norm(t).match(/\b[a-z]{2,4}\b/g) || []).filter(function (x) {
+      return !HEAD_STOP.test(x) && !/^(the|and|for|with|new|lot|set|kit|pro|max)$/.test(x);
+    });
+  }
+
+
+  // A short, category-agnostic vocabulary of things that are sold ALONGSIDE
+  // products rather than being products of the type in question. Far smaller
+  // to maintain than a list of every category that exists.
+  var ACCESSORY_HEAD = /^(cap|caps|hood|filter|filters|ring|rings|collar|clip|clips|case|bag|pouch|strap|cable|cord|adapter|adaptor|mount|bracket|tray|caddy|stand|dock|station|pad|pads|cover|holder|grip|sleeve|protector|shield|lead|leads|tip|tips|spacer|riser|enclosure|charger|battery|batteries|remote|manual|box|screws|mounts|plate)$/i;
+  // "with 2 Batteries" describes what's included, not what the item is.
+  var INCLUSION = /\b(with|w\/|includes?|including|plus|bundled|comes)\b/i;
+
+  function numericTokens(t) {
+    return (norm(t).match(/\d+(?:\.\d+)?/g) || []).filter(function (x) {
+      return parseFloat(x) > 1; // drop 1/0 and bare decimals like the 2 in M.2
+    });
+  }
+
+  function universalGrade(target, compTitle) {
+    var q = target.text, c = norm(compTitle);
+    if (COMPANION.test(c) && !COMPANION.test(q)) return { verdict: 'wrong', reason: 'accessory for this item' };
+
+    var qb = extractBrand(q), cb = extractBrand(c);
+    if (qb && cb && qb !== cb) return { verdict: 'wrong', reason: 'brand mismatch' };
+
+    var qu = parseUnits(q), cu = parseUnits(c);
+    for (var k in qu) {
+      if (!cu[k]) continue;
+      if (qu[k].join(',') !== cu[k].join(',')) return { verdict: 'wrong', reason: k + ' mismatch' };
+    }
+
+    // Model numbers are numeric. Every number the query asserts must appear
+    // in the comp — that separates a Fluke 87V from a Fluke 117 without
+    // anyone having to teach the engine what a multimeter is.
+    var qn = numericTokens(q), cn = numericTokens(c);
+    var missingNum = qn.filter(function (x) { return cn.indexOf(x) === -1; });
+    if (missingNum.length) return { verdict: 'wrong', reason: 'model number mismatch' };
+
+    // Head-noun comparison, skipped when the query names no product type of
+    // its own — a bare "Sony WH-1000XM4" has nothing to compare against.
+    var qh = headNoun(q), ch = headNoun(c);
+    if (qh && ch && qh !== qb) {
+      // "Drill Bare Tool" and "Drill with 2 Batteries" are the same drill;
+      // "Lens Cap Set" is not a lens. The difference is whether the trailing
+      // noun is an accessory, and whether it's flagged as an inclusion.
+      if (ch !== qh && ACCESSORY_HEAD.test(ch) && !ACCESSORY_HEAD.test(qh)) {
+        var upTo = norm(c).slice(0, norm(c).lastIndexOf(ch));
+        if (!INCLUSION.test(upTo)) return { verdict: 'wrong', reason: 'accessory, not the item' };
+      } else if (ch !== qh && norm(c).indexOf(qh) === -1) {
+        return { verdict: 'unknown', reason: 'product type not stated' };
+      }
+    }
+
+    var qt = distinctiveTokens(q), ct = distinctiveTokens(c);
+    var missing = qt.filter(function (x) { return ct.indexOf(x) === -1; });
+    if (missing.length) return { verdict: 'unknown', reason: 'missing ' + missing.slice(0, 2).join('/') };
+
+    return { verdict: 'exact', reason: null };
+  }
+
+  // Robust outlier rejection can't run first: at ~40% contamination the junk
+  // defines the spread and nothing registers as an outlier. It runs last, on
+  // already-filtered prices, and only trims the bimodal tails.
+  function trimBimodal(prices) {
+    var out = prices.slice();
+    for (var pass = 0; pass < 4 && out.length >= 3; pass++) {
+      var s = out.slice().sort(function (a, b) { return a - b; });
+      var mid = Math.floor(s.length / 2);
+      var med = s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+      var kept = out.filter(function (v) { return v >= med * 0.5 && v <= med * 2.5; });
+      if (kept.length === out.length || kept.length < 3) break;
+      out = kept;
+    }
+    return out;
+  }
+
   // ══════════════════ FIELD RULES PER CATEGORY ══════════════════
   // This is the whole point of detecting category first: "what makes two
   // of these the same item" is a different question for a laptop than for
@@ -19868,7 +20019,9 @@ var NexusSpec = (function () {
     return a === b ? 'match' : 'conflict';
   }
 
-  function gradeComp(target, compSpec) {
+  function gradeComp(target, compSpec, compTitle) {
+    // No category rulebook -> universal rules, not a lone token comparison.
+    if (target.category === 'unknown') return universalGrade(target, compTitle || compSpec.text);
     var rules = RULES[target.category] || RULES.unknown;
     var unknownCount = 0, softMiss = 0, reason = null;
 
@@ -19907,7 +20060,7 @@ var NexusSpec = (function () {
       var screened = screenComp(title, targetIsParts);
       if (screened) { row.verdict = screened.verdict; row.reason = screened.reason; return row; }
       if (!title) { row.verdict = 'unknown'; row.reason = 'no title returned'; return row; }
-      var g = gradeComp(target, parseItemSpec(title, target.category));
+      var g = gradeComp(target, parseItemSpec(title, target.category), title);
       row.verdict = g.verdict; row.reason = g.reason;
       return row;
     });
@@ -19939,7 +20092,7 @@ var NexusSpec = (function () {
 
   // Confidence now means match QUALITY, not comp count. Eight docking
   // stations used to read "High confidence" — they now can't.
-  function scoreConfidence(counts, prices, tierName) {
+  function scoreConfidence(counts, prices, tierName, opts) {
     var effective = counts.exact * WEIGHT.exact + counts.close * WEIGHT.close + counts.unknown * WEIGHT.unknown;
     var used = counts.exact + counts.close + counts.unknown;
     var spread = spreadOf(prices);
@@ -19949,6 +20102,7 @@ var NexusSpec = (function () {
     else if (effective >= 3) level = 'med';
     else level = 'low';
     if (tierName === 'unknown' && level === 'high') level = 'med'; // had to widen — cap it
+    if (opts && opts.uncategorised && level === 'high') level = 'med'; // universal rules only
     var bits = [used + ' comp' + (used === 1 ? '' : 's')];
     if (counts.exact) bits.push(counts.exact + ' exact');
     if (spread > 0.80) bits.push('wide spread');
@@ -19969,10 +20123,19 @@ var NexusSpec = (function () {
 
   // The one function the Pricing Lab calls. Everything above is internal.
   function filterComps(query, listings) {
+    var target = parseItemSpec(query);
     var rows = classifyAll(query, listings);
     var tier = pickTier(rows);
     var used = rows.filter(function (r) { return tier.accept.indexOf(r.verdict) !== -1; });
     var prices = used.map(function (r) { return r.price; });
+    if (target.category === 'unknown') {
+      var trimmed = trimBimodal(prices);
+      if (trimmed.length !== prices.length) {
+        var keep = trimmed.slice();
+        used = used.filter(function (r) { var i = keep.indexOf(r.price); if (i === -1) return false; keep.splice(i, 1); return true; });
+        prices = used.map(function (r) { return r.price; });
+      }
+    }
     var counts = tally(rows);
     var usedCounts = {
       exact: used.filter(function (r) { return r.verdict === 'exact'; }).length,
@@ -19986,7 +20149,7 @@ var NexusSpec = (function () {
       reasons[key] = (reasons[key] || 0) + 1;
     });
     return {
-      target: parseItemSpec(query),
+      target: target,
       rows: rows,
       prices: prices,
       tier: tier.name,
@@ -19995,7 +20158,7 @@ var NexusSpec = (function () {
       counts: counts,
       usedCounts: usedCounts,
       excludedReasons: reasons,
-      confidence: scoreConfidence(usedCounts, prices, tier.name)
+      confidence: scoreConfidence(usedCounts, prices, tier.name, { uncategorised: target.category === 'unknown' })
     };
   }
 
@@ -20070,6 +20233,11 @@ var NexusSpec = (function () {
     screenComp: screenComp,
     gradeComp: gradeComp,
     classifyAll: classifyAll,
+    universalGrade: universalGrade,
+    parseUnits: parseUnits,
+    headNoun: headNoun,
+    extractBrand: extractBrand,
+    trimBimodal: trimBimodal,
     filterComps: filterComps,
     healthBand: healthBand,
     RULES: RULES,
