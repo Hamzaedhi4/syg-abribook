@@ -54,6 +54,7 @@
   .bhai-action-badge{font:700 10px/1 var(--sans); letter-spacing:.04em; padding:4px 7px; border-radius:var(--r-pill); flex:none;}
   .bhai-action-badge.create{color:#0E7490; background:#CFFAFE; border:1px solid #A5F3FC;}
   .bhai-action-badge.edit{color:#9A3412; background:#FFEDD5; border:1px solid #FED7AA;}
+  .dp-input.auto-priced{border-color:#34d399; background:rgba(52,211,153,.07);}
   .dp-rmv{margin-left:auto; background:none; border:none; color:var(--ink-faint); font-size:16px; cursor:pointer; padding:0 2px; line-height:1;
     border-radius:4px; transition:color .12s;}
   .dp-rmv:hover{color:var(--fail);}
@@ -4222,12 +4223,12 @@
       <option value="P">Paul (P)</option>
     </select>
     <input class="lister-batch" id="listerBatch" value="RTL" placeholder="Batch e.g. RTL0623" autocomplete="off" spellcheck="false" maxlength="12">
-    <span class="lister-label" style="margin-left:4px">Abribook Page</span>
+    <span class="lister-label" style="margin-left:4px" title="Four doors into the same manifest queue — lettered because they are alternatives, not steps">Intake door</span>
     <select class="work-select" id="workPageSelect" title="Choose the active Abribook page">
-      <option value="bhai">🗣️ BhaiMode</option>
-      <option value="batch">Batch — RAM/Storage</option>
-      <option value="universal">Universal — Other Items</option>
-      <option value="blitzting">⚡ Blitzting</option>
+      <option value="bhai">A · BhaiMode — any item</option>
+      <option value="batch">B · Batch — RAM/storage codes</option>
+      <option value="universal">C · Universal — pick a category</option>
+      <option value="blitzting">D · Blitzting</option>
     </select>
     <div class="goal-wrap" title="Personal daily manifest goal">
       <span class="lister-label">Daily Goal</span>
@@ -5481,9 +5482,15 @@ const BUILTIN = {
     {code:'K8PC4R1X8', desc:'Kingston 8GB 1RX8 PC4-2400T-ED2-11 ECC Server Memory', rank:'1RX8', jedec:'PC4-2400T-ED2-11', ff:'RDIMM'},
     {code:'SKX4PC3RX8', desc:'Skynix 4GB 2RX8 PC3-10600U-9-11-B1 Desktop Memory', rank:'2RX8', jedec:'PC3-10600U-9-11-B1', ff:'UDIMM'},
     {code:'VD5EL', desc:'Vengeance RGB DDR5 Light Enhancement Kit (NO RAM)', rank:'CMHLEKIT-D5', jedec:'A919T61601LHM4', ff:'UDIMM'},
-  ]
+  ],
+  cpu:[],
+  psu:[],
+  mobo:[],
+  gpu:[],
+  srv:[]
 };
 let CUSTOM = {storage:[], ram:[]};
+function codeCategories(){ return Object.keys(BUILTIN); }
 let CATEGORY = 'storage';
 let logResultRam = '';
 const KEY='abribook:custom:v2';
@@ -5594,7 +5601,7 @@ function all(){
   (CUSTOM[CATEGORY]||[]).forEach(x=>map.set(x.code.toUpperCase(),x));
   return [...map.values()];
 }
-function allCategories(){ const map=new Map(); ["storage","ram"].forEach(cat=>{ (BUILTIN[cat]||[]).forEach(x=>map.set(x.code.toUpperCase(),x)); (CUSTOM[cat]||[]).forEach(x=>map.set(x.code.toUpperCase(),x)); }); return [...map.values()]; }
+function allCategories(){ const map=new Map(); codeCategories().forEach(cat=>{ (BUILTIN[cat]||[]).forEach(x=>map.set(x.code.toUpperCase(),x)); (CUSTOM[cat]||[]).forEach(x=>map.set(x.code.toUpperCase(),x)); }); return [...map.values()]; }
 function resolveCode(code){ const u=code.toUpperCase(); return allCategories().find(x=>x.code.toUpperCase()===u)||null; }
 function sizeOf(d){ const t=d.match(/\((\d+\s?TB)\)/i); if(t) return t[1].toUpperCase().replace(/\s/,''); const m=d.match(/(\d+(?:GB|TB))/i); return m?m[1].toUpperCase():''; }
 function esc(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
@@ -5721,7 +5728,7 @@ function exportAll(){
 }
 
 function currentResult(){ return CATEGORY==='ram' ? logResultRam : document.getElementById('logHealth').value.trim(); }
-function isBuiltinCode(code){ const u=code.toUpperCase(); return ["storage","ram"].some(cat=>(BUILTIN[cat]||[]).some(x=>x.code.toUpperCase()===u)); }
+function isBuiltinCode(code){ const u=code.toUpperCase(); return codeCategories().some(cat=>(BUILTIN[cat]||[]).some(x=>x.code.toUpperCase()===u)); }
 function codeDefLine(x){
   let s=x.code+' = '+x.desc; const extra=[];
   if(x.rank) extra.push('rank '+x.rank); if(x.jedec) extra.push('JEDEC '+x.jedec); if(x.ff) extra.push(x.ff);
@@ -5969,7 +5976,7 @@ function wanKnowledgeDedup(raw, formatted){
   const rawNorm = raw.toLowerCase().trim();
   const fmtNorm = formatted.toLowerCase().trim();
   // Check against BUILTIN
-  const allBuiltin = [...(BUILTIN.storage||[]), ...(BUILTIN.ram||[])];
+  const allBuiltin = codeCategories().flatMap(c=>BUILTIN[c]||[]);
   const builtinMatch = allBuiltin.find(x =>
     x.desc.toLowerCase() === fmtNorm ||
     (x.desc.toLowerCase().includes(fmtNorm)) ||
@@ -6472,7 +6479,7 @@ function wanRunRules(rawText, codeText){
   const lo = combined.toLowerCase();
 
   // ── Tier 1: BUILTIN exact/fuzzy match ────────────────────────
-  const allBuiltin = [...(BUILTIN.storage||[]), ...(BUILTIN.ram||[])];
+  const allBuiltin = codeCategories().flatMap(c=>BUILTIN[c]||[]);
 
   // First: check if codeText exactly matches a BUILTIN code
   if(codeText){
@@ -7105,7 +7112,7 @@ function skuAssignmentBlockHTML(e, idPrefix){
 
 // ── Abribook code registry counter ──────────────────────────────
 function abribookCodeCount(){
-  return (BUILTIN.storage||[]).length + (BUILTIN.ram||[]).length;
+  return codeCategories().reduce((n,c)=>n+(BUILTIN[c]||[]).length,0);
 }
 function updateAbribookCodeCounter(){
   const el = document.getElementById('abribookCodeCount');
@@ -7897,6 +7904,7 @@ function clearBhaiForm(){
   bhaiSetSkuMode('new');
   bhaiRefreshSkuPreview();
   bhaiUpdatePreview();
+  bhaiResetPriceAuto(); // new item = fresh auto-fill state
 }
 
 function bhaiStatusClass(e){ return e.desc ? 'high' : 'low'; }
@@ -7949,12 +7957,196 @@ if(document.getElementById('bhaiSuggestPrice')) document.getElementById('bhaiSug
   showPriceSuggestion(desc, null, 'bhaiPrice');
 });
 // Shovo Price Advisor — inline, live version of the same Pricing Memory lookup
-if(document.getElementById('bhaiDesc')) document.getElementById('bhaiDesc').addEventListener('blur', ()=>{
+// ── Auto price fill (added 2026-08-05) ───────────────────────────
+// Fires while typing the description and writes the price for you.
+// Three rules keep it from ever destroying your own work:
+//   1. It only writes into an EMPTY price field, or one it wrote itself.
+//   2. The moment you type in the price field by hand, it stops touching
+//      it for the rest of the entry — manual always wins.
+//   3. Low/No confidence never auto-fills; it only advises via the chip.
+let _bhaiPriceAuto = false;   // true = current value came from auto-fill
+let _bhaiPriceTouched = false; // true = Juan typed in the price field himself
+let _bhaiAutoTimer = null;
+const BHAI_AUTOFILL_MIN_CONF = ['High','Medium'];
+
+function bhaiAutoPrice(){
+  const priceEl = document.getElementById('bhaiPrice');
+  const descEl  = document.getElementById('bhaiDesc');
+  if(!priceEl || !descEl) return;
+  const desc = descEl.value.trim();
+
+  if(!desc){
+    if(_bhaiPriceAuto){ priceEl.value=''; priceEl.classList.remove('auto-priced'); _bhaiPriceAuto=false; }
+    shovoClearPriceChip('bhaiShovoPriceChip');
+    return;
+  }
+
+  const canWrite = !_bhaiPriceTouched && (!priceEl.value.trim() || _bhaiPriceAuto);
+  if(canWrite){
+    const s = suggestPriceFor(desc, null);
+    if(s.price && BHAI_AUTOFILL_MIN_CONF.includes(s.confidence)){
+      priceEl.value = s.price.toFixed(2);
+      priceEl.classList.add('auto-priced');
+      _bhaiPriceAuto = true;
+      if(typeof bhaiRefreshSkuPreview==='function') bhaiRefreshSkuPreview();
+      shovoRenderPriceChip('bhaiShovoPriceChip','suggest',
+        '<span class="chip-icon">\u26a1</span><span>Auto-filled $'+s.price.toFixed(2)+
+        ' ('+s.confidence+' confidence) \u2014 '+esc(s.basis)+'. Type over it to override.</span>');
+      return;
+    }
+    if(_bhaiPriceAuto){ priceEl.value=''; priceEl.classList.remove('auto-priced'); _bhaiPriceAuto=false; }
+  }
   shovoAdvisePrice('bhaiDesc', null, 'bhaiPrice', 'bhaiShovoPriceChip');
-});
-if(document.getElementById('bhaiPrice')) document.getElementById('bhaiPrice').addEventListener('blur', ()=>{
-  shovoAdvisePrice('bhaiDesc', null, 'bhaiPrice', 'bhaiShovoPriceChip');
-});
+}
+
+// ── Live eBay comp fallback (added 2026-08-05) ───────────────────
+// Pricing Memory only knows parts you've already sold. When it has no
+// match, this asks the extension for live sold comps and prices off
+// those instead — same CHECK_EBAY_LIVE call and same NexusSpec.filterComps
+// the Pricing Lab uses, so a component priced here matches what the Lab
+// would say for the same query.
+//
+// Deliberately NOT on every keystroke: the extension opens a background
+// eBay tab and can take ~25-30s. It fires on blur only, once per
+// description, and never while a previous check is still running.
+let _bhaiEbayInFlight = false;
+let _bhaiEbayLastQuery = '';
+
+function bhaiRetailRound(n){ return Math.max(.99, Math.round(n) - .01); }
+
+function bhaiCompPrice(prices){
+  if(!prices || !prices.length) return null;
+  const p = prices.slice().sort((a,b)=>a-b);
+  const mid = Math.floor(p.length/2);
+  const median = p.length%2 ? p[mid] : (p[mid-1]+p[mid])/2;
+  const avg = p.reduce((a,b)=>a+b,0)/p.length;
+  return bhaiRetailRound((median+avg)/2);   // same math as the Pricing Lab
+}
+
+async function bhaiEbayFallback(){
+  const descEl = document.getElementById('bhaiDesc');
+  const priceEl = document.getElementById('bhaiPrice');
+  if(!descEl || !priceEl) return;
+  const q = descEl.value.trim();
+
+  if(!q || _bhaiEbayInFlight) return;
+  if(_bhaiPriceTouched) return;                       // manual price always wins
+  if(priceEl.value.trim() && !_bhaiPriceAuto) return; // don't clobber an existing value
+  if(q === _bhaiEbayLastQuery) return;                // already checked this exact text
+
+  _bhaiEbayInFlight = true;
+  _bhaiEbayLastQuery = q;
+
+  const write = (price, label)=>{
+    if(_bhaiPriceTouched) return false;   // typed while we waited — his value stands
+    priceEl.value = price.toFixed(2);
+    priceEl.classList.add('auto-priced');
+    _bhaiPriceAuto = true;
+    if(typeof bhaiRefreshSkuPreview==='function') bhaiRefreshSkuPreview();
+    shovoRenderPriceChip('bhaiShovoPriceChip','suggest',
+      '<span class="chip-icon">\ud83d\udd0d</span><span>$'+price.toFixed(2)+' \u2014 '+label+'. Type over it to override.</span>');
+    return true;
+  };
+
+  try{
+    // ── Layer 1: comps already pulled for a similar item ──────────
+    // The Lab caches every live pull in live_sold_prices. Reuse it so the
+    // same Xeon never costs 30s twice.
+    if(typeof window.searchLiveSoldPrices==='function'){
+      const cached = await window.searchLiveSoldPrices(q);
+      if(cached && cached.length >= 3){
+        const p = bhaiCompPrice(cached.map(c=>c.price));
+        if(p){ write(p, cached.length+' cached sold comp(s) from an earlier live pull'); return; }
+      }
+    }
+
+    // ── Layer 2: fresh scrape through the extension ───────────────
+    if(typeof window.nexusAskExtension !== 'function'){
+      shovoRenderPriceChip('bhaiShovoPriceChip','flag',
+        '<span class="chip-icon">\u26a0\ufe0f</span><span>No cached comps and the browser extension isn\'t available \u2014 price it yourself.</span>');
+      return;
+    }
+    shovoRenderPriceChip('bhaiShovoPriceChip','suggest',
+      '<span class="chip-icon">\u23f3</span><span>No match in Pricing Memory or cached comps \u2014 checking live eBay sold listings. Opens a background tab, ~30s.</span>');
+
+    const condId = (typeof window.nexusGuessConditionKey==='function' && window.NEXUS_CONDITION_IDS)
+      ? (window.NEXUS_CONDITION_IDS[window.nexusGuessConditionKey(q)] || null) : null;
+    const res = await window.nexusAskExtension('CHECK_EBAY_LIVE', {query:q, conditionId:condId}, 32000);
+
+    if(!res || !res.ok){
+      shovoRenderPriceChip('bhaiShovoPriceChip','flag',
+        '<span class="chip-icon">\u26a0\ufe0f</span><span>Live eBay check failed: '+esc(res&&res.error?res.error:'no response')+'. Price it yourself.</span>');
+      return;
+    }
+
+    // Raw scrape must pass the spec engine first — unfiltered comps are how
+    // a CPU gets priced off a lot of 4 or a board+CPU bundle.
+    if(typeof NexusSpec==='undefined' || !NexusSpec.filterComps){
+      shovoRenderPriceChip('bhaiShovoPriceChip','flag',
+        '<span class="chip-icon">\u26a0\ufe0f</span><span>Spec filter unavailable \u2014 refusing to price off unfiltered comps. Use the Pricing Lab.</span>');
+      return;
+    }
+    const bd = NexusSpec.filterComps(q, res.listings||[]);
+    if(bd.prices && bd.prices.length) await (window.saveLiveSoldPrices||(()=>Promise.resolve()))(q, bd.prices);
+
+    const price = bhaiCompPrice(bd.prices);
+    const conf = bd.confidence || {level:'low', label:'Low confidence', detail:''};
+    const dropped = (bd.pulled||0) - (bd.used||0);
+
+    if(!price){
+      shovoRenderPriceChip('bhaiShovoPriceChip','flag',
+        '<span class="chip-icon">\u26a0\ufe0f</span><span>Pulled '+(bd.pulled||0)+' sold listing(s), none matched this item after filtering. Price it yourself.</span>');
+      return;
+    }
+
+    // Same guard the Lab added after eight docking stations read "High
+    // confidence": a number backed by weak matches gets shown, never written.
+    if(conf.level === 'low'){
+      shovoRenderPriceChip('bhaiShovoPriceChip','flag',
+        '<span class="chip-icon">\ud83d\udea9</span><span>Live comps suggest ~$'+price.toFixed(2)+
+        ' but only at '+conf.label.toLowerCase()+' ('+esc(conf.detail||'')+')'+
+        (dropped>0?', '+dropped+' filtered out':'')+' \u2014 not auto-filled. Check it in the Pricing Lab.</span>');
+      return;
+    }
+
+    write(price, (bd.used||bd.prices.length)+' live eBay sold comp(s), '+conf.label.toLowerCase()+
+      (dropped>0?', '+dropped+' filtered out':'')+' \u2014 median/average blend');
+  }catch(err){
+    shovoRenderPriceChip('bhaiShovoPriceChip','flag',
+      '<span class="chip-icon">\u26a0\ufe0f</span><span>Live eBay check errored: '+esc(err.message||String(err))+'</span>');
+  }finally{
+    _bhaiEbayInFlight = false;
+  }
+}
+
+function bhaiResetPriceAuto(){
+  _bhaiPriceAuto=false; _bhaiPriceTouched=false; _bhaiAutoTimer=null; _bhaiEbayLastQuery='';
+  document.getElementById('bhaiPrice')?.classList.remove('auto-priced');
+}
+
+if(document.getElementById('bhaiDesc')){
+  document.getElementById('bhaiDesc').addEventListener('input', ()=>{
+    clearTimeout(_bhaiAutoTimer);
+    _bhaiAutoTimer = setTimeout(bhaiAutoPrice, 450);
+  });
+  document.getElementById('bhaiDesc').addEventListener('blur', ()=>{
+    clearTimeout(_bhaiAutoTimer);
+    bhaiAutoPrice();
+    // Local lookup runs first and is instant. Only reach for the network
+    // when it came back with nothing — repeat parts never pay the wait.
+    const pEl = document.getElementById('bhaiPrice');
+    if(pEl && !pEl.value.trim() && !_bhaiPriceTouched) bhaiEbayFallback();
+  });
+}
+if(document.getElementById('bhaiPrice')){
+  document.getElementById('bhaiPrice').addEventListener('input', ()=>{
+    _bhaiPriceTouched = true; _bhaiPriceAuto = false;
+    document.getElementById('bhaiPrice').classList.remove('auto-priced');
+  });
+  document.getElementById('bhaiPrice').addEventListener('blur', ()=>{
+    shovoAdvisePrice('bhaiDesc', null, 'bhaiPrice', 'bhaiShovoPriceChip');
+  });
+}
 if(document.getElementById('bhaiEbayLookup')) document.getElementById('bhaiEbayLookup').addEventListener('click', ()=>{
   const desc = document.getElementById('bhaiDesc')?.value.trim() || '';
   openEbaySoldSearch(desc);
@@ -16487,10 +16679,10 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
 
   <span class="tb-label">Page</span>
   <select id="tbWorkPage" class="tb-page-select">
-    <option value="bhai">🗣️ BhaiMode</option>
-    <option value="batch">📋 Batch — RAM/Storage</option>
-    <option value="universal">📱 Universal</option>
-    <option value="blitzting">⚡ Blitzting</option>
+    <option value="bhai">A · BhaiMode</option>
+    <option value="batch">B · Batch</option>
+    <option value="universal">C · Universal</option>
+    <option value="blitzting">D · Blitzting</option>
   </select>
 
   <div class="tb-sep"></div>
@@ -19209,6 +19401,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-module:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--mod-color),transparent 55%);background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));box-shadow:0 18px 50px rgba(0,0,0,.22)}
   .nexus-module-icon{font-size:24px;margin-bottom:26px}.nexus-module h2{font-size:16px;margin:0 0 7px;letter-spacing:-.025em}.nexus-module p{font-size:12px;line-height:1.5;color:var(--nexus-soft);margin:0;max-width:260px}
   .nexus-module-foot{position:absolute;right:18px;top:18px;font:700 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mod-color)}
+
   .nexus-home-actions{display:flex;gap:9px;margin-top:18px}.nexus-quiet-btn{border:1px solid var(--nexus-line);background:rgba(255,255,255,.035);color:var(--nexus-soft);border-radius:999px;padding:9px 14px;font:650 11px var(--sans);cursor:pointer}.nexus-quiet-btn:hover{color:#fff;border-color:rgba(255,255,255,.2)}
   .nexus-shipping{position:fixed;inset:0;z-index:10020;background:var(--nexus-bg);color:var(--nexus-text);display:none;flex-direction:column}.nexus-shipping.show{display:flex}
   .nexus-ship-head{display:flex;align-items:center;gap:13px;padding:18px 24px;border-bottom:1px solid var(--nexus-line);background:#0c111b}.nexus-ship-head h2{margin:0;font-size:16px;flex:1}.nexus-back{border:1px solid var(--nexus-line);border-radius:10px;background:transparent;color:var(--nexus-soft);padding:9px 13px;cursor:pointer}
@@ -20886,6 +21079,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   }
   // Reads back logged price_snapshot events (written by every calculatePricing() run)
   // to show whether Nexus's own price checks for similar items have moved over time.
+  window.saveLiveSoldPrices=saveLiveSoldPrices;
+  window.searchLiveSoldPrices=searchLiveSoldPrices;
   function loadEventsByType(type){
     return openDb().then(function(db){
       return new Promise(function(resolve){
@@ -23331,6 +23526,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     if(/\bused\b/.test(t))return 'used';
     return '';
   }
+  window.NEXUS_CONDITION_IDS=NEXUS_CONDITION_IDS;
+  window.nexusGuessConditionKey=nexusGuessConditionKey;
   function nexusResolveConditionId(){
     var sel=document.getElementById('nexusConditionFilter');
     var key=sel?sel.value:'';
