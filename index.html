@@ -8023,6 +8023,59 @@ function bhaiCompPrice(prices){
   return bhaiRetailRound((median+avg)/2);   // same math as the Pricing Lab
 }
 
+// ── Search-query extraction (added 2026-08-05) ───────────────────
+// The description is prose — serial numbers, inspection notes, bin codes.
+// Sending it verbatim to eBay is what priced a WD1003FZEX at $624.99: the
+// serial guarantees zero exact matches, eBay falls back to loose matching
+// and returns anything, then filterComps grades those against the same
+// polluted string. The Pricing Lab never hits this because it has a
+// separate clean query box. This builds that clean query automatically.
+//
+// Keeps: brand, capacity, and any part-number-shaped token (WD1003FZEX,
+// SR1A8, CT2000P5PSSD8). Drops: serials, prose, condition wording.
+const BHAI_Q_BRANDS = ['western digital','wd','seagate','samsung','crucial','kingston','intel',
+  'micron','toshiba','hitachi','hgst','sandisk','corsair','amd','nvidia','asus','msi','gigabyte',
+  'evga','dell','hp','lenovo','supermicro','skhynix','sk hynix','hynix','adata','pny','lexar','axiom'];
+
+function bhaiStripNoise(text){
+  return String(text||'')
+    // serial number, however it's labelled — the single worst token to search
+    .replace(/\b(?:serial\s*(?:number|no\.?|#)?|s\/n|sn)\s*[:#]?\s*[A-Za-z0-9-]{6,}/gi,' ')
+    .replace(/\b(?:untested|tested|no issues noted|at time of inspection|inspection|pulled from|working|pull)\b/gi,' ')
+    .replace(/\b(?:bin|shelf|rack)\s*\d+\b/gi,' ')
+    .replace(/\bB\d+\/BIN\d+\b/gi,' ')
+    .replace(/[,;]+/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+
+function bhaiBuildSearchQuery(desc){
+  const cleaned = bhaiStripNoise(desc);
+  const low = cleaned.toLowerCase();
+  const parts = [];
+
+  const brand = BHAI_Q_BRANDS.find(b => new RegExp('\\b'+b.replace(/ /g,'\\s')+'\\b').test(low));
+  if(brand) parts.push(brand === 'wd' ? 'WD' : brand.replace(/\b\w/g,c=>c.toUpperCase()));
+
+  const cap = cleaned.match(/\b\d+(?:\.\d+)?\s*(?:TB|GB)\b/i);
+  if(cap) parts.push(cap[0].replace(/\s+/g,'').toUpperCase());
+
+  // Part-number-shaped: mixed letters+digits, 5+ chars, not a pure capacity
+  const seen = new Set(parts.map(p=>p.toLowerCase()));
+  cleaned.split(/[\s\/]+/).forEach(tok=>{
+    const t = tok.replace(/[^A-Za-z0-9-]/g,'');
+    if(t.length < 5 || t.length > 20) return;
+    if(!/[A-Za-z]/.test(t) || !/[0-9]/.test(t)) return;
+    if(/^\d+(?:\.\d+)?(?:tb|gb|mb)$/i.test(t)) return;
+    if(seen.has(t.toLowerCase())) return;
+    seen.add(t.toLowerCase());
+    parts.push(t.toUpperCase());
+  });
+
+  const q = parts.join(' ').trim();
+  // Nothing identifying survived — better to search nothing than search prose
+  return (q && /[0-9]/.test(q)) ? q : '';
+}
+
 async function bhaiEbayFallback(){
   const descEl = document.getElementById('bhaiDesc');
   const priceEl = document.getElementById('bhaiPrice');
@@ -8033,6 +8086,13 @@ async function bhaiEbayFallback(){
   if(_bhaiPriceTouched) return;                       // manual price always wins
   if(priceEl.value.trim() && !_bhaiPriceAuto) return; // don't clobber an existing value
   if(q === _bhaiEbayLastQuery) return;                // already checked this exact text
+
+  const searchQ = bhaiBuildSearchQuery(q);
+  if(!searchQ){
+    shovoRenderPriceChip('bhaiShovoPriceChip','flag',
+      '<span class="chip-icon">\u26a0\ufe0f</span><span>Couldn\'t pull a brand/model/part number out of this description \u2014 not searching eBay on prose. Price it yourself or add the model number.</span>');
+    return;
+  }
 
   _bhaiEbayInFlight = true;
   _bhaiEbayLastQuery = q;
@@ -8049,18 +8109,17 @@ async function bhaiEbayFallback(){
   };
 
   try{
-    // ── Layer 1: comps already pulled for a similar item ──────────
-    // The Lab caches every live pull in live_sold_prices. Reuse it so the
-    // same Xeon never costs 30s twice.
-    if(typeof window.searchLiveSoldPrices==='function'){
-      const cached = await window.searchLiveSoldPrices(q);
-      if(cached && cached.length >= 3){
-        const p = bhaiCompPrice(cached.map(c=>c.price));
-        if(p){ write(p, cached.length+' cached sold comp(s) from an earlier live pull'); return; }
-      }
-    }
-
-    // ── Layer 2: fresh scrape through the extension ───────────────
+    // ── Live scrape through the extension ─────────────────────────
+    // NOTE: an earlier version checked the live_sold_prices cache first to
+    // skip this 30s wait. That was removed 2026-08-05 after it priced a 1TB
+    // HDD at $624.99. searchLiveSoldPrices() matches on trainingScore — the
+    // share of query tokens present in the record — with no spec awareness,
+    // so "1tb hard drive" matched a cached Micron 7450 enterprise pull.
+    // Crucially, saveLiveSoldPrices() stores {query, tokens, price} and NO
+    // title, so those comps can't be run through NexusSpec.filterComps and
+    // therefore can't be graded at all. This is the same drift the Lab
+    // documented on steerRecommendation ($350 on a $150 item). Only comps
+    // that have passed the spec filter are allowed to set a price here.
     if(typeof window.nexusAskExtension !== 'function'){
       shovoRenderPriceChip('bhaiShovoPriceChip','flag',
         '<span class="chip-icon">\u26a0\ufe0f</span><span>No cached comps and the browser extension isn\'t available \u2014 price it yourself.</span>');
@@ -8071,7 +8130,7 @@ async function bhaiEbayFallback(){
 
     const condId = (typeof window.nexusGuessConditionKey==='function' && window.NEXUS_CONDITION_IDS)
       ? (window.NEXUS_CONDITION_IDS[window.nexusGuessConditionKey(q)] || null) : null;
-    const res = await window.nexusAskExtension('CHECK_EBAY_LIVE', {query:q, conditionId:condId}, 32000);
+    const res = await window.nexusAskExtension('CHECK_EBAY_LIVE', {query:searchQ, conditionId:condId}, 32000);
 
     if(!res || !res.ok){
       shovoRenderPriceChip('bhaiShovoPriceChip','flag',
@@ -8086,8 +8145,8 @@ async function bhaiEbayFallback(){
         '<span class="chip-icon">\u26a0\ufe0f</span><span>Spec filter unavailable \u2014 refusing to price off unfiltered comps. Use the Pricing Lab.</span>');
       return;
     }
-    const bd = NexusSpec.filterComps(q, res.listings||[]);
-    if(bd.prices && bd.prices.length) await (window.saveLiveSoldPrices||(()=>Promise.resolve()))(q, bd.prices);
+    const bd = NexusSpec.filterComps(searchQ, res.listings||[]);
+    if(bd.prices && bd.prices.length) await (window.saveLiveSoldPrices||(()=>Promise.resolve()))(searchQ, bd.prices);
 
     const price = bhaiCompPrice(bd.prices);
     const conf = bd.confidence || {level:'low', label:'Low confidence', detail:''};
@@ -8110,7 +8169,7 @@ async function bhaiEbayFallback(){
     }
 
     write(price, (bd.used||bd.prices.length)+' live eBay sold comp(s), '+conf.label.toLowerCase()+
-      (dropped>0?', '+dropped+' filtered out':'')+' \u2014 median/average blend');
+      (dropped>0?', '+dropped+' filtered out':'')+' \u2014 median/average blend, searched as "'+esc(searchQ)+'"');
   }catch(err){
     shovoRenderPriceChip('bhaiShovoPriceChip','flag',
       '<span class="chip-icon">\u26a0\ufe0f</span><span>Live eBay check errored: '+esc(err.message||String(err))+'</span>');
