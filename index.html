@@ -19623,6 +19623,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-oq-sku.nexus-sku-copy.copied{background:rgba(50,214,197,.35)!important;border-color:var(--nexus-cyan)!important;color:#fff!important}
   .nexus-oq-combined-badge{font:700 10px var(--sans);color:#fbbf24;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.35);border-radius:999px;padding:2px 8px}
   .nexus-oq-card.nexus-oq-combined{border-left:3px solid #fbbf24}
+  .nexus-undo-toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,14px);z-index:10600;display:flex;align-items:center;gap:14px;background:#0b1019;border:1px solid var(--nexus-line);border-radius:12px;padding:11px 14px;color:#e6edf7;font:500 13px var(--sans);box-shadow:0 10px 34px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
+  .nexus-undo-toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+  .nexus-undo-toast button{background:none;border:1px solid var(--nexus-cyan);color:var(--nexus-cyan);border-radius:8px;padding:5px 12px;font:600 12px var(--sans);cursor:pointer}
+  .nexus-undo-toast button:hover{background:rgba(50,214,197,.14)}
   .nexus-oq-item-row{display:flex;align-items:center;gap:6px;margin:2px 0;flex-wrap:wrap}
   .nexus-oq-qty{font:700 10px var(--mono);color:var(--nexus-soft)}
   .nexus-oq-value{font:700 11px var(--mono);color:var(--nexus-gold);flex:none}
@@ -19756,7 +19760,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Nexus Shipping Station</h2><button class="nexus-newsession" id="nexusNewSession" title="Clear Incoming, Packed, and the label PDF to start a fresh batch">↻ New packing session</button><button class="nexus-back" id="nexusShipBack">← Command</button></div>
   <div class="nexus-sku-find" id="nexusSkuFind">
     <span class="nexus-sku-find-icon">⌕</span>
-    <input class="nexus-sku-find-input" id="nexusSkuFindInput" placeholder="Find SKU in Incoming / Packed…" autocomplete="off">
+    <input class="nexus-sku-find-input" id="nexusSkuFindInput" placeholder="Find SKU, buyer name, or order # …" autocomplete="off">
     <span class="nexus-sku-find-count" id="nexusSkuFindCount"></span>
     <button class="nexus-sku-find-close" id="nexusSkuFindClose" title="Close (Esc)">✕</button>
   </div>
@@ -22750,9 +22754,20 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   // scan-queue, the loaded label PDF and its match results) so the next
   // batch starts clean. Leaves the connected eBay working page URL alone —
   // that's still valid if you're continuing on the same tab.
-  function resetPackingSession(){
+  // Holds the last session so an automatic reset is always undoable. The
+  // manual path never used one because a human had just confirmed a dialog;
+  // an automatic wipe has no such moment, so it needs a way back.
+  var _lastSessionSnapshot=null;
+
+  function resetPackingSession(opts){
+    opts=opts||{};
     var total=pulledOrders.length+packedOrders.length+packQueue.length;
-    if(total>0 && !confirm('Start a new packing session? This clears '+pulledOrders.length+' incoming, '+packedOrders.length+' packed, and '+packQueue.length+' scanned shipment'+(packQueue.length===1?'':'s')+' — plus the loaded label PDF. The connected eBay page stays connected.')) return;
+    if(!opts.silent && total>0 && !confirm('Start a new packing session? This clears '+pulledOrders.length+' incoming, '+packedOrders.length+' packed, and '+packQueue.length+' scanned shipment'+(packQueue.length===1?'':'s')+' — plus the loaded label PDF. The connected eBay page stays connected.')) return;
+
+    _lastSessionSnapshot=total>0?{
+      pulled:pulledOrders.slice(), packed:packedOrders.slice(), queue:packQueue.slice(),
+      at:Date.now()
+    }:null;
 
     pulledOrders=[];packedOrders=[];packQueue=[];
     selectedOrder=null;selectedBox=null;
@@ -22786,6 +22801,22 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
 
     document.getElementById('nexusPrefillStatus').textContent='Select a matched SKU and a package. Weight is optional.';
     document.getElementById('nexusConnectStatus').textContent='New session started. The connected eBay page is still active — pull orders again when ready.';
+  }
+  function undoSessionReset(){
+    if(!_lastSessionSnapshot)return;
+    pulledOrders=_lastSessionSnapshot.pulled.slice();
+    packedOrders=_lastSessionSnapshot.packed.slice();
+    packQueue=_lastSessionSnapshot.queue.slice();
+    putSetting('shipping_pulled_orders',pulledOrders);
+    putSetting('shipping_packed_orders',packedOrders);
+    putSetting('shipping_pack_queue',packQueue);
+    renderOrderQueue();
+    renderQueue();
+    var keys=document.getElementById('nexusLabelKeys');
+    if(keys)keys.value=packQueue.map(labelKeyForShipment).join('\n');
+    _lastSessionSnapshot=null;
+    document.getElementById('nexusConnectStatus').textContent='Session restored — '+pulledOrders.length+' incoming, '+packedOrders.length+' packed, '+packQueue.length+' scanned. The label PDF still needs reloading.';
+    toast('Packing session restored');
   }
   function labelKeyForShipment(q){
     // Same priority as orderKeyForEntry: name + address match what's actually
@@ -23192,18 +23223,41 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   function clearSkuFindHighlights(){
     document.querySelectorAll('.nexus-oq-card.nexus-oq-found').forEach(function(c){c.classList.remove('nexus-oq-found')});
   }
+  // Searches SKU, buyer name, AND order number (2026-08-05). Two things
+  // worth knowing:
+  //  - querySelectorAll, not querySelector: a combined order renders one
+  //    .nexus-oq-sku PER item, so the old singular lookup silently searched
+  //    only the first SKU of a multi-item card and missed the rest.
+  //  - order numbers are matched digits-only as well as literally, so
+  //    "1499534518" finds "07-14995-34518" without typing the dashes.
+  function skuFindHaystack(card){
+    var parts=[];
+    card.querySelectorAll('.nexus-oq-sku').forEach(function(el){parts.push(el.textContent||'')});
+    var name=card.querySelector('.nexus-oq-name');
+    if(name)parts.push(name.textContent||'');
+    var addr=card.querySelector('.nexus-oq-addr');
+    if(addr)parts.push(addr.textContent||'');
+    var ord=card.querySelector('.nexus-oq-order');
+    if(ord)parts.push(ord.textContent||'');
+    var text=parts.join(' ').toLowerCase();
+    return {text:text, digits:text.replace(/[^0-9]/g,'')};
+  }
   function runSkuFind(){
-    var q=document.getElementById('nexusSkuFindInput').value.trim().toLowerCase();
+    var raw=document.getElementById('nexusSkuFindInput').value.trim();
+    var q=raw.toLowerCase();
     clearSkuFindHighlights();
     _skuFindMatchIdx=-1;
     var countEl=document.getElementById('nexusSkuFindCount');
     if(!q){countEl.textContent='';return}
+    var qDigits=q.replace(/[^0-9]/g,'');
     var cards=document.querySelectorAll('#nexusOrderQueue .nexus-oq-card, #nexusPackedQueue .nexus-oq-card');
     var matches=[];
     cards.forEach(function(c){
-      var skuEl=c.querySelector('.nexus-oq-sku');
-      var sku=(skuEl?skuEl.textContent:'').toLowerCase();
-      if(sku.indexOf(q)!==-1){c.classList.add('nexus-oq-found');matches.push(c)}
+      var h=skuFindHaystack(c);
+      var hit=h.text.indexOf(q)!==-1;
+      // digit-only fallback needs 4+ digits or "1" would match every card
+      if(!hit&&qDigits.length>=4&&h.digits.indexOf(qDigits)!==-1)hit=true;
+      if(hit){c.classList.add('nexus-oq-found');matches.push(c)}
     });
     countEl.textContent=matches.length?matches.length+' match'+(matches.length===1?'':'es')+' · Enter to jump':'No match';
     if(matches.length){_skuFindMatchIdx=0;matches[0].scrollIntoView({behavior:'smooth',block:'center'})}
@@ -23745,6 +23799,31 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     a.href=url;a.download='SYG-Labels-'+date+'-Pack-Order.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1500);
     document.getElementById('nexusLabelStatus').textContent='Sorted PDF downloaded · '+ordered.length+' pages · original label content preserved.';
     nexusEvent('sorted_label_pdf_created',null,{pages:ordered.length,sequence:ordered.map(function(x){return x+1})});
+
+    // Downloading the sorted PDF IS the end of a packing session — labels are
+    // printed in pack order and there is nothing further to do with this set.
+    // Leaving stale orders behind is what corrupts the next session, so reset
+    // automatically instead of relying on anyone remembering. Runs only after
+    // a successful save (an exception above returns before reaching here), and
+    // the previous session is snapshotted so Undo is always available.
+    var packedCount=packedOrders.length, queuedCount=packQueue.length;
+    resetPackingSession({silent:true});
+    document.getElementById('nexusLabelStatus').textContent=
+      'Sorted PDF downloaded · '+ordered.length+' pages · session cleared automatically ('+
+      packedCount+' packed, '+queuedCount+' scanned).';
+    toastUndoReset(packedCount,queuedCount);
+  }
+  function toastUndoReset(packedCount,queuedCount){
+    var t=document.createElement('div');
+    t.className='nexus-undo-toast';
+    t.innerHTML='<span>Session cleared · '+packedCount+' packed, '+queuedCount+' scanned</span>'+
+                '<button type="button">Undo</button>';
+    document.body.appendChild(t);
+    var gone=false;
+    function close(){ if(gone)return; gone=true; t.classList.remove('show'); setTimeout(function(){t.remove()},250); }
+    t.querySelector('button').onclick=function(){undoSessionReset();close()};
+    requestAnimationFrame(function(){t.classList.add('show')});
+    setTimeout(close,12000);
   }
   function updateAboutNexus(){
     var back=document.getElementById('aboutBackdrop');if(!back)return;
@@ -23786,7 +23865,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   function init(){
     buildHome();initFloorPlan();buildBoxes();installAuditHooks();openDb();initSupplies();bindSupplies();updateAboutNexus();redesignHaz();
     document.getElementById('nexusShipBack').onclick=function(){document.getElementById('nexusShipping').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
-    document.getElementById('nexusNewSession').onclick=resetPackingSession;
+    document.getElementById('nexusNewSession').onclick=function(){resetPackingSession()};
     document.getElementById('nexusSkuFindInput').addEventListener('input',runSkuFind);
     document.getElementById('nexusSkuFindInput').addEventListener('keydown',function(e){
       if(e.key==='Escape'){e.preventDefault();closeSkuFind()}
