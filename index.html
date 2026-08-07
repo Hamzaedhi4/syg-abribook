@@ -4293,7 +4293,7 @@
       <option value="P">Paul (P)</option>
     </select>
     <input class="lister-batch" id="listerBatch" value="RTL" placeholder="Batch e.g. RTL0623" autocomplete="off" spellcheck="false" maxlength="12">
-    <span class="nexus-build" id="nexusBuild" title="Build stamp — if this does not match the file you just deployed, you are looking at a cached or stale copy">b0808.1</span>
+    <span class="nexus-build" id="nexusBuild" title="Build stamp — if this does not match the file you just deployed, you are looking at a cached or stale copy">b0808.3</span>
     <span class="lister-label" style="margin-left:4px" title="Four doors into the same manifest queue — lettered because they are alternatives, not steps">Intake door</span>
     <select class="work-select" id="workPageSelect" title="Choose the active Abribook page">
       <option value="bhai">A · BhaiMode — any item</option>
@@ -5316,7 +5316,7 @@
       <span class="wb-pre on" data-wb-layout="blitz">Component blitz</span>
       <span class="wb-pre" data-wb-layout="value">High value</span>
       <span class="wb-pre" data-wb-layout="audit">Audit</span>
-      <span class="wb-keys">⇧F find · ⌘↵ add</span>
+      <span class="wb-keys">⇧F find · ⇧↵ add</span>
       <button class="wb-prompt-btn" id="wbPromptBtn" type="button">Manifest prompt</button>
     </div>
   </div>
@@ -8375,8 +8375,18 @@ function wanRenderResolved(){
   var raw=descEl.value.trim();
   if(!raw){ box.hidden=true; var sb=document.getElementById('wanSays'); if(sb) sb.hidden=true; return }
 
+  // BUG (found 2026-08-07): registry lookup used to run on `q`, the eBay
+  // SEARCH query built by bhaiBuildSearchQuery — which has its own 5-char
+  // minimum tuned for what's worth searching on eBay. That's the right rule
+  // for eBay, but it silently blocked short registry codes (e.g. C1P, 3
+  // chars) from ever reaching wanRegistryLook, which has its own, more
+  // permissive 3-char threshold that never got a chance to run. Registry
+  // lookup now runs on the RAW text directly — a local lookup shouldn't be
+  // gated by a filter designed for a different, external search.
   var q = (typeof bhaiBuildSearchQuery==='function') ? bhaiBuildSearchQuery(raw) : '';
-  if(!q){
+  var reg=wanRegistryLook(raw);
+
+  if(!q && reg.state==='none'){
     box.hidden=false;
     wanPaint('Src','');
     wanPaint('Id','Nothing identifying yet');
@@ -8386,8 +8396,7 @@ function wanRenderResolved(){
     wanPaintHtml('Drives','');
     return;
   }
-
-  var reg=wanRegistryLook(q);
+  box.hidden=false;
   var pm=(typeof suggestPriceFor==='function')?suggestPriceFor(raw,null):{price:null,confidence:'None',basis:''};
 
   var id, sub, bars, cls, lab, why;
@@ -8402,8 +8411,7 @@ function wanRenderResolved(){
     bars=3; cls='med'; lab='Unknown part'; why='priced from comps only';
   }
 
-  box.hidden=false;
-  wanPaint('Src','searched as \u201c'+q+'\u201d');
+  wanPaint('Src', q ? ('searched as \u201c'+q+'\u201d') : 'too short for an eBay search \u2014 registry only');
   wanPaint('Id',id);
   wanPaint('Sub',sub);
   wanPaintHtml('Conf', wanBars(bars,cls)+
@@ -8566,6 +8574,21 @@ function wanBoardWireHeader(){
   });
 }
 wanBoardWireHeader();
+
+// Shift+Enter confirms the current entry and sends it to the queue — same
+// action as clicking Add. Bound once, globally, but gated on two things so
+// it can never fire outside the board or eat a normal newline: the board
+// must be the active page, AND focus must be inside the description
+// textarea specifically (not the SKU modal, not some other field, where
+// Shift+Enter should keep doing whatever it normally does).
+document.addEventListener('keydown', function(e){
+  if(e.key!=='Enter' || !e.shiftKey) return;
+  if(CURRENT_WORK_PAGE!=='wanboard') return;
+  if(document.activeElement!==document.getElementById('bhaiDesc')) return;
+  e.preventDefault();
+  var addBtn=document.getElementById('bhaiAddEntry');
+  if(addBtn && !addBtn.disabled) addBtn.click();
+});
 
 function wanBoardTakeComposer(){
   var slot=document.getElementById('wbComposer');
@@ -17495,7 +17518,7 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
 
   <div class="tb-sep"></div>
 
-  <span class="nexus-build" id="tbBuild" title="Build stamp — if this is missing or wrong, you are running a stale file">b0808.1</span>
+  <span class="nexus-build" id="tbBuild" title="Build stamp — if this is missing or wrong, you are running a stale file">b0808.3</span>
 
   <span class="tb-label">Page</span>
   <select id="tbWorkPage" class="tb-page-select">
