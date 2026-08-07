@@ -55,6 +55,76 @@
   .bhai-action-badge.create{color:#0E7490; background:#CFFAFE; border:1px solid #A5F3FC;}
   .bhai-action-badge.edit{color:#9A3412; background:#FFEDD5; border:1px solid #FED7AA;}
   .dp-input.auto-priced{border-color:#34d399; background:rgba(52,211,153,.07);}
+  .wan-resolved{margin-top:10px;background:#0f1218;border:1px solid #232c3a;border-radius:10px;padding:12px 14px}
+  .wan-resolved[hidden]{display:none}
+  .wr-head{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .wr-dot{width:6px;height:6px;border-radius:50%;background:#32d6c5;flex-shrink:0}
+  .wr-title{font:700 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#6b7688}
+  .wr-src{margin-left:auto;font:500 10px var(--mono);color:#5c6675;text-align:right;max-width:62%;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wr-id{font:600 17px var(--sans);color:#e8eef7;line-height:1.25}
+  .wr-sub{font:500 11px var(--mono);color:#32d6c5;margin-top:3px}
+  .wr-conf{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .wr-bars{display:flex;gap:2px}
+  .wr-bars i{width:18px;height:3px;border-radius:1px;background:#2a3341;display:block}
+  .wr-bars i.on{background:#32d6c5}
+  .wr-bars i.on.med{background:#e0a53a}
+  .wr-bars i.on.low{background:#8b949e}
+  .wr-lab{font:700 10px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:#32d6c5}
+  .wr-lab.med{color:#e0a53a} .wr-lab.low{color:#8b949e}
+  .wr-why{margin-left:auto;font:500 10px var(--mono);color:#5c6675}
+  .wr-drives{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;padding-top:10px;border-top:1px solid #1d2531}
+  .wr-d{background:#151b24;border:1px solid #232c3a;border-radius:6px;padding:6px 9px;min-width:88px}
+  .wr-d .k{font:600 9px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:#5c6675;margin-bottom:2px}
+  .wr-d .v{font:500 11px var(--mono);color:#dbe3ee}
+  .wr-d .v.g{color:#4ec06f}
+  .wr-d .v.w{color:#e0a53a}
+  .wan-says{margin-top:8px;background:#0f1218;border:1px solid #232c3a;border-radius:10px;padding:10px 13px}
+  .wan-says[hidden]{display:none}
+  .ws-head{margin-bottom:6px}
+  .ws-title{font:700 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#6b7688}
+  .ws-tip{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid #1d2531}
+  .ws-tip:last-child{border-bottom:none}
+  .ws-ic{width:14px;flex-shrink:0;font:700 11px var(--mono);text-align:center;line-height:1.5}
+  .ws-tip.warn .ws-ic{color:#e0a53a}
+  .ws-tip.good .ws-ic{color:#4ec06f}
+  .ws-tip.info .ws-ic{color:#5a9ef5}
+  .ws-bd{font:500 11px var(--sans);line-height:1.55;color:#9aa7b8}
+  .ws-bd b{color:#dbe3ee;font-weight:600}
+
+  /* ── Composer layout (added 2026-08-06, reworked) ───────────────
+     First attempt sized .uni-form to calc(100vh - 190px). That was wrong:
+     BhaiMode is mounted inside .wan-panel-body, an absolutely-positioned,
+     user-resizable board card with its own scroll — so a viewport-height
+     form just made a very tall page you scroll, and the composer never
+     looked pinned. Sticky is the right tool here: it needs no height chain
+     and adapts to whatever size the panel is dragged to. */
+  #bhaiPage .uni-form{display:flex;flex-direction:column;padding:14px 14px 0}
+  #bhaiPage .uni-form > *{flex-shrink:0}
+  #bhaiPage #bhaiActionBanner{order:1}
+  #bhaiPage #wanResolved{order:2}
+  #bhaiPage #wanSays{order:3}
+  #bhaiPage .uni-preview-shell{order:4}
+  #bhaiPage #bhaiFlags{order:5}
+  #bhaiPage .needs-research-box{order:6}
+  #bhaiPage #bhaiSkuAssignBox{order:7}
+  #bhaiPage .uni-policy-row{order:8}
+  #bhaiPage .wan-spacer{order:9;min-height:10px}
+
+  #bhaiPage .wan-composer{order:20;position:sticky;bottom:0;z-index:5;
+    margin:10px -14px 0;padding:11px 14px 12px;
+    background:#0d1117;border-top:1px solid #2c3746;
+    box-shadow:0 -10px 22px -12px rgba(0,0,0,.75)}
+  #bhaiPage .wan-composer .uni-desc-wrap{margin:0}
+  #bhaiPage .wan-composer .uni-main-textarea{min-height:96px;font-size:15px;
+    line-height:1.6;font-family:var(--mono);background:#0a0e14;border-color:#1f6b64}
+  #bhaiPage .wan-composer .uni-main-textarea:focus{border-color:#32d6c5;
+    box-shadow:0 0 0 3px rgba(50,214,197,.12)}
+  #bhaiPage .wan-composer .wan-price-row{margin:9px 0 0}
+  #bhaiPage .wan-composer #bhaiAddEntry{margin:9px 0 0}
+  #bhaiPage .wan-composer #bhaiSuggestPrice,
+  #bhaiPage .wan-composer #bhaiEbayLookup,
+  #bhaiPage .wan-composer #bhaiShovoPriceChip{margin-top:8px}
   .dp-rmv{margin-left:auto; background:none; border:none; color:var(--ink-faint); font-size:16px; cursor:pointer; padding:0 2px; line-height:1;
     border-radius:4px; transition:color .12s;}
   .dp-rmv:hover{color:var(--fail);}
@@ -4223,12 +4293,14 @@
       <option value="P">Paul (P)</option>
     </select>
     <input class="lister-batch" id="listerBatch" value="RTL" placeholder="Batch e.g. RTL0623" autocomplete="off" spellcheck="false" maxlength="12">
+    <span class="nexus-build" id="nexusBuild" title="Build stamp — if this does not match the file you just deployed, you are looking at a cached or stale copy">b0808.1</span>
     <span class="lister-label" style="margin-left:4px" title="Four doors into the same manifest queue — lettered because they are alternatives, not steps">Intake door</span>
     <select class="work-select" id="workPageSelect" title="Choose the active Abribook page">
       <option value="bhai">A · BhaiMode — any item</option>
       <option value="batch">B · Batch — RAM/storage codes</option>
       <option value="universal">C · Universal — pick a category</option>
       <option value="blitzting">D · Blitzting</option>
+      <option value="wanboard">E · Wan Board — new</option>
     </select>
     <div class="goal-wrap" title="Personal daily manifest goal">
       <span class="lister-label">Daily Goal</span>
@@ -5108,7 +5180,35 @@
             <div class="dp-preview sku-assign-preview" id="bhaiSkuAssignPreview">Fill in above to generate — SKU is optional, Shovo will flag missing ones before you copy the prompt</div>
           </details>
 
-          <div class="dp-row" style="margin-top:8px">
+          
+          
+          
+          
+
+          
+
+          <div class="wan-resolved" id="wanResolved" hidden>
+            <div class="wr-head">
+              <span class="wr-dot"></span>
+              <span class="wr-title">Resolved</span>
+              <span class="wr-src" id="wrSrc"></span>
+            </div>
+            <div class="wr-id" id="wrId"></div>
+            <div class="wr-sub" id="wrSub"></div>
+            <div class="wr-conf" id="wrConf"></div>
+            <div class="wr-drives" id="wrDrives"></div>
+          </div>
+
+          <div class="wan-spacer" aria-hidden="true"></div>
+
+          <div class="wan-composer">
+            <div class="uni-desc-wrap">
+            <div class="uni-desc-label-row">
+              <div class="dp-label">Describe the item — any type, plain English</div>
+            </div>
+            <textarea class="uni-textarea uni-main-textarea" id="bhaiDesc" placeholder="e.g. This is a Corsair TX650 650W power supply, Hi-Pot tested OK, model 75-001315, SN 121871160000005961209..."></textarea>
+          </div>
+            <div class="dp-row wan-price-row">
             <div>
               <div class="dp-label">Cost <span style="opacity:.6;font-weight:400">(per item)</span></div>
               <input class="dp-input" id="bhaiCost" placeholder="e.g. 12.50" autocomplete="off" inputmode="decimal">
@@ -5118,15 +5218,15 @@
               <input class="dp-input" id="bhaiPrice" placeholder="e.g. 39.99" autocomplete="off" inputmode="decimal">
             </div>
           </div>
-          <div id="bhaiShovoPriceChip" class="shovo-price-chip" style="display:none"></div>
-          <button type="button" class="dp-add-entry" id="bhaiSuggestPrice" style="margin-top:7px;padding:7px;font-size:11.5px;">💡 Suggest Price (Pricing Memory)</button>
-          <button type="button" class="dp-add-entry" id="bhaiEbayLookup" style="margin-top:7px;padding:7px;font-size:11.5px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔍 Check Sold Prices on eBay</button>
+            <div id="bhaiShovoPriceChip" class="shovo-price-chip" style="display:none"></div>
+            <button type="button" class="dp-add-entry" id="bhaiSuggestPrice" style="margin-top:7px;padding:7px;font-size:11.5px;">💡 Suggest Price (Pricing Memory)</button>
+            <button type="button" class="dp-add-entry" id="bhaiEbayLookup" style="margin-top:7px;padding:7px;font-size:11.5px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔍 Check Sold Prices on eBay</button>
+            <button class="dp-add-entry" id="bhaiAddEntry" style="margin:12px 0 0">+ Add to manifest queue</button>
+          </div>
 
-          <div class="uni-desc-wrap">
-            <div class="uni-desc-label-row">
-              <div class="dp-label">Describe the item — any type, plain English</div>
-            </div>
-            <textarea class="uni-textarea uni-main-textarea" id="bhaiDesc" placeholder="e.g. This is a Corsair TX650 650W power supply, Hi-Pot tested OK, model 75-001315, SN 121871160000005961209..."></textarea>
+          <div class="wan-says" id="wanSays" hidden>
+            <div class="ws-head"><span class="ws-title">Wan says</span></div>
+            <div id="wsList"></div>
           </div>
 
           <div class="uni-policy-row">
@@ -5156,9 +5256,8 @@
           </div>
           <div class="entry-flags" id="bhaiFlags"></div>
 
-          <button class="dp-add-entry" id="bhaiAddEntry" style="margin:12px 0 0">+ Add to manifest queue</button>
-          <button class="dp-add-entry" id="bhaiOpenSpeedReview" style="margin-top:7px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔎 Review Prices in Speed Review</button>
-          <button class="dp-add-entry" id="bhaiOpenSpeedReview" style="margin-top:7px;background:transparent;border:1px solid var(--line-2);">🔎 Speed Review this session</button>
+          
+          
 
         </div>
       </div>
@@ -5166,6 +5265,62 @@
   </div><!-- /#bhaiPage -->
 
   <!-- ── Blitzting Page ── -->
+  <div class="work-page wb-page" id="wanboardPage">
+    <div class="wb-grid">
+
+      <div class="wb-col wb-left">
+        <div class="wb-pnl wb-grow">
+          <div class="wb-hd"><span class="wb-n">2</span><h3>Queue</h3><span class="wb-r" id="wbQueueCount">0</span></div>
+          <div class="wb-hint">drag to reorder · pack order = label order</div>
+          <div class="wb-list" id="wbQueueList"></div>
+          <div class="wb-slot" id="wbSlotReview"></div>
+        </div>
+        <div class="wb-pnl">
+          <div class="wb-hd"><h3>Registry</h3><span class="wb-r" id="wbRegCount"></span></div>
+          <div class="wb-stats" id="wbRegStats"></div>
+        </div>
+      </div>
+
+      <div class="wb-col wb-center">
+        <div class="wb-readout" id="wbReadout">
+          <div class="wb-hd"><span class="wb-n wb-act">◆</span><h3>Resolved</h3><span class="wb-r" id="wbSrc"></span></div>
+          <div class="wb-id" id="wbId">Nothing yet</div>
+          <div class="wb-sub" id="wbSub">start typing below</div>
+          <div class="wb-conf" id="wbConf"></div>
+          <div class="wb-drives" id="wbDrives"></div>
+        </div>
+        <div class="wb-adv" id="wbAdv">
+          <div class="wb-hd"><h3>Wan says</h3></div>
+          <div id="wbAdvList"></div>
+        </div>
+        <div class="wb-composer" id="wbComposer"></div>
+      </div>
+
+      <div class="wb-col wb-right">
+        <div class="wb-pnl">
+          <div class="wb-hd"><h3>Live comps</h3><span class="wb-r" id="wbCompMeta"></span></div>
+          <div class="wb-hist" id="wbHist"></div>
+          <div class="wb-cmpv" id="wbCmpv"></div>
+        </div>
+        <div class="wb-pnl wb-grow">
+          <div class="wb-hd"><span class="wb-n">3</span><h3>Send</h3></div>
+          <div class="wb-note" id="wbSendNote">Nothing queued yet.</div>
+          <div class="wb-slot" id="wbSlotSend"></div>
+          <div class="wb-stats wb-foot" id="wbSession"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="wb-bot">
+      <span class="wb-l">Layout</span>
+      <span class="wb-pre on" data-wb-layout="blitz">Component blitz</span>
+      <span class="wb-pre" data-wb-layout="value">High value</span>
+      <span class="wb-pre" data-wb-layout="audit">Audit</span>
+      <span class="wb-keys">⇧F find · ⌘↵ add</span>
+      <button class="wb-prompt-btn" id="wbPromptBtn" type="button">Manifest prompt</button>
+    </div>
+  </div>
+
   <div class="work-page blitz-page" id="blitzPage">
 
     <div class="blitz-mode-bar">
@@ -5604,7 +5759,7 @@ function all(){
 function allCategories(){ const map=new Map(); codeCategories().forEach(cat=>{ (BUILTIN[cat]||[]).forEach(x=>map.set(x.code.toUpperCase(),x)); (CUSTOM[cat]||[]).forEach(x=>map.set(x.code.toUpperCase(),x)); }); return [...map.values()]; }
 function resolveCode(code){ const u=code.toUpperCase(); return allCategories().find(x=>x.code.toUpperCase()===u)||null; }
 function sizeOf(d){ const t=d.match(/\((\d+\s?TB)\)/i); if(t) return t[1].toUpperCase().replace(/\s/,''); const m=d.match(/(\d+(?:GB|TB))/i); return m?m[1].toUpperCase():''; }
-function esc(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function esc(s){ s=String(s==null?'':s); return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 function hl(t,q){ if(!q) return esc(t); const i=t.toLowerCase().indexOf(q.toLowerCase());
   if(i<0) return esc(t); return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length)); }
 
@@ -7905,6 +8060,7 @@ function clearBhaiForm(){
   bhaiRefreshSkuPreview();
   bhaiUpdatePreview();
   bhaiResetPriceAuto(); // new item = fresh auto-fill state
+  wanRenderResolved();
 }
 
 function bhaiStatusClass(e){ return e.desc ? 'high' : 'low'; }
@@ -7931,6 +8087,7 @@ function renderBhaiEntries(){
   }).join('');
   dpUpdatePreviewAll();
   updateGoalCounter();
+  if(typeof wanBoardQueue==='function' && CURRENT_WORK_PAGE==='wanboard') wanBoardQueue();
 }
 
 ['bhaiWebsiteSku','bhaiDesc','bhaiClaudeNotes','bhaiNeedsResearch','bhaiReturnPolicy'].forEach(id=>{
@@ -7938,20 +8095,6 @@ function renderBhaiEntries(){
   if(el) el.addEventListener('change', bhaiUpdatePreview);
 });
 
-if(document.getElementById('bhaiOpenSpeedReview')) document.getElementById('bhaiOpenSpeedReview').addEventListener('click', ()=>{
-  const tbSel = document.getElementById('tbWorkPage');
-  if(tbSel){ tbSel.value = 'blitzting'; tbSel.dispatchEvent(new Event('change')); }
-  document.getElementById('blitzTabReview')?.click();
-});
-if(document.getElementById('bhaiOpenSpeedReview')) document.getElementById('bhaiOpenSpeedReview').addEventListener('click', ()=>{
-  if(!bhaiEntriesData.length){ toast('No BhaiMode entries in the queue yet'); return; }
-  switchWorkPage('blitzting');
-  const tbSel = document.getElementById('tbWorkPage'); if(tbSel) tbSel.value = 'blitzting';
-  document.getElementById('blitzTabReview')?.click();
-  // Jump straight to the first BhaiMode-sourced card rather than wherever the queue starts
-  const firstBhaiIdx = _brQueue.findIndex(e => e.panel === 'BhaiMode');
-  if(firstBhaiIdx !== -1){ _brIdx = firstBhaiIdx; blitzRenderReview(); }
-});
 if(document.getElementById('bhaiSuggestPrice')) document.getElementById('bhaiSuggestPrice').addEventListener('click', ()=>{
   const desc = document.getElementById('bhaiDesc')?.value.trim() || '';
   showPriceSuggestion(desc, null, 'bhaiPrice');
@@ -8178,6 +8321,512 @@ async function bhaiEbayFallback(){
   }
 }
 
+// ── Resolved panel (added 2026-08-06) ────────────────────────────
+// Shows what Wan thinks the typed description IS, before anything is
+// pushed. Deliberately reuses the existing pieces rather than adding a
+// second source of truth: bhaiBuildSearchQuery for the search terms,
+// resolveCode/allCategories for the registry, suggestPriceFor for price.
+// Exact registry hits resolve; near-misses FLAG and never auto-resolve —
+// same rule as the code lookup, because a typo silently resolving is how
+// a wrong listing gets made.
+function wanCandidateTokens(q){
+  return q.split(/[\s\/]+/).map(function(t){return t.replace(/[^A-Za-z0-9-]/g,'')})
+          .filter(function(t){return t.length>=3 && /[A-Za-z]/.test(t) && /[0-9]/.test(t)});
+}
+function wanRegistryLook(q){
+  var toks=wanCandidateTokens(q);
+  for(var i=0;i<toks.length;i++){
+    var hit=resolveCode(toks[i]);
+    if(hit) return {state:'exact', code:hit.code, desc:hit.desc};
+  }
+  var all=allCategories(), near=[];
+  toks.forEach(function(t){
+    var u=t.toUpperCase();
+    all.forEach(function(x){
+      var c=x.code.toUpperCase();
+      if(c!==u && (c.indexOf(u)===0 || u.indexOf(c)===0)) near.push(x);
+    });
+  });
+  if(near.length) return {state:'near', code:near[0].code, desc:near[0].desc};
+  return {state:'none'};
+}
+function wanBars(n, cls){
+  var out='';
+  for(var i=0;i<5;i++) out+='<i class="'+(i<n?('on '+(cls||'')):'')+'"></i>';
+  return '<div class="wr-bars">'+out+'</div>';
+}
+// BhaiMode and the Wan Board each have their own Resolved/advisor markup.
+// Rather than run two renderers (which drift), one pass paints both id sets —
+// wrX for BhaiMode, wbX for the board. Whichever is off-screen is a no-op.
+function wanPaint(key, text){
+  ['wr'+key,'wb'+key].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.textContent=text;
+  });
+}
+function wanPaintHtml(key, html){
+  ['wr'+key,'wb'+key].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.innerHTML=html;
+  });
+}
+function wanRenderResolved(){
+  var box=document.getElementById('wanResolved');
+  var descEl=document.getElementById('bhaiDesc');
+  if(!box||!descEl) return;
+  var raw=descEl.value.trim();
+  if(!raw){ box.hidden=true; var sb=document.getElementById('wanSays'); if(sb) sb.hidden=true; return }
+
+  var q = (typeof bhaiBuildSearchQuery==='function') ? bhaiBuildSearchQuery(raw) : '';
+  if(!q){
+    box.hidden=false;
+    wanPaint('Src','');
+    wanPaint('Id','Nothing identifying yet');
+    wanPaint('Sub','no brand, model, or part number found');
+    wanPaintHtml('Conf', wanBars(0)+'<span class="wr-lab low">Unresolved</span>'+
+      '<span class="wr-why">add a model or part number</span>');
+    wanPaintHtml('Drives','');
+    return;
+  }
+
+  var reg=wanRegistryLook(q);
+  var pm=(typeof suggestPriceFor==='function')?suggestPriceFor(raw,null):{price:null,confidence:'None',basis:''};
+
+  var id, sub, bars, cls, lab, why;
+  if(reg.state==='exact'){
+    id=reg.desc; sub=q+' \u00b7 registry code '+reg.code;
+    bars=5; cls=''; lab='High confidence'; why='exact registry hit';
+  } else if(reg.state==='near'){
+    id='Close to '+reg.desc; sub=q+' \u00b7 did you mean '+reg.code+'?';
+    bars=2; cls='med'; lab='Needs a look'; why='near match \u2014 not auto-applied';
+  } else {
+    id='New part'; sub=q+' \u00b7 not in the registry yet';
+    bars=3; cls='med'; lab='Unknown part'; why='priced from comps only';
+  }
+
+  box.hidden=false;
+  wanPaint('Src','searched as \u201c'+q+'\u201d');
+  wanPaint('Id',id);
+  wanPaint('Sub',sub);
+  wanPaintHtml('Conf', wanBars(bars,cls)+
+    '<span class="wr-lab '+cls+'">'+lab+'</span><span class="wr-why">'+esc(why)+'</span>');
+
+  var priceSrc, priceCls;
+  if(pm.price && ['High','Medium'].indexOf(pm.confidence)!==-1){ priceSrc='pricing memory'; priceCls='g' }
+  else if(document.getElementById('bhaiPrice') && document.getElementById('bhaiPrice').value.trim()){ priceSrc='set by you'; priceCls='' }
+  else { priceSrc='live comps on blur'; priceCls='w' }
+
+  var cat=(typeof ebayCategoryFor==='function')?ebayCategoryFor(raw):null;
+  var catVal, catCls;
+  if(!cat){ catVal='no match'; catCls='w' }
+  else if(!cat.confirmed){ catVal=cat.type+' \u2014 no ID'; catCls='w' }
+  else { catVal=cat.id+' \u00b7 '+cat.type; catCls='g' }
+
+  wanPaintHtml('Drives',
+    '<div class="wr-d"><div class="k">Registry</div><div class="v">'+(reg.code?esc(reg.code):'\u2014')+'</div></div>'+
+    '<div class="wr-d"><div class="k">eBay category</div><div class="v '+catCls+'">'+esc(catVal)+'</div></div>'+
+    '<div class="wr-d"><div class="k">Price source</div><div class="v '+priceCls+'">'+priceSrc+'</div></div>'+
+    '<div class="wr-d"><div class="k">Returns</div><div class="v">'+esc((document.getElementById('bhaiReturnPolicy')||{}).value||'\u2014').slice(0,22)+'</div></div>');
+
+  wanRenderSays(raw, {cat:cat, reg:reg, pm:pm});
+}
+
+// ── "Wan says" advisor (added 2026-08-06) ────────────────────────
+// A rules engine, not a status readout. The whole risk here is noise: a
+// panel that always says something gets ignored within a week, and then it
+// is worse than nothing because real warnings hide in it. So every rule has
+// a guard and stays silent when it has nothing, the list caps at 3, and no
+// rule repeats what the Resolved panel already shows.
+function wanAdvice(raw, ctx){
+  var t=String(raw||'').toLowerCase(), out=[];
+
+  // 1. Lot pricing — the trap is pricing a lot at N x the single price.
+  var lot=t.match(/lot of (\d+)|\bqty:? ?(\d+)|\bx(\d+)\b/);
+  if(lot){
+    var n=parseInt(lot[1]||lot[2]||lot[3],10);
+    if(n>1) out.push({k:'warn', h:'Lot of '+n+'.',
+      b:'Multi-unit lots typically clear <b>12\u201318% under</b> '+n+'\u00d7 the single price. Check comps for the lot, not the unit.'});
+  }
+
+  // 2. Category gap — the Studio Display case, surfaced before push.
+  if(ctx.cat && !ctx.cat.confirmed) out.push({k:'warn', h:'No eBay category for '+ctx.cat.type+'.',
+    b:'Leave <b>ebay_category_id</b> blank and confirm the ID on eBay \u2014 guessing one breaks the Marketplace Connect mapping.'});
+  else if(!ctx.cat) out.push({k:'info', h:'No category matched.',
+    b:'Add the item type in plain words (e.g. <b>hard drive</b>, <b>power supply</b>) so the category can resolve.'});
+
+  // 3. Near-miss registry code — a typo that must never auto-apply.
+  if(ctx.reg && ctx.reg.state==='near') out.push({k:'warn', h:'Close to a known code.',
+    b:'This looks like <b>'+esc(ctx.reg.code)+'</b> but does not match exactly. Check the label before trusting the price.'});
+
+  // 4. Condition wording missing — drives ebay_condition_code.
+  if(!/tested|working|untested|for parts|pulled|new|sealed|health|does not/.test(t))
+    out.push({k:'info', h:'No condition wording.',
+      b:'Add how it tested \u2014 <b>tested working</b>, <b>untested</b>, <b>for parts</b> \u2014 or the condition code has to be guessed.'});
+
+  // 5. For-parts vs returns policy contradiction.
+  var pol=(document.getElementById('bhaiReturnPolicy')||{}).value||'';
+  if(/for parts|does not (power|read|post)|not working/.test(t) && /30 days free/i.test(pol))
+    out.push({k:'warn', h:'For-parts item with a 30-day return.',
+      b:'Returns are usually set to <b>not accepted</b> on for-parts listings.'});
+
+  // 6. Serial captured — confirms it is excluded from the eBay query.
+  if(/\b(?:serial\s*(?:number|no\.?|#)?|s\/n|sn)\s*[:#]?\s*[a-z0-9-]{6,}/i.test(raw))
+    out.push({k:'good', h:'Serial noted.',
+      b:'Kept in the listing, stripped from the eBay search \u2014 serials return zero comps.'});
+
+  return out.slice(0,3);
+}
+function wanRenderSays(raw, ctx){
+  var box=document.getElementById('wanSays'), list=document.getElementById('wsList');
+  if(!box||!list) return;
+  var tips=wanAdvice(raw, ctx);
+  if(!tips.length){ box.hidden=true; list.innerHTML='';
+    var wbl0=document.getElementById('wbAdvList'); if(wbl0) wbl0.innerHTML='';
+    var wba0=document.getElementById('wbAdv'); if(wba0) wba0.hidden=true; return }
+  var ic={warn:'!', good:'\u2713', info:'i'};
+  var rows=tips.map(function(x){
+    return '<div class="ws-tip '+x.k+'"><span class="ws-ic">'+ic[x.k]+'</span>'+
+           '<span class="ws-bd"><b>'+esc(x.h)+'</b> '+x.b+'</span></div>';
+  }).join('');
+  list.innerHTML=rows;
+  box.hidden=false;
+  var wbl=document.getElementById('wbAdvList');
+  if(wbl) wbl.innerHTML=tips.map(function(x){
+    return '<div class="wb-tip '+x.k+'"><span class="ic">'+ic[x.k]+'</span>'+
+           '<span class="bd"><b>'+esc(x.h)+'</b> '+x.b+'</span></div>';
+  }).join('');
+  var wba=document.getElementById('wbAdv'); if(wba) wba.hidden=false;
+}
+
+// ── Composer wrapper guard (added 2026-08-06) ────────────────────
+// .wan-composer exists in the static markup, so normally this does nothing.
+// It's here because the composer CSS is entirely dependent on that wrapper
+// existing — without it the layout silently reverts to the old stacked form
+// with no error anywhere. This rebuilds it by MOVING the nodes (never
+// cloning: a move preserves ids and every listener already bound). Runs on
+// load and on every work-page switch. Idempotent.
+// ── Wan Board mount (added 2026-08-06) ───────────────────────────
+// The board is authored inline with the other work-pages for readability,
+// but it must not LIVE there: .wan-panel-body is a small draggable window
+// and the board is a full-screen surface. Reparenting to <body> also dodges
+// a subtle trap — the panel is dragged via transform, and a transformed
+// ancestor makes position:fixed resolve against that ancestor instead of
+// the viewport, so the overlay would be trapped inside the card anyway.
+function wanMountBoard(){
+  var b=document.getElementById('wanboardPage');
+  if(b && b.parentNode !== document.body) document.body.appendChild(b);
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', wanMountBoard);
+else wanMountBoard();
+
+// ── Wan Board wiring (added 2026-08-06) ──────────────────────────
+// The board does not reimplement anything. It BORROWS the live composer
+// nodes from BhaiMode while it is open and hands them back on exit, and it
+// mirrors bhaiEntriesData for its queue. Same nodes means every listener,
+// every id lookup and the whole manifest pipeline keep working untouched.
+// The composer carries the fields used on EVERY entry. These others are set
+// once per session (SKU assignment, returns, notes) — they still have to be
+// reachable from the board or you could not assign a SKU there, so they come
+// too, collapsed. Borrowed the same way: moved, never cloned.
+var WB_DETAIL_SELECTORS=['#bhaiSkuAssignBox','.uni-policy-row','.needs-research-box'];
+
+function wanBoardWrapLookupRow(){
+  // order alone cannot place two children of a column flexbox side by side;
+  // they need a shared row parent. Built once, idempotent, nodes moved not
+  // cloned — same rule as every other board wrapper.
+  var a=document.getElementById('bhaiSuggestPrice'), b=document.getElementById('bhaiEbayLookup');
+  if(!a||!b) return;
+  if(a.parentNode===b.parentNode && a.parentNode.classList.contains('wb-lookup-row')) return;
+  var row=document.getElementById('wbLookupRow');
+  if(!row){ row=document.createElement('div'); row.id='wbLookupRow'; row.className='wb-lookup-row' }
+  if(a.parentNode) a.parentNode.insertBefore(row, a);
+  row.appendChild(a); row.appendChild(b);
+}
+function wanBoardWrapSide(){
+  // Groups the trigger, price row, chip, lookup-button row, AND the Add
+  // button into one column beside the textarea \u2014 trigger goes first (above
+  // Cost), Add goes last (underneath Suggest Price / Check Sold Prices).
+  var comp=document.querySelector('.wan-composer');
+  var price=document.querySelector('.wan-composer .wan-price-row');
+  var chip=document.getElementById('bhaiShovoPriceChip');
+  var lookup=document.getElementById('wbLookupRow');
+  var addBtn=document.getElementById('bhaiAddEntry');
+  var trigger=document.getElementById('wbDetailsTrigger');
+  if(!comp||!price) return;
+  var side=document.getElementById('wbComposerSide');
+  if(!side){ side=document.createElement('div'); side.id='wbComposerSide'; side.className='wan-composer-side' }
+  if(side.parentNode!==comp) comp.insertBefore(side, price);
+  [trigger, price, chip, lookup, addBtn].forEach(function(el){ if(el && el.parentNode!==side) side.appendChild(el) });
+}
+function wanBoardWireHeader(){
+  var btn=document.getElementById('wbPromptBtn');
+  if(!btn || btn.dataset.wired) return;
+  btn.dataset.wired='1';
+  btn.addEventListener('click', function(){
+    var real=document.getElementById('promptBtn');
+    if(real) real.click();   // same handler, real button just relocated
+  });
+}
+wanBoardWireHeader();
+
+function wanBoardTakeComposer(){
+  var slot=document.getElementById('wbComposer');
+  var comp=document.querySelector('.wan-composer');
+  if(!slot||!comp) return;
+  var det=document.getElementById('wbDetails');
+  if(!det){
+    // Was an always-visible inline drawer sitting right above the
+    // composer, which read as "Returns" appearing twice \u2014 the drawer
+    // header text and the field label with no real separation between
+    // them. Converted to a modal: a small trigger stays in the composer,
+    // the fields only exist on screen when opened, blurred backdrop behind.
+    det=document.createElement('div');
+    det.id='wbDetails'; det.className='wb-modal';
+    det.innerHTML=
+      '<div class="wb-modal-card">'+
+        '<div class="wb-modal-hd"><span>SKU, returns and notes</span>'+
+        '<button type="button" class="wb-modal-x" id="wbDetailsClose" aria-label="Close">\u2715</button></div>'+
+        '<div class="wb-modal-body" id="wbDetailsBody"></div>'+
+      '</div>';
+    document.body.appendChild(det);
+    det.addEventListener('click', function(e){ if(e.target===det) wanBoardCloseDetails() });
+    document.getElementById('wbDetailsClose').addEventListener('click', wanBoardCloseDetails);
+  }
+  var body=document.getElementById('wbDetailsBody');
+  // BUG (found from your screenshot, confirmed live): Batch, Universal, and
+  // Blitzting each have their OWN .uni-policy-row / .needs-research-box with
+  // slightly different copy. Once BhaiMode's own field moves out of #bhaiPage,
+  // `document.querySelector('#bhaiPage '+sel)` stops finding it, and the bare
+  // `document.querySelector(sel)` fallback grabbed whichever page's copy came
+  // first in DOM order instead \u2014 pulling in a SECOND, different element every
+  // reopen. Fixed by capturing each real node exactly once and caching it, so
+  // there is never a second query that could resolve to the wrong page.
+  window._wbDetailNodes = window._wbDetailNodes || {};
+  WB_DETAIL_SELECTORS.forEach(function(sel){
+    var el = window._wbDetailNodes[sel];
+    if(!el){
+      el = document.querySelector('#bhaiPage '+sel);
+      if(el) window._wbDetailNodes[sel] = el;
+    }
+    if(el && body && el.parentNode!==body) body.appendChild(el);
+  });
+  if(comp.parentNode!==slot) slot.appendChild(comp);
+  wanBoardWrapLookupRow();
+  wanBoardWrapSide();
+  wanBoardEnsureTrigger();
+  wanBoardDedupeDetails();
+}
+// Defensive cleanup for anyone who already hit the duplicate-field bug in a
+// running tab: removes any extra .uni-policy-row / .needs-research-box that
+// isn't the cached, canonical node.
+function wanBoardDedupeDetails(){
+  var body=document.getElementById('wbDetailsBody');
+  if(!body) return;
+  ['.uni-policy-row','.needs-research-box'].forEach(function(cls){
+    var nodes=body.querySelectorAll(cls);
+    if(nodes.length<=1) return;
+    var keep=window._wbDetailNodes && window._wbDetailNodes[cls] ? window._wbDetailNodes[cls] : nodes[0];
+    nodes.forEach(function(n){ if(n!==keep) n.remove() });
+  });
+}
+function wanBoardEnsureTrigger(){
+  // Must run AFTER wanBoardWrapSide, since the trigger's home is now inside
+  // the side column, positioned first (above Cost) rather than at the top
+  // of the whole composer.
+  var side=document.getElementById('wbComposerSide');
+  if(!side) return;
+  var btn=document.getElementById('wbDetailsTrigger');
+  if(!btn){
+    btn=document.createElement('button');
+    btn.type='button'; btn.id='wbDetailsTrigger'; btn.className='wb-details-trigger';
+    btn.textContent='SKU, returns & notes';
+    btn.addEventListener('click', wanBoardOpenDetails);
+  }
+  if(side.firstChild!==btn) side.insertBefore(btn, side.firstChild);
+}
+function wanBoardOpenDetails(){
+  wanBoardTakeComposer();
+  var det=document.getElementById('wbDetails');
+  if(det){ det.classList.add('open'); document.body.classList.add('wb-modal-open') }
+}
+function wanBoardCloseDetails(){
+  var det=document.getElementById('wbDetails');
+  if(det){ det.classList.remove('open'); document.body.classList.remove('wb-modal-open') }
+}
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){
+    var det=document.getElementById('wbDetails');
+    if(det && det.classList.contains('open')) wanBoardCloseDetails();
+  }
+});
+
+function wanBoardReturnComposer(){
+  var form=document.querySelector('#bhaiPage .uni-form');
+  if(!form) return;
+  var det=document.getElementById('wbDetails');
+  var dbody=document.getElementById('wbDetailsBody');
+  if(dbody) Array.prototype.slice.call(dbody.children).forEach(function(el){ form.appendChild(el) });
+  if(det) det.classList.remove('open');
+  document.body.classList.remove('wb-modal-open');
+  var comp=document.querySelector('.wan-composer');
+  // Unwrap the side column FIRST (so its children — price row, chip, lookup
+  // row — become direct children of the composer again), then unwrap the
+  // lookup row, then the composer itself moves back to page A's form.
+  var side=document.getElementById('wbComposerSide');
+  if(side && comp){
+    // The trigger button is board-only chrome with no page-A equivalent —
+    // it must not travel back into the form. Removed here and recreated
+    // fresh next time wanBoardEnsureTrigger runs.
+    Array.prototype.slice.call(side.children).forEach(function(el){
+      if(el.id==='wbDetailsTrigger'){ el.remove(); return }
+      comp.insertBefore(el, side);
+    });
+    side.remove();
+  }
+  var row=document.getElementById('wbLookupRow');
+  if(row){
+    var a=document.getElementById('bhaiSuggestPrice'), b=document.getElementById('bhaiEbayLookup');
+    if(a) row.parentNode.insertBefore(a, row);
+    if(b) row.parentNode.insertBefore(b, row);
+    row.remove();
+  }
+  if(comp && comp.parentNode!==form) form.appendChild(comp);
+}
+
+function wanBoardQueue(){
+  var list=document.getElementById('wbQueueList');
+  if(!list) return;
+  var data=(typeof bhaiEntriesData!=='undefined'?bhaiEntriesData:[]);
+  document.getElementById('wbQueueCount').textContent=data.length;
+  if(!data.length){ list.innerHTML='<div class="wb-empty">Nothing queued yet.</div>'; wanBoardSend(); return }
+  list.innerHTML=data.map(function(e,i){
+    var ready=!!e.desc;
+    return '<div class="wb-q'+(ready?'':' warn')+'" draggable="true" data-wbid="'+esc(e.id)+'">'+
+      '<span class="wb-qn">'+(i+1)+'</span>'+
+      '<span class="wb-qt">'+esc(bhaiEntrySkuLabel(e)||'(new draft)')+'</span>'+
+      '<span class="wb-qm">'+(ready?esc((e.price?'$'+e.price:'no price')):'missing info')+'</span></div>';
+  }).join('');
+  wanBoardWireDrag();
+  wanBoardSend();
+}
+
+// Pack order is label order, so the queue must be physically rearrangeable.
+// Reordering mutates bhaiEntriesData itself, then re-renders BOTH views so
+// the sidebar and the board can never disagree about sequence.
+var _wbDrag=null;
+function wanBoardWireDrag(){
+  var list=document.getElementById('wbQueueList');
+  if(!list) return;
+  Array.prototype.forEach.call(list.children, function(el){
+    if(!el.dataset || !el.dataset.wbid) return;
+    el.addEventListener('dragstart', function(e){ _wbDrag=el; el.classList.add('drag');
+      e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain','')}catch(_){} });
+    el.addEventListener('dragend', function(){ el.classList.remove('drag'); _wbDrag=null; wanBoardCommitOrder() });
+    el.addEventListener('dragover', function(e){
+      e.preventDefault();
+      if(!_wbDrag||_wbDrag===el) return;
+      var r=el.getBoundingClientRect();
+      list.insertBefore(_wbDrag, (e.clientY-r.top)/r.height>0.5 ? el.nextSibling : el);
+    });
+  });
+}
+function wanBoardCommitOrder(){
+  var list=document.getElementById('wbQueueList');
+  if(!list || typeof bhaiEntriesData==='undefined') return;
+  var ids=Array.prototype.map.call(list.children,function(el){return el.dataset&&el.dataset.wbid}).filter(Boolean);
+  if(ids.length!==bhaiEntriesData.length) return;   // never reorder on a partial read
+  var byId={}; bhaiEntriesData.forEach(function(e){ byId[e.id]=e });
+  var next=ids.map(function(id){ return byId[id] });
+  if(next.some(function(x){return !x})) return;     // unknown id: abort, change nothing
+  bhaiEntriesData = next;
+  if(typeof renderBhaiEntries==='function') renderBhaiEntries();
+  wanBoardQueue();
+}
+
+function wanBoardSend(){
+  var note=document.getElementById('wbSendNote');
+  var sess=document.getElementById('wbSession');
+  var data=(typeof bhaiEntriesData!=='undefined'?bhaiEntriesData:[]);
+  var missing=data.filter(function(e){return !e.desc}).length;
+  if(note) note.textContent = !data.length ? 'Nothing queued yet.'
+    : data.length+' entr'+(data.length===1?'y':'ies')+' ready'+(missing?', '+missing+' missing info':'')+'.';
+  if(sess) sess.innerHTML=
+    '<div class="wb-stat">Queued<b>'+data.length+'</b></div>'+
+    '<div class="wb-stat">Missing info<b>'+missing+'</b></div>'+
+    '<div class="wb-stat">Batch<b>'+esc(typeof LISTER_BATCH!=='undefined'?(LISTER_BATCH||'—'):'—')+'</b></div>';
+}
+
+function wanBoardSync(){
+  if(CURRENT_WORK_PAGE!=='wanboard') return;
+  wanBoardTakeComposer();
+  wanBoardQueue();
+  var reg=document.getElementById('wbRegCount');
+  if(reg && typeof allCategories==='function') reg.textContent=allCategories().length+' codes';
+}
+
+// Genie: the card pinches, draws down a skewed neck along an arc, then
+// collapses into its slot. Real macOS genie is a mesh warp CSS cannot do —
+// staged transforms read the same at speed. The point is not decoration:
+// it shows WHICH row your item became, which matters at forty items.
+function wanBoardGenie(){
+  if(CURRENT_WORK_PAGE!=='wanboard') return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var from=document.querySelector('#wbComposer .wan-composer');
+  var list=document.getElementById('wbQueueList');
+  if(!from||!list) return;
+  var a=from.getBoundingClientRect();
+  var target=list.lastElementChild;
+  var b=target?target.getBoundingClientRect():list.getBoundingClientRect();
+  var g=document.createElement('div');
+  g.className='wb-ghost';
+  g.style.cssText+=';left:'+a.left+'px;top:'+a.top+'px;width:'+a.width+'px;height:'+a.height+'px';
+  var ta=document.getElementById('bhaiDesc');
+  g.textContent=(ta&&ta.value?ta.value:'').split('\n')[0]||'entry';
+  document.body.appendChild(g);
+  var dx=b.left-a.left, dy=b.top-a.top, sx=b.width/a.width, sy=b.height/a.height;
+  var anim=g.animate([
+    {transform:'translate(0,0) scale(1,1)',opacity:1,offset:0},
+    {transform:'translate('+(dx*0.24)+'px,'+(dy*0.30)+'px) scale(.72,.80) skewX(-5deg)',opacity:.95,offset:.34},
+    {transform:'translate('+(dx*0.72)+'px,'+(dy*0.74)+'px) scale(.30,.44) skewX(3deg)',opacity:.7,offset:.68},
+    {transform:'translate('+dx+'px,'+dy+'px) scale('+sx+','+sy+')',opacity:0,offset:1}
+  ],{duration:500,easing:'cubic-bezier(.55,.02,.35,1)',fill:'forwards'});
+  anim.onfinish=function(){ g.remove(); if(target) target.classList.add('landed') };
+}
+
+// Trailing cursor light. Lerped, not locked — a hard-locked halo reads as a
+// rendering artifact; a lagging one reads as light. Board only.
+function wanBoardGlow(){
+  if(document.getElementById('wbGlow')) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var g=document.createElement('div'); g.id='wbGlow';
+  document.body.appendChild(g);
+  var x=0,y=0,tx=0,ty=0,live=false;
+  document.addEventListener('pointermove',function(e){
+    if(CURRENT_WORK_PAGE!=='wanboard'){ if(live){live=false;g.classList.remove('on')} return }
+    tx=e.clientX; ty=e.clientY;
+    if(!live){ x=tx;y=ty;live=true;g.classList.add('on') }
+  });
+  document.addEventListener('pointerleave',function(){ live=false; g.classList.remove('on') });
+  (function loop(){
+    if(live){ x+=(tx-x)*.16; y+=(ty-y)*.16;
+      g.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0)' }
+    requestAnimationFrame(loop);
+  })();
+}
+
+function wanBuildComposer(){
+  var form=document.querySelector('#bhaiPage .uni-form');
+  if(!form || form.querySelector('.wan-composer')) return;
+  var order=['.uni-desc-wrap','.wan-price-row','#bhaiShovoPriceChip','#bhaiSuggestPrice',
+             '#bhaiEbayLookup','#bhaiAddEntry'];
+  var nodes=order.map(function(sel){ return form.querySelector(sel) }).filter(Boolean);
+  if(!nodes.length) return;
+  var wrap=document.createElement('div');
+  wrap.className='wan-composer';
+  form.appendChild(wrap);
+  nodes.forEach(function(n){ wrap.appendChild(n) });   // move, not clone
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', wanBuildComposer);
+else wanBuildComposer();
+
 function bhaiResetPriceAuto(){
   _bhaiPriceAuto=false; _bhaiPriceTouched=false; _bhaiAutoTimer=null; _bhaiEbayLastQuery='';
   document.getElementById('bhaiPrice')?.classList.remove('auto-priced');
@@ -8187,6 +8836,7 @@ if(document.getElementById('bhaiDesc')){
   document.getElementById('bhaiDesc').addEventListener('input', ()=>{
     clearTimeout(_bhaiAutoTimer);
     _bhaiAutoTimer = setTimeout(bhaiAutoPrice, 450);
+    wanRenderResolved();
   });
   document.getElementById('bhaiDesc').addEventListener('blur', ()=>{
     clearTimeout(_bhaiAutoTimer);
@@ -8195,6 +8845,7 @@ if(document.getElementById('bhaiDesc')){
     // when it came back with nothing — repeat parts never pay the wait.
     const pEl = document.getElementById('bhaiPrice');
     if(pEl && !pEl.value.trim() && !_bhaiPriceTouched) bhaiEbayFallback();
+    wanRenderResolved();
   });
 }
 if(document.getElementById('bhaiPrice')){
@@ -8237,6 +8888,7 @@ if(document.getElementById('bhaiAddEntry')) document.getElementById('bhaiAddEntr
   renderBhaiEntries();
   clearBhaiForm();
   toast('BhaiMode entry added — Action: ' + bhaiAction(e));
+  if(typeof wanBoardQueue==='function' && CURRENT_WORK_PAGE==='wanboard'){ wanBoardQueue(); wanBoardGenie(); }
 });
 if(document.getElementById('bhaiEntries')) document.getElementById('bhaiEntries').addEventListener('click', ev=>{
   const dupBtn = ev.target.closest('[data-bhaidupid]');
@@ -8387,9 +9039,44 @@ function switchWorkPage(page){
     universal: document.getElementById('universalPage'),
     bhai: document.getElementById('bhaiPage'),
     blitzting: document.getElementById('blitzPage'),
+    wanboard: document.getElementById('wanboardPage'),
   };
   Object.entries(pages).forEach(([k,el])=>{ if(el) el.classList.toggle('on', k===page); });
   CURRENT_WORK_PAGE = page;
+  if(typeof wanBuildComposer==='function') wanBuildComposer();
+  // Board takes over the whole workspace; the panel canvas hides behind it.
+  if(typeof wanMountBoard==='function') wanMountBoard();
+  document.body.classList.toggle('wb-on', page==='wanboard');
+  if(page==='wanboard'){ if(typeof wanBoardSync==='function') wanBoardSync();
+                         if(typeof wanBoardGlow==='function') wanBoardGlow();
+                         if(typeof wanRenderResolved==='function') wanRenderResolved(); }
+  else { if(typeof wanBoardReturnComposer==='function') wanBoardReturnComposer(); }
+  var _cv=document.getElementById('wanCanvas'), _hud=document.getElementById('wanHUD');
+  // BUG (found via real browser trace, not visible from reading the code):
+  // `_cv && _cv.style.display!=='none' || page==='wanboard'` parses as
+  // `(_cv && display!=='none') || page==='wanboard'` because && binds tighter
+  // than ||. While ON the board, display IS 'none' (we set it), so on the
+  // trip BACK to page A the left side is false, page is not 'wanboard' so
+  // the right side is false too — the whole block, including the restore
+  // branch, was skipped entirely. Canvas and HUD stayed hidden forever after
+  // the first visit to the board. Removed the guard: both branches are
+  // already internally safe (each checks _cv/_hud individually), so nothing
+  // needs to gate entry to this block at all.
+  if(_cv || _hud){
+    if(page==='wanboard'){
+      // Guard against re-entry: the toolbar mirrors its value to the header
+      // select and re-dispatches change, so this runs twice per switch. Without
+      // the guard the second pass saves display:none as the "previous" value
+      // and the canvas never comes back.
+      if(_cv && !('wbPrev' in _cv.dataset)){ _cv.dataset.wbPrev=_cv.style.display||'block' }
+      if(_hud && !('wbPrev' in _hud.dataset)){ _hud.dataset.wbPrev=_hud.style.display||'flex' }
+      if(_cv) _cv.style.display='none';
+      if(_hud) _hud.style.display='none';
+    } else {
+      if(_cv && _cv.dataset.wbPrev){ _cv.style.display=_cv.dataset.wbPrev; delete _cv.dataset.wbPrev }
+      if(_hud && _hud.dataset.wbPrev){ _hud.style.display=_hud.dataset.wbPrev; delete _hud.dataset.wbPrev }
+    }
+  }
 
   if(page==='universal'){
     switchManifestTab('universal');
@@ -8929,17 +9616,80 @@ function allManifestObjects(){
   const bhai = bhaiEntriesData.filter(e=>e.desc).map(bhaiEntryObject);
   return batch.concat(uni).concat(bhai).map((e, i)=>({...e, entry_id: e.entry_id || '', batch_id: LISTER_BATCH || '', lister: LISTER_INITIAL || '', internal_sku: listerSKU(i+1)}));
 }
+// ── eBay category table (added 2026-08-06) ───────────────────────
+// These IDs used to live only inside the prompt string, which meant nothing
+// in the app could read them and any drift was invisible. They're data now,
+// and EBAY_READINESS_BLOCK is generated FROM this table below — so the
+// prompt and the UI can never disagree.
+// `confirmed:false` entries are known gaps, not guesses: they render as
+// blank + a flag rather than a made-up ID. Never invent a category here.
+const EBAY_CATEGORIES = [
+  {type:'Storage/SSD',        id:'175669', confirmed:true,  match:['ssd','nvme','m.2','solid state']},
+  {type:'Storage/HDD',        id:'56083',  confirmed:true,  match:['hdd','hard drive','7200 rpm','5400 rpm','caviar','barracuda']},
+  {type:'RAM',                id:'170083', confirmed:true,  match:['ram','dimm','rdimm','udimm','sodimm','memory','pc4-','pc3-','pc5-']},
+  {type:'Motherboard',        id:'1244',   confirmed:true,  match:['motherboard','mainboard','mobo']},
+  {type:'GPU',                id:'27386',  confirmed:true,  match:['gpu','graphics card','geforce','radeon','quadro','rtx','gtx']},
+  {type:'PSU',                id:'42017',  confirmed:true,  match:['psu','power supply','80 plus','80+']},
+  {type:'PSU (server)',       id:'56090',  confirmed:true,  pri:2, match:['hot-plug','hot plug','redundant psu','server power supply']},
+  {type:'CPU (server)',       id:'56088',  confirmed:true,  pri:2, match:['xeon','epyc','opteron']},
+  {type:'CPU (desktop)',      id:'',       confirmed:false, match:['cpu','processor','core i3','core i5','core i7','core i9','ryzen']},
+  {type:'Server components',  id:'168074', confirmed:true,  pri:2, match:['backplane','raid card','riser','server board','sas expander']},
+  {type:'Power Protection',   id:'99265',  confirmed:true,  pri:2, match:['ups','battery backup','uninterruptible']},
+  {type:'Power Tools',        id:'3247',   confirmed:true,  match:['drill','impact driver','20v max','dewalt','milwaukee','makita']},
+  {type:'Test Equipment',     id:'181939', confirmed:true,  match:['multimeter','oscilloscope','true rms','tester','clamp meter']},
+  {type:'Gaming Accessories', id:'54968',  confirmed:true,  match:['controller','dualshock','dualsense','joy-con','gaming headset']},
+  {type:'Phone',              id:'9355',   confirmed:true,  match:['iphone','galaxy s','pixel ','smartphone']},
+  {type:'Laptop',             id:'175672', confirmed:true,  match:['laptop','notebook','macbook','thinkpad','latitude','elitebook']},
+  {type:'Console',            id:'139971', confirmed:true,  match:['playstation','xbox','nintendo switch','ps5','ps4']},
+  {type:'Computer Peripherals',id:'3676',  confirmed:true,  match:['keyboard','mouse','webcam','usb hub','docking station']},
+  {type:'Audio (pro)',        id:'180014', confirmed:true,  match:['microphone','mixer','audio interface','pa system','studio monitor']},
+  {type:'Audio (consumer)',   id:'15052',  confirmed:true,  match:['headphone','earbud','soundbar','speaker','subwoofer']},
+  {type:'Monitor',            id:'',       confirmed:false, match:['monitor','display','studio display','ultrasharp','4k display']},
+  {type:'Projector',          id:'',       confirmed:false, match:['projector','lumens','throw ratio']}
+];
+
+function ebayCategoryFor(text){
+  var t=String(text||'').toLowerCase();
+  if(!t.trim()) return null;
+  // Specificity beats keyword length. Ranking purely by longest match sent
+  // "Intel Xeon ... processor" to desktop CPU (processor > xeon) and a
+  // hot-plug server PSU to desktop PSU (power supply > hot-plug). pri:2
+  // entries are the specific variants and always win over their generic
+  // counterpart; length only breaks ties within the same tier.
+  var best=null, bestPri=-1, bestLen=0;
+  EBAY_CATEGORIES.forEach(function(c){
+    var pri=c.pri||1;
+    c.match.forEach(function(kw){
+      if(t.indexOf(kw)===-1) return;
+      if(pri>bestPri || (pri===bestPri && kw.length>bestLen)){
+        best=c; bestPri=pri; bestLen=kw.length;
+      }
+    });
+  });
+  return best;
+}
+
+function ebayCategoryPromptLines(){
+  var ok=EBAY_CATEGORIES.filter(function(c){return c.confirmed});
+  var gaps=EBAY_CATEGORIES.filter(function(c){return !c.confirmed});
+  var lines=[];
+  for(var i=0;i<ok.length;i+=3){
+    lines.push('  '+ok.slice(i,i+3).map(function(c){return c.type+': '+c.id}).join(' | '));
+  }
+  lines.push('  Audio Equipment: use 180014 for microphone/mixer/audio interface/pro-audio gear, otherwise 15052 (headphones/earbuds/speakers/consumer audio).');
+  lines.push('  NO CONFIRMED ID YET — leave ebay_category_id blank and flag it, never guess: '+
+             gaps.map(function(c){return c.type}).join(', ')+'.');
+  return lines.join('\n');
+}
+
 const EBAY_READINESS_BLOCK =
 `EBAY MARKETPLACE CONNECT READINESS — additional metafields (namespace: custom)
 Set these on every product too, so Marketplace Connect's Attribute Mapping (once configured in the app) can auto-populate the eBay listing without anyone touching Marketplace Connect by hand:
   ebay_category_id, ebay_condition_code, ebay_condition_description, ebay_returns_accepted, ebay_returns_within
 
 CATEGORY (ebay_category_id) — match by item type, confirmed eBay category IDs:
-  Storage/SSD: 175669 | Storage/HDD: 56083 | RAM: 170083 | Motherboard: 1244 | GPU: 27386 | PSU: 42017
-  Power Tools: 3247 | Test Equipment: 181939 | Gaming Accessories: 54968 | Phone: 9355 | Laptop: 175672
-  Console: 139971 | Computer Peripherals: 3676
-  Audio Equipment: 180014 if description mentions microphone/mixer/audio interface/pro-audio gear, otherwise 15052 (headphones/earbuds/speakers/consumer audio)
-  If the item type has no match above (e.g. Desktop, CPU, or anything not on this list), leave ebay_category_id blank — never guess a category ID.
+${ebayCategoryPromptLines()}
+  If the item type has no match above, leave ebay_category_id blank — never guess a category ID.
 
 CONDITION (ebay_condition_code + ebay_condition_description):
   New / Sealed            → code 1000, description blank
@@ -9041,6 +9791,15 @@ function buildClaudePrepPrompt(entriesOverride){
       `STEP 4 — TITLE + HTML DESCRIPTION (flexible, not templated).\n` +
       `Write a natural SEO-appropriate title for the item. Build an "Item Specifications" HTML table using whatever rows are actually relevant to THIS item — don't force irrelevant fields in, don't omit relevant ones. Use judgment: a PSU naturally gets Wattage/Certification rows, a motherboard gets Socket/Chipset rows, a bundled combo gets an "Included" row listing what's mounted. Keep the same visual style used elsewhere (navy header row #1F4E79, alternating white/#f9f9f9 row shading, 35% label column). Always end the specs table with Condition, then Included, then Description rows, followed by a Shipping & Returns block using: Shipping = "Free Shipping", Return Policy = the value in notes_for_claude (default "30 Days Free Return" if not stated).\n\n` +
       `GUARDRAILS.\n- Do not invent missing specs — mark them MISSING, UNLESS you have genuine confident real-world knowledge of the exact product (e.g. a known monitor model's native resolution and panel type). In that case you may fill it in — but you MUST disclose every such fill-in in the "Filled From Knowledge" column below, naming the exact field and value added. Never silently add anything not in the original description.\n- If needs_research is "Yes", explain what must be verified before listing instead of finalizing it.\n- If ready/high-confidence, remind the lister to take photos of the item, model/serial labels, accessories, and visible defects before final listing edits.\n- If raw_item_description conflicts with something already on file (e.g. a registry code mislabeled), flag it explicitly rather than silently propagating the error.\n- If assigned_sku is present and website_sku is blank, use assigned_sku as the Website SKU. po_number, unit_number, and inventory_location are internal tracking metadata only — never output them as metafields.\n- If cost is provided, set/update the product's per-unit cost (Shopify inventory item cost) alongside price — these are different fields, do not conflate them.\n\n` +
+      `SKU BATCH SUFFIX — apply to every entry.\n` +
+      `The RTL batch number goes at the END of every SKU that does not already start with RTL. Append the numeric portion only, not the full batch id — batch \`${LISTER_BATCH||'RTL####'}\` means appending \`-${(LISTER_BATCH||'').replace(/^RTL/i,'')||'####'}\`. Example: NJ02-5-63740-b4/bin1 becomes NJ02-5-63740-b4/bin1-${(LISTER_BATCH||'').replace(/^RTL/i,'')||'####'}.\n` +
+      `Apply this to CREATEs and EDITs alike. It is always the LAST mutation on a product — after title, description, metafields, price, and after any sku_rename_to. If sku_rename_to is set, rename to that value first, then append the suffix to the renamed SKU.\n` +
+      `If a SKU already ends with this exact suffix, leave it alone rather than appending it twice.\n\n` +
+
+      `BARCODE PDF — ask for it before finalizing.\n` +
+      `The queue below is in PACK ORDER: the lister physically arranged it to match the sequence the boxes will be packed and labelled in. Before you finish, ask the lister to upload the barcode/label PDF for this batch so it can be reordered to match. Reorder the PDF so page number equals queue position (entry 1 = page 1), matching pages to entries by name and address, and assert permutation integrity before writing the output. Name the result labels-packorder-MMDD.pdf.\n` +
+      `If no PDF is provided, complete every other step and say plainly that label sorting is still outstanding — do not silently skip it.\n\n` +
+
       `Return one completed row per entry with these columns:\n` +
       `Internal SKU | Action (CREATE/EDIT) | Website SKU | SKU Renamed To (if sku_rename_to was set) | Classified Type | Title | Final HTML Description | Final Metafields | Missing Info Warnings | Filled From Knowledge (field + value, or "none") | Photo Reminder | Status\n\n` +
       `BhaiMode entries:\n${JSON.stringify(payload,null,2)}`
@@ -16736,12 +17495,15 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
 
   <div class="tb-sep"></div>
 
+  <span class="nexus-build" id="tbBuild" title="Build stamp — if this is missing or wrong, you are running a stale file">b0808.1</span>
+
   <span class="tb-label">Page</span>
   <select id="tbWorkPage" class="tb-page-select">
     <option value="bhai">A · BhaiMode</option>
     <option value="batch">B · Batch</option>
     <option value="universal">C · Universal</option>
     <option value="blitzting">D · Blitzting</option>
+    <option value="wanboard">E · Wan Board</option>
   </select>
 
   <div class="tb-sep"></div>
@@ -19627,6 +20389,286 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-undo-toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
   .nexus-undo-toast button{background:none;border:1px solid var(--nexus-cyan);color:var(--nexus-cyan);border-radius:8px;padding:5px 12px;font:600 12px var(--sans);cursor:pointer}
   .nexus-undo-toast button:hover{background:rgba(50,214,197,.14)}
+  .nexus-build{font:600 9px var(--mono);letter-spacing:.06em;color:#5c6675;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:2px 6px;margin-left:6px;cursor:help}
+
+  /* ══ E · Wan Board ══════════════════════════════════════════════
+     A real replacement shell, not a restyle of the old form. Scoped
+     entirely under #wanboardPage so it cannot leak into A/B/C/D. Own
+     palette because this reads as an instrument panel, not a document. */
+  /* Every color-bearing global variable, redefined once for the board scope.
+     Previous passes patched individual classes (.dp-add-entry, then just the
+     inline --ink-soft case) and kept missing siblings — SKU box, dp-input,
+     dp-preview, dp-label all read these same tokens. Overriding the full set
+     here means every current AND future borrowed element inherits correctly,
+     rather than needing its own override discovered by another screenshot. */
+  /* Global floating chrome (G-Mode, the prompt button) sits fixed on top of
+     everything, including the board's z-index:180 overlay, since it was
+     never designed with a full-screen page in mind. Hidden while the board
+     is open, restored on exit. The prompt button gets a real home in the
+     board footer instead — same click target, just relocated. */
+  body.wb-on #promptBtn,body.wb-on #gModeFloatWan,body.wb-on #gModeFloatHaz{display:none !important}
+  .wb-prompt-btn{margin-left:10px;background:var(--wb-raised);border:1px solid var(--wb-line-hi);
+    color:var(--wb-dim);font:600 11px var(--sans);border-radius:6px;padding:6px 12px;cursor:pointer}
+  .wb-prompt-btn:hover{border-color:var(--wb-cy);color:var(--wb-ink)}
+  /* ROOT CAUSE, found by reading cascade order instead of adding more
+     overrides: an UNSCOPED rule — `.dp-input, .uni-textarea, .uni-select {
+     ... !important }` — points at --wan-card / --wan-ink / --wan-border2.
+     Those variables are only DEFINED under .outer. The board is mounted as
+     a direct child of <body> (a sibling of .outer, not a descendant), so
+     inside the board these variables resolve to nothing, and because the
+     rule carries !important, no scoped override of mine could ever beat it
+     regardless of specificity. The only real fix is defining the SAME
+     variable names the unscoped rule already reads, right here. */
+  #wanboardPage{
+    /* All 23 variables actually referenced by var() anywhere in the file,
+       confirmed by grep, not assumed. Matched to their .outer/.wan-panel
+       source values (swapping indigo #6366F1 accent for the board's own
+       cyan) so borrowed elements look consistent with the rest of the app
+       instead of like a third, inconsistent theme. */
+    --wan-bg:#080A0F; --wan-card:#0f141c; --wan-surface:#0f141c;
+    --wan-border:#232c3a; --wan-border2:#2c3746;
+    --wan-ink:#e8eef7; --wan-faint:#6b7688; --wan-soft:#9aa7b8;
+    --wan-accent:#32d6c5; --wan-accent2:#4ec9d6; --wan-green:#22C55E;
+    --wd-bg:#07090F; --wd-card:#0f141c; --wd-card2:#181B28; --wd-surface:#0D0F18;
+    --wd-border:#232c3a; --wd-border2:#2c3746;
+    --wd-ink:#e8eef7; --wd-faint:#6b7688; --wd-soft:#9aa7b8;
+    --wd-accent:#32d6c5; --wd-accent2:#4ec9d6; --wd-green:#22C55E;
+    --bg:#0a0d12; --surface:#0f141c; --surface-2:#141a24;
+    --ink:#e8eef7; --ink-soft:#9aa7b8; --ink-faint:#6b7688;
+    --line:#232c3a; --line-2:#2c3746;
+    --accent:#32d6c5; --accent-press:#28b3a5; --accent-ink:#32d6c5;
+    --accent-tint:rgba(50,214,197,.10); --accent-tint-2:rgba(50,214,197,.22);
+    --pass:#4ec06f; --pass-ink:#4ec06f; --pass-tint:rgba(78,192,111,.12);
+    --fail:#e5484d; --fail-ink:#e5484d; --fail-tint:rgba(229,72,77,.12);
+    --warn:#e0a53a; --header:#0a0d12; --on-dark:#e8eef7; --on-dark-soft:#9aa7b8;
+    --wb-bg:#0a0d12;--wb-pnl:#111620;--wb-raised:#161c27;--wb-line:#1f2733;
+    --wb-line-hi:#2c3746;--wb-ink:#e8eef7;--wb-dim:#8492a5;--wb-faint:#556072;
+    --wb-cy:#32d6c5;--wb-am:#e0a53a;--wb-gr:#4ec06f;--wb-bl:#5a9ef5}
+  /* The board is NOT a panel card. Work-pages render inside .wan-panel-body,
+     which is a small draggable window — the board needs the whole screen. So
+     it is moved to <body> at init (a draggable ancestor uses transform, and
+     transform breaks position:fixed on descendants) and overlays the canvas
+     below the 52px toolbar. */
+  /* On the board the toolbar moves to the BOTTOM: the composer lives down
+     there, so who/batch/page belong in the same band as the hands. Driven by
+     a body class so it reverts cleanly for A-D. */
+  body.wb-on #wanToolbar{top:auto !important;bottom:0 !important;
+    border-bottom:none;border-top:1px solid rgba(255,255,255,.07);
+    box-shadow:0 -2px 20px rgba(0,0,0,.4)}
+  body.wb-on #wanboardPage.on{top:0;bottom:52px}
+  #wanboardPage{display:none}
+  /* FOUND VIA REAL COMPUTED-STYLE INSPECTION: redefining a custom property
+     does not retroactively change an ALREADY-COMPUTED color value. body sets
+     `color: var(--ink)`, which resolves ONCE using body's own --ink (the
+     light-theme value) and that literal rgb inherits down the whole tree.
+     Redefining --ink deeper only changes what var(--ink) resolves to if
+     something reads it AGAIN — nothing under this element did, so every
+     descendant (including the SKU box) kept body's dark literal regardless
+     of the variable override above. Setting color explicitly here is what
+     actually fixes it, for every borrowed element at once. */
+  #wanboardPage.on{display:flex !important;flex-direction:column;gap:1px;
+    position:fixed;top:52px;left:0;right:0;bottom:0;z-index:180;
+    background:var(--wb-line);overflow:hidden;color:var(--ink)}
+  .wb-grid{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr) minmax(0,250px);
+    gap:1px;background:var(--wb-line);flex:1;min-height:0}
+  .wb-col{background:var(--wb-bg);display:flex;flex-direction:column;gap:1px;min-height:0}
+  .wb-pnl{background:var(--wb-pnl);padding:12px 13px;display:flex;flex-direction:column;min-height:0}
+  .wb-grow{flex:1}
+  .wb-hd{display:flex;align-items:center;gap:7px;margin-bottom:10px;flex-shrink:0}
+  .wb-hd h3{margin:0;font:700 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--wb-faint)}
+  .wb-n{font:700 9px var(--mono);color:var(--wb-bg);background:var(--wb-faint);border-radius:3px;padding:2px 5px}
+  .wb-n.wb-act{background:var(--wb-cy)}
+  .wb-r{margin-left:auto;font:600 10px var(--mono);color:var(--wb-faint)}
+  .wb-hint{font:500 10px var(--mono);color:var(--wb-faint);opacity:.75;margin-bottom:7px}
+  .wb-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;min-height:0}
+  .wb-empty{font:500 11px var(--sans);color:var(--wb-faint);padding:10px 0}
+
+  .wb-center{background:var(--wb-pnl)}
+  .wb-readout{padding:15px 18px 13px;flex-shrink:0}
+  .wb-id{font:600 24px var(--sans);letter-spacing:-.015em;line-height:1.2;color:var(--wb-ink)}
+  .wb-sub{font:500 12px var(--mono);color:var(--wb-cy);margin-top:4px}
+  .wb-conf{display:flex;align-items:center;gap:9px;margin-top:13px}
+  .wb-bars{display:flex;gap:2px}
+  .wb-bars i{width:20px;height:3px;border-radius:1px;background:var(--wb-line-hi);display:block}
+  .wb-bars i.on{background:var(--wb-cy)} .wb-bars i.on.med{background:var(--wb-am)}
+  .wb-lab{font:700 10px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--wb-cy)}
+  .wb-lab.med{color:var(--wb-am)} .wb-lab.low{color:var(--wb-dim)}
+  .wb-why{margin-left:auto;font:500 10px var(--mono);color:var(--wb-faint)}
+  .wb-drives{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:1px;
+    background:var(--wb-line);border:1px solid var(--wb-line);border-radius:8px;overflow:hidden;margin-top:14px}
+  .wb-drives > div{background:var(--wb-raised);padding:8px 10px}
+  .wb-drives .k{font:700 9px var(--sans);letter-spacing:.11em;text-transform:uppercase;color:var(--wb-faint);margin-bottom:3px}
+  .wb-drives .v{font:600 12px var(--mono);color:var(--wb-ink)}
+  .wb-drives .v.g{color:var(--wb-gr)} .wb-drives .v.w{color:var(--wb-am)}
+
+  .wb-adv{min-height:0;overflow-y:auto;padding:12px 18px;border-top:1px solid var(--wb-line);margin-top:10px}
+  .wb-adv[hidden]{display:none}
+  .wb-tip{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--wb-line)}
+  .wb-tip:last-child{border-bottom:none}
+  .wb-tip .ic{width:14px;flex-shrink:0;font:700 11px var(--mono);text-align:center}
+  .wb-tip.warn .ic{color:var(--wb-am)} .wb-tip.good .ic{color:var(--wb-gr)} .wb-tip.info .ic{color:var(--wb-bl)}
+  .wb-tip .bd{font:500 11px var(--sans);line-height:1.55;color:var(--wb-dim)}
+  .wb-tip .bd b{color:var(--wb-ink);font-weight:600}
+
+  /* The composer holds BORROWED BhaiMode controls, which are styled for the
+     light document theme. Inside the board they render as dark-on-dark and
+     effectively vanish. Restyle them here rather than touching the originals,
+     so page A is unaffected when they go home. */
+
+  #wanboardPage .uni-main-textarea{min-height:96px;font-family:var(--mono);
+    font-size:15px;line-height:1.6;border-color:#1f6b64}
+  #wanboardPage .uni-main-textarea:focus,#wanboardPage .dp-input:focus{
+    border-color:var(--wb-cy);box-shadow:0 0 0 3px rgba(50,214,197,.12);outline:none}
+
+  #wanboardPage .dp-add-entry{background:var(--wb-raised);border:1px solid var(--wb-line-hi);
+    color:var(--wb-dim);font:600 12px var(--sans);border-radius:7px;padding:9px}
+  #wanboardPage .dp-add-entry:hover{border-color:var(--wb-cy);color:var(--wb-ink)}
+  /* Root cause: --ink-soft (#5C616C) is a light-theme token borrowed buttons
+     inherit. It reads fine on white, and reads as dark-on-dark on the board's
+     near-black panel. Redefining it inside #wanboardPage fixes every borrowed
+     element at once, including the one with an inline color:var(--ink-soft)
+     that no class selector can beat — a custom-property override wins there
+     because the inline rule still points at the SAME variable, we are just
+     changing what it resolves to within this scope. */
+  #wanboardPage{--ink-soft:#9aa7b8; --ink:#e8eef7; --ink-faint:#6b7688; --line-2:#232c3a}
+  #wanboardPage .dp-add-entry{color:var(--wb-dim) !important}
+
+  /* Composer action row (added 2026-08-07). Was four full-width dashed
+     buttons stacked top to bottom, each reading with equal weight — Add to
+     queue (used every entry) looked identical to Speed Review (used once a
+     session). Regrouped by actual frequency: price row stays a 2-up grid,
+     the two lookup buttons sit side by side as small secondary actions, Add
+     is the one full-width filled button, Speed Review drops to a plain text
+     link underneath since it is rarely reached for. No markup was reordered
+     — flex/grid on the existing children only, so this is pure layout. */
+  /* Composer redesign (2026-08-07): description box enlarged and made the
+     dominant element; the secondary controls move to a narrow side column
+     instead of stacking full-width beneath the textarea. The SKU/returns
+     trigger sits first (above Cost), Add to queue sits last (underneath
+     the lookup buttons) — both now live inside the side column, not
+     spanning the full composer width. */
+  #wanboardPage .wan-composer{display:grid;gap:8px;
+    grid-template-columns:1fr 190px;
+    grid-template-areas:"desc side"}
+  #wanboardPage .uni-desc-wrap{grid-area:desc;display:flex;flex-direction:column;height:100%}
+  #wanboardPage .uni-desc-wrap .uni-main-textarea{flex:1;min-height:180px;height:100%;resize:none}
+  #wanboardPage .wan-composer-side{grid-area:side;display:flex;flex-direction:column;gap:8px}
+  #wanboardPage .wan-price-row{display:flex;flex-direction:column;gap:8px;margin:0}
+  #wanboardPage #bhaiShovoPriceChip{order:unset}
+  #wanboardPage .wan-composer > .dp-add-entry{width:auto}
+  #wanboardPage #bhaiSuggestPrice,#wanboardPage #bhaiEbayLookup{
+    order:unset;flex:none;margin:0 !important;padding:9px 8px !important;
+    font-size:10.5px !important;border-style:solid !important;
+    white-space:normal;line-height:1.35;text-align:left}
+  #wanboardPage .wb-lookup-row{order:unset;display:flex;flex-direction:column;gap:8px}
+  #wanboardPage .wb-lookup-row > .dp-add-entry{order:0;flex:none}
+  /* background/color need !important — the pre-existing unscoped
+     `.dp-add-entry{ background: transparent !important; color: var(--wan-soft)
+     !important }` rule otherwise wins regardless of this selector's ID
+     specificity. Confirmed via real computed-style inspection: without this,
+     the primary Add button silently stayed transparent-on-transparent. */
+  #wanboardPage #bhaiAddEntry{width:100%;margin:0 !important;
+    padding:12px !important;font-size:13px !important;border-radius:8px;
+    background:var(--wb-cy) !important;border-color:var(--wb-cy) !important;
+    color:#06231f !important;font-weight:700}
+  #wanboardPage #bhaiAddEntry:hover{background:#3fe5d3 !important;color:#06231f !important}
+
+  #wanboardPage .wan-resolved,#wanboardPage .wan-says{display:none}
+
+  .wb-details-trigger{width:100%;background:var(--wb-raised);border:1px solid var(--wb-line-hi);
+    color:var(--wb-dim);font:600 11px var(--sans);border-radius:7px;padding:8px 11px;
+    cursor:pointer;text-align:left;order:-1}
+  .wb-details-trigger:hover{border-color:var(--wb-cy);color:var(--wb-ink)}
+  .wb-details-trigger::after{content:'\2192';float:right;opacity:.6}
+
+  /* Mounted on document.body (a modal must escape any transformed/clipped
+     ancestor the same reason the board itself did), so it does NOT inherit
+     #wanboardPage's scoped color variables automatically \u2014 restated here. */
+  .wb-modal{position:fixed;inset:0;z-index:700;display:none;
+    align-items:center;justify-content:center;color:#e8eef7;
+    --wan-bg:#080A0F;--wan-card:#0f141c;--wan-surface:#0f141c;
+    --wan-border:#232c3a;--wan-border2:#2c3746;--wan-ink:#e8eef7;
+    --wan-faint:#6b7688;--wan-soft:#9aa7b8;--wan-accent:#32d6c5;
+    --wan-accent2:#4ec9d6;--wan-green:#22C55E;
+    --wd-bg:#07090F;--wd-card:#0f141c;--wd-card2:#181B28;--wd-surface:#0D0F18;
+    --wd-border:#232c3a;--wd-border2:#2c3746;--wd-ink:#e8eef7;--wd-faint:#6b7688;
+    --wd-soft:#9aa7b8;--wd-accent:#32d6c5;--wd-accent2:#4ec9d6;--wd-green:#22C55E;
+    --ink:#e8eef7;--ink-soft:#9aa7b8;--ink-faint:#6b7688;--line:#232c3a;--line-2:#2c3746;
+    --surface:#0f141c;--surface-2:#141a24;--accent:#32d6c5;--accent-ink:#32d6c5;
+    background:rgba(5,7,11,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .wb-modal-card{color:var(--ink)}
+  .wb-modal.open{display:flex}
+  .wb-modal-card{width:min(480px,86vw);max-height:80vh;overflow-y:auto;
+    background:#111620;border:1px solid #2c3746;border-radius:12px;
+    box-shadow:0 24px 60px rgba(0,0,0,.55)}
+  .wb-modal-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:13px 16px;border-bottom:1px solid #1f2733;
+    font:700 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:#8492a5}
+  .wb-modal-x{background:none;border:none;color:#556072;font-size:14px;
+    cursor:pointer;padding:2px 4px;line-height:1}
+  .wb-modal-x:hover{color:#e8eef7}
+  .wb-modal-body{padding:6px 16px 16px}
+  .wb-modal-body>*{margin:9px 0}
+  body.wb-modal-open{overflow:hidden}
+  /* The SKU box, returns row, and notes box are BORROWED page-A elements and
+     still carry .sku-assign-box / .uni-policy-row / .needs-research-box, so
+     they still match every rule those classes were already styled by — no
+     re-styling needed here beyond spacing. */
+  .wb-composer{flex-shrink:0;margin-top:auto;background:var(--wb-pnl);
+    border-top:1px solid var(--wb-line-hi);padding:12px 18px 14px;
+    box-shadow:0 -10px 24px -14px rgba(0,0,0,.8)}
+  .wb-hist{display:flex;align-items:flex-end;gap:3px;height:54px;margin:2px 0 9px}
+  .wb-hist i{flex:1;background:rgba(50,214,197,.35);border-radius:2px 2px 0 0;display:block}
+  .wb-hist i.hi{background:var(--wb-cy)}
+  .wb-cmpv{display:flex;align-items:baseline;gap:8px}
+  .wb-cmpv b{font:600 18px var(--mono);color:var(--wb-ink)}
+  .wb-cmpv span{font:500 10px var(--sans);color:var(--wb-faint)}
+  .wb-note{font:500 11px var(--sans);line-height:1.6;color:var(--wb-dim);margin-bottom:10px}
+  .wb-stats{display:flex;flex-direction:column}
+  .wb-foot{margin-top:auto;padding-top:10px;border-top:1px solid var(--wb-line)}
+  .wb-stat{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--wb-line);
+    font:500 11px var(--sans);color:var(--wb-dim)}
+  .wb-stat:last-child{border-bottom:none}
+  .wb-stat b{font:600 12px var(--mono);color:var(--wb-ink)}
+
+  .wb-bot{display:flex;align-items:center;gap:7px;padding:9px 16px;background:var(--wb-pnl);flex-shrink:0}
+  .wb-l{font:700 9px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--wb-faint);margin-right:4px}
+  .wb-pre{font:500 11px var(--sans);padding:4px 11px;border-radius:5px;border:1px solid var(--wb-line);
+    color:var(--wb-faint);cursor:pointer;transition:.14s}
+  .wb-pre:hover{border-color:var(--wb-line-hi);color:var(--wb-dim)}
+  .wb-pre.on{border-color:#1c6f68;background:rgba(50,214,197,.1);color:var(--wb-cy)}
+  .wb-keys{margin-left:auto;font:500 10px var(--mono);color:var(--wb-faint);opacity:.7}
+  .wb-q{display:flex;align-items:center;gap:8px;background:var(--wb-raised);border:1px solid var(--wb-line);
+    border-left:2px solid var(--wb-gr);border-radius:0 6px 6px 0;padding:7px 9px;cursor:grab;
+    transition:transform .16s,opacity .16s,box-shadow .16s}
+  .wb-q:active{cursor:grabbing}
+  .wb-q.warn{border-left-color:var(--wb-am)}
+  .wb-q.drag{opacity:.35;box-shadow:0 6px 20px rgba(0,0,0,.55)}
+  .wb-qn{font:600 9px var(--mono);color:var(--wb-faint);min-width:12px}
+  .wb-qt{font:500 11px var(--sans);color:var(--wb-ink);white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;flex:1;min-width:0}
+  .wb-qm{font:500 10px var(--mono);color:var(--wb-faint);flex-shrink:0}
+  .wb-q.warn .wb-qm{color:var(--wb-am)}
+  .wb-q.landed{animation:wbSlot .42s cubic-bezier(.22,1.2,.36,1) both}
+  @keyframes wbSlot{from{opacity:0;transform:translateY(-9px) scaleY(.55)}to{opacity:1;transform:none}}
+  .wb-ghost{position:fixed;z-index:600;pointer-events:none;background:var(--wb-raised);
+    border:1px solid #1c6f68;border-radius:9px;padding:9px 11px;overflow:hidden;
+    font:500 12px var(--mono);color:var(--wb-ink);transform-origin:top left;will-change:transform,opacity}
+  /* z-index:1 was invisible in practice: #wanboardPage.on is appended to
+     body AFTER wbGlow on every switch (wanMountBoard always appendChild's
+     to the end), and its panels have solid backgrounds — later paint order
+     covered the glow regardless of z-index 1 vs the panels' default.
+     Confirmed via elementFromPoint() at the cursor: the composer was the
+     actual top-painted element, not the glow. Needs to sit above the
+     board overlay (z-index:180) but below the modal (700) so it's visible
+     over panels while the SKU/returns popup is still on top of it. */
+  #wbGlow{position:fixed;left:0;top:0;width:320px;height:320px;margin:-160px 0 0 -160px;
+    pointer-events:none;z-index:190;opacity:0;transition:opacity .35s;
+    background:radial-gradient(circle closest-side,rgba(50,214,197,.12),rgba(50,214,197,.045) 45%,transparent 72%)}
+  #wbGlow.on{opacity:1}
+  @media(prefers-reduced-motion:reduce){#wbGlow{display:none}.wb-q.landed{animation:none}}
+  @media(max-width:1100px){.wb-grid{grid-template-columns:1fr}.wb-col{min-height:auto}}
   .nexus-oq-item-row{display:flex;align-items:center;gap:6px;margin:2px 0;flex-wrap:wrap}
   .nexus-oq-qty{font:700 10px var(--mono);color:var(--nexus-soft)}
   .nexus-oq-value{font:700 11px var(--mono);color:var(--nexus-gold);flex:none}
@@ -25891,4 +26933,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   renderStack();
 })();
 </script>
+
+
+
 </body></html>
