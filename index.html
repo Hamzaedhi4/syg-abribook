@@ -4293,7 +4293,7 @@
       <option value="P">Paul (P)</option>
     </select>
     <input class="lister-batch" id="listerBatch" value="RTL" placeholder="Batch e.g. RTL0623" autocomplete="off" spellcheck="false" maxlength="12">
-    <span class="nexus-build" id="nexusBuild" title="Build stamp — if this does not match the file you just deployed, you are looking at a cached or stale copy">b0808.3</span>
+    <span class="nexus-build" id="nexusBuild" title="Build stamp — if this does not match the file you just deployed, you are looking at a cached or stale copy">b0808.7</span>
     <span class="lister-label" style="margin-left:4px" title="Four doors into the same manifest queue — lettered because they are alternatives, not steps">Intake door</span>
     <select class="work-select" id="workPageSelect" title="Choose the active Abribook page">
       <option value="bhai">A · BhaiMode — any item</option>
@@ -5305,7 +5305,9 @@
         <div class="wb-pnl wb-grow">
           <div class="wb-hd"><span class="wb-n">3</span><h3>Send</h3></div>
           <div class="wb-note" id="wbSendNote">Nothing queued yet.</div>
-          <div class="wb-slot" id="wbSlotSend"></div>
+          <div class="wb-slot" id="wbSlotSend">
+            <button type="button" class="wb-send-btn" id="wbSendCopy">Copy prompt with items</button>
+          </div>
           <div class="wb-stats wb-foot" id="wbSession"></div>
         </div>
       </div>
@@ -5316,8 +5318,8 @@
       <span class="wb-pre on" data-wb-layout="blitz">Component blitz</span>
       <span class="wb-pre" data-wb-layout="value">High value</span>
       <span class="wb-pre" data-wb-layout="audit">Audit</span>
-      <span class="wb-keys">⇧F find · ⇧↵ add</span>
-      <button class="wb-prompt-btn" id="wbPromptBtn" type="button">Manifest prompt</button>
+      <span class="wb-keys">⇧↵ add · ⇧M copy prompt</span>
+      <button class="wb-prompt-btn" id="wbPromptBtn" type="button">Onboarding prompt</button>
     </div>
   </div>
 
@@ -7883,6 +7885,35 @@ document.getElementById('dpClear').addEventListener('click', ()=>{
 // new draft listing"; filled means "edit this existing product."
 let bhaiEntriesData = [];
 let bhaiNextId = 1;
+// Extracted 2026-08-07 so the board's queue can reuse the EXACT same edit
+// logic as page A's pencil icon, instead of a second copy that could drift
+// out of sync with it — same trap as every other duplicated-logic bug this
+// session (Speed Review, the offer-total code) already showed up once.
+function bhaiLoadEntryForEdit(id){
+  const src = bhaiEntriesData.find(e=>e.id===id);
+  if(!src) return;
+  document.getElementById('bhaiWebsiteSku').value = src.websiteSku||'';
+  document.getElementById('bhaiDesc').value = src.desc||'';
+  document.getElementById('bhaiClaudeNotes').value = src.claudeNotes||'';
+  document.getElementById('bhaiReturnPolicy').value = src.returnPolicy||'30 Days Free Return';
+  document.getElementById('bhaiNeedsResearch').checked = !!src.needsResearch;
+  document.getElementById('bhaiCost').value = src.cost||'';
+  document.getElementById('bhaiPrice').value = src.price||'';
+  bhaiFormSkuState = {poNumber: src.poNumber||'', unitNumber: src.unitNumber||'', invLocation: src.invLocation||'', _lastAssignedPo: src.poNumber||''};
+  document.getElementById('bhaiPoNumber').value = src.poNumber||'';
+  document.getElementById('bhaiInvLocation').value = src.invLocation||'';
+  const unitEl = document.getElementById('bhaiUnitNumber'); if(unitEl) unitEl.value = src.unitNumber||'';
+  bhaiRefreshSkuPreview();
+  bhaiUpdatePreview();
+  bhaiEditingId = id;
+  const addBtn = document.getElementById('bhaiAddEntry');
+  if(addBtn) addBtn.textContent = '✎ Update entry';
+  // wanRenderResolved/wanRenderSays read straight from the (now-populated)
+  // #bhaiDesc, so Resolved reflects what's being edited immediately, on
+  // whichever page — A or the board — is currently showing it.
+  if(typeof wanRenderResolved==='function') wanRenderResolved();
+  toast('Editing entry — change fields, then hit Update entry');
+}
 let bhaiEditingId = null; // set while editing an existing queued entry via the ✎ button
 
 function bhaiAction(e){ return (e.websiteSku && !e.isFreshlyAssigned) ? 'EDIT' : 'CREATE'; }
@@ -8202,17 +8233,28 @@ function bhaiBuildSearchQuery(desc){
   const cap = cleaned.match(/\b\d+(?:\.\d+)?\s*(?:TB|GB)\b/i);
   if(cap) parts.push(cap[0].replace(/\s+/g,'').toUpperCase());
 
-  // Part-number-shaped: mixed letters+digits, 5+ chars, not a pure capacity
+  // Part-number-shaped: mixed letters+digits, 5+ chars, not a pure capacity.
+  // BUG (found 2026-08-07): this used to collect EVERY matching token, not
+  // just the first. A serial with no labeling keyword nearby ("Serial",
+  // "S/N") — e.g. "WD1003FZEX (WCC3F3EAT703)" — is structurally identical
+  // to a real part number and was sailing straight into the eBay query
+  // alongside the genuine one. Real descriptions in this shop essentially
+  // never contain two legitimate part numbers; the pattern is always
+  // "model number, then optionally an unlabeled serial." Taking only the
+  // FIRST qualifying token is the safe default — a rare true second part
+  // number gets dropped, which is far cheaper than a serial silently
+  // corrupting every comp search.
   const seen = new Set(parts.map(p=>p.toLowerCase()));
-  cleaned.split(/[\s\/]+/).forEach(tok=>{
-    const t = tok.replace(/[^A-Za-z0-9-]/g,'');
-    if(t.length < 5 || t.length > 20) return;
-    if(!/[A-Za-z]/.test(t) || !/[0-9]/.test(t)) return;
-    if(/^\d+(?:\.\d+)?(?:tb|gb|mb)$/i.test(t)) return;
-    if(seen.has(t.toLowerCase())) return;
-    seen.add(t.toLowerCase());
+  const tokens = cleaned.split(/[\s\/]+/);
+  for(let i=0;i<tokens.length;i++){
+    const t = tokens[i].replace(/[^A-Za-z0-9-]/g,'');
+    if(t.length < 5 || t.length > 20) continue;
+    if(!/[A-Za-z]/.test(t) || !/[0-9]/.test(t)) continue;
+    if(/^\d+(?:\.\d+)?(?:tb|gb|mb)$/i.test(t)) continue;
+    if(seen.has(t.toLowerCase())) continue;
     parts.push(t.toUpperCase());
-  });
+    break; // first qualifying token only — see note above
+  }
 
   const q = parts.join(' ').trim();
   // Nothing identifying survived — better to search nothing than search prose
@@ -8566,12 +8608,31 @@ function wanBoardWrapSide(){
 }
 function wanBoardWireHeader(){
   var btn=document.getElementById('wbPromptBtn');
-  if(!btn || btn.dataset.wired) return;
-  btn.dataset.wired='1';
-  btn.addEventListener('click', function(){
-    var real=document.getElementById('promptBtn');
-    if(real) real.click();   // same handler, real button just relocated
-  });
+  if(btn && !btn.dataset.wired){
+    btn.dataset.wired='1';
+    btn.addEventListener('click', function(){
+      // This button's job is the static onboarding prompt (#promptBtn /
+      // MANIFEST_PROMPT) — general system conventions, not tied to the
+      // current queue. I briefly mis-"fixed" it to point at the per-batch
+      // copy action, assuming it was misplaced; it wasn't. That real
+      // action lives in Send instead — see wbSendCopy below.
+      var real=document.getElementById('promptBtn');
+      if(real) real.click();
+    });
+  }
+
+  // The actual "copy the prompt with my queued items" action, placed where
+  // it belongs: under Send, next to the entry count it's describing —
+  // not in the header, which is onboarding-only. Same real action as the
+  // Shift+M shortcut (#dpCopyAll), so both paths can never disagree.
+  var sendBtn=document.getElementById('wbSendCopy');
+  if(sendBtn && !sendBtn.dataset.wired){
+    sendBtn.dataset.wired='1';
+    sendBtn.addEventListener('click', function(){
+      var real=document.getElementById('dpCopyAll');
+      if(real && !real.disabled) real.click();
+    });
+  }
 }
 wanBoardWireHeader();
 
@@ -8588,6 +8649,31 @@ document.addEventListener('keydown', function(e){
   e.preventDefault();
   var addBtn=document.getElementById('bhaiAddEntry');
   if(addBtn && !addBtn.disabled) addBtn.click();
+});
+
+// Shift+M copies the REAL manifest-prep prompt — the one built from the
+// actual queued entries (dpCopyAll / prepareExportPrompt), same action as
+// the existing global Ctrl+Enter shortcut. NOT the button this file's own
+// wbPromptBtn was wired to (promptBtn / MANIFEST_PROMPT), which is a static
+// onboarding prompt with zero queue data in it — the wrong target for "copy
+// the prompt with the items," caught while wiring this shortcut.
+//
+// Unlike Shift+Enter, this can't be scoped to one field: copying the prompt
+// is a whole-board action, not something tied to the composer specifically.
+// But M is an ordinary letter people type constantly — "Micron",
+// "Motherboard", "MZ-V9P2T0" — so it has to be BLOCKED while typing
+// anywhere, or every capital M in a real description would fire this by
+// accident instead of typing the letter.
+document.addEventListener('keydown', function(e){
+  if(e.key!=='M' || !e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+  if(CURRENT_WORK_PAGE!=='wanboard') return;
+  var t=document.activeElement, tag=(t&&t.tagName||'').toLowerCase();
+  var typing = tag==='input' || tag==='textarea' || (t&&t.isContentEditable);
+  if(typing) return;
+  e.preventDefault();
+  var copyBtn=document.getElementById('dpCopyAll');
+  if(copyBtn && !copyBtn.disabled) copyBtn.click();
+  else toast('Nothing to copy yet — add an entry or review the session first');
 });
 
 function wanBoardTakeComposer(){
@@ -8725,10 +8811,30 @@ function wanBoardQueue(){
     return '<div class="wb-q'+(ready?'':' warn')+'" draggable="true" data-wbid="'+esc(e.id)+'">'+
       '<span class="wb-qn">'+(i+1)+'</span>'+
       '<span class="wb-qt">'+esc(bhaiEntrySkuLabel(e)||'(new draft)')+'</span>'+
-      '<span class="wb-qm">'+(ready?esc((e.price?'$'+e.price:'no price')):'missing info')+'</span></div>';
+      '<span class="wb-qm">'+(ready?esc((e.price?'$'+e.price:'no price')):'missing info')+'</span>'+
+      '<button type="button" class="wb-qedit" draggable="false" data-wbeditid="'+esc(e.id)+'" title="Edit this entry" aria-label="Edit">\u270e</button>'+
+      '</div>';
   }).join('');
   wanBoardWireDrag();
+  wanBoardWireEdit();
   wanBoardSend();
+}
+
+// Reuses bhaiLoadEntryForEdit — the exact same function page A's pencil icon
+// calls — so editing from the board can never drift out of sync with
+// editing from the sidebar. Delegated on the list so it survives re-renders
+// without re-binding per row.
+var _wbEditWired=false;
+function wanBoardWireEdit(){
+  var list=document.getElementById('wbQueueList');
+  if(!list || _wbEditWired) return;
+  _wbEditWired=true;
+  list.addEventListener('click', function(ev){
+    var btn=ev.target.closest('[data-wbeditid]');
+    if(!btn) return;
+    ev.stopPropagation();
+    bhaiLoadEntryForEdit(parseInt(btn.dataset.wbeditid,10));
+  });
 }
 
 // Pack order is label order, so the queue must be physically rearrangeable.
@@ -8775,6 +8881,12 @@ function wanBoardSend(){
     '<div class="wb-stat">Queued<b>'+data.length+'</b></div>'+
     '<div class="wb-stat">Missing info<b>'+missing+'</b></div>'+
     '<div class="wb-stat">Batch<b>'+esc(typeof LISTER_BATCH!=='undefined'?(LISTER_BATCH||'—'):'—')+'</b></div>';
+  // Mirror the real button's enabled state so this one can never look
+  // clickable when #dpCopyAll would actually refuse (empty queue, guided
+  // mode awaiting review, no lister locked in) — same check it runs itself.
+  var sendBtn=document.getElementById('wbSendCopy');
+  var realBtn=document.getElementById('dpCopyAll');
+  if(sendBtn) sendBtn.disabled = !data.length || (realBtn ? realBtn.disabled : false);
 }
 
 function wanBoardSync(){
@@ -8900,6 +9012,13 @@ if(document.getElementById('bhaiAddEntry')) document.getElementById('bhaiAddEntr
       bhaiEditingId = null;
       const addBtn = document.getElementById('bhaiAddEntry');
       if(addBtn) addBtn.textContent = '+ Add to manifest queue';
+      // BUG (found 2026-08-07): this branch returned before ever reaching
+      // the board-refresh call the create-path has below. Editing an entry
+      // FROM the board would update bhaiEntriesData correctly but leave the
+      // board's own queue row showing stale text until something unrelated
+      // happened to trigger a re-render. No genie here — nothing is being
+      // ADDED to a new slot, an existing row is just refreshed in place.
+      if(typeof wanBoardQueue==='function' && CURRENT_WORK_PAGE==='wanboard'){ wanBoardQueue(); }
       toast('Entry updated');
       return;
     }
@@ -8928,27 +9047,7 @@ if(document.getElementById('bhaiEntries')) document.getElementById('bhaiEntries'
   }
   const editBtn = ev.target.closest('[data-bhaieditid]');
   if(editBtn){
-    const id = parseInt(editBtn.dataset.bhaieditid);
-    const src = bhaiEntriesData.find(e=>e.id===id);
-    if(src){
-      document.getElementById('bhaiWebsiteSku').value = src.websiteSku||'';
-      document.getElementById('bhaiDesc').value = src.desc||'';
-      document.getElementById('bhaiClaudeNotes').value = src.claudeNotes||'';
-      document.getElementById('bhaiReturnPolicy').value = src.returnPolicy||'30 Days Free Return';
-      document.getElementById('bhaiNeedsResearch').checked = !!src.needsResearch;
-      document.getElementById('bhaiCost').value = src.cost||'';
-      document.getElementById('bhaiPrice').value = src.price||'';
-      bhaiFormSkuState = {poNumber: src.poNumber||'', unitNumber: src.unitNumber||'', invLocation: src.invLocation||'', _lastAssignedPo: src.poNumber||''};
-      document.getElementById('bhaiPoNumber').value = src.poNumber||'';
-      document.getElementById('bhaiInvLocation').value = src.invLocation||'';
-      const unitEl = document.getElementById('bhaiUnitNumber'); if(unitEl) unitEl.value = src.unitNumber||'';
-      bhaiRefreshSkuPreview();
-      bhaiUpdatePreview();
-      bhaiEditingId = id;
-      const addBtn = document.getElementById('bhaiAddEntry');
-      if(addBtn) addBtn.textContent = '✎ Update entry';
-      toast('Editing entry — change fields, then hit Update entry');
-    }
+    bhaiLoadEntryForEdit(parseInt(editBtn.dataset.bhaieditid));
     return;
   }
   const btn = ev.target.closest('[data-bhaiid]'); if(!btn) return;
@@ -17518,7 +17617,7 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
 
   <div class="tb-sep"></div>
 
-  <span class="nexus-build" id="tbBuild" title="Build stamp — if this is missing or wrong, you are running a stale file">b0808.3</span>
+  <span class="nexus-build" id="tbBuild" title="Build stamp — if this is missing or wrong, you are running a stale file">b0808.7</span>
 
   <span class="tb-label">Page</span>
   <select id="tbWorkPage" class="tb-page-select">
@@ -20648,6 +20747,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-cmpv b{font:600 18px var(--mono);color:var(--wb-ink)}
   .wb-cmpv span{font:500 10px var(--sans);color:var(--wb-faint)}
   .wb-note{font:500 11px var(--sans);line-height:1.6;color:var(--wb-dim);margin-bottom:10px}
+  .wb-send-btn{width:100%;background:var(--wb-bl);border:1px solid var(--wb-bl);
+    color:#031228;font:700 12.5px var(--sans);padding:11px;border-radius:8px;cursor:pointer}
+  .wb-send-btn:hover:not(:disabled){filter:brightness(1.1)}
+  .wb-send-btn:disabled{opacity:.4;cursor:default;background:var(--wb-raised);
+    border-color:var(--wb-line-hi);color:var(--wb-faint)}
   .wb-stats{display:flex;flex-direction:column}
   .wb-foot{margin-top:auto;padding-top:10px;border-top:1px solid var(--wb-line)}
   .wb-stat{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--wb-line);
@@ -20672,6 +20776,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-qt{font:500 11px var(--sans);color:var(--wb-ink);white-space:nowrap;overflow:hidden;
     text-overflow:ellipsis;flex:1;min-width:0}
   .wb-qm{font:500 10px var(--mono);color:var(--wb-faint);flex-shrink:0}
+  .wb-qedit{flex-shrink:0;background:none;border:none;color:var(--wb-faint);
+    font-size:12px;cursor:pointer;padding:2px 4px;line-height:1;border-radius:4px;
+    opacity:0;transition:opacity .12s,color .12s}
+  .wb-q:hover .wb-qedit{opacity:1}
+  .wb-qedit:hover{color:var(--wb-cy)}
+  .wb-q{position:relative}
   .wb-q.warn .wb-qm{color:var(--wb-am)}
   .wb-q.landed{animation:wbSlot .42s cubic-bezier(.22,1.2,.36,1) both}
   @keyframes wbSlot{from{opacity:0;transform:translateY(-9px) scaleY(.55)}to{opacity:1;transform:none}}
