@@ -3640,6 +3640,7 @@
       <div class="nexus-hero"><div><h1>Store operations, connected.</h1><p>Move from intake to healthy listings to physical-first shipping.</p></div><div class="nexus-health-mini"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-health-mini-row"><strong id="nexusOverallHealth">100%</strong><span id="nexusHealthSub">23 audited listings</span></div></div></div>
       <div class="nexus-grid" id="nexusGridView0">
         <button class="nexus-module" id="welcomeWan" style="--mod-color:var(--nexus-blue)"><div class="nexus-module-foot">List</div><div class="nexus-module-icon">📖</div><h2>Wan Workspace</h2><p>Listing intake, Abribook registry, manifests and batch tools.</p></button>
+        <button class="nexus-module" data-module="morning" style="--mod-color:#fbbf24"><div class="nexus-module-foot">Rounds</div><div class="nexus-module-icon">☀</div><h2>Morning Rounds</h2><p>Reviews, eBay messages, orders, cancellations and disputes — one click each.</p></button>
         <button class="nexus-module" id="welcomePc" style="--mod-color:#f4bb55"><div class="nexus-module-foot">Audit</div><div class="nexus-module-icon">◉</div><h2>Listing Health</h2><p>Scan, audit, correct and understand every listing.</p></button>
         <button class="nexus-module" id="welcomeHaz" style="--mod-color:#4ade80"><div class="nexus-module-foot">Buy</div><div class="nexus-module-icon">◇</div><h2>Haz Buying</h2><p>Customer intake, offer calculations and buying board.</p></button>
         <button class="nexus-module" data-module="shipping" style="--mod-color:var(--nexus-cyan)"><div class="nexus-module-foot">Ship</div><div class="nexus-module-icon">▰</div><h2>Shipping Station</h2><p>Physical-first packing, package presets and eBay prefill.</p></button>
@@ -4293,7 +4294,7 @@
       <option value="P">Paul (P)</option>
     </select>
     <input class="lister-batch" id="listerBatch" value="RTL" placeholder="Batch e.g. RTL0623" autocomplete="off" spellcheck="false" maxlength="12">
-    <span class="nexus-build" id="nexusBuild" title="Build stamp — if this does not match the file you just deployed, you are looking at a cached or stale copy">b0808.7</span>
+    <span class="nexus-build" id="nexusBuild" title="Build stamp — if this does not match the file you just deployed, you are looking at a cached or stale copy">b0809.0</span>
     <span class="lister-label" style="margin-left:4px" title="Four doors into the same manifest queue — lettered because they are alternatives, not steps">Intake door</span>
     <select class="work-select" id="workPageSelect" title="Choose the active Abribook page">
       <option value="bhai">A · BhaiMode — any item</option>
@@ -7761,10 +7762,18 @@ function showEosSummary(){
 function updateCopyButtonGate(){
   const btn = document.getElementById('dpCopyAll');
   if(!btn) return;
-  if(!GUIDED_MODE){ btn.disabled = false; btn.title = ''; return; }
-  const reviewed = _lastReviewedSnapshot !== null && _lastReviewedSnapshot === entriesSnapshot();
-  btn.disabled = !reviewed;
-  btn.title = reviewed ? '' : 'Guided mode is on — click "Review Session" first (entries have changed since your last review)';
+  if(!GUIDED_MODE){ btn.disabled = false; btn.title = ''; }
+  else {
+    const reviewed = _lastReviewedSnapshot !== null && _lastReviewedSnapshot === entriesSnapshot();
+    btn.disabled = !reviewed;
+    btn.title = reviewed ? '' : 'Guided mode is on — click "Review Session" first (entries have changed since your last review)';
+  }
+  // This gate change didn't previously reach the board's own mirrored
+  // button at all — confirming "Mark Session Reviewed" would unlock
+  // #dpCopyAll on page A but leave #wbSendCopy showing stale-disabled
+  // until something unrelated (like adding another entry) happened to
+  // re-render the board.
+  if(typeof wanBoardSend==='function' && typeof CURRENT_WORK_PAGE!=='undefined' && CURRENT_WORK_PAGE==='wanboard'){ wanBoardSend(); }
 }
 
 if(document.getElementById('guidedModeToggle')){
@@ -8630,7 +8639,19 @@ function wanBoardWireHeader(){
     sendBtn.dataset.wired='1';
     sendBtn.addEventListener('click', function(){
       var real=document.getElementById('dpCopyAll');
-      if(real && !real.disabled) real.click();
+      if(!real) return;
+      if(!real.disabled){ real.click(); return }
+      // The button being disabled almost always means "guided mode wants a
+      // Review Session first," not "nothing is queued" — the queue-count
+      // check already prevents clicking on a truly empty queue. Rather than
+      // a dead-end toast telling the person to go find a button that only
+      // exists on page A, open the SAME review modal directly. It already
+      // force-reparents itself to <body> with max z-index on every show
+      // (built that way specifically for the transformed/floating-panel
+      // Wan canvas), so it renders correctly on top of the board with no
+      // extra handling needed here.
+      if(typeof showEosSummary==='function') showEosSummary();
+      else toast('Guided mode is on — review the session on page A first');
     });
   }
 }
@@ -8672,7 +8693,11 @@ document.addEventListener('keydown', function(e){
   if(typing) return;
   e.preventDefault();
   var copyBtn=document.getElementById('dpCopyAll');
-  if(copyBtn && !copyBtn.disabled) copyBtn.click();
+  if(copyBtn && !copyBtn.disabled){ copyBtn.click(); return }
+  // Same reasoning as the Send-panel button: disabled almost always means
+  // "review the session first," not "nothing queued" — open that review
+  // directly instead of a dead-end toast.
+  if(typeof showEosSummary==='function') showEosSummary();
   else toast('Nothing to copy yet — add an entry or review the session first');
 });
 
@@ -8886,7 +8911,21 @@ function wanBoardSend(){
   // mode awaiting review, no lister locked in) — same check it runs itself.
   var sendBtn=document.getElementById('wbSendCopy');
   var realBtn=document.getElementById('dpCopyAll');
-  if(sendBtn) sendBtn.disabled = !data.length || (realBtn ? realBtn.disabled : false);
+  if(sendBtn){
+    var blockedByReview = !!(realBtn && realBtn.disabled);
+    // Two different reasons look similar but must NOT both use the native
+    // `disabled` attribute: a disabled button never fires click at all, so
+    // if "needs review" also set disabled=true, the click handler's own
+    // fallback (open the review modal) could never run — the exact
+    // dead-end this fix exists to remove. Only a truly empty queue gets
+    // real disabled=true; "needs review" stays clickable with its own
+    // visual state instead.
+    sendBtn.disabled = !data.length;
+    sendBtn.classList.toggle('needs-review', !!data.length && blockedByReview);
+    sendBtn.textContent = blockedByReview && data.length ? 'Review session to unlock' : 'Copy prompt with items';
+    sendBtn.title = !data.length ? 'Nothing queued yet'
+      : (blockedByReview ? 'Click to review the session first — guided mode requires it before copying' : '');
+  }
 }
 
 function wanBoardSync(){
@@ -17617,7 +17656,7 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
 
   <div class="tb-sep"></div>
 
-  <span class="nexus-build" id="tbBuild" title="Build stamp — if this is missing or wrong, you are running a stale file">b0808.7</span>
+  <span class="nexus-build" id="tbBuild" title="Build stamp — if this is missing or wrong, you are running a stale file">b0809.0</span>
 
   <span class="tb-label">Page</span>
   <select id="tbWorkPage" class="tb-page-select">
@@ -20707,6 +20746,35 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   /* Mounted on document.body (a modal must escape any transformed/clipped
      ancestor the same reason the board itself did), so it does NOT inherit
      #wanboardPage's scoped color variables automatically \u2014 restated here. */
+  /* Morning Rounds modal (added 2026-08-08). Own small stylesheet rather
+     than reusing .wb-* — this has to work from the home grid too, before
+     the board's scoped variables (#wanboardPage) are anywhere on screen. */
+  .morning-backdrop{position:fixed;inset:0;z-index:10300;display:none;
+    align-items:center;justify-content:center;
+    background:rgba(5,7,11,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .morning-backdrop.open{display:flex}
+  .morning-card{width:min(420px,90vw);max-height:82vh;overflow-y:auto;
+    background:#12151c;border:1px solid #262b36;border-radius:14px;
+    box-shadow:0 26px 60px rgba(0,0,0,.55);color:#e8eef7;
+    font-family:-apple-system,system-ui,sans-serif}
+  .morning-head{display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px;border-bottom:1px solid #1f232c;font:700 14px inherit}
+  .morning-close{background:none;border:none;color:#6b7280;font-size:15px;
+    cursor:pointer;padding:2px 4px;line-height:1}
+  .morning-close:hover{color:#e8eef7}
+  .morning-body{padding:6px 12px 4px}
+  .morning-group{margin:12px 6px}
+  .morning-group-label{font:700 10px inherit;letter-spacing:.09em;
+    text-transform:uppercase;color:#6b7280;margin:4px 6px 6px}
+  .morning-link{width:100%;display:flex;align-items:center;gap:10px;
+    background:#181c25;border:1px solid #262b36;border-radius:9px;
+    padding:11px 12px;margin-bottom:6px;color:#e8eef7;font:500 13px inherit;
+    cursor:pointer;text-align:left;transition:border-color .12s,background .12s}
+  .morning-link:hover{border-color:#fbbf24;background:#1c2029}
+  .morning-link-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;color:#fbbf24}
+  .morning-link span:nth-child(2){flex:1}
+  .morning-link-go{color:#4b5563;font-size:12px}
+  .morning-foot{padding:10px 18px 16px;font:500 11px inherit;color:#6b7280;text-align:center}
   .wb-modal{position:fixed;inset:0;z-index:700;display:none;
     align-items:center;justify-content:center;color:#e8eef7;
     --wan-bg:#080A0F;--wan-card:#0f141c;--wan-surface:#0f141c;
@@ -20752,6 +20820,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-send-btn:hover:not(:disabled){filter:brightness(1.1)}
   .wb-send-btn:disabled{opacity:.4;cursor:default;background:var(--wb-raised);
     border-color:var(--wb-line-hi);color:var(--wb-faint)}
+  .wb-send-btn.needs-review{background:var(--wb-raised);border-color:var(--wb-am);
+    color:var(--wb-am)}
+  .wb-send-btn.needs-review:hover{background:rgba(224,165,58,.12)}
   .wb-stats{display:flex;flex-direction:column}
   .wb-foot{margin-top:auto;padding-top:10px;border-top:1px solid var(--wb-line)}
   .wb-stat{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--wb-line);
@@ -23150,6 +23221,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       '<div class="nexus-home-body"><div class="nexus-hero"><div><h1>Store operations, connected.</h1><p>Move from intake to healthy listings to physical-first shipping.</p></div><div class="nexus-health-mini"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-health-mini-row"><strong id="nexusOverallHealth">100%</strong><span id="nexusHealthSub">Ready for first audit</span></div></div></div>'+
       '<div class="nexus-grid" id="nexusGridView">'+
       moduleHtml('wan','📖','Wan Workspace','Listing intake, Abribook registry, manifests and batch tools.','LIST','var(--nexus-blue)')+
+      moduleHtml('morning','☀','Morning Rounds','Reviews, eBay messages, orders, cancellations and disputes.','ROUNDS','#fbbf24')+
       moduleHtml('audit','◉','Listing Health','Scan, audit, correct and understand every listing.','AUDIT','#f4bb55')+
       moduleHtml('haz','◇','Haz Buying','Customer intake, offer calculations and buying board.','BUY','#4ade80')+
       moduleHtml('shipping','▰','Shipping Station','Physical-first packing, package presets and eBay prefill.','SHIP','var(--nexus-cyan)')+
@@ -23190,6 +23262,74 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     if(id==='shovo'){if(typeof window.openShovoFromNexus==='function')window.openShovoFromNexus();return}
     if(id==='command'){buildCommandCenter();welcome.classList.add('hidden');document.getElementById('nexusCommand').classList.add('show');return}
     if(id==='leads'){welcome.classList.add('hidden');if(typeof window.leadsOpen==='function')window.leadsOpen();return}
+    if(id==='morning'){openMorningRounds();return}
+  }
+
+  // ── Morning Rounds (added 2026-08-08) ──────────────────────────────
+  // Five external sites checked every morning, one click each. This is
+  // deliberately NOT a work-page — it opens/closes a plain modal over
+  // whatever's currently on screen (home grid or an active canvas), so
+  // checking reviews or orders never interrupts what you were doing.
+  // Built once, reused every open — same idempotent pattern as the
+  // board's own modals elsewhere in this file.
+  var MORNING_LINKS = [
+    {group:'Google', label:'Reviews', icon:'★',
+     url:'https://www.google.com/search?q=sell+your+gadgets+-+cash+for+electronics+reviews&oq=sell+your+gadg&gs_lcrp=EgZjaHJvbWUqCAgAEEUYJxg7MggIABBFGCcYOzIPCAEQLhgnGK8BGMcBGI4FMgYIAhBFGDkyBwgDEAAYgAQyBggEEEUYPDIGCAUQRRg8MgYIBhBFGDwyBggHEEUYQdIBCDMzNzdqMGo3qAIAsAIA&sourceid=chrome&source=chrome.ob&ie=UTF-8#sv=CAwSqwkKBmxjbF9wdhKMCQoDcHZxEoQJTXJjR05uZFVNRUYzUlVsRlFrRkNSMEZGYVVWM2FtSnFPRGRDYWtwSFYwRjRWWE4wTkd0RlNHWnVYMEZHUVc5QlZFdDNRa0pMZEVKRE9XaFpNbmh5VUROT2FGQlZkMjFaVjJzNVVrVk9iMk14VGtaa01teHZUa2hTYlZGdGNFdFNNV1JDWlVaa1FsUnJSbTVTYTJoYVUwZHdRMDFVUWxwUlZVNUtVVEJPUWxKV1JrOWhSemxFV1d4a1VrcHRUblpRVkVWdFdWaE9iRkJVU1cxYU1rNXpZVmRST1ZFeWJ6QlRNRTVTWVc1a2QwOVlXbFZSYldoRVZqQkdVMU5ZVWtKVWJVWldZMjF3TVZSRVFqVlpiRkpUWlVac2NrOVhTazFSTW1oTFYyMDFNV1I2YkcxbGF6VnpURlZhVkZSWFRuRmlNbVJFVFc1c1RWcEZjSGRrVjNCWFltNU5NMXBWU2pCV1YxcElXa014U0Zvd2RHRlNibWhDVVhwb1VVOUZhRUpWVTFwc1lWUXhNRlV5ZDNwWldFSXlZVVUxYUdWdVZuZGtSa1pSVEZkWmRGSkhaRUpXVTFweldWZEtiR0pFTVcxamJWWnNXRE5DZWxnelpHeFpiazV3WkVkVmJWbDNSMVU1UVVWQ1VWVkdWR1JZWkVsaE1rWkZWMVpTTmxFd1kzaFdNRXBZV1d0S1JsWkhjek5pYlVaTVVqTnNRMVl5YUdGaWVrNVZXbGR3Y1ZscmVHcGFhazQyVXpKRk1tUkdRblJTUkU1cFYxWmtObUo2Vm1salZFRjBWMjFSZWxFemFGTk5SVGx1V1c1S05sZEhVbWhUYTNSYVUzcFNhVlp1UWtSaWJtUXdVMjB4VDJKWFRrWk5NMUphVkVZNWRGcFhUVFJPUjJoR1l6SjBNazlGVWtaYVIxbzFVMVpDVWxNeVdrOVdiRnB0Vm10d05tVlZkR0ZZZVRBMVZsaFdVbVJXUW5GalZUbFRUbTVGTlUxWE5WUmxSRXBYWkRCR1QxTXlOVXBSYWtaVlpFWmFibVJJVG01V2EyUkdXV3hTVFZZeFNuUldSVTVGVTIxNFNtTnRiRWxaYkU0d1lucENORnB0U25CYU1VNXhaRVZLVVZFeE9XNVRNazVtVG14WmQwNUdiRXBrYTBaVFdrVlNWV1ZXY0ZsV2FsWkVURlZuZEZacVpIVmlXRlpxWVhwV01WZEdSakJNV0ZJeVdrVnNUMVZITlVSa2JGVXlWRzVTUWtwdFRtcEpZVWgzVTIxT2FHUkhWbTVpTTBvMVVGZEdhbU50VG5kWU0xbDRXSHBOZVVwdVRuQmFlakZDVkRCUk1rNUdPSGxVYTJOM1pXeHdSMkpzYUhWWGF6bDJWVWRzWmxWVVNqTlhiVEZKVmpJeGFrOUhlRkpLYlVaclpGaEtjMUJVWjBKWGFHTkpRVUpKVkVOR01WRkhTV3RGU0dadVgwRkdRVG9sTUhnNE9XTXlabVJpTVdFd1lqWXlPV1V4T2pCNFpqazNPRGN5TkdSaU9HVXlZVE16Tnc9PRoSbG9jYWwtcGxhY2Utdmlld2VyGAoglY2k5Qo'},
+    {group:'eBay', label:'Messages', icon:'✉',
+     url:'https://www.ebay.com/cnt/ViewMessage?filter=1&_caprdt=1&group_type=CORE'},
+    {group:'eBay', label:'Orders Awaiting Shipment', icon:'▤',
+     url:'https://www.ebay.com/sh/ord/?filter=status:AWAITING_SHIPMENT'},
+    {group:'eBay', label:'Cancellations', icon:'⊘',
+     url:'https://www.ebay.com/sh/ord/cancel'},
+    {group:'eBay', label:'Requests & Disputes', icon:'⚑',
+     url:'https://www.ebay.com/sh/resolutions'}
+  ];
+
+  function ensureMorningModal(){
+    var m=document.getElementById('morningBackdrop');
+    if(m) return m;
+    m=document.createElement('div');
+    m.id='morningBackdrop';
+    m.className='morning-backdrop';
+    var groups={};
+    MORNING_LINKS.forEach(function(l){ (groups[l.group]=groups[l.group]||[]).push(l) });
+    var body=Object.keys(groups).map(function(g){
+      return '<div class="morning-group"><div class="morning-group-label">'+g+'</div>'+
+        groups[g].map(function(l){
+          return '<button type="button" class="morning-link" data-url="'+l.url.replace(/"/g,'&quot;')+'">'+
+            '<span class="morning-link-icon">'+l.icon+'</span><span>'+l.label+'</span>'+
+            '<span class="morning-link-go">↗</span></button>';
+        }).join('')+
+      '</div>';
+    }).join('');
+    m.innerHTML='<div class="morning-card">'+
+      '<div class="morning-head"><span>☀ Morning Rounds</span><button type="button" class="morning-close" id="morningClose" aria-label="Close">✕</button></div>'+
+      '<div class="morning-body">'+body+'</div>'+
+      '<div class="morning-foot">Opens in a new tab \u2014 you stay right here.</div>'+
+      '</div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', function(e){
+      var link=e.target.closest('.morning-link');
+      if(link){ window.open(link.dataset.url, '_blank', 'noopener'); return }
+      if(e.target===m) closeMorningRounds();
+    });
+    document.getElementById('morningClose').addEventListener('click', closeMorningRounds);
+    document.addEventListener('keydown', function(e){
+      if(e.key==='Escape' && m.classList.contains('open')) closeMorningRounds();
+    });
+    return m;
+  }
+  function openMorningRounds(){
+    // Same reason the review modal force-repositions itself on every show:
+    // this can be opened from either home grid, or later from anywhere,
+    // and must never end up trapped behind a transformed ancestor.
+    var m=ensureMorningModal();
+    if(m.parentElement!==document.body) document.body.appendChild(m);
+    m.classList.add('open');
+  }
+  function closeMorningRounds(){
+    var m=document.getElementById('morningBackdrop');
+    if(m) m.classList.remove('open');
   }
 
   // ── Shelving & supplies ─────────────────────────────────────────────
