@@ -20093,6 +20093,7 @@ function renderAnswer(q) {
     const myHpGeneration = ++hpLookupGeneration;
     hpLookupInFlight = true;
     hpResultUnseen = false;
+    console.log('[HP Lookup RENDER] starting. bodyEl attached now?', document.body.contains(bodyEl), '\u2014 labelEl attached now?', document.body.contains(labelEl));
     if (labelEl) labelEl.textContent = 'Looking up HP ' + serial;
     bodyEl.innerHTML = '<div style="color:rgba(255,255,255,.55);font-size:13px;">'
       + '\u23f3 Searching HP support \u2014 this drives a real lookup across two of HP\'s own pages plus expanding the full specs list, usually 15\u201345s.</div>';
@@ -20129,6 +20130,15 @@ function renderAnswer(q) {
       }
 
       const r = res.result || {};
+      // Checking a real hypothesis, not guessing blind: if bodyEl/labelEl
+      // were captured at the start of this call but the panel's actual
+      // DOM got rebuilt at some point during a wait this long, these
+      // references would be stale — writes to them would succeed with no
+      // error, but nothing visible would change, because the live page
+      // has different nodes by now. This proves or rules that out
+      // directly instead of assuming either way.
+      console.log('[HP Lookup RENDER] about to render. bodyEl still attached to the live document?', document.body.contains(bodyEl), '\u2014 labelEl still attached?', document.body.contains(labelEl), '\u2014 current #gModeAIBody === bodyEl?', document.getElementById('gModeAIBody') === bodyEl);
+
       if (labelEl) labelEl.textContent = 'HP ' + serial;
       const warrantyColor = /expired/i.test(r.warranty || '') ? '#fca5a5' : /active|valid/i.test(r.warranty || '') ? '#86efac' : '#fbbf24';
       const row = (label, val) => '<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">'
@@ -20143,6 +20153,7 @@ function renderAnswer(q) {
         + row('CPU', r.cpu) + row('RAM', r.ram) + row('Storage', r.storage)
         + '</div>'
         + '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:11.5px;color:rgba(255,255,255,.3);">Serial ' + esc(r.serial || serial) + (r.specsUrl ? ' \u00b7 <a href="' + esc(r.specsUrl) + '" target="_blank" style="color:rgba(255,255,255,.4);">Open on HP\u2019s site</a>' : '') + '</div>';
+      console.log('[HP Lookup RENDER] wrote the result. Reading it straight back from the LIVE DOM:', document.getElementById('gModeAIBody')?.innerHTML.slice(0, 150), '\u2014 is that live element visible (offsetParent not null)?', !!document.getElementById('gModeAIBody')?.offsetParent, '\u2014 is #gModeAIResult itself visible?', document.getElementById('gModeAIResult')?.style.display, '\u2014 is the whole Shovo panel open?', document.getElementById('gModeAI')?.classList.contains('open'));
     });
     return;
   }
