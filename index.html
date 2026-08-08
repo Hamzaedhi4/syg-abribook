@@ -20129,7 +20129,16 @@ function renderAnswer(q) {
         return;
       }
 
-      const r = res.result || {};
+      // The bridge FLATTENS result fields directly onto the reply object
+      // itself (Object.assign(flat, res.result)) — there is no nested
+      // .result by the time this arrives. Reading res.result here was
+      // always reading a property that doesn't exist, silently producing
+      // an empty object and every field falling back to "Not found" /
+      // "Unknown" — even on a completely successful, correctly-fetched
+      // result. This was the second half of the actual bug alongside the
+      // missing ok:true in the bridge; found by running the real
+      // extension against a real page and watching exactly this happen.
+      const r = res;
       // Checking a real hypothesis, not guessing blind: if bodyEl/labelEl
       // were captured at the start of this call but the panel's actual
       // DOM got rebuilt at some point during a wait this long, these
