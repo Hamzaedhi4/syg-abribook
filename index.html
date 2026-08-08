@@ -21234,7 +21234,7 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
 </div>
 
 <div class="nexus-command" id="nexusCommand">
-  <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Listing Health Command Center</h2><button class="nexus-newsession" id="nexusOpenStoreWide" style="border-color:rgba(50,214,197,.35);color:var(--nexus-cyan)">🗂 Store Wide Audit</button><button class="nexus-back" id="nexusCommandBack">← Command</button></div>
+  <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Listing Health Command Center</h2><button class="nexus-newsession" id="nexusCompanionInstall" style="border-color:rgba(192,132,252,.35);color:#c084fc">⬇ Nexus Companion Installation</button><button class="nexus-newsession" id="nexusOpenStoreWide" style="border-color:rgba(50,214,197,.35);color:var(--nexus-cyan)">🗂 Store Wide Audit</button><button class="nexus-back" id="nexusCommandBack">← Command</button></div>
   <div class="nexus-command-body">
     <div class="nexus-command-hero">
       <div class="nexus-score-card"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-score-ring" id="nexusScoreRing" style="--score:100%"><strong id="nexusCommandScore">100%</strong></div><div class="nexus-score-caption" id="nexusCommandCaption">23 listings included in health</div></div>
@@ -25273,6 +25273,14 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       }
     });
     document.getElementById('nexusCommandBack').onclick=function(){document.getElementById('nexusCommand').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
+    // Opens the Google Drive folder where the Nexus Companion Toolkit
+    // (the browser extension — Claude relay, eBay price checks, MC sync,
+    // shipping prefill, HP lookup) is always kept, so anyone setting up a
+    // new unit has one link to the latest download rather than needing it
+    // sent to them directly each time.
+    document.getElementById('nexusCompanionInstall').onclick=function(){
+      window.open('https://drive.google.com/drive/u/0/folders/1HAVeFx1-1j7odG2QRbmTN3vvZsM0WfIy', '_blank', 'noopener');
+    };
     document.getElementById('nexusOpenStoreWide').onclick=function(){
       document.getElementById('nexusCommand').classList.remove('show');
       document.getElementById('nexusStoreWide').classList.add('show');
