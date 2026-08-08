@@ -3690,6 +3690,28 @@
       </div>
     </div>
 
+    <!-- Right-click menu for the Haz board canvas -->
+    <div class="haz-ctx-menu" id="hazCtxMenu" style="display:none;position:fixed;z-index:9000;background:#141a24;border:1px solid rgba(255,255,255,.1);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.5);padding:5px;min-width:170px;">
+      <button class="haz-ctx-item" id="hazCtxAddItem" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;background:none;border:none;border-radius:6px;color:#e8eef7;font:600 12.5px/1 var(--sans);text-align:left;cursor:pointer;">➕ Add new item</button>
+    </div>
+
+    <!-- Quick add-item form (manual notes card, no offer calculation) -->
+    <div class="haz-note-backdrop" id="hazNoteBackdrop" style="display:none;position:fixed;inset:0;background:rgba(3,5,10,.7);z-index:9100;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+      <div class="haz-note-box" style="width:340px;background:#141a24;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.5);">
+        <h3 style="margin:0 0 14px;font:700 14px/1 var(--sans);color:#fff;">📝 Add item notes</h3>
+        <label style="display:block;font:600 11px/1 var(--sans);color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Item name</label>
+        <input id="hazNoteItem" type="text" placeholder="e.g. Sony WH-1000XM4" style="width:100%;box-sizing:border-box;padding:9px 10px;margin-bottom:12px;background:#0a0e14;border:1px solid rgba(255,255,255,.12);border-radius:7px;color:#e8eef7;font:13px/1 var(--sans);">
+        <label style="display:block;font:600 11px/1 var(--sans);color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Condition</label>
+        <input id="hazNoteCondition" type="text" placeholder="e.g. Light scuffs, works fine" style="width:100%;box-sizing:border-box;padding:9px 10px;margin-bottom:12px;background:#0a0e14;border:1px solid rgba(255,255,255,.12);border-radius:7px;color:#e8eef7;font:13px/1 var(--sans);">
+        <label style="display:block;font:600 11px/1 var(--sans);color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Notes</label>
+        <textarea id="hazNoteText" placeholder="Anything worth remembering — what the customer said, asking price, follow-up needed..." style="width:100%;box-sizing:border-box;min-height:80px;padding:9px 10px;margin-bottom:14px;background:#0a0e14;border:1px solid rgba(255,255,255,.12);border-radius:7px;color:#e8eef7;font:13px/1.5 var(--sans);resize:vertical;"></textarea>
+        <div style="display:flex;gap:8px;">
+          <button id="hazNoteCancel" style="flex:1;padding:10px;background:none;border:1px solid rgba(255,255,255,.12);border-radius:7px;color:rgba(255,255,255,.6);font:600 12.5px/1 var(--sans);cursor:pointer;">Cancel</button>
+          <button id="hazNoteSave" style="flex:1;padding:10px;background:#4ADE80;border:none;border-radius:7px;color:#06231f;font:700 12.5px/1 var(--sans);cursor:pointer;">Save</button>
+        </div>
+      </div>
+    </div>
+
     <!-- RIGHT: Chat + controls -->
     <div class="haz-right">
       <!-- Customer-facing view -->
@@ -16804,6 +16826,76 @@ function hazBoardAddCard(data){
   // board always visible
 }
 
+// ── Manual note card (right-click → Add new item) ───────────────────
+// Lighter than a full chat-driven card: no offer math, no POS fields —
+// just item name, condition, and free-text notes, placed at the exact
+// canvas position that was right-clicked (converted from screen
+// coordinates through the board's current pan/zoom, same math the drag
+// handler already uses elsewhere in this file).
+function hazBoardAddNoteCard(data){
+  const id = Date.now();
+  _boardCards.push({
+    id, type:'note',
+    item: data.item, condition: data.condition, notes: data.notes,
+    x: data.x, y: data.y,
+    expanded: false,
+  });
+  hazBoardSave();
+  hazBoardRender();
+  if(_boardCards.length===1) hazBoardOpen();
+}
+function hazBoardRemoveCard(id){
+  _boardCards = _boardCards.filter(c=>c.id!==id);
+  hazBoardSave();
+  hazBoardRender();
+}
+
+// ── Right-click canvas menu ──────────────────────────────────────────
+let _hazCtxCanvasPos = {x:0, y:0}; // where the note card will actually land, in canvas space
+(function(){
+  const canvas = document.getElementById('hazBoardCanvas');
+  const menu   = document.getElementById('hazCtxMenu');
+  const backdrop = document.getElementById('hazNoteBackdrop');
+  if(!canvas || !menu) return;
+
+  canvas.addEventListener('contextmenu', ev=>{
+    ev.preventDefault();
+    // Same inverse-transform the drag handler uses: screen coords minus
+    // the canvas's own offset and current pan, divided by current zoom.
+    const rect = canvas.getBoundingClientRect();
+    _hazCtxCanvasPos = {
+      x: (ev.clientX - rect.left - _boardPan.x) / _boardZoom,
+      y: (ev.clientY - rect.top  - _boardPan.y) / _boardZoom,
+    };
+    menu.style.left = ev.clientX+'px';
+    menu.style.top  = ev.clientY+'px';
+    menu.style.display = 'block';
+  });
+  document.addEventListener('click', ()=>{ menu.style.display='none'; });
+
+  document.getElementById('hazCtxAddItem').addEventListener('click', ()=>{
+    menu.style.display='none';
+    document.getElementById('hazNoteItem').value='';
+    document.getElementById('hazNoteCondition').value='';
+    document.getElementById('hazNoteText').value='';
+    backdrop.style.display='flex';
+    document.getElementById('hazNoteItem').focus();
+  });
+  document.getElementById('hazNoteCancel').addEventListener('click', ()=>{ backdrop.style.display='none'; });
+  backdrop.addEventListener('click', ev=>{ if(ev.target===backdrop) backdrop.style.display='none'; });
+  document.getElementById('hazNoteSave').addEventListener('click', ()=>{
+    const item = document.getElementById('hazNoteItem').value.trim();
+    if(!item){ document.getElementById('hazNoteItem').focus(); return; }
+    hazBoardAddNoteCard({
+      item,
+      condition: document.getElementById('hazNoteCondition').value.trim(),
+      notes: document.getElementById('hazNoteText').value.trim(),
+      x: _hazCtxCanvasPos.x, y: _hazCtxCanvasPos.y,
+    });
+    backdrop.style.display='none';
+  });
+})();
+
 function hazBoardRender(){
   const inner = document.getElementById('hazBoardInner');
   const empty = document.getElementById('hazBoardEmpty');
@@ -16832,11 +16924,36 @@ function hazBoardRender(){
         _boardDrag={cardId:card.id, startX:ev.clientX, startY:ev.clientY, origX:card.x, origY:card.y};
       });
     }
-    el.className = 'haz-receipt' + (card.expanded?' expanded':'');
+    el.className = 'haz-receipt' + (card.expanded?' expanded':'') + (card.type==='note'?' haz-note-card':'');
     el.style.left = card.x+'px';
     el.style.top  = card.y+'px';
     const now = new Date(card.id);
     const timeStr = now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+    if(card.type==='note'){
+      // Lighter card for a right-click "Add new item" entry — no offer
+      // math, no POS fields, just what was actually typed in.
+      el.innerHTML = `
+        <div class="haz-receipt-head" style="border-bottom-color:rgba(74,222,128,.15);">
+          <span class="haz-receipt-icon">📝</span>
+          <span class="haz-receipt-item">${esc(card.item)}</span>
+          <button class="haz-receipt-toggle" data-id="${card.id}">${card.expanded?'▲':'▼'}</button>
+        </div>
+        <div class="haz-receipt-body">
+          ${card.condition ? `<div class="haz-receipt-condition">${esc(card.condition)}</div>` : ''}
+          <div class="haz-receipt-extra" style="white-space:pre-wrap;color:rgba(255,255,255,.75);font-size:12.5px;line-height:1.6;padding:10px 0 4px;">${esc(card.notes || '(no notes added)')}</div>
+          <button class="haz-note-delete" data-id="${card.id}" style="margin-top:6px;width:100%;padding:7px;background:none;border:1px solid rgba(239,68,68,.3);border-radius:7px;color:#fca5a5;font:600 11.5px/1 var(--sans);cursor:pointer;">✕ Remove</button>
+        </div>
+        <div class="haz-receipt-timestamp">${timeStr}</div>`;
+      el.querySelector('.haz-receipt-toggle').addEventListener('click', ev=>{
+        ev.stopPropagation(); card.expanded=!card.expanded; hazBoardSave(); hazBoardRender();
+      });
+      el.querySelector('.haz-note-delete').addEventListener('click', ev=>{
+        ev.stopPropagation(); hazBoardRemoveCard(card.id);
+      });
+      return; // skip the full offer-card template below for this card
+    }
+
     el.innerHTML = `
       <div class="haz-receipt-head">
         <span class="haz-receipt-icon">📦</span>
@@ -19961,7 +20078,7 @@ function renderAnswer(q) {
       return;
     }
 
-    window.nexusAskExtension('HP_LOOKUP', { serial: serial }, 90000).then(function (res) {
+    window.nexusAskExtension('HP_LOOKUP', { serial: serial }, 150000).then(function (res) {
       // The person may have typed a NEW query while this was in flight —
       // don't stomp a newer, unrelated answer with this stale one.
       if (document.getElementById('gModeAIResultLabel')?.textContent !== 'Looking up HP ' + serial) return;
@@ -24988,13 +25105,25 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   function nexusAskExtension(type,payload,timeout){
     return new Promise(function(resolve){
       var requestId=Date.now()+Math.random(),done=false;
+      var debug = type === 'HP_LOOKUP'; // targeted — this function is shared by many features; avoid spamming the console for the ones that already work fine
+      if(debug) console.log('[HP Lookup PAGE] sending request, requestId =', requestId, 'timeout =', timeout);
       function listener(e){
+        if(debug && e.source===window && e.data && e.data.source==='syg-audit-extension'){
+          // Catches the case a message DOES arrive but gets silently
+          // rejected by the strict match below — e.g. a requestId or type
+          // mismatch would previously just look identical to nothing
+          // having arrived at all.
+          console.log('[HP Lookup PAGE] a matching-origin message arrived:', JSON.stringify({type:e.data.type, requestId:e.data.requestId, matchesOurRequestId: e.data.requestId===requestId, matchesExpectedType: e.data.type===type+'_RESULT'}));
+        }
         if(e.source!==window||!e.data||e.data.source!=='syg-audit-extension'||e.data.requestId!==requestId||e.data.type!==type+'_RESULT')return;
+        if(debug) console.log('[HP Lookup PAGE] MATCHED \u2014 resolving with the real result', e.data);
         done=true;window.removeEventListener('message',listener);resolve(e.data);
       }
       window.addEventListener('message',listener);
       window.postMessage(Object.assign({source:'syg-audit-page',type:type,requestId:requestId},payload),'*');
-      setTimeout(function(){if(!done){window.removeEventListener('message',listener);resolve({ok:false,error:'The Nexus browser extension did not respond.'})}},timeout||12000);
+      setTimeout(function(){if(!done){
+        if(debug) console.log('[HP Lookup PAGE] TIMEOUT fired after', timeout||12000, 'ms \u2014 giving up, requestId was', requestId);
+        window.removeEventListener('message',listener);resolve({ok:false,error:'The Nexus browser extension did not respond.'})}},timeout||12000);
     });
   }
   window.nexusAskExtension=nexusAskExtension;
