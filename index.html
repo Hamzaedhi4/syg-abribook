@@ -18956,8 +18956,14 @@ const KB = [
   // ── SPECS LOOKUP (DELL SERVICE TAG) ────────────────────────────────
   { keys: ['specs command','dell specs','service tag lookup','specs tag','how specs works','dell service tag','specs st','look up dell','dell specs command'],
     title: 'Specs lookup — "specs {tag}"',
-    answer: `<h3>What it does</h3>Type <code>specs</code> followed by a Dell Service Tag (e.g. <code>specs 4X7YZ12</code>) and Shovo opens Dell's support page in a new tab and copies the tag to your clipboard. Dell's site doesn't auto-fill its own search box, so paste (Ctrl+V) into the "Service tag" field and hit the arrow — no retyping.<h3>Format</h3><code>specs {tag}</code> — the tag has to come right after the word, nothing else in between.<h3>Note</h3>This only covers Dell for now. If you want the same shortcut for HP, Lenovo, or another brand's service/serial lookup, that can be added the same way.`,
+    answer: `<h3>What it does</h3>Type <code>specs</code> followed by a Dell Service Tag (e.g. <code>specs 4X7YZ12</code>) and Shovo opens Dell's support page in a new tab and copies the tag to your clipboard. Dell's site doesn't auto-fill its own search box, so paste (Ctrl+V) into the "Service tag" field and hit the arrow — no retyping.<h3>Format</h3><code>specs {tag}</code> — the tag has to come right after the word, nothing else in between.<h3>Note</h3>For HP, use <code>hp {serial}</code> instead — that one's fully automated and shows Warranty/CPU/RAM/Storage right in this panel, no tab-switching needed. Lenovo or another brand's lookup can be added the same way HP was.`,
     related: ['log drive','abribook codes'] },
+
+  // ── HP SPEC + WARRANTY LOOKUP ────────────────────────────────────
+  { keys: ['hp specs','hp command','hp lookup','hp serial','hp warranty','how hp works','partsurfer','part surfer','hp support lookup'],
+    title: 'HP lookup — "hp {serial}"',
+    answer: `<h3>What it does</h3>Type <code>hp</code> followed by the serial number (e.g. <code>hp 5CG2142SQW</code>) and Shovo drives an actual lookup on HP's own support site \u2014 searches the serial, reads warranty status, opens Specifications &amp; Accessories, and pulls CPU/RAM/Storage. Everything shows right here, no tab-switching. Replaces PartSurfer entirely.<h3>Format</h3><code>hp {serial}</code> \u2014 serial right after the word, nothing else in between.<h3>How long it takes</h3>5\u201320 seconds \u2014 it's a real search across two of HP's own pages, not a cached shortcut. A background tab does the work; you don't need to watch it.<h3>If it fails</h3>Double-check the serial first. If a correct serial still fails, HP likely changed something on their page \u2014 flag it, since the extension's selectors would need updating.`,
+    related: ['log drive','abribook codes','specs command'] },
 
   // ── LOGGING A DRIVE ──────────────────────────────────────────────
   { keys: ['log drive','log storage','log ssd','log nvme','log sata','batch entry','add entry','how to log','log item','log a drive','logging drives','log device','log disk','add a drive','add batch'],
@@ -19934,7 +19940,59 @@ function renderAnswer(q) {
     return;
   }
 
-  // ── 2. Check for action intent ─────────────────────────────────
+  // ── 1c. HP spec + warranty lookup — "hp {serial}" drives an actual
+  // automated fetch through the extension (serial search -> warranty ->
+  // specs page -> scrape), replacing PartSurfer entirely. Unlike the Dell
+  // specs command above, this doesn't hand you a tab and a clipboard —
+  // Warranty/CPU/RAM/Storage render right here once the extension reports
+  // back. Can take 5-20+ seconds (two real page loads on HP's site), so
+  // this shows a loading state immediately and updates it asynchronously
+  // rather than blocking renderAnswer, which is otherwise synchronous.
+  const hpMatch = q.trim().match(/^hp\s+([A-Za-z0-9]{4,})$/i);
+  if (hpMatch) {
+    const serial = hpMatch[1].toUpperCase();
+    if (labelEl) labelEl.textContent = 'Looking up HP ' + serial;
+    bodyEl.innerHTML = '<div style="color:rgba(255,255,255,.55);font-size:13px;">'
+      + '\u23f3 Searching HP support \u2014 this drives a real lookup across two of HP\'s own pages, usually 5\u201320s.</div>';
+
+    if (typeof window.nexusAskExtension !== 'function') {
+      bodyEl.innerHTML = '<div style="color:#fca5a5;font-weight:600;font-size:13px;">Extension not detected.</div>'
+        + '<div style="color:rgba(255,255,255,.5);margin-top:6px;font-size:12.5px;">Install/reload the Nexus Toolkit browser extension, then try again.</div>';
+      return;
+    }
+
+    window.nexusAskExtension('HP_LOOKUP', { serial: serial }, 45000).then(function (res) {
+      // The person may have typed a NEW query while this was in flight —
+      // don't stomp a newer, unrelated answer with this stale one.
+      if (document.getElementById('gModeAIResultLabel')?.textContent !== 'Looking up HP ' + serial) return;
+
+      if (!res || !res.ok) {
+        bodyEl.innerHTML = '<div style="color:#fca5a5;font-weight:600;font-size:13px;">Lookup failed</div>'
+          + '<div style="color:rgba(255,255,255,.55);margin-top:8px;line-height:1.6;font-size:12.5px;">' + esc((res && res.error) || 'No response.') + '</div>'
+          + '<div style="margin-top:12px;font-size:11.5px;color:rgba(255,255,255,.3);">Check the serial and try again \u2014 or if this keeps failing, HP may have changed their page and the extension\'s selectors need a look.</div>';
+        return;
+      }
+
+      const r = res.result || {};
+      if (labelEl) labelEl.textContent = 'HP ' + serial;
+      const warrantyColor = /expired/i.test(r.warranty || '') ? '#fca5a5' : /active|valid/i.test(r.warranty || '') ? '#86efac' : '#fbbf24';
+      const row = (label, val) => '<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">'
+        + '<div style="width:78px;flex:none;font:600 11px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.35);">' + label + '</div>'
+        + '<div style="flex:1;color:rgba(255,255,255,.85);font-size:13px;line-height:1.5;">' + esc(val || 'Not found') + '</div></div>';
+
+      bodyEl.innerHTML =
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">'
+        + '<span style="font-weight:700;font-size:13px;">Warranty:</span>'
+        + '<span style="font-weight:700;font-size:13px;color:' + warrantyColor + ';">' + esc(r.warranty || 'Unknown') + '</span></div>'
+        + '<div style="margin-top:10px;">'
+        + row('CPU', r.cpu) + row('RAM', r.ram) + row('Storage', r.storage)
+        + '</div>'
+        + '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:11.5px;color:rgba(255,255,255,.3);">Serial ' + esc(r.serial || serial) + (r.specsUrl ? ' \u00b7 <a href="' + esc(r.specsUrl) + '" target="_blank" style="color:rgba(255,255,255,.4);">Open on HP\u2019s site</a>' : '') + '</div>';
+    });
+    return;
+  }
+
+
   const action = findAction(q);
   if (action) {
     if (labelEl) labelEl.textContent = action.label;
