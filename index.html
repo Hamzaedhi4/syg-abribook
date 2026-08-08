@@ -20021,6 +20021,28 @@ function renderCustomCmd(match, q) {
 }
 
 // ── Render answer ─────────────────────────────────────────────────
+// A generation counter for the HP lookup specifically — that flow can
+// legitimately take well over a minute (real search, real page loads, a
+// real 70+ row expand-and-scrape). Comparing the panel's CURRENT text
+// against what it said when the lookup started is fragile over a wait
+// that long: closing and reopening Shovo, or anything else that touches
+// the label text in between, makes the comparison fail even though the
+// person's actual intent never changed — silently discarding a perfectly
+// good, successful result. Tracking "did a NEWER hp lookup start since
+// this one began" by number instead is robust to any of that.
+let hpLookupGeneration = 0;
+// Two separate concerns, not one: "still working" (nothing final exists
+// yet, so reopening should just show the loading state as-is) and
+// "finished but not yet actually seen" (a real result IS sitting there,
+// reopening should reveal it rather than wipe it — but only needs
+// preserving once, the FIRST time it's actually shown). Collapsing these
+// into one flag has a real gap: checking once while still loading would
+// consume it early, and a LATER reopen after it actually finishes would
+// wipe the real result anyway — a completely normal "check on it a
+// couple times while it's slow" pattern would still lose the result.
+let hpLookupInFlight = false;
+let hpResultUnseen = false;
+
 function renderAnswer(q) {
   const resultEl = document.getElementById('gModeAIResult');
   const bodyEl   = document.getElementById('gModeAIBody');
@@ -20068,20 +20090,36 @@ function renderAnswer(q) {
   const hpMatch = q.trim().match(/^hp\s+([A-Za-z0-9]{4,})$/i);
   if (hpMatch) {
     const serial = hpMatch[1].toUpperCase();
+    const myHpGeneration = ++hpLookupGeneration;
+    hpLookupInFlight = true;
+    hpResultUnseen = false;
     if (labelEl) labelEl.textContent = 'Looking up HP ' + serial;
     bodyEl.innerHTML = '<div style="color:rgba(255,255,255,.55);font-size:13px;">'
       + '\u23f3 Searching HP support \u2014 this drives a real lookup across two of HP\'s own pages plus expanding the full specs list, usually 15\u201345s.</div>';
 
     if (typeof window.nexusAskExtension !== 'function') {
+      hpLookupInFlight = false;
       bodyEl.innerHTML = '<div style="color:#fca5a5;font-weight:600;font-size:13px;">Extension not detected.</div>'
         + '<div style="color:rgba(255,255,255,.5);margin-top:6px;font-size:12.5px;">Install/reload the Nexus Toolkit browser extension, then try again.</div>';
       return;
     }
 
     window.nexusAskExtension('HP_LOOKUP', { serial: serial }, 150000).then(function (res) {
-      // The person may have typed a NEW query while this was in flight —
-      // don't stomp a newer, unrelated answer with this stale one.
-      if (document.getElementById('gModeAIResultLabel')?.textContent !== 'Looking up HP ' + serial) return;
+      // Confirmed the pipeline itself works end-to-end via real logs
+      // across all four layers — the request sent, the extension
+      // resolved it successfully, this listener matched and resolved the
+      // promise with the real data. What's fixed here is what happens
+      // AFTER that: comparing generation numbers instead of the panel's
+      // current text is more robust regardless of what unrelated
+      // interaction happens during a wait this long, and — the more
+      // likely actual culprit, found by reading openGModeAI() itself —
+      // reopening Shovo unconditionally wiped this same result back out
+      // the instant it was checked on, if that checking happened to
+      // coincide with or follow the real completion. Both are fixed
+      // together; whichever one was actually biting, this covers it.
+      if (myHpGeneration !== hpLookupGeneration) return; // a genuinely newer lookup superseded this one — its own callback owns this state, not this one
+      hpLookupInFlight = false;
+      hpResultUnseen = true; // something real is about to render — don't let the NEXT open wipe it before it's actually been seen
 
       if (!res || !res.ok) {
         bodyEl.innerHTML = '<div style="color:#fca5a5;font-weight:600;font-size:13px;">Lookup failed</div>'
@@ -20193,9 +20231,19 @@ function openGModeAI() {
   setTimeout(() => {
     const inp = document.getElementById('gModeAIInput');
     if (inp) { inp.focus(); inp.value = ''; }
-    document.getElementById('gModeAIResult').style.display = 'none';
-    document.getElementById('gModeAISuggestions').style.display = 'flex';
-    document.getElementById('gModeAIBody').innerHTML = '';
+    // Don't wipe an HP lookup that's still running (preserve the loading
+    // state as-is, nothing final to consume yet) or whose result hasn't
+    // actually been revealed yet (preserve AND consume it — the next
+    // check after THIS one behaves normally again).
+    if (hpLookupInFlight) {
+      // leave everything exactly as it is
+    } else if (hpResultUnseen) {
+      hpResultUnseen = false;
+    } else {
+      document.getElementById('gModeAIResult').style.display = 'none';
+      document.getElementById('gModeAISuggestions').style.display = 'flex';
+      document.getElementById('gModeAIBody').innerHTML = '';
+    }
     const mapPanel = document.getElementById('shovoCmdMap');
     if (mapPanel) mapPanel.style.display = 'none';
     initCmdMap();
