@@ -19953,7 +19953,7 @@ function renderAnswer(q) {
     const serial = hpMatch[1].toUpperCase();
     if (labelEl) labelEl.textContent = 'Looking up HP ' + serial;
     bodyEl.innerHTML = '<div style="color:rgba(255,255,255,.55);font-size:13px;">'
-      + '\u23f3 Searching HP support \u2014 this drives a real lookup across two of HP\'s own pages, usually 5\u201320s.</div>';
+      + '\u23f3 Searching HP support \u2014 this drives a real lookup across two of HP\'s own pages plus expanding the full specs list, usually 15\u201345s.</div>';
 
     if (typeof window.nexusAskExtension !== 'function') {
       bodyEl.innerHTML = '<div style="color:#fca5a5;font-weight:600;font-size:13px;">Extension not detected.</div>'
@@ -19961,7 +19961,7 @@ function renderAnswer(q) {
       return;
     }
 
-    window.nexusAskExtension('HP_LOOKUP', { serial: serial }, 45000).then(function (res) {
+    window.nexusAskExtension('HP_LOOKUP', { serial: serial }, 90000).then(function (res) {
       // The person may have typed a NEW query while this was in flight —
       // don't stomp a newer, unrelated answer with this stale one.
       if (document.getElementById('gModeAIResultLabel')?.textContent !== 'Looking up HP ' + serial) return;
