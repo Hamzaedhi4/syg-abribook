@@ -5305,12 +5305,6 @@
       </div>
 
       <div class="wb-col wb-center" id="wbCenter">
-        <div class="wb-ctabs" role="tablist">
-          <button type="button" class="wb-ctab on" data-wb-pane="wan" role="tab" aria-selected="true">Wan</button>
-          <button type="button" class="wb-ctab" data-wb-pane="syg" role="tab" aria-selected="false">SYG</button>
-          <span class="wb-ctab-note" id="wbSygNote"></span>
-        </div>
-
         <div class="wb-syg" id="wbSyg">
           <div class="wb-syg-bar">
             <span class="wb-syg-crumb" id="wbSygCrumb">buyer.sellyourgadgets.com / dashboard / inventory</span>
@@ -5340,7 +5334,13 @@
           <div class="wb-hd"><h3>Wan says</h3></div>
           <div id="wbAdvList"></div>
         </div>
-        <div class="wb-composer" id="wbComposer"></div>
+        <div class="wb-composer" id="wbComposer">
+          <div class="wb-ctabs" role="tablist">
+            <button type="button" class="wb-ctab on" data-wb-pane="wan" role="tab" aria-selected="true">Wan</button>
+            <button type="button" class="wb-ctab" data-wb-pane="syg" role="tab" aria-selected="false">SYG</button>
+            <span class="wb-ctab-note" id="wbSygNote"></span>
+          </div>
+        </div>
       </div>
 
       <div class="wb-col wb-right">
@@ -8705,11 +8705,20 @@ window.addEventListener('message',function(e){
   var d=e.data;
   if(!d||d.source!=='syg-nexus-frame'||d.type!=='SYG_FRAME_STATUS') return;
   wbSygHeard=true; clearTimeout(wbSygTimer);
+  if(d.reason==='planting'){
+    // The frame found itself on /login, planted the session cookie and is
+    // reloading itself once. Say so rather than flashing the failure card
+    // for the half second before the good load lands.
+    wbSygNote('restoring session…');
+    wbSygState('info','Restoring your session…','Planting the portal cookie and reloading the frame.');
+    return;
+  }
   if(d.loggedOut){
     wbSygNote('signed out');
-    wbSygState('warn','The portal loaded, but signed out',
-      'The frame rendered — header stripping works. Its session cookies just did not come along, because Nexus is not served from sellyourgadgets.com and the portal sets no SameSite attribute. Sign in below and the panel will clear itself, or serve Nexus from nexus.sellyourgadgets.com to make this permanent.',
-      [{label:'Retry with a fresh session',onClick:wbSygLoad}]);
+    wbSygState('warn','Portal still signed out',
+      'The frame renders, and the extension is attaching your session to every request — so this is the portal\'s own client-side check refusing the planted cookie. Most likely you are not signed in to buyer.sellyourgadgets.com in a normal tab; sign in there first, then hit Retry. If you ARE signed in there and this persists, Chrome is blocking third-party cookies for this frame and serving Nexus from nexus.sellyourgadgets.com is the real fix.',
+      [{label:'Sign in (new tab)',href:'https://buyer.sellyourgadgets.com/login'},
+       {label:'Retry',onClick:wbSygLoad}]);
   } else {
     wbSygNote(d.path||'');
     wbSygState(null);
@@ -21044,15 +21053,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      whichever order happened to run last. A separate class layers
      cleanly on top: the tab decides which pane is on screen, the
      advisor still decides whether Wan has anything to say. */
-  .wb-ctabs{display:flex;align-items:center;gap:4px;flex-shrink:0;
-    padding:8px 18px 0;background:var(--wb-pnl)}
-  .wb-ctab{appearance:none;background:transparent;border:1px solid transparent;
-    border-bottom:none;border-radius:7px 7px 0 0;padding:6px 14px;cursor:pointer;
+  /* The bar lives as the FIRST CHILD of #wbComposer, not as a sibling above
+     the readout. That position is load-bearing: wanBoardTakeComposer()
+     mounts the borrowed BhaiMode composer with slot.appendChild(comp) —
+     append, never innerHTML — so anything already sitting in the slot
+     survives the mount and lands directly above the textarea. Sitting it
+     outside the composer instead would put it at the mercy of
+     .wb-composer's margin-top:auto, which pushes all the column's free
+     space upward and would strand the tabs far from the box they belong
+     to. */
+  .wb-ctabs{display:flex;align-items:center;gap:5px;flex-shrink:0;
+    padding:0 0 10px;margin:0}
+  .wb-ctab{appearance:none;background:transparent;border:1px solid var(--wb-line-hi);
+    border-radius:var(--r-pill,999px);padding:5px 15px;cursor:pointer;
     font:700 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;
     color:var(--wb-faint);transition:color .15s,background .15s,border-color .15s}
-  .wb-ctab:hover{color:var(--wb-dim)}
-  .wb-ctab.on{background:var(--wb-raised);border-color:var(--wb-line-hi);
-    color:var(--wb-cy);box-shadow:inset 0 2px 0 var(--wb-cy)}
+  .wb-ctab:hover{color:var(--wb-dim);border-color:var(--wb-dim)}
+  .wb-ctab.on{background:rgba(50,214,197,.12);border-color:var(--wb-cy);color:var(--wb-cy)}
   .wb-ctab-note{margin-left:auto;font:500 10px var(--mono);color:var(--wb-faint);
     opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%}
 
