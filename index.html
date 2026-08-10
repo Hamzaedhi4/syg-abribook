@@ -8720,7 +8720,25 @@ window.addEventListener('message',function(e){
       [{label:'Sign in (new tab)',href:'https://buyer.sellyourgadgets.com/login'},
        {label:'Retry',onClick:wbSygLoad}]);
   } else {
-    wbSygNote(d.path||'');
+    // A guest session renders a perfectly valid-looking page — no /login, no
+    // error, just the customer view. Comparing the frame's acting user id
+    // against the one in the real browser session is the only way to catch
+    // that from out here, so it is checked rather than assumed correct.
+    var uid=d.uid?String(d.uid):'';
+    wbSygNote((d.path||'')+(uid?'  ·  uid '+uid.slice(0,10):''));
+    if(uid && typeof nexusAskExtension==='function'){
+      nexusAskExtension('SYG_FRAME_PREP',{},8000).then(function(r){
+        var want=r&&r.result&&r.result.uid;
+        if(want && String(want)!==uid){
+          wbSygState('warn','Rendering as the wrong user',
+            'The frame is acting as '+uid.slice(0,10)+'…, but your browser session is '+String(want).slice(0,10)+'…. That is the portal\u2019s guest session winning over yours. Reload — the frame evicts the guest cookie and comes back as staff.',
+            [{label:'Reload frame',onClick:function(){ wbSygMounted=false; wbSygLoad() }}]);
+          return;
+        }
+        wbSygState(null);
+      });
+      return;
+    }
     wbSygState(null);
   }
 });
