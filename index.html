@@ -5304,7 +5304,31 @@
         </div>
       </div>
 
-      <div class="wb-col wb-center">
+      <div class="wb-col wb-center" id="wbCenter">
+        <div class="wb-ctabs" role="tablist">
+          <button type="button" class="wb-ctab on" data-wb-pane="wan" role="tab" aria-selected="true">Wan</button>
+          <button type="button" class="wb-ctab" data-wb-pane="syg" role="tab" aria-selected="false">SYG</button>
+          <span class="wb-ctab-note" id="wbSygNote"></span>
+        </div>
+
+        <div class="wb-syg" id="wbSyg">
+          <div class="wb-syg-bar">
+            <span class="wb-syg-crumb" id="wbSygCrumb">buyer.sellyourgadgets.com / dashboard / inventory</span>
+            <button type="button" class="wb-syg-btn" id="wbSygReload">Reload</button>
+            <a class="wb-syg-btn" id="wbSygOpen" href="https://buyer.sellyourgadgets.com/dashboard/inventory" target="_blank" rel="noopener">Open ↗</a>
+          </div>
+          <div class="wb-syg-frame-wrap">
+            <iframe id="wbSygFrame" title="SYG buyer portal — inventory"
+                    referrerpolicy="no-referrer"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"></iframe>
+            <div class="wb-syg-state" id="wbSygState" hidden>
+              <div class="wb-syg-state-t" id="wbSygStateT"></div>
+              <div class="wb-syg-state-b" id="wbSygStateB"></div>
+              <div class="wb-syg-state-a" id="wbSygStateA"></div>
+            </div>
+          </div>
+        </div>
+
         <div class="wb-readout" id="wbReadout">
           <div class="wb-hd"><span class="wb-n wb-act">◆</span><h3>Resolved</h3><span class="wb-r" id="wbSrc"></span></div>
           <div class="wb-id" id="wbId">Nothing yet</div>
@@ -8597,6 +8621,122 @@ function wanMountBoard(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', wanMountBoard);
 else wanMountBoard();
+
+// ── Wan Board center tabs: Wan / SYG (added 2026-08-10) ──────────────
+// The SYG tab embeds the buyer portal's inventory page in the readout
+// area. Two browser protections stand in the way and the extension
+// answers both (header strip via static DNR, session cookies via a
+// dynamic rule — see background.js). Neither is visible from here: the
+// frame is cross-origin, so if something fails this page cannot read the
+// frame's URL, cannot catch an error, and gets an onload event that looks
+// identical whether the dashboard rendered or Chrome refused to paint.
+//
+// That is why the frame reports on itself. content-syg-frame.js runs
+// inside it and posts its path out; silence past the timeout means the
+// document never executed, which in practice means the header strip is
+// not live. The two outcomes need different fixes, so the panel names
+// which one happened instead of showing one generic "couldn't load".
+var WB_SYG_URL='https://buyer.sellyourgadgets.com/dashboard/inventory';
+var WB_SYG_ORIGIN='https://buyer.sellyourgadgets.com';
+var wbSygMounted=false, wbSygTimer=null, wbSygHeard=false;
+
+function wbSygState(kind,title,body,actions){
+  var el=document.getElementById('wbSygState');
+  if(!el) return;
+  if(!kind){ el.hidden=true; return }
+  document.getElementById('wbSygStateT').textContent=title||'';
+  document.getElementById('wbSygStateB').textContent=body||'';
+  var a=document.getElementById('wbSygStateA'); a.innerHTML='';
+  (actions||[]).forEach(function(spec){
+    var b=document.createElement(spec.href?'a':'button');
+    b.textContent=spec.label;
+    if(spec.href){ b.href=spec.href; b.target='_blank'; b.rel='noopener' }
+    else b.addEventListener('click',spec.onClick);
+    a.appendChild(b);
+  });
+  el.classList.toggle('warn',kind==='warn');
+  el.hidden=false;
+}
+
+function wbSygNote(txt){
+  var n=document.getElementById('wbSygNote'); if(n) n.textContent=txt||'';
+}
+
+function wbSygLoad(){
+  var f=document.getElementById('wbSygFrame'); if(!f) return;
+  wbSygHeard=false;
+  clearTimeout(wbSygTimer);
+  wbSygState('info','Loading portal…','Asking the extension for a session, then opening the frame.');
+  wbSygNote('connecting…');
+
+  // Refresh the injected cookie rule on every mount rather than once at
+  // install — Bubble reissues the session on activity, and a rule holding
+  // last week's value fails in exactly the same silent way as no rule.
+  var prep = (typeof nexusAskExtension==='function')
+    ? nexusAskExtension('SYG_FRAME_PREP',{},8000)
+    : Promise.resolve({ok:false,error:'Extension bridge not present on this page.'});
+
+  prep.then(function(res){
+    if(!res||!res.ok){
+      wbSygNote('no session');
+      wbSygState('warn','Extension could not attach a session',
+        (res&&res.error)||'The Nexus Toolkit did not answer. The portal will still try to load, but expect a login wall.',
+        [{label:'Sign in to the portal',href:WB_SYG_URL},
+         {label:'Retry',onClick:wbSygLoad}]);
+      // fall through and load anyway — a first-party session sometimes
+      // rides along fine and there is no reason to block on a guess
+    }
+    f.src=WB_SYG_URL;
+    wbSygMounted=true;
+    // If the frame's own script never speaks, the document never ran.
+    wbSygTimer=setTimeout(function(){
+      if(wbSygHeard) return;
+      wbSygNote('blocked');
+      wbSygState('warn','Chrome refused to render the portal',
+        'buyer.sellyourgadgets.com sends x-frame-options: DENY. The Toolkit strips that header, so this means the extension is not loaded or is running an older build — reload it at chrome://extensions and make sure it is v1.16.0 or newer, then retry.',
+        [{label:'Retry',onClick:wbSygLoad},
+         {label:'Open in a tab',href:WB_SYG_URL}]);
+    },9000);
+  });
+}
+
+window.addEventListener('message',function(e){
+  if(e.origin!==WB_SYG_ORIGIN) return;
+  var d=e.data;
+  if(!d||d.source!=='syg-nexus-frame'||d.type!=='SYG_FRAME_STATUS') return;
+  wbSygHeard=true; clearTimeout(wbSygTimer);
+  if(d.loggedOut){
+    wbSygNote('signed out');
+    wbSygState('warn','The portal loaded, but signed out',
+      'The frame rendered — header stripping works. Its session cookies just did not come along, because Nexus is not served from sellyourgadgets.com and the portal sets no SameSite attribute. Sign in below and the panel will clear itself, or serve Nexus from nexus.sellyourgadgets.com to make this permanent.',
+      [{label:'Retry with a fresh session',onClick:wbSygLoad}]);
+  } else {
+    wbSygNote(d.path||'');
+    wbSygState(null);
+  }
+});
+
+function wbSygSwitch(pane){
+  var c=document.getElementById('wbCenter'); if(!c) return;
+  c.classList.toggle('syg-on',pane==='syg');
+  Array.prototype.forEach.call(document.querySelectorAll('.wb-ctab'),function(t){
+    var on=t.dataset.wbPane===pane;
+    t.classList.toggle('on',on);
+    t.setAttribute('aria-selected',on?'true':'false');
+  });
+  // Mount lazily on first open, then leave it mounted. The dashboard is a
+  // Bubble SPA that refetches everything on load, so tearing the frame down
+  // on every tab flip would cost a full reload and lose scroll position and
+  // any filter the user had set — same reasoning as the panel-state
+  // preservation on the HP lookups.
+  if(pane==='syg' && !wbSygMounted) wbSygLoad();
+}
+
+document.addEventListener('click',function(e){
+  var t=e.target.closest && e.target.closest('.wb-ctab');
+  if(t) wbSygSwitch(t.dataset.wbPane);
+  if(e.target && e.target.id==='wbSygReload'){ wbSygMounted=false; wbSygLoad() }
+});
 
 // ── Wan Board wiring (added 2026-08-06) ──────────────────────────
 // The board does not reimplement anything. It BORROWS the live composer
@@ -20889,6 +21029,65 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-empty{font:500 11px var(--sans);color:var(--wb-faint);padding:10px 0}
 
   .wb-center{background:var(--wb-pnl)}
+
+  /* ── Center-column tabs (added 2026-08-10) ────────────────────────────
+     Switches the whole area ABOVE the composer between the live Wan
+     readout and the embedded buyer portal. The composer itself never
+     moves — it is borrowed from BhaiMode and every id lookup in the
+     manifest pipeline depends on those nodes staying put, so the tabs
+     deliberately swap only the two panes above it.
+
+     Visibility is driven by a class on the column, NOT by toggling
+     [hidden] on #wbAdv. wanBoardGenie() already owns that attribute —
+     it hides the panel whenever there are no tips — so a tab that also
+     wrote to it would fight the advisor for control and lose in
+     whichever order happened to run last. A separate class layers
+     cleanly on top: the tab decides which pane is on screen, the
+     advisor still decides whether Wan has anything to say. */
+  .wb-ctabs{display:flex;align-items:center;gap:4px;flex-shrink:0;
+    padding:8px 18px 0;background:var(--wb-pnl)}
+  .wb-ctab{appearance:none;background:transparent;border:1px solid transparent;
+    border-bottom:none;border-radius:7px 7px 0 0;padding:6px 14px;cursor:pointer;
+    font:700 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--wb-faint);transition:color .15s,background .15s,border-color .15s}
+  .wb-ctab:hover{color:var(--wb-dim)}
+  .wb-ctab.on{background:var(--wb-raised);border-color:var(--wb-line-hi);
+    color:var(--wb-cy);box-shadow:inset 0 2px 0 var(--wb-cy)}
+  .wb-ctab-note{margin-left:auto;font:500 10px var(--mono);color:var(--wb-faint);
+    opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%}
+
+  .wb-syg{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--wb-pnl)}
+  .wb-center:not(.syg-on) .wb-syg{display:none}
+  .wb-center.syg-on #wbReadout,
+  .wb-center.syg-on #wbAdv{display:none}
+
+  .wb-syg-bar{display:flex;align-items:center;gap:7px;flex-shrink:0;
+    padding:9px 18px;border-bottom:1px solid var(--wb-line)}
+  .wb-syg-crumb{font:500 10.5px var(--mono);color:var(--wb-faint);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+  .wb-syg-btn{flex:none;background:var(--wb-raised);border:1px solid var(--wb-line-hi);
+    color:var(--wb-dim);font:600 10.5px var(--sans);border-radius:6px;
+    padding:5px 11px;cursor:pointer;text-decoration:none;transition:all .15s}
+  .wb-syg-btn:hover{border-color:var(--wb-cy);color:var(--wb-ink)}
+
+  .wb-syg-frame-wrap{position:relative;flex:1;min-height:0}
+  #wbSygFrame{width:100%;height:100%;border:0;display:block;background:var(--wb-bg)}
+  /* The frame is cross-origin, so a failure paints nothing at all rather
+     than an error — the state card sits on top of that silence and names
+     which of the two blockers actually fired. */
+  .wb-syg-state{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:9px;text-align:center;
+    padding:26px 34px;background:var(--wb-pnl)}
+  .wb-syg-state[hidden]{display:none}
+  .wb-syg-state-t{font:600 15px var(--sans);color:var(--wb-ink)}
+  .wb-syg-state-b{font:500 11.5px/1.65 var(--sans);color:var(--wb-dim);max-width:46ch}
+  .wb-syg-state-a{display:flex;gap:7px;margin-top:4px}
+  .wb-syg-state-a button,.wb-syg-state-a a{background:var(--wb-raised);
+    border:1px solid var(--wb-line-hi);color:var(--wb-dim);font:600 11px var(--sans);
+    border-radius:6px;padding:7px 13px;cursor:pointer;text-decoration:none}
+  .wb-syg-state-a button:hover,.wb-syg-state-a a:hover{border-color:var(--wb-cy);color:var(--wb-ink)}
+  .wb-syg-state.warn .wb-syg-state-t{color:var(--wb-am)}
+
   .wb-readout{padding:15px 18px 13px;flex-shrink:0}
   .wb-id{font:600 24px var(--sans);letter-spacing:-.015em;line-height:1.2;color:var(--wb-ink)}
   .wb-sub{font:500 12px var(--mono);color:var(--wb-cy);margin-top:4px}
