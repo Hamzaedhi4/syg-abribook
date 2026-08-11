@@ -5296,6 +5296,10 @@
           <div class="wb-hd"><span class="wb-n">2</span><h3>Queue</h3><span class="wb-r" id="wbQueueCount">0</span></div>
           <div class="wb-hint">drag to reorder · pack order = label order</div>
           <div class="wb-list" id="wbQueueList"></div>
+          <div class="wb-ctx-menu" id="wbCtxMenu" hidden role="menu">
+            <button type="button" class="wb-ctx-item" id="wbCtxEdit" role="menuitem">&#9998; Edit entry</button>
+            <button type="button" class="wb-ctx-item wb-ctx-danger" id="wbCtxDelete" role="menuitem">🗑 Delete from queue</button>
+          </div>
           <div class="wb-slot" id="wbSlotReview"></div>
         </div>
         <div class="wb-pnl">
@@ -5307,15 +5311,26 @@
       <div class="wb-col wb-center" id="wbCenter">
         <div class="wb-lab" id="wbLab">
           <div class="wb-lab-hd">
-            <h3>Price research</h3>
-            <span class="wb-lab-q" id="wbLabQ">—</span>
+            <h3>Pricing Lab</h3>
+          </div>
+          <div class="wb-lab-search">
+            <input type="text" id="wbLabSearch" placeholder="Search an item — independent of the composer above" autocomplete="off" spellcheck="false">
+            <button type="button" class="wb-lab-search-btn" id="wbLabSearchBtn" title="Search">Search</button>
+          </div>
+          <div class="wb-lab-filterrow">
+            <div class="wb-lab-filters" id="wbLabFilters" role="tablist">
+              <button type="button" class="wb-lab-f on" data-labfilter="all" role="tab">All</button>
+              <button type="button" class="wb-lab-f" data-labfilter="store" role="tab">Store</button>
+              <button type="button" class="wb-lab-f" data-labfilter="live" role="tab">Live</button>
+            </div>
+            <button type="button" class="wb-live-btn" id="wbLabLiveBtn" title="Pull live sold comps from eBay (~25s)">Pull live</button>
           </div>
           <div class="wb-lab-hero" id="wbLabHero"></div>
           <div class="wb-lab-range" id="wbLabRange"></div>
           <div class="wb-lab-stats" id="wbLabStats"></div>
           <div class="wb-lab-chart" id="wbLabChart"></div>
           <div class="wb-read wb-read-lg" id="wbLabRead"></div>
-          <div class="wb-lab-list" id="wbLabList"></div>
+          <div class="wb-lab-comps" id="wbLabComps"></div>
         </div>
 
         <div class="wb-syg" id="wbSyg">
@@ -9062,47 +9077,6 @@ var WBLab = (function () {
         readEl.hidden = false;
       } else readEl.hidden = true;
     }
-
-    renderLab(q, store, live, rows, r);
-  }
-
-  function renderLab(q, store, live, rows, r) {
-    var qEl = document.getElementById('wbLabQ');
-    if (qEl) qEl.textContent = q || '—';
-
-    var tv = tradingView(store, live, true);
-    var lHero = document.getElementById('wbLabHero');
-    var lRange = document.getElementById('wbLabRange');
-    if (lHero) lHero.innerHTML = tv.hero;
-    if (lRange) lRange.innerHTML = tv.range;
-
-    var stats = document.getElementById('wbLabStats');
-    if (stats) stats.innerHTML = tv.stats;
-
-    var lc = document.getElementById('wbLabChart');
-    if (lc) {
-      lc.innerHTML = (store.length || live.length)
-        ? chart(store, live, { big: true })
-        : '<div class="wb-empty">Nothing to chart yet — describe an item in the composer.</div>';
-    }
-
-    var lr = document.getElementById('wbLabRead');
-    if (lr) {
-      if (r) {
-        lr.className = 'wb-read wb-read-lg ' + (r.k === 'warn' ? 'warn' : '');
-        lr.innerHTML = '<div class="wb-read-wan"><span class="wb-wan-face">W</span><span>' + r.t + '</span></div>';
-        lr.hidden = false;
-      } else lr.hidden = true;
-    }
-
-    var list = document.getElementById('wbLabList');
-    if (list) {
-      list.innerHTML = rows.slice(0, 8).map(function (x) {
-        return '<div class="wb-lab-row store"><b>' + money(x.price) + '</b>' +
-               '<i title="' + esc(x.title) + '">' + esc(x.title) + '</i>' +
-               '<em>store</em></div>';
-      }).join('');
-    }
   }
 
   // ── Trading-view hero (recommended price) ────────────────────────
@@ -9198,7 +9172,18 @@ var WBLab = (function () {
     lastLiveQ = query || '';
   }
 
-  return { render: render, setLive: setLive, median: median, storeMatches: storeMatches };
+  return {
+    render: render, setLive: setLive, median: median, storeMatches: storeMatches,
+    // Exposed for the Lab tab's own filterable view (added 2026-08-11) —
+    // it needs to run this same math against a person-chosen SUBSET of
+    // comps (whatever they've toggled on), not the full store+live lists
+    // this module tracks internally. Exposing the primitives means that
+    // view can never compute a different recommended price than this
+    // panel would for the same comps — same functions, just called with a
+    // different array.
+    heroCalc: heroCalc, verdictFor: verdictFor, chart: chart,
+    money: money, retailRound: retailRound
+  };
 })();
 
 // ── Wan Board center tabs: Wan / SYG (added 2026-08-10) ──────────────
@@ -9327,7 +9312,15 @@ function wbSygSwitch(pane){
     t.classList.toggle('on',on);
     t.setAttribute('aria-selected',on?'true':'false');
   });
-  if(pane==='lab') wbLabRefresh();
+  // Seeded from the composer ONLY the first time the tab is opened in a
+  // session, as a convenience starting point — never again after that.
+  // Re-seeding on every open would silently blow away whatever the person
+  // is actively comparing in the Lab tab the moment they glance back at
+  // the composer, which is exactly the coupling this tab exists to remove.
+  if(pane==='lab'){
+    if(!wbLabState.query){ wbLabRunSearch(true); }
+    else { wbLabRenderTab(); }
+  }
   // Mount lazily on first open, then leave it mounted. The dashboard is a
   // Bubble SPA that refetches everything on load, so tearing the frame down
   // on every tab flip would cost a full reload and lose scroll position and
@@ -9359,34 +9352,221 @@ document.addEventListener('input',function(e){
   if(e.target && (e.target.id==='bhaiDesc' || e.target.id==='bhaiPrice')) wbLabSchedule();
 });
 
+// Shared by the small Comps panel and the Lab tab — one eBay-scrape-plus-
+// spec-filter code path so the two can never disagree about which listings
+// count as real comps for the same query. Returns rows with titles attached
+// (needed for the Lab tab's chips); the small panel just discards the title
+// half and keeps bare prices, which is all it ever displayed.
+async function wbFetchLiveComps(query){
+  if(!query) return {ok:false, error:'no query'};
+  if(typeof nexusAskExtension!=='function') return {ok:false, error:'extension not loaded'};
+  try{
+    var condId=(typeof nexusResolveConditionId==='function')?nexusResolveConditionId():null;
+    var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:query,conditionId:condId},32000);
+    if(!res||!res.ok) return {ok:false, error:(res&&res.error)||'live check failed'};
+    var listings=res.listings||(res.result&&res.result.listings)||[];
+    if(typeof NexusSpec!=='undefined' && NexusSpec.filterComps){
+      var breakdown=NexusSpec.filterComps(query, listings);
+      var rows=(breakdown.usedRows||[]).map(function(r){ return {price:r.price, title:r.title||''} });
+      return {ok:true, rows:rows, pulled:breakdown.pulled, used:breakdown.used};
+    }
+    var rows=listings.map(function(l){
+      var price=typeof l==='number'?l:(l&&l.price);
+      return {price:price, title:(l&&l.title)||''};
+    }).filter(function(r){return r.price>0});
+    return {ok:true, rows:rows, pulled:rows.length, used:rows.length};
+  }catch(err){
+    return {ok:false, error:(err&&err.message)||'live check failed'};
+  }
+}
+
 async function wbPullLive(){
   var btn=document.getElementById('wbLiveBtn');
   var meta=document.getElementById('wbCompMeta');
   var q=wbComposerText();
   if(!q){ if(meta) meta.textContent='describe an item first'; return }
-  if(typeof nexusAskExtension!=='function'){ if(meta) meta.textContent='extension not loaded'; return }
   if(btn){ btn.disabled=true; btn.textContent='pulling…' }
   if(meta) meta.textContent='checking eBay (~25s)…';
-  try{
-    var condId=(typeof nexusResolveConditionId==='function')?nexusResolveConditionId():null;
-    var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:condId},32000);
-    if(!res||!res.ok) throw new Error((res&&res.error)||'live check failed');
-    // Route the scrape through the spec engine exactly as the pricing lab
-    // does. Raw eBay results include docks, cables and wrong-spec variants;
-    // charting them unfiltered would draw a confident distribution of the
-    // wrong product.
-    var listings=res.listings||res.result&&res.result.listings||[];
-    var prices=(typeof NexusSpec!=='undefined'&&NexusSpec.filterComps)
-      ? (NexusSpec.filterComps(q,listings).prices||[])
-      : listings.map(function(l){return typeof l==='number'?l:l&&l.price}).filter(function(p){return p>0});
-    WBLab.setLive(q,prices);
+  var res=await wbFetchLiveComps(q);
+  if(res.ok){
+    WBLab.setLive(q, res.rows.map(function(r){return r.price}));
     wbLabRefresh();
-  }catch(err){
-    if(meta) meta.textContent=(err&&err.message)||'live check failed';
-  }finally{
-    if(btn){ btn.disabled=false; btn.textContent='Pull live' }
+  }else{
+    if(meta) meta.textContent=res.error;
   }
+  if(btn){ btn.disabled=false; btn.textContent='Pull live' }
 }
+
+// ── Pricing Lab tab: independent search, filterable comps ────────────
+// Deliberately NOT tied to the composer. The small Comps panel next to the
+// Send button still tracks bhaiDesc live — that one is a glance while
+// you're typing. This tab is the standalone tool: its own query, its own
+// pulled comps, and a person can look at the list and decide which ones
+// actually belong in the number rather than reading a raw pasted block of
+// prices and trusting all of it.
+//
+// Two different kinds of filtering, kept deliberately separate so neither
+// surprises the other:
+//   - The All/Store/Live tabs control what's SHOWN — narrowing the view,
+//     nothing more. Switching to "Store" doesn't drop live comps from the
+//     calculation; it just stops displaying their chips.
+//   - The check on each chip controls what's COUNTED — click one off and
+//     the hero price, range, and stats recompute without it, regardless of
+//     which view filter is currently active. That's the actual "filter
+//     through the comps" the number is built from.
+var wbLabState = { query:'', storeRows:[], liveRows:[], filter:'all' };
+var wbLabNextCompId = 1;
+
+function wbLabRunSearch(seedFromComposer){
+  var input=document.getElementById('wbLabSearch');
+  var q = seedFromComposer ? wbComposerText() : (input?input.value.trim():'');
+  if(input) input.value = q;
+  wbLabState.query = q;
+  var matches = (typeof WBLab!=='undefined') ? WBLab.storeMatches(q) : [];
+  wbLabState.storeRows = matches.map(function(m){
+    return { id:'s'+(wbLabNextCompId++), price:m.price, title:m.title, included:true };
+  });
+  // A fresh search clears whatever was pulled live before — those comps
+  // answered a DIFFERENT query, and carrying them into a new search would
+  // silently mix two items' evidence into one recommended price with
+  // nothing on screen explaining why the number looks off.
+  wbLabState.liveRows = [];
+  wbLabRenderTab();
+}
+
+function wbLabIncludedPrices(kind){
+  var rows = kind==='store' ? wbLabState.storeRows : wbLabState.liveRows;
+  return rows.filter(function(r){return r.included}).map(function(r){return r.price});
+}
+
+function wbLabToggleComp(id){
+  [wbLabState.storeRows, wbLabState.liveRows].forEach(function(rows){
+    var row=rows.find(function(r){return r.id===id});
+    if(row) row.included = !row.included;
+  });
+  wbLabRenderTab();
+}
+
+function wbLabSetFilter(f){
+  wbLabState.filter = f;
+  Array.prototype.forEach.call(document.querySelectorAll('.wb-lab-f'), function(btn){
+    btn.classList.toggle('on', btn.dataset.labfilter===f);
+  });
+  wbLabRenderComps(); // view-only — see the comment above wbLabState
+}
+
+function wbLabCell(label,val,cls,sub){
+  return '<div class="wb-lab-stat"><u>'+label+'</u><b class="'+(cls||'')+'">'+val+'</b>'+(sub?'<s>'+sub+'</s>':'')+'</div>';
+}
+
+function wbLabRenderTab(){
+  var heroEl=document.getElementById('wbLabHero');
+  var rangeEl=document.getElementById('wbLabRange');
+  var statsEl=document.getElementById('wbLabStats');
+  var chartEl=document.getElementById('wbLabChart');
+  var readEl=document.getElementById('wbLabRead');
+  if(!heroEl || typeof WBLab==='undefined') return;
+  var money=WBLab.money;
+
+  if(!wbLabState.query){
+    heroEl.innerHTML='<div class="wb-tv-empty">Search an item above to see comps and a recommended price.</div>';
+    rangeEl.innerHTML=''; statsEl.innerHTML=''; chartEl.innerHTML=''; if(readEl) readEl.hidden=true;
+    wbLabRenderComps();
+    return;
+  }
+
+  var storePrices=wbLabIncludedPrices('store'), livePrices=wbLabIncludedPrices('live');
+  var h=WBLab.heroCalc(storePrices, livePrices);
+
+  if(!h){
+    heroEl.innerHTML='<div class="wb-tv-empty">No comps yet for &#8220;'+esc(wbLabState.query)+'&#8221; — try Pull live, or refine the search.</div>';
+    rangeEl.innerHTML=''; statsEl.innerHTML=''; chartEl.innerHTML='<div class="wb-empty">Nothing to chart yet.</div>'; if(readEl) readEl.hidden=true;
+    wbLabRenderComps();
+    return;
+  }
+
+  heroEl.innerHTML =
+    '<div class="wb-tv-top"><span class="wb-tv-eyebrow">Recommended selling price</span></div>'+
+    '<div class="wb-tv-price">'+money(h.rec)+'</div>'+
+    '<div class="wb-tv-sub">Median '+money(h.med)+' &amp; average '+money(h.avg)+' of '+h.n+' comp'+(h.n===1?'':'s')+
+    ' — '+storePrices.length+' store, '+livePrices.length+' live</div>';
+
+  var markerPct = h.hi>h.lo ? ((h.rec-h.lo)/(h.hi-h.lo))*100 : 50;
+  rangeEl.innerHTML =
+    '<div class="wb-tv-track"><div class="wb-tv-marker" style="left:'+markerPct.toFixed(1)+'%" title="Recommended '+money(h.rec)+'"></div></div>'+
+    '<div class="wb-tv-labels"><span>'+money(h.lo)+'</span><span>'+money(h.med)+'</span><span>'+money(h.hi)+'</span></div>';
+
+  var fast=WBLab.retailRound(h.rec*0.92), max=WBLab.retailRound(Math.max(h.rec*1.06, h.hi));
+  statsEl.innerHTML =
+    wbLabCell('Comps', String(h.n), '', storePrices.length+' store &middot; '+livePrices.length+' live') +
+    wbLabCell('Fast sale', money(fast), 'am', 'move it quickly') +
+    wbLabCell('Max margin', money(max), 'cy', 'can wait it out') +
+    wbLabCell('Range', money(h.lo)+'–'+money(h.hi), '', 'observed spread');
+
+  chartEl.innerHTML = WBLab.chart(storePrices, livePrices, {big:true});
+  if(readEl) readEl.hidden=true;
+
+  wbLabRenderComps();
+}
+
+function wbLabRenderComps(){
+  var compsEl=document.getElementById('wbLabComps');
+  if(!compsEl || typeof WBLab==='undefined') return;
+  var money=WBLab.money;
+  var rows=[];
+  if(wbLabState.filter!=='live') rows=rows.concat(wbLabState.storeRows.map(function(r){ return Object.assign({source:'store'}, r); }));
+  if(wbLabState.filter!=='store') rows=rows.concat(wbLabState.liveRows.map(function(r){ return Object.assign({source:'live'}, r); }));
+
+  if(!rows.length){
+    compsEl.innerHTML = wbLabState.query
+      ? '<div class="wb-empty">No comps to show'+(wbLabState.filter!=='all'?' for this filter':'')+'.</div>'
+      : '';
+    return;
+  }
+  compsEl.innerHTML = rows.map(function(r){
+    return '<button type="button" class="wb-comp-chip '+r.source+' '+(r.included?'included':'excluded')+'" data-compid="'+r.id+'">'+
+      '<span class="wb-comp-check">'+(r.included?'\u2713':'')+'</span>'+
+      '<span class="wb-comp-price">'+money(r.price)+'</span>'+
+      '<span class="wb-comp-title">'+esc(r.title || (r.source==='live'?'eBay sold listing':'store sale'))+'</span>'+
+      '<span class="wb-comp-src '+r.source+'">'+r.source+'</span>'+
+      '</button>';
+  }).join('');
+}
+
+async function wbLabPullLive(){
+  var btn=document.getElementById('wbLabLiveBtn');
+  if(!wbLabState.query){
+    if(btn) btn.title='Search an item first';
+    return;
+  }
+  if(btn){ btn.disabled=true; btn.textContent='pulling…' }
+  var res=await wbFetchLiveComps(wbLabState.query);
+  if(res.ok){
+    wbLabState.liveRows = res.rows.map(function(r){
+      return { id:'l'+(wbLabNextCompId++), price:r.price, title:r.title, included:true };
+    });
+    // Live comps pulled while the view was filtered to "Store" would
+    // otherwise land in the data with nothing on screen to show for it —
+    // switch to "All" so the person can actually see what just came in.
+    if(wbLabState.filter==='store') wbLabSetFilter('all');
+    wbLabRenderTab();
+  } else {
+    if(btn) btn.title=res.error;
+  }
+  if(btn){ btn.disabled=false; btn.textContent='Pull live' }
+}
+
+document.addEventListener('click', function(e){
+  var chip=e.target.closest && e.target.closest('.wb-comp-chip[data-compid]');
+  if(chip){ wbLabToggleComp(chip.dataset.compid); return; }
+  var f=e.target.closest && e.target.closest('.wb-lab-f[data-labfilter]');
+  if(f){ wbLabSetFilter(f.dataset.labfilter); return; }
+  if(e.target && e.target.id==='wbLabSearchBtn'){ wbLabRunSearch(false); return; }
+  if(e.target && e.target.id==='wbLabLiveBtn'){ wbLabPullLive(); return; }
+});
+document.addEventListener('keydown', function(e){
+  if(e.target && e.target.id==='wbLabSearch' && e.key==='Enter'){ e.preventDefault(); wbLabRunSearch(false); }
+});
 
 document.addEventListener('click',function(e){
   var t=e.target.closest && e.target.closest('.wb-ctab');
@@ -9686,6 +9866,93 @@ function wanBoardWireEdit(){
   });
 }
 
+// ── Right-click queue delete (added 2026-08-11) ──────────────────────
+// Placed here deliberately, well after bhaiEntriesData / undoableToast /
+// renderBhaiEntries are all declared — a synchronous call up near the top
+// of the script referencing any of those too early is exactly the TDZ
+// crash found and fixed earlier in this file (zhuanSyncAddBtnLabel firing
+// before bhaiEditingId existed, which took the whole script down with it).
+// Nothing here fires until an actual right-click, but the LISTENER
+// REGISTRATION itself still has to happen at a point where everything it
+// closes over already exists.
+var wbCtxTargetId=null;
+
+function wbCtxMenuEl(){ return document.getElementById('wbCtxMenu'); }
+
+function wbCtxShow(x,y){
+  var m=wbCtxMenuEl(); if(!m) return;
+  m.hidden=false;
+  // Measured AFTER un-hiding — offsetWidth/Height are 0 on a display:none
+  // element, so clamping against them before this would always compute a
+  // no-op clamp and let the menu run off the edge anyway.
+  var vw=window.innerWidth, vh=window.innerHeight;
+  var mw=m.offsetWidth||190, mh=m.offsetHeight||44;
+  m.style.left=Math.max(4,Math.min(x, vw-mw-8))+'px';
+  m.style.top=Math.max(4,Math.min(y, vh-mh-8))+'px';
+}
+function wbCtxHide(){
+  var m=wbCtxMenuEl(); if(m) m.hidden=true;
+  wbCtxTargetId=null;
+}
+
+document.addEventListener('contextmenu', function(e){
+  var row=e.target.closest && e.target.closest('#wbQueueList .wb-q[data-wbid]');
+  if(!row){ wbCtxHide(); return; }
+  e.preventDefault();
+  wbCtxTargetId=parseInt(row.dataset.wbid,10);
+  wbCtxShow(e.clientX, e.clientY);
+});
+
+// Closing on a plain left click anywhere outside the menu, on Escape, on
+// scroll, and on the window losing focus — a context menu that only closes
+// one specific way is the kind of thing that ends up "stuck open" the
+// first time someone dismisses it in whatever way they reflexively tried.
+document.addEventListener('click', function(e){
+  var m=wbCtxMenuEl(); if(!m || m.hidden) return;
+  if(e.target.closest('#wbCtxMenu')) return;
+  wbCtxHide();
+});
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') wbCtxHide(); });
+window.addEventListener('scroll', wbCtxHide, true);
+window.addEventListener('blur', wbCtxHide);
+
+document.addEventListener('click', function(e){
+  if(e.target.closest('#wbCtxEdit')){
+    var editId=wbCtxTargetId;
+    wbCtxHide();
+    // Same function the pencil icon already calls — the two entry points
+    // can never disagree about what "editing an entry" means.
+    if(editId!==null && typeof bhaiLoadEntryForEdit==='function') bhaiLoadEntryForEdit(editId);
+    return;
+  }
+  if(!e.target.closest('#wbCtxDelete')) return;
+  var id=wbCtxTargetId;
+  wbCtxHide();
+  if(id!==null) wbDeleteQueueEntry(id);
+});
+
+// Mirrors the sidebar's own delete-with-undo exactly (same undoableToast
+// pattern, same splice-back-in-place restore) so the two delete paths
+// can never drift into different behavior. The one addition: this also
+// re-renders the board's own queue list, which the sidebar's original
+// delete handler never did — deleting from the sidebar while the board
+// was open used to leave a stale row sitting there until something
+// unrelated happened to trigger a re-render.
+function wbDeleteQueueEntry(id){
+  var idx=bhaiEntriesData.findIndex(function(e){return e.id===id});
+  var removed=idx!==-1?bhaiEntriesData[idx]:null;
+  if(!removed) return;
+  bhaiEntriesData=bhaiEntriesData.filter(function(e){return e.id!==id});
+  renderBhaiEntries();
+  if(typeof wanBoardQueue==='function') wanBoardQueue();
+  undoableToast('Removed '+(removed.desc?removed.desc.slice(0,30):'entry'), function(){
+    bhaiEntriesData.splice(Math.min(idx,bhaiEntriesData.length),0,removed);
+    renderBhaiEntries();
+    if(typeof wanBoardQueue==='function') wanBoardQueue();
+    toast('Restored entry');
+  });
+}
+
 // Pack order is label order, so the queue must be physically rearrangeable.
 // Reordering mutates bhaiEntriesData itself, then re-renders BOTH views so
 // the sidebar and the board can never disagree about sequence.
@@ -9926,10 +10193,15 @@ if(document.getElementById('bhaiEntries')) document.getElementById('bhaiEntries'
   const removed = idx!==-1 ? bhaiEntriesData[idx] : null;
   bhaiEntriesData = bhaiEntriesData.filter(e=>e.id!==id);
   renderBhaiEntries();
+  // Keep the board's own queue list in sync too — without this, deleting
+  // from the sidebar while Wan Board was open left a stale row sitting
+  // there until something unrelated triggered a re-render.
+  if(typeof wanBoardQueue==='function' && CURRENT_WORK_PAGE==='wanboard'){ wanBoardQueue(); }
   if(removed){
     undoableToast('Removed ' + (removed.desc ? removed.desc.slice(0,30) : 'entry'), ()=>{
       bhaiEntriesData.splice(Math.min(idx, bhaiEntriesData.length), 0, removed);
       renderBhaiEntries();
+      if(typeof wanBoardQueue==='function' && CURRENT_WORK_PAGE==='wanboard'){ wanBoardQueue(); }
       toast('Restored entry');
     });
   }
@@ -21794,8 +22066,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-lab-hd{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
   .wb-lab-hd h3{font:700 11px var(--sans);letter-spacing:.15em;text-transform:uppercase;
     color:var(--wb-dim);margin:0}
-  .wb-lab-q{font:500 11px var(--mono);color:var(--wb-faint);
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .wb-lab-search{display:flex;gap:7px;margin-bottom:9px}
+  .wb-lab-search input{flex:1;background:var(--wb-raised);border:1px solid var(--wb-line-hi);
+    border-radius:8px;padding:9px 12px;font:500 12.5px var(--sans);color:var(--wb-ink);outline:none}
+  .wb-lab-search input:focus{border-color:var(--wb-cy)}
+  .wb-lab-search input::placeholder{color:var(--wb-faint)}
+  .wb-lab-search-btn{flex:none;background:var(--wb-bl);border:1px solid var(--wb-bl);
+    color:#031228;font:700 11.5px var(--sans);padding:9px 15px;border-radius:8px;cursor:pointer}
+  .wb-lab-search-btn:hover{filter:brightness(1.08)}
+
+  .wb-lab-filterrow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .wb-lab-filters{display:flex;gap:3px;background:var(--wb-raised);border:1px solid var(--wb-line);
+    border-radius:8px;padding:3px}
+  .wb-lab-f{background:transparent;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;
+    font:600 10.5px var(--sans);color:var(--wb-faint);transition:background .12s,color .12s}
+  .wb-lab-f.on{background:var(--wb-pnl);color:var(--wb-ink);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  .wb-lab-f:hover:not(.on){color:var(--wb-dim)}
+
   .wb-lab-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
     background:var(--wb-line);border:1px solid var(--wb-line);border-radius:8px;overflow:hidden}
   .wb-lab-stat{background:var(--wb-pnl);padding:9px 11px}
@@ -21804,7 +22092,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-lab-stat b{font:600 15px var(--mono);color:var(--wb-ink)}
   .wb-lab-stat b.cy{color:var(--wb-cy)} .wb-lab-stat b.am{color:var(--wb-am)}
   .wb-lab-stat s{display:block;text-decoration:none;font:500 9px var(--sans);color:var(--wb-faint);margin-top:2px}
-  .wb-lab-list{margin-top:10px}
+
+  /* Comp chips — read-only visuals, click anywhere on one to toggle
+     whether it counts toward the recommended price. No text entry
+     anywhere in this tab; every number on screen came from a real match
+     or a real eBay pull, never something typed in by hand. */
+  .wb-lab-comps{margin-top:12px;display:flex;flex-direction:column;gap:5px}
+  .wb-comp-chip{display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+    background:var(--wb-raised);border:1px solid var(--wb-line);border-radius:8px;
+    padding:8px 11px;cursor:pointer;transition:border-color .12s,opacity .12s}
+  .wb-comp-chip:hover{border-color:var(--wb-line-hi)}
+  .wb-comp-chip.excluded{opacity:.42}
+  .wb-comp-check{flex:none;width:15px;height:15px;border-radius:4px;border:1.5px solid var(--wb-line-hi);
+    display:flex;align-items:center;justify-content:center;font:700 10px var(--sans);color:var(--wb-bg)}
+  .wb-comp-chip.included .wb-comp-check{background:var(--wb-cy);border-color:var(--wb-cy)}
+  .wb-comp-price{flex:none;font:700 12.5px var(--mono);color:var(--wb-ink);min-width:64px}
+  .wb-comp-title{flex:1;min-width:0;font:500 11px var(--sans);color:var(--wb-dim);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wb-comp-src{flex:none;font:700 8.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;
+    padding:2px 7px;border-radius:999px}
+  .wb-comp-src.store{color:var(--wb-cy);background:rgba(50,214,197,.14)}
+  .wb-comp-src.live{color:var(--wb-am);background:rgba(240,180,60,.14)}
 
   /* ── Trading-view hero (recommended price) ─────────────────────────
      Same visual language in both sizes — the compact panel and the Lab
@@ -22120,6 +22428,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-q{position:relative}
   .wb-q.warn .wb-qm{color:var(--wb-am)}
   .wb-q.landed{animation:wbSlot .42s cubic-bezier(.22,1.2,.36,1) both}
+
+  /* ── Right-click queue menu ─────────────────────────────────────────
+     One reusable node, repositioned per right-click rather than built
+     fresh each time — same reasoning as toast() being a singleton
+     elsewhere in this file: cheaper, and there's never more than one of
+     these open at once anyway. Positioned fixed at cursor coordinates set
+     in JS, clamped there so it can't render off the right/bottom edge on
+     a row near the panel boundary. */
+  .wb-ctx-menu{position:fixed;z-index:5000;min-width:172px;padding:5px;
+    background:var(--wb-raised);border:1px solid var(--wb-line-hi);border-radius:9px;
+    box-shadow:0 12px 34px rgba(0,0,0,.5);}
+  .wb-ctx-menu[hidden]{display:none}
+  .wb-ctx-item{display:flex;align-items:center;gap:7px;width:100%;text-align:left;
+    background:transparent;border:none;border-radius:6px;padding:8px 10px;cursor:pointer;
+    font:600 11.5px var(--sans);color:var(--wb-dim);transition:background .12s,color .12s}
+  .wb-ctx-item:hover{background:rgba(255,255,255,.06);color:var(--wb-ink)}
+  .wb-ctx-item.wb-ctx-danger:hover{background:rgba(248,113,113,.12);color:#f87171}
   @keyframes wbSlot{from{opacity:0;transform:translateY(-9px) scaleY(.55)}to{opacity:1;transform:none}}
   .wb-ghost{position:fixed;z-index:600;pointer-events:none;background:var(--wb-raised);
     border:1px solid #1c6f68;border-radius:9px;padding:9px 11px;overflow:hidden;
@@ -23293,6 +23618,13 @@ var NexusSpec = (function () {
       target: target,
       rows: rows,
       prices: prices,
+      // The Lab tab's comp chips need titles alongside prices, and `prices`
+      // alone can't recover them safely — two comps can share an identical
+      // price, so matching back by value would risk pairing the wrong
+      // title to the wrong row. This is the actual USED subset (post
+      // tier-filter, post bimodal-trim), the same objects `prices` was
+      // derived from, so nothing here can disagree with what got counted.
+      usedRows: used,
       tier: tier.name,
       pulled: rows.length,
       used: used.length,
