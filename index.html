@@ -9996,26 +9996,69 @@ function wbBgShade(hex, amt){
   function ch(v){ v=parseInt(v,16)+amt; return Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0'); }
   return '#'+ch(m[1])+ch(m[2])+ch(m[3]);
 }
+// Every variable actually painting a "surface" or "text" color across the
+// Wan Board — not just the four --wb-* ones. Many panels, especially the
+// composer (borrowed wholesale from elsewhere in Nexus, per the comment
+// on #wanboardPage's own variable block), are styled through a SEPARATE
+// set of --wan-*/--wd-*/plain variables that stayed locked at their
+// original near-black values regardless of what got picked here — which
+// is exactly why the composer and a few other surfaces stayed dark even
+// after the fix that made the picker actually run at all. Grouped into
+// tiers so one picked color produces the same light/recessed/raised
+// relationship across every one of them, borrowed variable or not.
+//
+// Accent colors (cyan/amber/green/blue, and their --accent-tint /
+// --pass-tint / --fail-tint rgba cousins) are deliberately left out —
+// same reasoning as before: they carry their own self-contained contrast
+// and a full recompute against an arbitrary picked color is a bigger
+// feature than "let me change the background."
+var WB_BG_TIERS = {
+  panel:  ['--wb-pnl','--wan-card','--wan-surface','--wd-card','--surface'],
+  bg:     ['--wb-bg','--wan-bg','--wd-bg','--bg','--header'],
+  raised: ['--wb-raised','--wd-card2','--wd-surface','--surface-2'],
+  line:   ['--wb-line','--wan-border','--wd-border','--line'],
+  lineHi: ['--wb-line-hi','--wan-border2','--wd-border2','--line-2'],
+  ink:    ['--wb-ink','--wan-ink','--wd-ink','--ink','--on-dark'],
+  dim:    ['--wb-dim','--wan-soft','--wd-soft','--ink-soft','--on-dark-soft'],
+  faint:  ['--wb-faint','--wan-faint','--wd-faint','--ink-faint']
+};
+function wbSetTier(board, names, value){
+  names.forEach(function(n){ board.style.setProperty(n, value); });
+}
 function wbApplyBgColor(hex){
   var board=document.getElementById('wanboardPage');
   if(!board || !/^#?[0-9a-f]{6}$/i.test(hex)) return;
   if(hex[0]!=='#') hex='#'+hex;
   var dark = wbBgBrightness(hex) < 140;
-  board.style.setProperty('--wb-pnl', hex);
-  board.style.setProperty('--wb-raised', wbBgShade(hex, dark?14:-14));
-  board.style.setProperty('--wb-line', wbBgShade(hex, dark?26:-26));
-  board.style.setProperty('--wb-line-hi', wbBgShade(hex, dark?40:-40));
-  board.style.setProperty('--wb-ink', dark?'#e8eef7':'#0a0d12');
-  board.style.setProperty('--wb-dim', dark?'#8492a5':'#4a5568');
-  board.style.setProperty('--wb-faint', dark?'#556072':'#718096');
+  wbSetTier(board, WB_BG_TIERS.panel,  hex);
+  // Recessed/elevated are spatial relationships, not light-vs-dark ones —
+  // "behind the panel" should read darker than the panel regardless of
+  // whether the panel itself is light or dark. The first version of this
+  // flipped direction based on `dark`, which for a near-white pick meant
+  // ADDING to channels already sitting at 255 — clamped straight back to
+  // the same value, so the "recessed" tier came out identical to the
+  // panel with zero visible contrast. Found by testing #ffffff directly,
+  // not by inspection — the bug only shows up right at that ceiling.
+  wbSetTier(board, WB_BG_TIERS.bg,     wbBgShade(hex, -10));
+  // Raised keeps the direction conditional, unlike bg above — it has the
+  // OPPOSITE clamping risk. Going consistently lighter would clamp to
+  // zero contrast on a light pick the same way bg used to on a dark one,
+  // just at the other end. Conditional means it always moves toward
+  // whichever direction still has headroom.
+  wbSetTier(board, WB_BG_TIERS.raised, wbBgShade(hex, dark?14:-14));
+  wbSetTier(board, WB_BG_TIERS.line,   wbBgShade(hex, dark?26:-26));
+  wbSetTier(board, WB_BG_TIERS.lineHi, wbBgShade(hex, dark?40:-40));
+  wbSetTier(board, WB_BG_TIERS.ink,    dark?'#e8eef7':'#0a0d12');
+  wbSetTier(board, WB_BG_TIERS.dim,    dark?'#8492a5':'#4a5568');
+  wbSetTier(board, WB_BG_TIERS.faint,  dark?'#556072':'#718096');
   var input=document.getElementById('tbBgColor');
   if(input) input.value=hex;
 }
 function wbResetBgColor(){
   var board=document.getElementById('wanboardPage');
   if(board){
-    ['--wb-pnl','--wb-raised','--wb-line','--wb-line-hi','--wb-ink','--wb-dim','--wb-faint'].forEach(function(p){
-      board.style.removeProperty(p);
+    Object.keys(WB_BG_TIERS).forEach(function(k){
+      WB_BG_TIERS[k].forEach(function(n){ board.style.removeProperty(n); });
     });
   }
   try{ localStorage.removeItem('abribook:wbBgColor'); }catch(e){}
