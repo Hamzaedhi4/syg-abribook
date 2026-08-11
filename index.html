@@ -5305,6 +5305,19 @@
       </div>
 
       <div class="wb-col wb-center" id="wbCenter">
+        <div class="wb-lab" id="wbLab">
+          <div class="wb-lab-hd">
+            <h3>Price research</h3>
+            <span class="wb-lab-q" id="wbLabQ">—</span>
+          </div>
+          <div class="wb-lab-hero" id="wbLabHero"></div>
+          <div class="wb-lab-range" id="wbLabRange"></div>
+          <div class="wb-lab-stats" id="wbLabStats"></div>
+          <div class="wb-lab-chart" id="wbLabChart"></div>
+          <div class="wb-read wb-read-lg" id="wbLabRead"></div>
+          <div class="wb-lab-list" id="wbLabList"></div>
+        </div>
+
         <div class="wb-syg" id="wbSyg">
           <div class="wb-syg-bar">
             <span class="wb-syg-crumb" id="wbSygCrumb">buyer.sellyourgadgets.com / dashboard / inventory</span>
@@ -5336,26 +5349,44 @@
         </div>
         <div class="wb-composer" id="wbComposer">
           <div class="wb-ctabs" role="tablist">
-            <button type="button" class="wb-ctab on" data-wb-pane="wan" role="tab" aria-selected="true">Wan</button>
-            <button type="button" class="wb-ctab" data-wb-pane="syg" role="tab" aria-selected="false">SYG</button>
+            <button type="button" class="wb-ctab on" data-wb-pane="wan" role="tab" aria-selected="true"><i class="wb-ct-dot"></i>Wan</button>
+            <button type="button" class="wb-ctab" data-wb-pane="lab" role="tab" aria-selected="false"><i class="wb-ct-dot"></i>Lab</button>
+            <button type="button" class="wb-ctab" data-wb-pane="syg" role="tab" aria-selected="false"><i class="wb-ct-dot"></i>SYG</button>
             <span class="wb-ctab-note" id="wbSygNote"></span>
           </div>
         </div>
       </div>
 
       <div class="wb-col wb-right">
-        <div class="wb-pnl">
-          <div class="wb-hd"><h3>Live comps</h3><span class="wb-r" id="wbCompMeta"></span></div>
-          <div class="wb-hist" id="wbHist"></div>
-          <div class="wb-cmpv" id="wbCmpv"></div>
-        </div>
         <div class="wb-pnl wb-grow">
           <div class="wb-hd"><span class="wb-n">3</span><h3>Send</h3></div>
           <div class="wb-note" id="wbSendNote">Nothing queued yet.</div>
+          <label class="wb-shovo-toggle" id="wbShovoToggleRow" title="When on, the copied prompt tells Claude to push every edit as given instead of stopping to ask about ambiguous or missing fields.">
+            <input type="checkbox" id="wbShovoMode">
+            <span class="wb-shovo-sw"><i></i></span>
+            <span class="wb-shovo-lbl">ShovoMode <em>— push edits, don't ask</em></span>
+          </label>
           <div class="wb-slot" id="wbSlotSend">
             <button type="button" class="wb-send-btn" id="wbSendCopy">Copy prompt with items</button>
           </div>
           <div class="wb-stats wb-foot" id="wbSession"></div>
+        </div>
+        <div class="wb-pnl wb-comps" id="wbComps">
+          <div class="wb-hd">
+            <h3>Comps</h3>
+            <span class="wb-r" id="wbCompMeta">type an item</span>
+          </div>
+          <div class="wb-legend">
+            <span class="wb-lg store"><i></i>Store sold</span>
+            <span class="wb-lg live"><i></i>eBay live</span>
+            <button type="button" class="wb-live-btn" id="wbLiveBtn" title="Pull live sold comps from eBay (~25s)">Pull live</button>
+          </div>
+          <div class="wb-tv-hero" id="wbTvHero"></div>
+          <div class="wb-tv-range" id="wbTvRange"></div>
+          <div class="wb-tv-stats" id="wbTvStats"></div>
+          <div class="wb-chart" id="wbChart"></div>
+          <div class="wb-cmpv" id="wbCmpv" hidden></div>
+          <div class="wb-read" id="wbRead"></div>
         </div>
       </div>
 
@@ -7750,6 +7781,13 @@ document.getElementById('dpEntries').addEventListener('drop', ev=>{
 
 // ── Guided Mode / Review checkpoint / EOS Summary / Export scope ───
 let GUIDED_MODE = (function(){ try{ return localStorage.getItem('abribook:guidedMode')==='1'; }catch(e){ return false; } })();
+// ShovoMode: a modifier on the COPIED PROMPT, not on this app's own
+// behavior. Nexus never contacts Claude directly — it only assembles text
+// for the person to paste — so this can't change how a conversation
+// responds by itself. What it changes is which instruction block goes into
+// that text. Same sync-init-from-localStorage shape as GUIDED_MODE, so a
+// page reload doesn't reset it.
+let SHOVO_MODE = (function(){ try{ return localStorage.getItem('abribook:shovoMode')==='1'; }catch(e){ return false; } })();
 let _lastReviewedSnapshot = null;
 
 function entriesSnapshot(){
@@ -7835,6 +7873,17 @@ if(document.getElementById('guidedModeToggle')){
 }
 if(document.getElementById('reviewSessionBtn')){
   document.getElementById('reviewSessionBtn').addEventListener('click', showEosSummary);
+}
+
+if(document.getElementById('wbShovoMode')){
+  document.getElementById('wbShovoMode').checked = SHOVO_MODE;
+  document.getElementById('wbShovoMode').addEventListener('change', (ev)=>{
+    SHOVO_MODE = ev.target.checked;
+    try{ localStorage.setItem('abribook:shovoMode', SHOVO_MODE ? '1' : '0'); }catch(e){}
+    toast(SHOVO_MODE
+      ? 'ShovoMode on — the copied prompt will tell Claude to push edits as given instead of asking'
+      : 'ShovoMode off — Claude will ask before guessing on anything ambiguous, as usual');
+  });
 }
 
 // Shared prep for both "Copy" and "Send to Claude Desktop" — same gates
@@ -8622,6 +8671,393 @@ function wanMountBoard(){
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', wanMountBoard);
 else wanMountBoard();
 
+// ── Comps lab: store sold vs live eBay, side by side ────────────────
+//
+// Fills the Comps panel (bottom right, beside the composer) and the Lab tab
+// in the centre column. Both draw from one render pass — same data, same
+// chart code, two sizes — so the small panel can never disagree with the
+// expanded view.
+//
+// Replaces the old "Live comps" panel, whose three nodes (#wbHist, #wbCmpv,
+// #wbCompMeta) appeared exactly once each in the entire file: in the markup.
+// Nothing ever wrote to them. The CSS was complete, so it rendered as a
+// styled heading over blank space.
+//
+// Two sources, deliberately treated differently, matching the signal
+// hierarchy already used everywhere else in Nexus:
+//   • STORE SOLD (HAZ_STORE_PRICES, source:'sold') — ground truth. What SYG
+//     actually got paid. Local, instant, free, so it runs on every keystroke.
+//   • LIVE EBAY (CHECK_EBAY_LIVE through the extension) — the wider market.
+//     Costs ~25s and a background tab, so it is button-triggered only. Never
+//     automatic: a debounce that fires network calls while someone types is
+//     how you end up with eight eBay tabs open.
+
+var WBLab = (function () {
+  'use strict';
+
+  var STOP = {the:1,and:1,for:1,with:1,new:1,used:1,'/':1,'-':1,'|':1,w:1,in:1,of:1,a:1};
+
+  function tokenize(s) {
+    return String(s || '').toLowerCase()
+      .replace(/[^a-z0-9.\s-]/g, ' ')
+      .split(/[\s-]+/)
+      .filter(function (t) { return t.length > 1 && !STOP[t]; });
+  }
+
+  // Overlap score against the store catalogue. Model numbers carry most of
+  // the weight — "mz-v8p2t0" identifies a drive, "samsung" identifies a
+  // thousand of them — so anything containing a digit counts double. Without
+  // that a query drifts onto same-brand, wrong-part rows and prices the item
+  // off the wrong evidence.
+  function score(qTok, rTok) {
+    if (!qTok.length || !rTok.length) return 0;
+    var set = Object.create(null), hit = 0, weight = 0, total = 0;
+    rTok.forEach(function (t) { set[t] = 1; });
+    qTok.forEach(function (t) {
+      var w = /\d/.test(t) ? 2 : 1;
+      total += w;
+      if (set[t]) { hit++; weight += w; }
+    });
+    return total ? weight / total : 0;
+  }
+
+  // Capacity is a hard gate, not a scoring nudge. Token overlap alone happily
+  // matches an 8TB drive against a 20TB one — same brand, same family, same
+  // interface, four shared words — and the wrong-capacity row then drags the
+  // median somewhere that will lose money. Same story for RAM and phone
+  // storage. If both sides state a capacity and they disagree, it is a
+  // different product regardless of how well the rest of the text lines up.
+  function capacityOf(tokens) {
+    var caps = [];
+    tokens.forEach(function (t) {
+      var m = /^(\d+(?:\.\d+)?)(tb|gb|mb)$/.exec(t);
+      if (!m) return;
+      var n = parseFloat(m[1]);
+      if (m[2] === 'tb') n *= 1024;
+      else if (m[2] === 'mb') n /= 1024;
+      caps.push(Math.round(n));
+    });
+    return caps;
+  }
+  function capacityConflict(qc, rc) {
+    if (!qc.length || !rc.length) return false;   // one side silent — cannot judge
+    for (var i = 0; i < qc.length; i++)
+      for (var j = 0; j < rc.length; j++) {
+        // 1000GB vs 1TB(1024) are the same drive described two ways, so allow
+        // a few percent of slop before calling it a conflict.
+        var a = qc[i], b = rc[j];
+        if (Math.abs(a - b) / Math.max(a, b) < 0.06) return false;
+      }
+    return true;
+  }
+
+  function storeMatches(query) {
+    if (typeof HAZ_STORE_PRICES === 'undefined') return [];
+    var q = tokenize(query);
+    if (q.length < 2) return [];
+    var qCap = capacityOf(q);
+    var out = [];
+    HAZ_STORE_PRICES.forEach(function (e) {
+      if (e.source !== 'sold' || !(e.price > 0)) return;
+      var r = tokenize(e.title);
+      (e.keywords || []).forEach(function (k) { r = r.concat(tokenize(k)); });
+      if (capacityConflict(qCap, capacityOf(r))) return;
+      var sc = score(q, r);
+      // 0.72, not 0.55. At the looser threshold an "iPad Air M1 256GB" query
+      // pulled MacBook Air rows at 0.60 — enough shared words to pass, an
+      // entirely different product, and a median wrong by a hundred dollars.
+      if (sc >= 0.72) out.push({ title: e.title, price: e.price, score: sc });
+    });
+    return out.sort(function (a, b) { return b.score - a.score; }).slice(0, 40);
+  }
+
+  function median(a) {
+    if (!a.length) return 0;
+    var s = a.slice().sort(function (x, y) { return x - y; }), m = s.length >> 1;
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+  function money(n) { return '$' + (n || 0).toFixed(2); }
+
+  // ── Chart ─────────────────────────────────────────────────────────
+  // Hand-rolled SVG. Paired bars per price bucket, one series each, with a
+  // dashed median line per series laid over the top — the contrast between
+  // the two medians is the whole point of the panel, so it is drawn rather
+  // than left to be inferred from bar heights.
+  function chart(store, live, opts) {
+    opts = opts || {};
+    var all = store.concat(live);
+    if (!all.length) return '';
+
+    var W = 300, H = opts.big ? 190 : 76, PAD = opts.big ? 18 : 8;
+    var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    if (hi === lo) { lo = Math.max(0, lo - 10); hi = hi + 10; }
+    var N = opts.big ? 16 : 11, step = (hi - lo) / N;
+
+    function bucket(arr) {
+      var b = new Array(N).fill(0);
+      arr.forEach(function (p) {
+        var i = Math.min(N - 1, Math.floor((p - lo) / step));
+        if (i >= 0) b[i]++;
+      });
+      return b;
+    }
+    var bs = bucket(store), bl = bucket(live);
+    var peak = Math.max(1, Math.max.apply(null, bs.concat(bl)));
+    var plotH = H - PAD * 2, bw = W / N, gap = bw * 0.16, half = (bw - gap * 2) / 2;
+
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">';
+
+    // Baseline
+    svg += '<line x1="0" y1="' + (H - PAD) + '" x2="' + W + '" y2="' + (H - PAD) +
+           '" stroke="var(--wb-line)" stroke-width="1"/>';
+
+    for (var i = 0; i < N; i++) {
+      var x = i * bw + gap;
+      if (bs[i]) {
+        var h1 = Math.max(2, (bs[i] / peak) * plotH);
+        svg += '<rect x="' + x.toFixed(1) + '" y="' + (H - PAD - h1).toFixed(1) +
+               '" width="' + half.toFixed(1) + '" height="' + h1.toFixed(1) +
+               '" fill="var(--wb-cy)" opacity="0.85" rx="1"/>';
+      }
+      if (bl[i]) {
+        var h2 = Math.max(2, (bl[i] / peak) * plotH);
+        svg += '<rect x="' + (x + half).toFixed(1) + '" y="' + (H - PAD - h2).toFixed(1) +
+               '" width="' + half.toFixed(1) + '" height="' + h2.toFixed(1) +
+               '" fill="var(--wb-am)" opacity="0.8" rx="1"/>';
+      }
+    }
+
+    function medLine(vals, colour) {
+      if (!vals.length) return '';
+      var m = median(vals), x = ((m - lo) / (hi - lo)) * W;
+      x = Math.max(1, Math.min(W - 1, x));
+      return '<line x1="' + x.toFixed(1) + '" y1="' + (PAD * 0.4) + '" x2="' + x.toFixed(1) +
+             '" y2="' + (H - PAD) + '" stroke="' + colour +
+             '" stroke-width="1.25" stroke-dasharray="3 3" opacity="0.95"/>';
+    }
+    svg += medLine(store, 'var(--wb-cy)') + medLine(live, 'var(--wb-am)');
+
+    if (opts.big) {
+      svg += '<text x="0" y="' + (H - 4) + '" fill="var(--wb-faint)" font-size="9" font-family="ui-monospace,monospace">' + money(lo) + '</text>';
+      svg += '<text x="' + W + '" y="' + (H - 4) + '" text-anchor="end" fill="var(--wb-faint)" font-size="9" font-family="ui-monospace,monospace">' + money(hi) + '</text>';
+    }
+    return svg + '</svg>';
+  }
+
+  // ── Wan's read ────────────────────────────────────────────────────
+  // The panel above already shows the numbers; repeating them here would be
+  // noise. This says what they MEAN — the one thing a stat block cannot do.
+  // Every branch is driven by the actual distributions, never a canned line,
+  // because advice that does not track the data is worse than no advice: it
+  // gets trusted once and then quietly mis-prices something.
+  function read(store, live, q) {
+    if (!q || q.length < 3) return null;
+    var ns = store.length, nl = live.length;
+    if (!ns && !nl) return { k: 'warn', t: 'Nothing to go on yet. No store sales match this and no live comps pulled — price it off the spec sheet, or hit <b>Pull live</b>.' };
+
+    var ms = median(store), ml = median(live);
+
+    if (ns && !nl) {
+      var lo = Math.min.apply(null, store), hi = Math.max.apply(null, store);
+      if (ns === 1) return { k: 'info', t: 'One store sale on record at <b>' + money(ms) + '</b>. That is a data point, not a pattern — worth pulling live comps before committing.' };
+      if (hi - lo > ms * 0.6) return { k: 'warn', t: 'We have sold this <b>' + ns + '</b> times but all over the map — ' + money(lo) + ' to ' + money(hi) + '. Condition is probably driving it. Median <b>' + money(ms) + '</b>.' };
+      return { k: 'good', t: '<b>' + ns + '</b> store sales, tight spread, median <b>' + money(ms) + '</b>. That is solid ground — I would start there.' };
+    }
+
+    if (!ns && nl) return { k: 'info', t: 'No store history, but <b>' + nl + '</b> live comps sitting at a median of <b>' + money(ml) + '</b>. First time through for this one, so treat that as the ceiling, not the target.' };
+
+    // Both present — the comparison is the interesting part.
+    var gap = ml - ms, pct = ms ? (gap / ms) * 100 : 0;
+    if (Math.abs(pct) < 8) return { k: 'good', t: 'Market and our own sales agree — <b>' + money(ms) + '</b> store vs <b>' + money(ml) + '</b> live. Comfortable pricing right in there.' };
+    if (pct >= 8) return { k: 'good', t: 'eBay is running <b>' + Math.round(pct) + '% above</b> what we have been getting (' + money(ml) + ' vs ' + money(ms) + '). Room to push this one up.' };
+    return { k: 'warn', t: 'We have been beating the market by <b>' + Math.round(-pct) + '%</b> here (' + money(ms) + ' vs ' + money(ml) + ' live). Nice — but do not anchor to our number if it has been drifting down.' };
+  }
+
+  // ── Render ────────────────────────────────────────────────────────
+  var lastLive = [], lastLiveQ = '';
+
+  function render(query) {
+    var q = String(query || '').trim();
+    var store = storeMatches(q).map(function (r) { return r.price; });
+    var live = (lastLiveQ && q.indexOf(lastLiveQ.slice(0, 18)) === 0) ? lastLive : [];
+    var rows = storeMatches(q);
+
+    var meta = document.getElementById('wbCompMeta');
+    var chartEl = document.getElementById('wbChart');
+    var cmpv = document.getElementById('wbCmpv');
+    var readEl = document.getElementById('wbRead');
+
+    if (meta) meta.textContent = q.length < 3 ? 'type an item'
+      : (store.length + ' sold' + (live.length ? ' · ' + live.length + ' live' : ''));
+
+    var tv = tradingView(store, live, false);
+    var tvHero = document.getElementById('wbTvHero');
+    var tvRange = document.getElementById('wbTvRange');
+    if (tvHero) tvHero.innerHTML = tv.hero;
+    if (tvRange) tvRange.innerHTML = tv.range;
+
+    if (chartEl) {
+      chartEl.innerHTML = (store.length || live.length)
+        ? chart(store, live, { big: false })
+        : '<div class="wb-empty">' + (q.length < 3 ? 'Describe an item to see comps' : 'No matches in store history') + '</div>';
+    }
+
+    if (cmpv) {
+      if (store.length || live.length) {
+        var primary = store.length ? median(store) : median(live);
+        cmpv.innerHTML = '<b>' + money(primary) + '</b><span>' +
+          (store.length ? 'store median' : 'live median') + '</span>' +
+          (store.length && live.length ? '<em>live ' + money(median(live)) + '</em>' : '');
+      } else cmpv.innerHTML = '';
+    }
+
+    var r = read(store, live, q);
+    if (readEl) {
+      if (r) {
+        readEl.className = 'wb-read ' + (r.k === 'warn' ? 'warn' : '');
+        readEl.innerHTML = '<div class="wb-read-wan"><span class="wb-wan-face">W</span><span>' + r.t + '</span></div>';
+        readEl.hidden = false;
+      } else readEl.hidden = true;
+    }
+
+    renderLab(q, store, live, rows, r);
+  }
+
+  function renderLab(q, store, live, rows, r) {
+    var qEl = document.getElementById('wbLabQ');
+    if (qEl) qEl.textContent = q || '—';
+
+    var tv = tradingView(store, live, true);
+    var lHero = document.getElementById('wbLabHero');
+    var lRange = document.getElementById('wbLabRange');
+    if (lHero) lHero.innerHTML = tv.hero;
+    if (lRange) lRange.innerHTML = tv.range;
+
+    var stats = document.getElementById('wbLabStats');
+    if (stats) stats.innerHTML = tv.stats;
+
+    var lc = document.getElementById('wbLabChart');
+    if (lc) {
+      lc.innerHTML = (store.length || live.length)
+        ? chart(store, live, { big: true })
+        : '<div class="wb-empty">Nothing to chart yet — describe an item in the composer.</div>';
+    }
+
+    var lr = document.getElementById('wbLabRead');
+    if (lr) {
+      if (r) {
+        lr.className = 'wb-read wb-read-lg ' + (r.k === 'warn' ? 'warn' : '');
+        lr.innerHTML = '<div class="wb-read-wan"><span class="wb-wan-face">W</span><span>' + r.t + '</span></div>';
+        lr.hidden = false;
+      } else lr.hidden = true;
+    }
+
+    var list = document.getElementById('wbLabList');
+    if (list) {
+      list.innerHTML = rows.slice(0, 8).map(function (x) {
+        return '<div class="wb-lab-row store"><b>' + money(x.price) + '</b>' +
+               '<i title="' + esc(x.title) + '">' + esc(x.title) + '</i>' +
+               '<em>store</em></div>';
+      }).join('');
+    }
+  }
+
+  // ── Trading-view hero (recommended price) ────────────────────────
+  // Mirrors the real Pricing Lab's own recommendation exactly — median and
+  // average of the actual comps, blended, retail-rounded. That formula was
+  // deliberately chosen there after a top-quartile + steering approach got
+  // pulled off by a mismatched signal (confirmed: it recommended $350 on a
+  // $150 item once). Reusing it here means the Wan Board and the Pricing
+  // Lab can never disagree on what a given set of comps recommends — same
+  // math, same answer, just a different composer feeding it the query.
+  function retailRound(n) { return Math.max(0.99, Math.round(n) - 0.01); }
+
+  function currentPrice() {
+    var el = document.getElementById('bhaiPrice');
+    var n = parseFloat(String(el && el.value || '').replace(/[^0-9.]/g, ''));
+    return isFinite(n) && n > 0 ? n : null;
+  }
+
+  function heroCalc(store, live) {
+    var all = store.concat(live);
+    if (!all.length) return null;
+    var sorted = all.slice().sort(function (a, b) { return a - b; });
+    var lo = sorted[0], hi = sorted[sorted.length - 1];
+    var med = median(all);
+    var avg = all.reduce(function (a, b) { return a + b; }, 0) / all.length;
+    var rec = retailRound((med + avg) / 2);
+    return { n: all.length, lo: lo, hi: hi, med: med, avg: avg, rec: rec };
+  }
+
+  function verdictFor(rec, current) {
+    if (!current) return { cls: '', label: 'No listed price', text: 'Add a price in the composer to see how it compares.' };
+    var diff = (current - rec) / rec;
+    if (diff > 0.12) return { cls: 'high', label: 'Priced high', text: Math.round(diff * 100) + '% above the recommended price.' };
+    if (diff < -0.12) return { cls: 'low', label: 'Priced low', text: Math.abs(Math.round(diff * 100)) + '% below what similar items sold for.' };
+    return { cls: 'good', label: 'Good price', text: 'Right around what similar items have sold for.' };
+  }
+
+  // Returns { hero, range, stats } HTML fragments. One calculation, two
+  // render sizes — the small panel and the Lab tab must never show a
+  // different recommended price for the same comps.
+  function tradingView(store, live, big) {
+    var h = heroCalc(store, live);
+    var current = currentPrice();
+
+    if (!h) {
+      return {
+        hero: '<div class="wb-tv-empty">' + (big ? 'Describe an item to see a recommended price.' : 'No comps yet') + '</div>',
+        range: '', stats: ''
+      };
+    }
+
+    var v = verdictFor(h.rec, current);
+    var markerPct = (current && h.hi > h.lo)
+      ? Math.max(0, Math.min(100, ((current - h.lo) / (h.hi - h.lo)) * 100))
+      : (h.hi > h.lo ? ((h.rec - h.lo) / (h.hi - h.lo)) * 100 : 50);
+    var markerLabel = current ? 'Your price ' + money(current) : 'Recommended';
+
+    var hero =
+      '<div class="wb-tv-top"><span class="wb-tv-eyebrow">' + (big ? 'Recommended selling price' : 'Recommended') + '</span>' +
+      (v.cls ? '<span class="wb-tv-verdict ' + v.cls + '">' + v.label + '</span>' : '') + '</div>' +
+      '<div class="wb-tv-price">' + money(h.rec) + '</div>' +
+      '<div class="wb-tv-sub">Median ' + money(h.med) + ' &amp; average ' + money(h.avg) + ' of ' + h.n + ' comp' + (h.n === 1 ? '' : 's') + '</div>' +
+      (big ? '<div class="wb-tv-vtext">' + v.text + '</div>' : '');
+
+    var range =
+      '<div class="wb-tv-track"><div class="wb-tv-marker" style="left:' + markerPct.toFixed(1) + '%" title="' + esc(markerLabel) + '"></div></div>' +
+      '<div class="wb-tv-labels"><span>' + money(h.lo) + '</span><span>' + money(h.med) + '</span><span>' + money(h.hi) + '</span></div>';
+
+    var fast = retailRound(h.rec * 0.92), max = retailRound(Math.max(h.rec * 1.06, h.hi));
+    var stats = big
+      ? cell('Comps', String(h.n), '', store.length + ' store · ' + live.length + ' live') +
+        cell('Fast sale', money(fast), 'am', 'move it quickly') +
+        cell('Max margin', money(max), 'cy', 'can wait it out') +
+        cell('Range', money(h.lo) + '–' + money(h.hi), '', 'observed spread')
+      : '';
+
+    return { hero: hero, range: range, stats: stats };
+  }
+
+  function cell(label, val, cls, sub) {
+    return '<div class="wb-lab-stat"><u>' + label + '</u><b class="' + (cls || '') + '">' + val + '</b>' +
+           (sub ? '<s>' + sub + '</s>' : '') + '</div>';
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  function setLive(query, prices) {
+    lastLive = prices || [];
+    lastLiveQ = query || '';
+  }
+
+  return { render: render, setLive: setLive, median: median, storeMatches: storeMatches };
+})();
+
 // ── Wan Board center tabs: Wan / SYG (added 2026-08-10) ──────────────
 // The SYG tab embeds the buyer portal's inventory page in the readout
 // area. Two browser protections stand in the way and the extension
@@ -8693,7 +9129,7 @@ function wbSygLoad(){
       if(wbSygHeard) return;
       wbSygNote('blocked');
       wbSygState('warn','Chrome refused to render the portal',
-        'buyer.sellyourgadgets.com sends x-frame-options: DENY. The Toolkit strips that header, so this means the extension is not loaded or is running an older build — reload it at chrome://extensions and make sure it is v1.16.0 or newer, then retry.',
+        'buyer.sellyourgadgets.com sends x-frame-options: DENY. The Toolkit strips that header, so this means the extension is not loaded or is running an older build — reload it at chrome://extensions and make sure it is v1.22.0 or newer, then retry.',
         [{label:'Retry',onClick:wbSygLoad},
          {label:'Open in a tab',href:WB_SYG_URL}]);
     },9000);
@@ -8705,18 +9141,14 @@ window.addEventListener('message',function(e){
   var d=e.data;
   if(!d||d.source!=='syg-nexus-frame'||d.type!=='SYG_FRAME_STATUS') return;
   wbSygHeard=true; clearTimeout(wbSygTimer);
-  if(d.reason==='planting'){
-    // The frame found itself on /login, planted the session cookie and is
-    // reloading itself once. Say so rather than flashing the failure card
-    // for the half second before the good load lands.
-    wbSygNote('restoring session…');
-    wbSygState('info','Restoring your session…','Planting the portal cookie and reloading the frame.');
-    return;
-  }
+  // 'planting' was reported by the frame while it corrected its own session
+  // and reloaded. That whole mechanism is gone — the extension now fixes the
+  // cookies' SameSite before the frame loads, so there is no correction pass
+  // to narrate.
   if(d.loggedOut){
     wbSygNote('signed out');
-    wbSygState('warn','Portal still signed out',
-      'The frame renders, and the extension is attaching your session to every request — so this is the portal\'s own client-side check refusing the planted cookie. Most likely you are not signed in to buyer.sellyourgadgets.com in a normal tab; sign in there first, then hit Retry. If you ARE signed in there and this persists, Chrome is blocking third-party cookies for this frame and serving Nexus from nexus.sellyourgadgets.com is the real fix.',
+    wbSygState('warn','Portal signed out',
+      'Almost always means there is no session to copy — sign in to buyer.sellyourgadgets.com in a normal tab, then hit Retry. If you ARE signed in there, the extension could not rewrite the session cookies to SameSite=None; check that buyer.sellyourgadgets.com is still allowed to use third-party cookies in Chrome settings.',
       [{label:'Sign in (new tab)',href:'https://buyer.sellyourgadgets.com/login'},
        {label:'Retry',onClick:wbSygLoad}]);
   } else {
@@ -8731,7 +9163,7 @@ window.addEventListener('message',function(e){
         var want=r&&r.result&&r.result.uid;
         if(want && String(want)!==uid){
           wbSygState('warn','Rendering as the wrong user',
-            'The frame is acting as '+uid.slice(0,10)+'…, but your browser session is '+String(want).slice(0,10)+'…. That is the portal\u2019s guest session winning over yours. Reload — the frame evicts the guest cookie and comes back as staff.',
+            'The frame is acting as '+uid.slice(0,10)+'…, but your browser session is '+String(want).slice(0,10)+'…. Reload to re-sync — prep rewrites the session cookies before the frame loads, so a fresh mount should pick up the right identity.',
             [{label:'Reload frame',onClick:function(){ wbSygMounted=false; wbSygLoad() }}]);
           return;
         }
@@ -8746,11 +9178,13 @@ window.addEventListener('message',function(e){
 function wbSygSwitch(pane){
   var c=document.getElementById('wbCenter'); if(!c) return;
   c.classList.toggle('syg-on',pane==='syg');
+  c.classList.toggle('lab-on',pane==='lab');
   Array.prototype.forEach.call(document.querySelectorAll('.wb-ctab'),function(t){
     var on=t.dataset.wbPane===pane;
     t.classList.toggle('on',on);
     t.setAttribute('aria-selected',on?'true':'false');
   });
+  if(pane==='lab') wbLabRefresh();
   // Mount lazily on first open, then leave it mounted. The dashboard is a
   // Bubble SPA that refetches everything on load, so tearing the frame down
   // on every tab flip would cost a full reload and lose scroll position and
@@ -8759,11 +9193,69 @@ function wbSygSwitch(pane){
   if(pane==='syg' && !wbSygMounted) wbSygLoad();
 }
 
+// ── Comps wiring ────────────────────────────────────────────────────
+// Store matching is local and cheap, so it runs off composer input on a
+// short debounce. The live eBay pull is NOT wired to input under any
+// debounce — it opens a background tab and takes ~25s, so it stays on an
+// explicit button. Typing must never cost a network call.
+var wbLabTimer=null;
+function wbComposerText(){
+  var ta=document.getElementById('bhaiDesc');
+  return ta&&ta.value?ta.value.trim():'';
+}
+function wbLabRefresh(){
+  if(typeof WBLab==='undefined') return;
+  try{ WBLab.render(wbComposerText()) }catch(e){}
+}
+function wbLabSchedule(){
+  clearTimeout(wbLabTimer);
+  wbLabTimer=setTimeout(wbLabRefresh,220);
+}
+
+document.addEventListener('input',function(e){
+  if(e.target && (e.target.id==='bhaiDesc' || e.target.id==='bhaiPrice')) wbLabSchedule();
+});
+
+async function wbPullLive(){
+  var btn=document.getElementById('wbLiveBtn');
+  var meta=document.getElementById('wbCompMeta');
+  var q=wbComposerText();
+  if(!q){ if(meta) meta.textContent='describe an item first'; return }
+  if(typeof nexusAskExtension!=='function'){ if(meta) meta.textContent='extension not loaded'; return }
+  if(btn){ btn.disabled=true; btn.textContent='pulling…' }
+  if(meta) meta.textContent='checking eBay (~25s)…';
+  try{
+    var condId=(typeof nexusResolveConditionId==='function')?nexusResolveConditionId():null;
+    var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:q,conditionId:condId},32000);
+    if(!res||!res.ok) throw new Error((res&&res.error)||'live check failed');
+    // Route the scrape through the spec engine exactly as the pricing lab
+    // does. Raw eBay results include docks, cables and wrong-spec variants;
+    // charting them unfiltered would draw a confident distribution of the
+    // wrong product.
+    var listings=res.listings||res.result&&res.result.listings||[];
+    var prices=(typeof NexusSpec!=='undefined'&&NexusSpec.filterComps)
+      ? (NexusSpec.filterComps(q,listings).prices||[])
+      : listings.map(function(l){return typeof l==='number'?l:l&&l.price}).filter(function(p){return p>0});
+    WBLab.setLive(q,prices);
+    wbLabRefresh();
+  }catch(err){
+    if(meta) meta.textContent=(err&&err.message)||'live check failed';
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Pull live' }
+  }
+}
+
 document.addEventListener('click',function(e){
   var t=e.target.closest && e.target.closest('.wb-ctab');
   if(t) wbSygSwitch(t.dataset.wbPane);
   if(e.target && e.target.id==='wbSygReload'){ wbSygMounted=false; wbSygLoad() }
+  if(e.target && e.target.id==='wbLiveBtn'){ wbPullLive() }
 });
+
+// Paint the comps panel once on load so it shows its empty state rather than
+// a bare heading — the failure mode the old panel had for its whole life.
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wbLabRefresh);
+else wbLabRefresh();
 
 // ── Wan Board wiring (added 2026-08-06) ──────────────────────────
 // The board does not reimplement anything. It BORROWS the live composer
@@ -10108,6 +10600,12 @@ function buildClaudePrepPrompt(entriesOverride){
     }));
     parts.push(
       `You are preparing SYG listings from plain-English BhaiMode entries. Each entry may be ANY item type — you classify it yourself, no category was pre-selected.\n\n` +
+      (SHOVO_MODE ?
+      `SHOVOMODE IS ON.\n` +
+      `Don't stop to ask me clarifying questions on this batch. Where a field is genuinely ambiguous — trailing characters on a SKU, unclear condition wording, a spec that could go two ways — make the single most reasonable call yourself and push the edit through, rather than pausing for confirmation. Every guess still goes in the "Filled From Knowledge" or "Missing Info Warnings" column exactly as the guardrails below require — ShovoMode changes whether you wait for my answer before acting, not whether you disclose what you assumed.\n` +
+      `This does NOT relax the classification or metafield rules below. If nothing on the fixed type list fits, still output NEEDS_CATEGORY and skip that entry rather than force-fitting it — but don't stop the whole batch for it: finish and push every other entry, then list the blocked one(s) at the end with what's needed to unblock. Same for ebay_category_id: leave it blank and flagged rather than guessing, same as always.\n` +
+      `If something looks like it might be a genuine mistake rather than an ambiguity — a price with an extra zero, a SKU that doesn't match anything in Shopify, an EDIT with no live product found — still flag it and don't push that one entry blind. ShovoMode is for moving fast through normal ambiguity, not for overriding a real "this looks wrong" signal.\n\n`
+      : ``) +
       `STEP 1 — CLASSIFY.\nRead raw_item_description and pick exactly one type from this fixed list:\n` +
       `  CPU, GPU, Motherboard, PSU, Storage, RAM, Laptop, Desktop, Console, Phone, Power Tools, Test Equipment, Audio Equipment, Gaming Accessories, Computer Peripherals\n` +
       `If nothing on this list clearly fits, output TYPE: NEEDS_CATEGORY for that entry, explain what's ambiguous, and skip steps 2-4 for it. Do not force-fit an item into the wrong type.\n\n` +
@@ -21080,16 +21578,123 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      .wb-composer's margin-top:auto, which pushes all the column's free
      space upward and would strand the tabs far from the box they belong
      to. */
-  .wb-ctabs{display:flex;align-items:center;gap:5px;flex-shrink:0;
+  .wb-ctabs{display:flex;align-items:center;gap:0;flex-shrink:0;
     padding:0 0 10px;margin:0}
-  .wb-ctab{appearance:none;background:transparent;border:1px solid var(--wb-line-hi);
-    border-radius:var(--r-pill,999px);padding:5px 15px;cursor:pointer;
-    font:700 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;
-    color:var(--wb-faint);transition:color .15s,background .15s,border-color .15s}
-  .wb-ctab:hover{color:var(--wb-dim);border-color:var(--wb-dim)}
-  .wb-ctab.on{background:rgba(50,214,197,.12);border-color:var(--wb-cy);color:var(--wb-cy)}
+  .wb-ctab{appearance:none;position:relative;background:transparent;
+    border:1px solid transparent;border-radius:8px;padding:6px 13px 6px 11px;
+    cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+    font:700 10px var(--sans);letter-spacing:.13em;text-transform:uppercase;
+    color:var(--wb-faint);transition:color .18s,background .18s,border-color .18s}
+  .wb-ct-dot{width:5px;height:5px;border-radius:50%;background:currentColor;
+    opacity:.42;transition:opacity .18s,box-shadow .18s;flex:none}
+  .wb-ctab:hover{color:var(--wb-dim);background:rgba(255,255,255,.028)}
+  .wb-ctab.on{color:var(--wb-cy);background:rgba(50,214,197,.10);
+    border-color:rgba(50,214,197,.30)}
+  /* The dot carries the active state rather than a border or underline. At
+     this size a lit dot reads as "live" at a glance from across the room,
+     which is the distance this board is actually used from. */
+  .wb-ctab.on .wb-ct-dot{opacity:1;box-shadow:0 0 7px 1px rgba(50,214,197,.85)}
   .wb-ctab-note{margin-left:auto;font:500 10px var(--mono);color:var(--wb-faint);
-    opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%}
+    opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46%}
+
+  /* ── Comps panel (bottom right, beside the composer) ─────────────── */
+  .wb-comps{flex:none;display:flex;flex-direction:column;gap:0}
+  .wb-legend{display:flex;align-items:center;gap:11px;margin:1px 0 7px}
+  .wb-lg{display:inline-flex;align-items:center;gap:5px;
+    font:600 9.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--wb-faint)}
+  .wb-lg i{width:8px;height:8px;border-radius:2px;flex:none}
+  .wb-lg.store i{background:var(--wb-cy)}
+  .wb-lg.live i{background:var(--wb-am)}
+  .wb-live-btn{margin-left:auto;background:var(--wb-raised);border:1px solid var(--wb-line-hi);
+    color:var(--wb-dim);font:600 9.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;
+    border-radius:5px;padding:4px 9px;cursor:pointer;transition:all .15s}
+  .wb-live-btn:hover:not(:disabled){border-color:var(--wb-am);color:var(--wb-am)}
+  .wb-live-btn:disabled{opacity:.45;cursor:default}
+  .wb-chart{height:76px;margin:0 0 8px}
+  .wb-lab-chart{height:190px;margin:4px 0 12px}
+  .wb-chart svg,.wb-lab-chart svg{width:100%;height:100%;display:block;overflow:visible}
+  .wb-empty{display:flex;align-items:center;justify-content:center;height:100%;
+    font:500 10.5px var(--sans);color:var(--wb-faint);opacity:.7;text-align:center;padding:0 12px}
+  .wb-cmpv{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .wb-cmpv b{font:600 18px var(--mono);color:var(--wb-ink)}
+  .wb-cmpv span{font:500 10px var(--sans);color:var(--wb-faint)}
+  .wb-cmpv em{font:600 10px var(--mono);font-style:normal;color:var(--wb-am)}
+
+  /* Wan's read on the numbers. Deliberately a spoken line, not a stat — the
+     panel above already has the stats, and a second block of figures would
+     just be noise. This is the part that says what they mean. */
+  .wb-read{margin-top:9px;padding:8px 10px;border-radius:7px;
+    background:rgba(50,214,197,.055);border-left:2px solid var(--wb-cy);
+    font:500 11px/1.55 var(--sans);color:var(--wb-dim)}
+  .wb-read[hidden]{display:none}
+  .wb-read b{color:var(--wb-ink);font-weight:650}
+  .wb-read.warn{background:rgba(240,180,60,.06);border-left-color:var(--wb-am)}
+  .wb-read-lg{font-size:12px;padding:11px 13px;margin-top:2px}
+  .wb-read-wan{display:flex;gap:8px;align-items:flex-start}
+  .wb-read-wan .wb-wan-face{flex:none;width:17px;height:17px;border-radius:50%;
+    background:rgba(50,214,197,.16);border:1px solid rgba(50,214,197,.45);
+    display:flex;align-items:center;justify-content:center;
+    font:700 8.5px var(--mono);color:var(--wb-cy);margin-top:1px}
+
+  .wb-lab{flex:1;min-height:0;display:flex;flex-direction:column;
+    padding:15px 18px 4px;overflow:auto}
+  .wb-center:not(.lab-on) .wb-lab{display:none}
+  .wb-center.lab-on #wbReadout,
+  .wb-center.lab-on #wbAdv{display:none}
+  .wb-lab-hd{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+  .wb-lab-hd h3{font:700 11px var(--sans);letter-spacing:.15em;text-transform:uppercase;
+    color:var(--wb-dim);margin:0}
+  .wb-lab-q{font:500 11px var(--mono);color:var(--wb-faint);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wb-lab-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--wb-line);border:1px solid var(--wb-line);border-radius:8px;overflow:hidden}
+  .wb-lab-stat{background:var(--wb-pnl);padding:9px 11px}
+  .wb-lab-stat u{display:block;text-decoration:none;font:600 8.5px var(--sans);
+    letter-spacing:.13em;text-transform:uppercase;color:var(--wb-faint);margin-bottom:3px}
+  .wb-lab-stat b{font:600 15px var(--mono);color:var(--wb-ink)}
+  .wb-lab-stat b.cy{color:var(--wb-cy)} .wb-lab-stat b.am{color:var(--wb-am)}
+  .wb-lab-stat s{display:block;text-decoration:none;font:500 9px var(--sans);color:var(--wb-faint);margin-top:2px}
+  .wb-lab-list{margin-top:10px}
+
+  /* ── Trading-view hero (recommended price) ─────────────────────────
+     Same visual language in both sizes — the compact panel and the Lab
+     tab are one calculation rendered twice, and they should read as the
+     same instrument at two zoom levels, the way a real trading terminal's
+     watchlist tile and full chart agree with each other. */
+  .wb-tv-empty{padding:14px 0 4px;font:500 10.5px var(--sans);color:var(--wb-faint);opacity:.75}
+  .wb-tv-top{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+  .wb-tv-eyebrow{font:600 8.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--wb-faint)}
+  .wb-tv-verdict{margin-left:auto;font:700 8.5px var(--sans);letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 8px;border-radius:999px}
+  .wb-tv-verdict.good{color:var(--wb-cy);background:rgba(50,214,197,.14)}
+  .wb-tv-verdict.high{color:#f87171;background:rgba(248,113,113,.14)}
+  .wb-tv-verdict.low{color:#60a5fa;background:rgba(96,165,250,.14)}
+  .wb-tv-price{font:700 26px var(--mono);color:var(--wb-ink);letter-spacing:-.01em;margin:2px 0 1px}
+  .wb-lab-hero .wb-tv-price{font-size:38px}
+  .wb-tv-sub{font:500 10px var(--sans);color:var(--wb-faint)}
+  .wb-tv-vtext{margin-top:6px;font:500 11px/1.5 var(--sans);color:var(--wb-dim)}
+
+  /* Gradient track: blue (under market) → teal (on point) → amber → red
+     (over market), same read as a price gauge. The marker sits at the
+     listed price when one exists, else at the recommendation itself — so
+     the dot is always answering "where does this land," just against a
+     different reference. */
+  .wb-tv-track{position:relative;height:8px;border-radius:999px;margin:12px 3px 8px;
+    background:linear-gradient(90deg,#60a5fa,var(--wb-cy) 42%,var(--wb-am) 70%,#f87171)}
+  .wb-tv-marker{position:absolute;top:50%;transform:translate(-50%,-50%);
+    width:13px;height:13px;border-radius:50%;background:var(--wb-pnl);
+    border:2.5px solid var(--wb-ink);box-shadow:0 1px 5px rgba(0,0,0,.5)}
+  .wb-lab-range .wb-tv-track{height:10px;margin:16px 3px 9px}
+  .wb-lab-range .wb-tv-marker{width:16px;height:16px;border-width:3px}
+  .wb-tv-labels{display:flex;justify-content:space-between;font:600 9px var(--mono);color:var(--wb-faint)}
+  .wb-lab-row{display:flex;align-items:baseline;gap:9px;padding:5px 0;
+    border-bottom:1px solid var(--wb-line);font:500 10.5px var(--sans);color:var(--wb-dim)}
+  .wb-lab-row:last-child{border-bottom:none}
+  .wb-lab-row b{font:600 11px var(--mono);color:var(--wb-ink);flex:none;width:64px}
+  .wb-lab-row i{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .wb-lab-row em{font-style:normal;font:600 9px var(--sans);letter-spacing:.06em;
+    text-transform:uppercase;flex:none;opacity:.75}
+  .wb-lab-row.store em{color:var(--wb-cy)} .wb-lab-row.live em{color:var(--wb-am)}
 
   .wb-syg{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--wb-pnl)}
   .wb-center:not(.syg-on) .wb-syg{display:none}
@@ -21285,13 +21890,36 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-composer{flex-shrink:0;margin-top:auto;background:var(--wb-pnl);
     border-top:1px solid var(--wb-line-hi);padding:12px 18px 14px;
     box-shadow:0 -10px 24px -14px rgba(0,0,0,.8)}
-  .wb-hist{display:flex;align-items:flex-end;gap:3px;height:54px;margin:2px 0 9px}
-  .wb-hist i{flex:1;background:rgba(50,214,197,.35);border-radius:2px 2px 0 0;display:block}
-  .wb-hist i.hi{background:var(--wb-cy)}
+  /* .wb-hist removed — the flexbox bar strip it styled was never populated
+     by any code and has been replaced by the SVG dual-series chart. */
   .wb-cmpv{display:flex;align-items:baseline;gap:8px}
   .wb-cmpv b{font:600 18px var(--mono);color:var(--wb-ink)}
   .wb-cmpv span{font:500 10px var(--sans);color:var(--wb-faint)}
   .wb-note{font:500 11px var(--sans);line-height:1.6;color:var(--wb-dim);margin-bottom:10px}
+
+  /* ── ShovoMode toggle ────────────────────────────────────────────
+     Lives right above the copy button because that's the only thing it
+     touches — it changes what gets written into the copied prompt, nothing
+     in the panels above reacts to it. Keeping it physically next to its
+     one effect avoids the more common toggle-UI mistake of parking a
+     switch somewhere global-looking when its blast radius is actually one
+     button. */
+  .wb-shovo-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;
+    margin-bottom:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--wb-line);
+    background:var(--wb-raised);transition:border-color .15s,background .15s}
+  .wb-shovo-toggle:has(#wbShovoMode:checked){border-color:rgba(240,180,60,.4);
+    background:rgba(240,180,60,.07)}
+  .wb-shovo-toggle input{position:absolute;opacity:0;width:0;height:0}
+  .wb-shovo-sw{flex:none;width:30px;height:17px;border-radius:999px;background:var(--wb-line-hi);
+    position:relative;transition:background .15s}
+  .wb-shovo-sw i{position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;
+    background:var(--wb-faint);transition:transform .15s,background .15s}
+  #wbShovoMode:checked ~ .wb-shovo-sw{background:var(--wb-am)}
+  #wbShovoMode:checked ~ .wb-shovo-sw i{transform:translateX(13px);background:#1a1408}
+  .wb-shovo-lbl{font:600 11.5px var(--sans);color:var(--wb-dim)}
+  .wb-shovo-lbl em{font-style:normal;font-weight:500;color:var(--wb-faint)}
+  #wbShovoMode:checked ~ .wb-shovo-lbl{color:var(--wb-am)}
+
   .wb-send-btn{width:100%;background:var(--wb-bl);border:1px solid var(--wb-bl);
     color:#031228;font:700 12.5px var(--sans);padding:11px;border-radius:8px;cursor:pointer}
   .wb-send-btn:hover:not(:disabled){filter:brightness(1.1)}
