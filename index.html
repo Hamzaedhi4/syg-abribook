@@ -5361,18 +5361,21 @@
           </div>
         </div>
 
-        <div class="wb-readout" id="wbReadout">
-          <div class="wb-hd"><span class="wb-n wb-act">◆</span><h3>Resolved</h3><span class="wb-r" id="wbSrc"></span></div>
-          <div class="wb-id" id="wbId">Nothing yet</div>
-          <div class="wb-sub" id="wbSub">start typing below</div>
-          <div class="wb-conf" id="wbConf"></div>
-          <div class="wb-drives" id="wbDrives"></div>
+        <div class="wb-wan" id="wbWan">
+          <div class="wb-readout" id="wbReadout">
+            <div class="wb-hd"><span class="wb-n wb-act">◆</span><h3>Resolved</h3><span class="wb-r" id="wbSrc"></span></div>
+            <div class="wb-id" id="wbId">Nothing yet</div>
+            <div class="wb-sub" id="wbSub">start typing below</div>
+            <div class="wb-conf" id="wbConf"></div>
+            <div class="wb-drives" id="wbDrives"></div>
+          </div>
+          <div class="wb-adv" id="wbAdv">
+            <div class="wb-hd"><h3>Wan says</h3></div>
+            <div id="wbAdvList"></div>
+          </div>
         </div>
-        <div class="wb-adv" id="wbAdv">
-          <div class="wb-hd"><h3>Wan says</h3></div>
-          <div id="wbAdvList"></div>
-        </div>
-        <div class="wb-composer" id="wbComposer">
+
+        <div class="wb-ctabs-resize" id="wbCenterResize" role="separator" aria-orientation="horizontal" title="Drag to resize · click a tab to switch">
           <div class="wb-ctabs" role="tablist">
             <button type="button" class="wb-ctab on" data-wb-pane="wan" role="tab" aria-selected="true"><i class="wb-ct-dot"></i>Wan</button>
             <button type="button" class="wb-ctab" data-wb-pane="lab" role="tab" aria-selected="false"><i class="wb-ct-dot"></i>Lab</button>
@@ -5380,6 +5383,9 @@
             <span class="wb-ctab-note" id="wbSygNote"></span>
           </div>
         </div>
+        <div class="wb-drag-shield" id="wbDragShield" hidden></div>
+
+        <div class="wb-composer" id="wbComposer"></div>
       </div>
 
       <div class="wb-col wb-right">
@@ -5417,6 +5423,10 @@
           <div class="wb-chart" id="wbChart"></div>
           <div class="wb-cmpv" id="wbCmpv" hidden></div>
           <div class="wb-read" id="wbRead"></div>
+        </div>
+        <div class="wb-pnl wb-side-panel" id="wbSidePanel">
+          <div class="wb-hd"><h3>Pricing &amp; SKU</h3></div>
+          <div id="wbComposerSideAnchor"></div>
         </div>
       </div>
 
@@ -9322,6 +9332,17 @@ function wbSygSwitch(pane){
     t.classList.toggle('on',on);
     t.setAttribute('aria-selected',on?'true':'false');
   });
+  // Reapply the shared resize height to whichever pane just became active.
+  // The explicit height set by dragging only ever lives on the ONE element
+  // that was visible at drag-time — without this, switching tabs would
+  // leave the newly-active pane sitting at its default flex:1 regardless
+  // of whatever size was chosen, which would look like the resize simply
+  // didn't stick.
+  if(typeof wbCenterResizeApply==='function'){
+    var savedH=null;
+    try{ savedH=parseInt(localStorage.getItem('abribook:wbCenterHeight'),10); }catch(e){}
+    if(savedH && !isNaN(savedH)) wbCenterResizeApply(savedH);
+  }
   // Seeded from the composer ONLY the first time the tab is opened in a
   // session, as a convenience starting point — never again after that.
   // Re-seeding on every open would silently blow away whatever the person
@@ -9614,19 +9635,26 @@ function wanBoardWrapLookupRow(){
   row.appendChild(a); row.appendChild(b);
 }
 function wanBoardWrapSide(){
-  // Groups the trigger, price row, chip, lookup-button row, AND the Add
-  // button into one column beside the textarea \u2014 trigger goes first (above
-  // Cost), Add goes last (underneath Suggest Price / Check Sold Prices).
-  var comp=document.querySelector('.wan-composer');
+  // Moved 2026-08-11: this group used to live beside (then above) the
+  // description textarea, inside the composer's own grid. It now lives in
+  // the right column instead, right above the Comps panel — "compacted
+  // with the comp check thingy," in the room where a person would
+  // naturally be looking at price/cost right next to the comps that
+  // justify them, rather than sandwiched into the composer where it kept
+  // fighting the resize handle for vertical space.
+  //
+  // The composer's OWN job shrinks to just the textarea now — nothing
+  // else needs to be grouped or reserved for inside .wan-composer at all.
   var price=document.querySelector('.wan-composer .wan-price-row');
   var chip=document.getElementById('bhaiShovoPriceChip');
   var lookup=document.getElementById('wbLookupRow');
   var addBtn=document.getElementById('bhaiAddEntry');
   var trigger=document.getElementById('wbDetailsTrigger');
-  if(!comp||!price) return;
+  var anchor=document.getElementById('wbComposerSideAnchor');
+  if(!anchor||!price) return;
   var side=document.getElementById('wbComposerSide');
   if(!side){ side=document.createElement('div'); side.id='wbComposerSide'; side.className='wan-composer-side' }
-  if(side.parentNode!==comp) comp.insertBefore(side, price);
+  if(side.parentNode!==anchor) anchor.appendChild(side);
   [trigger, price, chip, lookup, addBtn].forEach(function(el){ if(el && el.parentNode!==side) side.appendChild(el) });
 }
 function wanBoardWireHeader(){
@@ -10066,6 +10094,133 @@ function wbResetBgColor(){
   if(input) input.value='#111620'; // the board's own default --wb-pnl
   toast('Board background reset to default');
 }
+
+// ── Center-column resize handle (Wan / Lab / SYG) ────────────────────
+// One handle, one stored height, applied to whichever of the three tab
+// panes is currently visible — not three independent heights per tab.
+// Resizing on SYG and then switching to Lab keeps the same panel size
+// rather than jumping to whatever Lab's own height happened to be, which
+// would read as a bug rather than a resize.
+//
+// Works the same way for all three because they're now structurally
+// parallel: #wbWan, #wbLab, #wbSyg are each a single flex:1 container
+// (Wan's readout+advisor got wrapped in #wbWan specifically so it could
+// join that pattern — previously they were two independent flex children
+// with no shared box to resize as one unit).
+//
+// Dragging sets an explicit height via style.flex in place of the default
+// flex:1 — each pane's own internal content already fills whatever height
+// it's given (frame-wrap and advisor list are flex:1 inside their
+// parents), so nothing about their contents needs to know a resize
+// happened. The composer below reflows to sit right under the new edge,
+// and the Queue / Comps columns are entirely separate flex children of
+// the grid, untouched by any of this.
+var wbCenterResizeApply = null; // exposed so wbSygSwitch can reapply on tab change
+(function(){
+  var handle=document.getElementById('wbCenterResize');
+  var center=document.getElementById('wbCenter');
+  var shield=document.getElementById('wbDragShield');
+  if(!handle || !center) return;
+  var MIN_H=200;
+  var dragging=false, startY=0, startH=0;
+
+  function activePane(){
+    if(center.classList.contains('syg-on')) return document.getElementById('wbSyg');
+    if(center.classList.contains('lab-on')) return document.getElementById('wbLab');
+    return document.getElementById('wbWan');
+  }
+  function maxH(){
+    var rect=center.getBoundingClientRect();
+    var composer=document.getElementById('wbComposer');
+    // Floor of 140px on the reserve, not just whatever the composer
+    // happens to measure. If getBoundingClientRect() is ever read at a
+    // moment mid-reflow — a transition, a font swap, anything that can
+    // make a real browser report a smaller height than the composer will
+    // actually settle at — a too-small reserve is exactly what lets the
+    // ceiling balloon far past where it should. A floor means even a bad
+    // reading can't produce a wildly oversized cap.
+    var reserve = Math.max(140, composer ? composer.getBoundingClientRect().height + 16 : 220);
+    // No flat percentage ceiling on top of this anymore — there was one
+    // (first 78%, then 60%, tightening it each time the pane looked too
+    // big), but that was solving the wrong problem. The actual bug was a
+    // STALE saved height ballooning on load before the composer had
+    // rendered; that's now fixed at the source (wanBoardSync re-clamps
+    // against the composer's real size the moment the board opens). A
+    // percentage cap on top of that stopped being a safety net and
+    // started being a wall — the pane would load already sitting AT the
+    // cap, so any attempt to drag it BIGGER had nowhere to go and just
+    // snapped back, which is exactly "locked, draggable up but not down."
+    // The composer-based limit alone is the right constraint: it only
+    // stops the drag exactly when it would start crushing the composer,
+    // nothing more arbitrary than that — free to drag either direction
+    // right up to that real boundary.
+    return Math.max(MIN_H, rect.height-reserve);
+  }
+  function apply(h){
+    var pane=activePane();
+    if(!pane) return h;
+    h=Math.max(MIN_H, Math.min(maxH(), h));
+    pane.style.flex='0 0 '+h+'px';
+    return h;
+  }
+  wbCenterResizeApply = apply;
+
+  function onMove(e){
+    if(!dragging) return;
+    apply(startH+(e.clientY-startY));
+    e.preventDefault();
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging=false;
+    handle.classList.remove('dragging');
+    if(shield) shield.hidden=true;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    var pane=activePane();
+    var h=pane?pane.getBoundingClientRect().height:0;
+    if(h) try{ localStorage.setItem('abribook:wbCenterHeight', String(Math.round(h))); }catch(e){}
+  }
+  handle.addEventListener('pointerdown', function(e){
+    // A click on one of the tab buttons (or the status text next to them)
+    // must NOT start a drag — this row does double duty now, so the only
+    // way to tell "switch tabs" from "resize" apart is by what was
+    // actually under the pointer when it went down. Buttons keep working
+    // exactly as before; everywhere else on the row is the grab surface.
+    if(e.target.closest('.wb-ctab')) return;
+
+    var pane=activePane();
+    if(!pane) return;
+    dragging=true;
+    startY=e.clientY;
+    startH=pane.getBoundingClientRect().height;
+    handle.classList.add('dragging');
+    // The actual reported bug: dragging felt like it stopped tracking
+    // partway through, "on hold" rather than following the cursor. Real
+    // cause — the SYG pane holds a cross-origin iframe (the buyer portal),
+    // and the instant the pointer crosses INTO that iframe mid-drag, the
+    // parent page's pointermove listener (bound to `document` here) stops
+    // receiving events entirely. The iframe is a separate document with
+    // its own event target; the browser doesn't forward mouse movement
+    // across that boundary unless something is actively capturing it. A
+    // transparent, viewport-covering shield for the DURATION of the drag
+    // intercepts every pointer event before it can ever reach the iframe,
+    // so the drag tracks smoothly no matter where the cursor wanders —
+    // this is the standard fix wherever a resizable panel can contain an
+    // iframe, not something specific to this one frame.
+    if(shield) shield.hidden=false;
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    e.preventDefault();
+  });
+
+  // Restore whatever height was chosen last, on every load — a resize
+  // made once and lost on refresh isn't really a preference.
+  var saved=null;
+  try{ saved=parseInt(localStorage.getItem('abribook:wbCenterHeight'),10); }catch(e){}
+  if(saved && !isNaN(saved)) apply(saved);
+})();
+
 // Wiring (the actual addEventListener calls, plus the on-load restore) is
 // NOT here — moved further down, near tbAddSticky's own registration. The
 // #tbBgColor / #tbBgReset elements live inside #wanToolbar, which this
@@ -10146,6 +10301,25 @@ function wanBoardSync(){
   if(CURRENT_WORK_PAGE!=='wanboard') return;
   wanBoardTakeComposer();
   wanBoardQueue();
+  // Re-apply (and therefore re-clamp) the saved center-column height here,
+  // not just once at script load. The restore-on-load code runs before
+  // the composer has any real content — wanBoardTakeComposer() is what
+  // actually fills it, and that only happens once the person reaches this
+  // page, not at script parse time. Clamping against an empty composer's
+  // near-zero height computes almost no reserve, so a previously-saved
+  // height sails through unclamped and gets baked into the pane's inline
+  // style before the composer ever fills in — nothing re-checks it after.
+  // Found live: exactly this produced a pane locked far too tall, with
+  // the composer's real content rendering fine underneath but the pane
+  // above it sitting mostly empty. Re-running the same apply() here,
+  // now that the composer is genuinely populated, re-measures against
+  // its real height and re-clamps if the earlier pass let something
+  // through it shouldn't have.
+  if(typeof wbCenterResizeApply==='function'){
+    var savedH=null;
+    try{ savedH=parseInt(localStorage.getItem('abribook:wbCenterHeight'),10); }catch(e){}
+    if(savedH && !isNaN(savedH)) wbCenterResizeApply(savedH);
+  }
   var reg=document.getElementById('wbRegCount');
   if(reg && typeof allCategories==='function') reg.textContent=allCategories().length+' codes';
 }
@@ -22142,17 +22316,36 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      whichever order happened to run last. A separate class layers
      cleanly on top: the tab decides which pane is on screen, the
      advisor still decides whether Wan has anything to say. */
-  /* The bar lives as the FIRST CHILD of #wbComposer, not as a sibling above
-     the readout. That position is load-bearing: wanBoardTakeComposer()
-     mounts the borrowed BhaiMode composer with slot.appendChild(comp) —
-     append, never innerHTML — so anything already sitting in the slot
-     survives the mount and lands directly above the textarea. Sitting it
-     outside the composer instead would put it at the mercy of
-     .wb-composer's margin-top:auto, which pushes all the column's free
-     space upward and would strand the tabs far from the box they belong
-     to. */
-  .wb-ctabs{display:flex;align-items:center;gap:0;flex-shrink:0;
-    padding:0 0 10px;margin:0}
+  /* Moved out of #wbComposer entirely (2026-08-11) — it used to live as
+     the composer's first child specifically so it would survive
+     wanBoardTakeComposer()'s slot.appendChild(comp) remount. Living here
+     instead, as a static sibling that's never touched by that remount
+     logic, is actually a stronger guarantee than the old position ever
+     was — nothing about rebuilding the composer's own contents can affect
+     an element that was never inside it to begin with.
+     
+     This row is now ALSO the resize handle — #wbCenterResize is this
+     element, not a separate bar below it. Dragging the row's own
+     background resizes the pane above; clicking one of the .wb-ctab
+     buttons still just switches tabs. See the pointerdown handler in the
+     script below for how those two are told apart on the same element. */
+  .wb-ctabs-resize{flex-shrink:0;display:flex;align-items:center;
+    cursor:row-resize;padding:6px 4px;margin:2px 0 6px;border-radius:8px;
+    transition:background .12s}
+  .wb-ctabs-resize:hover{background:rgba(255,255,255,.035)}
+  .wb-ctabs-resize.dragging{background:rgba(50,214,197,.07)}
+
+  /* Covers the ENTIRE viewport for the duration of a drag, not just the
+     iframe — simplest correct fix, and it means this never needs to know
+     the iframe's exact bounding box or track it through a resize. Any
+     pointermove that would otherwise land inside the SYG iframe hits this
+     transparent layer first instead, so the iframe's own document never
+     gets a chance to swallow the event and stall the drag. Hidden (not
+     just transparent) when idle so it never intercepts a click anywhere
+     in the app on an ordinary day. */
+  .wb-drag-shield{position:fixed;inset:0;z-index:9999;cursor:row-resize;background:transparent}
+  .wb-drag-shield[hidden]{display:none}
+  .wb-ctabs{display:flex;align-items:center;gap:0;flex:1;min-width:0}
   .wb-ctab{appearance:none;position:relative;background:transparent;
     border:1px solid transparent;border-radius:8px;padding:6px 13px 6px 11px;
     cursor:pointer;display:inline-flex;align-items:center;gap:7px;
@@ -22212,8 +22405,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-lab{flex:1;min-height:0;display:flex;flex-direction:column;
     padding:15px 18px 4px;overflow:auto}
   .wb-center:not(.lab-on) .wb-lab{display:none}
-  .wb-center.lab-on #wbReadout,
-  .wb-center.lab-on #wbAdv{display:none}
+  .wb-center.lab-on .wb-wan{display:none}
   .wb-lab-hd{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
   .wb-lab-hd h3{font:700 11px var(--sans);letter-spacing:.15em;text-transform:uppercase;
     color:var(--wb-dim);margin:0}
@@ -22307,8 +22499,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   .wb-syg{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--wb-pnl)}
   .wb-center:not(.syg-on) .wb-syg{display:none}
-  .wb-center.syg-on #wbReadout,
-  .wb-center.syg-on #wbAdv{display:none}
+  .wb-center.syg-on .wb-wan{display:none}
 
   .wb-syg-bar{display:flex;align-items:center;gap:7px;flex-shrink:0;
     padding:9px 18px;border-bottom:1px solid var(--wb-line)}
@@ -22337,6 +22528,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-syg-state-a button:hover,.wb-syg-state-a a:hover{border-color:var(--wb-cy);color:var(--wb-ink)}
   .wb-syg-state.warn .wb-syg-state-t{color:var(--wb-am)}
 
+  .wb-wan{flex:1;min-height:0;display:flex;flex-direction:column}
   .wb-readout{padding:15px 18px 13px;flex-shrink:0}
   .wb-id{font:600 24px var(--sans);letter-spacing:-.015em;line-height:1.2;color:var(--wb-ink)}
   .wb-sub{font:500 12px var(--mono);color:var(--wb-cy);margin-top:4px}
@@ -22354,7 +22546,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-drives .v{font:600 12px var(--mono);color:var(--wb-ink)}
   .wb-drives .v.g{color:var(--wb-gr)} .wb-drives .v.w{color:var(--wb-am)}
 
-  .wb-adv{min-height:0;overflow-y:auto;padding:12px 18px;border-top:1px solid var(--wb-line);margin-top:10px}
+  .wb-adv{flex:1;min-height:0;overflow-y:auto;padding:12px 18px;border-top:1px solid var(--wb-line);margin-top:10px}
   .wb-adv[hidden]{display:none}
   .wb-tip{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--wb-line)}
   .wb-tip:last-child{border-bottom:none}
@@ -22400,13 +22592,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      trigger sits first (above Cost), Add to queue sits last (underneath
      the lookup buttons) — both now live inside the side column, not
      spanning the full composer width. */
-  #wanboardPage .wan-composer{display:grid;gap:8px;
-    grid-template-columns:1fr 190px;
-    grid-template-areas:"desc side"}
-  #wanboardPage .uni-desc-wrap{grid-area:desc;display:flex;flex-direction:column;height:100%}
+  /* The composer's own job is just the textarea now — Cost/Price/Suggest/
+     Check/Add moved out to #wbSidePanel in the right column (see
+     wanBoardWrapSide()), so there's no "side" grid area left to reserve
+     room for here at all. */
+  #wanboardPage .wan-composer{display:flex;flex-direction:column;height:100%}
+  #wanboardPage .uni-desc-wrap{display:flex;flex-direction:column;height:100%}
   #wanboardPage .uni-desc-wrap .uni-main-textarea{flex:1;min-height:180px;height:100%;resize:none}
-  #wanboardPage .wan-composer-side{grid-area:side;display:flex;flex-direction:column;gap:8px}
-  #wanboardPage .wan-price-row{display:flex;flex-direction:column;gap:8px;margin:0}
+
+  /* ── Relocated pricing/SKU panel (right column, above Comps) ───────
+     Narrower than its old home (the center column had ~190–250px to
+     work with; this sits in the same ~250px right column Comps already
+     lives in), so the row-wrap layout that worked above the textarea
+     would cram here — back to a vertical stack, but a much shorter one
+     now that it's not sharing space with the resize handle at all. */
+  .wb-side-panel{flex-shrink:0}
+  .wan-composer-side{display:flex;flex-direction:column;gap:8px}
+  #wanboardPage .wan-composer-side .wan-price-row{flex:none}
+  #wanboardPage .wan-composer-side #wbLookupRow{flex:none}
+  #wanboardPage .wan-composer-side #bhaiAddEntry{flex:none}
+  #wanboardPage .wan-price-row{display:flex;flex-direction:row;gap:8px;margin:0}
+  #wanboardPage .wan-price-row>div{flex:1;min-width:0}
   #wanboardPage #bhaiShovoPriceChip{order:unset}
   #wanboardPage .wan-composer > .dp-add-entry{width:auto}
   #wanboardPage #bhaiSuggestPrice,#wanboardPage #bhaiEbayLookup{
@@ -22496,7 +22702,25 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      still carry .sku-assign-box / .uni-policy-row / .needs-research-box, so
      they still match every rule those classes were already styled by — no
      re-styling needed here beyond spacing. */
-  .wb-composer{flex-shrink:0;margin-top:auto;background:var(--wb-pnl);
+  /* flex-shrink:0 + margin-top:auto used to pin this to the bottom — but
+     margin-top:auto ABSORBS free space as blank margin, it doesn't hand
+     that space to the composer's own height. So shrinking the pane above
+     (via the resize handle) freed up room that went nowhere: a growing
+     gap of dead space between the tabs and this box, with the textarea
+     itself never getting any taller. Reported directly: "the dragger
+     goes up indefinitely with a blank space... it should be tied to the
+     size of the describe item text box."
+     
+     Real fix: give this a genuine flex-grow (.22, well below the pane's
+     own default of 1) instead of none at all. Normally the pane still
+     dominates the split — roughly 4.5:1 in its favor — but the moment a
+     drag fixes the pane's height to an explicit pixel value (flex-grow
+     effectively 0 for that element), this composer is the only thing
+     left with any grow factor, so it claims 100% of whatever space the
+     drag just freed. The textarea inside is already flex:1 within this
+     box (see .uni-main-textarea below), so it fills right along with it —
+     shrink the pane, the text box grows, no gap anywhere in between. */
+  .wb-composer{flex:.22 1 auto;min-height:0;background:var(--wb-pnl);
     border-top:1px solid var(--wb-line-hi);padding:12px 18px 14px;
     box-shadow:0 -10px 24px -14px rgba(0,0,0,.8)}
   /* .wb-hist removed — the flexbox bar strip it styled was never populated
