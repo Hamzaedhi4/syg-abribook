@@ -5402,6 +5402,11 @@
             <span class="wb-shovo-sw"><i></i></span>
             <span class="wb-shovo-lbl">ZhuanMode <em>— auto-send via Ask Claude, no review</em></span>
           </label>
+          <label class="wb-shovo-toggle wb-thoky-toggle" id="wbThokyToggleRow" title="When on, the full SYG listing rulebook (title formats, condition grading, metafield order, Shopify push workflow) gets attached to the front of the prompt — whether it's copied by hand or auto-sent. Independent of ShovoMode and ZhuanMode.">
+            <input type="checkbox" id="wbThokyMode">
+            <span class="wb-shovo-sw"><i></i></span>
+            <span class="wb-shovo-lbl">ThokyMode <em>— attach listing rulebook</em></span>
+          </label>
           <div class="wb-slot" id="wbSlotSend">
             <button type="button" class="wb-send-btn" id="wbSendCopy">Copy prompt with items</button>
           </div>
@@ -7842,6 +7847,15 @@ let SHOVO_MODE = (function(){ try{ return localStorage.getItem('abribook:shovoMo
 // into the auto-sent prompt regardless of ShovoMode's state, because an
 // unattended send has no one there to answer a question either way.
 let ZHUAN_MODE = (function(){ try{ return localStorage.getItem('abribook:zhuanMode')==='1'; }catch(e){ return false; } })();
+// ThokyMode: attaches the full SYG listing rulebook (THOKY_INSTRUCTIONS,
+// defined further down) to the front of whatever prompt gets built —
+// applies equally whether that prompt is copied by hand or auto-sent via
+// ZhuanMode, since both paths run through the same buildClaudePrepPrompt().
+// Independent of ShovoMode/ZhuanMode: this isn't about how fast or how
+// autonomously the work happens, it's about which HOUSE RULES apply to
+// the listing itself — a separate axis, can be on with either, both, or
+// neither of the other two.
+let THOKY_MODE = (function(){ try{ return localStorage.getItem('abribook:thokyMode')==='1'; }catch(e){ return false; } })();
 let _lastReviewedSnapshot = null;
 
 function entriesSnapshot(){
@@ -8062,6 +8076,17 @@ if(document.getElementById('wbZhuanMode')){
   // calls zhuanSyncAddBtnLabel() itself — so the label still ends up
   // correct on a reload with ZhuanMode already on, just synced from a spot
   // in the file where it's actually safe to touch bhaiEditingId.
+}
+
+if(document.getElementById('wbThokyMode')){
+  document.getElementById('wbThokyMode').checked = THOKY_MODE;
+  document.getElementById('wbThokyMode').addEventListener('change', (ev)=>{
+    THOKY_MODE = ev.target.checked;
+    try{ localStorage.setItem('abribook:thokyMode', THOKY_MODE ? '1' : '0'); }catch(e){}
+    toast(THOKY_MODE
+      ? 'ThokyMode on — the listing rulebook is now attached to every prompt'
+      : 'ThokyMode off — prompts go out without the rulebook attached');
+  });
 }
 
 // Shared prep for both "Copy" and "Send to Claude Desktop" — same gates
@@ -11243,6 +11268,141 @@ function ebayCategoryPromptLines(){
   return lines.join('\n');
 }
 
+// ── Thoky rulebook (added 2026-08-12, from SHOVO_LISTING_THOKY_Instructions.pdf) ──
+// Transcribed faithfully from the uploaded document, not summarized — a
+// paraphrased version would drift from the exact title formats, the
+// condition-grading table, and the metafield order the moment anyone
+// updates one part of it and not the others. Attached to the prompt only
+// when THOKY_MODE is on (see the toggle below); off by default, so a
+// batch of non-listing entries never gets this bolted on unasked.
+const THOKY_INSTRUCTIONS =
+`THOKY RULEBOOK — SYG Listing Instructions (attached because ThokyMode is on)
+
+1. SKU INPUT FORMAT (how a lister sends a SKU)
+Line 1: SKU (e.g. NJ02-150-64210-I3 / BIN2)
+Line 2: Product title/specs
+Line 3: Condition — "New In Box", "Used", or "For Parts - <defects>"
+Line 4: Additional info (e.g. T-150, S-50, C-601ST250)
+Extra lines (IMEI, Serial Number, Battery Health, accessories like "No Charger" or
+"with Charger & case") can appear anywhere and are always captured.
+
+2. TITLE FORMATS — follow exactly, by category
+Phones: <Lock Status> Brand Model ModelNo MPN Storage BH% Color Condition
+  Order: Lock Status → Brand → Model → Model No. → MPN → Storage → BH % → Color → Condition
+  - Lock status first: Unlocked, or the carrier (Verizon, AT&T, T-Mobile), or a carrier list.
+  - Battery Health written as "BH 74%".
+  - Condition word only at the end when needed (For Parts, Used, New).
+Watches: Unlocked Apple Watch [Model] ModelNo GPS+Cellular(or GPS) Size(mm) Color
+  Example: Unlocked Apple Watch Ultra 2 A2986 GPS+Cellular 49mm Natural Titanium
+Laptops / Tablets / Consoles / Other: Brand-first, same spec order where applicable.
+  Examples:
+  Apple MacBook Pro 14-inch 2021 A2442 MKGP3LL/A M1 Pro 16GB 512GB Space Gray
+  Dell Latitude 7450 14-inch Intel Core Ultra 7 165U 32GB 1TB SSD Gray Used
+  Sony PlayStation 5 Digital CFI-1215B 825GB White w/ Controller & Power Cable
+Universal title rules:
+  - Screen sizes 6–16" always written as "-inch" (14-inch, 16-inch, 12.9-inch) — never 14".
+  - 80 characters maximum. Title Case, never ALL CAPS.
+  - No symbols/emojis, no keyword stuffing, no duplicate words, no banned terms.
+  - Never put a letter grade (A/B/C) in the title.
+  - Spell out accessories when there's room: "w/ Controller & Power Cable", "w/ Pencil & Case", "w/ Case".
+
+3. CONDITION GRADING (word, never a letter)
+  Lister says "New In Box" → Grade: New — "New; New In Box, sealed original packaging."
+  No defects listed / "Good Condition" → Used – Good (standard disclaimer)
+  "light scratches" → Used – Good
+  "scratches and dents" (unqualified) → Used – Fair
+  "heavy scratches", heavy dust/marks (cosmetic only, still works) → Used – Fair
+  Cracked glass/back, bad display, no power, Service Battery, doesn't turn on, or lister
+    says "For Parts" → For Parts — list the exact defect
+  - The Condition row carries full detail, e.g.: "Used – Fair; heavy scratches on the
+    screen and dents on the bezel. Fully functional. Please review all photos for the
+    exact condition."
+  - For Parts rows always end with: "Sold for parts or repair."
+  - The lister's stated "For Parts" or "New In Box" always wins over inference.
+  - "Scratches and dents" (unqualified) grades Fair even if the lister also wrote "Good
+    Condition" — flag the conflict each time rather than silently picking one.
+
+4. HTML DESCRIPTION (eBay-safe template)
+  - Single table, width:100%, border-collapse:collapse, wrapped in an Arial div, max-width 800px.
+  - Section header bars: navy #1F4E79, white bold text — "Product Details" and "Shipping & Returns".
+  - Alternating row colors #ffffff / #f9f9f9; cell borders 1px solid #dddddd.
+  - Hex colors only (never rgb()), no height attributes, no JavaScript, no external links,
+    inline CSS only, never first person.
+  - One row per spec, including: Type, Brand, Model, Model Number, MPN, Color, Storage,
+    Lock Status/Network, Screen Size, Processor, GPU, RAM, Battery Health (+ cycle count),
+    IMEI, iCloud/IMEI Status, Serial Number, Included Accessories, Condition.
+  - No "Untested — sold for parts" functionality rows (standing instruction).
+  - Always end with two fixed rows: Shipping → "Free Shipping"; Return Policy → "30 Days Free Return".
+  Fixed language, never change: Shipping "Free Shipping"; Returns "30 Days Free Return";
+  Lock Status one of: Factory Unlocked / Network Unlocked / Network Locked / Compatible with <Carrier> only.
+
+5. PRODUCT METAFIELDS (custom.* namespace) — all 19 fields, values only, in this exact order, every item:
+  Type, Brand, Model, Model Number, Features, Screen Size, Color, Connectivity,
+  Processor, Storage Capacity, Operating System, RAM, GPU, MPN, Network,
+  Platform, Release Year, Game name, UPC
+  - N/A only when the field genuinely doesn't apply to the category — never because the
+    lister didn't type it. Research everything researchable.
+  - Model Number ≠ MPN. MPN is the exact part number for that color/storage/carrier config
+    (e.g. MYAP3LL/A for T-Mobile 128GB Black iPhone 16). If no distinct MPN is found after
+    searching, fall back to the Model Number and flag it.
+  - Shopify push writes only real values — never the literal string "N/A".
+  - Key Shopify metafield keys: type, brand, model, model_number, mpn, color,
+    storage_capacity, storage_type, network, battery_health, imei_status, ebay_condition,
+    screen_size, ram, connectivity, release_year, processor, gpu, operating_system,
+    serial_number, features, video_game_platform, controller, hdmi_cable, power_cable,
+    watch_size, case_material, band.
+  - ebay_condition holds only the plain eBay Condition value — New, Used, or For Parts —
+    never mixed with the cosmetic grade word.
+  - Consoles also get: controller / hdmi_cable / power_cable = Included or Not Included.
+  - Watches also get: watch_size, case_material, band.
+
+6. RESEARCH RULES
+  - Constants (model number, MPN, screen size, processor, RAM, GPU, connectivity, release
+    year, OS) are researched via web search — never guessed, never N/A'd.
+  - Per-unit variables (storage, color, carrier/lock, grade, battery, IMEI, defects) come
+    from the lister — ask, don't guess, when genuinely ambiguous.
+  - Color inference is allowed when the model only shipped in one finish for the given
+    description (e.g. Starlight → Apple Watch SE 2nd Gen).
+
+7. SHOPIFY PUSH WORKFLOW (every SKU)
+  1. Find the existing product by SKU (productVariants(query:"sku:...")). Search with a
+     wildcard if the exact SKU string has suffix differences (BIN 1 vs BIN1).
+  2. Always fill out the product that already holds the SKU — usually the one with the
+     photos. Never create a parallel product for the same SKU.
+  3. If two products share a SKU: fill the one with the lister's photos, archive the
+     duplicate (never hard-delete).
+  4. Update title + descriptionHtml via productUpdate; write metafields via metafieldsSet
+     in one call.
+  5. Status: always DRAFT. Never publish. If a product is already ACTIVE (live), update
+     content in place, don't delist — but flag it.
+  6. Manifest is source of truth. When existing Shopify data conflicts (wrong color,
+     storage, model, generation), apply the manifest values and flag the conflict back
+     to the lister.
+  7. After pushing, report three sections: SEO TITLE / HTML DESCRIPTION / PRODUCT
+     METAFIELDS, plus any flags.
+  Known store issue: an external process (very likely Shopify Marketplace Connect's eBay
+  sync) has repeatedly overwritten or wiped pushed data — titles reformatted, DRAFT
+  flipped to ACTIVE, prices changed, metafields deleted. If a listing looks empty or
+  wrong after it was confirmed pushed, re-query and re-push.
+
+8. BANNED TERMS & TONE
+  - Substitute banned terms silently (never "Broken" in final copy — use "For Parts"; no
+    "Grade B" etc.).
+  - Professional, concise, accurate; never oversell; disclose every defect and missing
+    accessory; never first person; no "Item Specifications" heading.
+
+9. iPHONE CHECKLIST (before output) — confirm: IMEI, iCloud Status, IMEI Status, Lock
+   Status, Battery Health (+ cycle count), Condition. iCloud must be Off/Removed for
+   saleable units.
+
+10. STANDING DECISIONS
+  - BH abbreviation approved for titles; "-inch" format for 6–16 inch screens.
+  - Service/replacement part numbers (N-prefix, e.g. NWKM2LL/A) supplied by the lister
+    override researched retail MPNs.
+  - PS5 model numbers encode storage: CFI-11xxB = Digital 825GB; CFI-2015 = Slim 1TB.
+  - Products are never published live — DRAFT until the lister publishes.
+`;
+
 const EBAY_READINESS_BLOCK =
 `EBAY MARKETPLACE CONNECT READINESS — additional metafields (namespace: custom)
 Set these on every product too, so Marketplace Connect's Attribute Mapping (once configured in the app) can auto-populate the eBay listing without anyone touching Marketplace Connect by hand:
@@ -11275,6 +11435,13 @@ function buildClaudePrepPrompt(entriesOverride){
   const bhaiEntries  = entries.filter(e => e.panel === 'BhaiMode');
 
   const parts = [];
+
+  // Applies once, regardless of which entry types follow — this is a
+  // rulebook for HOW to build a listing, not something scoped to any one
+  // panel type. Sits ahead of the batch/universal/bhai blocks below so it
+  // reads as context before the actual task, the way a person would want
+  // to be reminded of house style before being handed the work itself.
+  if(THOKY_MODE) parts.push(THOKY_INSTRUCTIONS);
 
   // ── Batch → syg-listing-generator skill ──────────────────────
   if(batchEntries.length){
@@ -22614,7 +22781,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   #wanboardPage .wan-price-row{display:flex;flex-direction:row;gap:8px;margin:0}
   #wanboardPage .wan-price-row>div{flex:1;min-width:0}
   #wanboardPage #bhaiShovoPriceChip{order:unset}
-  #wanboardPage .wan-composer > .dp-add-entry{width:auto}
+  /* bhaiAddEntry used to be a direct child of .wan-composer (the old
+     center-column selector here targeted exactly that) — it now lives in
+     the ~250px right column instead, and the ZhuanMode label is much
+     longer than the default ("🚀 Push to Claude/Shopify" vs "+ Add to
+     manifest queue"). width:100% from the base .dp-add-entry rule already
+     fits a narrow column fine; what it didn't have was room for that
+     longer label to wrap cleanly instead of overflowing or clipping. */
+  #wanboardPage .wan-composer-side #bhaiAddEntry{
+    white-space:normal;line-height:1.35;padding:11px 10px;min-height:40px}
   #wanboardPage #bhaiSuggestPrice,#wanboardPage #bhaiEbayLookup{
     order:unset;flex:none;margin:0 !important;padding:9px 8px !important;
     font-size:10.5px !important;border-style:solid !important;
@@ -22762,6 +22937,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   #wbZhuanMode:checked ~ .wb-shovo-sw{background:#a78bfa}
   #wbZhuanMode:checked ~ .wb-shovo-sw i{background:#1c1330}
   #wbZhuanMode:checked ~ .wb-shovo-lbl{color:#a78bfa}
+
+  /* ThokyMode gets a third color again — blue, not amber or violet. It
+     sits on a different axis from the other two (WHICH rules apply, not
+     how autonomously the work happens), so it shouldn't visually read as
+     "a stronger version of" either one. */
+  .wb-thoky-toggle:has(#wbThokyMode:checked){border-color:rgba(90,158,245,.45);
+    background:rgba(90,158,245,.08)}
+  #wbThokyMode:checked ~ .wb-shovo-sw{background:#5a9ef5}
+  #wbThokyMode:checked ~ .wb-shovo-sw i{background:#0a1f38}
+  #wbThokyMode:checked ~ .wb-shovo-lbl{color:#5a9ef5}
 
   .wb-send-btn{width:100%;background:var(--wb-bl);border:1px solid var(--wb-bl);
     color:#031228;font:700 12.5px var(--sans);padding:11px;border-radius:8px;cursor:pointer}
