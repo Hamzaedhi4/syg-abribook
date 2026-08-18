@@ -5362,6 +5362,14 @@
         </div>
 
         <div class="wb-wan" id="wbWan">
+          <div class="wb-vg-tool" id="wbVgTool">
+            <div class="wb-vg-hd"><h3>Video game lookup</h3><span class="wb-vg-hd-note">barcode → PriceCharting → ready to send</span></div>
+            <div class="wb-vg-search">
+              <input type="text" id="wbVgUpc" placeholder="Scan or type a UPC / barcode" autocomplete="off" inputmode="numeric" spellcheck="false">
+              <button type="button" class="wb-vg-search-btn" id="wbVgLookupBtn">Look up</button>
+            </div>
+            <div id="wbVgResult"></div>
+          </div>
           <div class="wb-readout" id="wbReadout">
             <div class="wb-hd"><span class="wb-n wb-act">◆</span><h3>Resolved</h3><span class="wb-r" id="wbSrc"></span></div>
             <div class="wb-id" id="wbId">Nothing yet</div>
@@ -10015,6 +10023,222 @@ function wbDeleteQueueEntry(id){
     toast('Restored entry');
   });
 }
+
+// ── VG: video game barcode lookup ────────────────────────────────────
+// Embedded IN the Wan tab (not its own pane) — a section that sits above
+// the existing Resolved/Wan-says readout. Flow: UPC -> PriceCharting
+// (name, console, cover, price by condition tier, genre/publisher/etc)
+// -> a single wbVgBuildDraft() function is the ONE place that decides
+// what text and price get sent to the composer. The preview and the
+// actual send both call that same function — they can never show one
+// thing and send another, because there's only one function computing
+// either.
+//
+// PRICE SOURCE PRIORITY, by explicit request: PriceCharting outranks
+// eBay for games. eBay's SOLD-listing search is genuinely noisy for
+// video games specifically — wrong editions, cartridge-only vs
+// complete-in-box mismatches, bundle lots, and replica/bootleg carts all
+// match a plain keyword search the same way a clean listing would.
+// PriceCharting tracks price per exact title+platform+condition, so it
+// doesn't have that contamination problem. eBay live comps stay
+// available as a REFERENCE check (shown, never hidden), and are used to
+// suggest a price only as a last resort — if PriceCharting has no price
+// at all for this title.
+var wbVgLast = null; // { gameName, console, coverUrl, pageUrl, prices, details, liveComps }
+
+function wbVgSetBusy(busy){
+  var btn=document.getElementById('wbVgLookupBtn');
+  if(!btn) return;
+  btn.disabled=busy;
+  btn.textContent=busy?'Looking up…':'Look up';
+}
+
+async function wbVgLookup(){
+  var input=document.getElementById('wbVgUpc');
+  var upc=(input&&input.value||'').trim();
+  var resultEl=document.getElementById('wbVgResult');
+  if(!upc){ if(resultEl) resultEl.innerHTML='<div class="wb-empty">Type or scan a UPC first.</div>'; return; }
+  if(typeof nexusAskExtension!=='function'){
+    if(resultEl) resultEl.innerHTML='<div class="wb-empty">Extension bridge not available.</div>';
+    return;
+  }
+  wbVgSetBusy(true);
+  if(resultEl) resultEl.innerHTML='<div class="wb-empty">Looking up '+esc(upc)+'… this opens a background tab, usually 5–15s.</div>';
+  try{
+    var res=await nexusAskExtension('LOOKUP_PRICECHARTING', {upc:upc}, 45000);
+    if(!res||!res.ok){
+      wbVgLast=null;
+      if(resultEl) resultEl.innerHTML='<div class="wb-empty">'+esc((res&&res.error)||'No response from the lookup.')+'</div>';
+      return;
+    }
+    wbVgLast={ gameName:res.gameName, console:res.console, coverUrl:res.coverUrl, pageUrl:res.pageUrl,
+               prices:res.prices, details:res.details||{}, liveComps:null };
+    wbVgRenderResult();
+  }catch(err){
+    wbVgLast=null;
+    if(resultEl) resultEl.innerHTML='<div class="wb-empty">'+esc((err&&err.message)||'Lookup failed.')+'</div>';
+  }finally{
+    wbVgSetBusy(false);
+  }
+}
+
+function wbVgTierCell(cls,label,tier){
+  if(!tier || tier.price==null){
+    return '<div class="wb-vg-tier '+cls+'"><u>'+label+'</u><b class="empty">—</b></div>';
+  }
+  var money=(typeof WBLab!=='undefined')?WBLab.money:function(n){return '$'+Number(n||0).toFixed(2)};
+  return '<div class="wb-vg-tier '+cls+'"><u>'+label+'</u><b>'+money(tier.price)+'</b>'+
+    (tier.volume?'<s>'+esc(tier.volume)+'</s>':'')+'</div>';
+}
+
+// The single source of truth for what gets sent — the preview renders
+// this, and the send button sends exactly this, with nothing recomputed
+// in between.
+function wbVgBuildDraft(){
+  if(!wbVgLast) return null;
+  var d=wbVgLast;
+  var title=[d.gameName, d.console].filter(Boolean).join(' - ');
+  var text = title + '. Cartridge/disc only unless noted — please confirm condition and any inserts/manual before finalizing.';
+
+  var price=null, source=null;
+  var p=d.prices||{};
+  if(p.loose && p.loose.price!=null){ price=p.loose.price; source='PriceCharting · Loose'; }
+  else if(p.complete && p.complete.price!=null){ price=p.complete.price; source='PriceCharting · Complete'; }
+  else if(d.liveComps && d.liveComps.length && typeof WBLab!=='undefined'){
+    price=WBLab.heroCalc(d.liveComps, []).rec; source='eBay live (fallback — no PriceCharting price)';
+  }
+  return { text:text, price:price, priceSource:source };
+}
+
+function wbVgRenderPreview(){
+  var el=document.getElementById('wbVgPreview');
+  if(!el) return;
+  var draft=wbVgBuildDraft();
+  if(!draft){ el.innerHTML=''; return; }
+  var money=(typeof WBLab!=='undefined')?WBLab.money:function(n){return '$'+Number(n||0).toFixed(2)};
+  el.innerHTML =
+    '<div class="wb-vg-preview-label">Preview — sent to Describe the Item</div>'+
+    '<div class="wb-vg-preview-text">'+esc(draft.text)+'</div>'+
+    (draft.price!=null
+      ? '<div class="wb-vg-preview-price"><b>'+money(draft.price)+'</b><span>suggested price — '+esc(draft.priceSource)+'</span></div>'
+      : '<div class="wb-vg-preview-price"><span>No price suggestion yet — no PriceCharting price and no eBay pull.</span></div>');
+}
+
+function wbVgRenderResult(){
+  var resultEl=document.getElementById('wbVgResult');
+  if(!resultEl || !wbVgLast) return;
+  var d=wbVgLast, p=d.prices||{}, det=d.details||{};
+
+  var cover = d.coverUrl
+    ? '<img src="'+esc(d.coverUrl)+'" alt="" onerror="this.parentElement.innerHTML=\'&#127918;\'">'
+    : '&#127918;';
+
+  // Read-only context line — genre/publisher/release year help confirm
+  // this is genuinely the right edition/region before trusting the price,
+  // but they're deliberately NOT part of the draft text sent to the
+  // composer, which stays short and structured per how every other
+  // listing type in this system is written.
+  var detailBits=[det.genre, det.publisher, det.releaseDate].filter(Boolean);
+
+  var html =
+    '<div class="wb-vg-card">'+
+      '<div class="wb-vg-cover">'+cover+'</div>'+
+      '<div class="wb-vg-meta">'+
+        '<div class="wb-vg-name">'+esc(d.gameName||'Unknown title')+'</div>'+
+        (d.console?'<div class="wb-vg-console">'+esc(d.console)+'</div>':'')+
+        (detailBits.length?'<div class="wb-vg-page-link">'+esc(detailBits.join(' · '))+'</div>':'')+
+        (d.pageUrl?'<div class="wb-vg-page-link"><a href="'+esc(d.pageUrl)+'" target="_blank" rel="noopener">View on PriceCharting ↗</a></div>':'')+
+      '</div>'+
+    '</div>'+
+    '<div class="wb-vg-prices">'+
+      wbVgTierCell('loose','Loose',p.loose)+
+      wbVgTierCell('cib','Complete',p.complete)+
+      wbVgTierCell('new','New/Sealed',p.new)+
+    '</div>'+
+    '<div class="wb-vg-loose-flag">Loose price drives the suggestion below — PriceCharting is treated as the reliable source for games.</div>';
+
+  var extras=[];
+  if(p.graded&&p.graded.price!=null) extras.push(wbVgTierCell('graded','Graded',p.graded));
+  if(p.boxOnly&&p.boxOnly.price!=null) extras.push(wbVgTierCell('','Box Only',p.boxOnly));
+  if(p.manualOnly&&p.manualOnly.price!=null) extras.push(wbVgTierCell('','Manual Only',p.manualOnly));
+  if(extras.length) html += '<div class="wb-vg-prices">'+extras.join('')+'</div>';
+
+  html +=
+    '<button type="button" class="wb-vg-ebay-btn" id="wbVgPullLive">Check eBay sold listings (reference only)</button>'+
+    '<div id="wbVgLiveWrap"></div>'+
+    '<div class="wb-vg-preview" id="wbVgPreview"></div>'+
+    '<div class="wb-vg-actions">'+
+      '<button type="button" class="primary" id="wbVgUseBtn">Send to Describe the Item</button>'+
+    '</div>';
+
+  resultEl.innerHTML = html;
+  wbVgRenderPreview();
+}
+
+async function wbVgPullLiveComps(){
+  if(!wbVgLast) return;
+  var btn=document.getElementById('wbVgPullLive');
+  var wrap=document.getElementById('wbVgLiveWrap');
+  if(!wrap) return;
+  var query=[wbVgLast.gameName, wbVgLast.console].filter(Boolean).join(' ');
+  if(btn){ btn.disabled=true; btn.textContent='Checking…' }
+  wrap.innerHTML='<div class="wb-empty">Checking eBay (~25s)…</div>';
+  try{
+    var res=await wbFetchLiveComps(query);
+    if(!res.ok){
+      wrap.innerHTML='<div class="wb-empty">'+esc(res.error||'Live check failed.')+'</div>';
+      return;
+    }
+    var prices=res.rows.map(function(r){return r.price}).filter(function(p){return p>0});
+    wbVgLast.liveComps=prices;
+    if(!prices.length){
+      wrap.innerHTML='<div class="wb-empty">No sold listings matched "'+esc(query)+'" on eBay.</div>';
+    } else {
+      // Shown for comparison only — this does NOT feed the preview/send
+      // price unless PriceCharting had nothing at all (see
+      // wbVgBuildDraft). It's here so a lister can sanity-check
+      // PriceCharting's number against what's actually selling, not to
+      // replace it.
+      var h=WBLab.heroCalc(prices, []);
+      var money=WBLab.money;
+      wrap.innerHTML =
+        '<div class="wb-vg-ebay-note">eBay reference — '+h.n+' sold comp'+(h.n===1?'':'s')+
+        ', median '+money(h.med)+', range '+money(h.lo)+'–'+money(h.hi)+
+        '. Not used for the suggested price unless PriceCharting has none.</div>';
+    }
+    wbVgRenderPreview(); // reflect the eBay fallback if PriceCharting had no price
+  }catch(err){
+    wrap.innerHTML='<div class="wb-empty">'+esc((err&&err.message)||'Live check failed.')+'</div>';
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Check eBay sold listings (reference only)' }
+  }
+}
+
+function wbVgUseInListing(){
+  var draft=wbVgBuildDraft();
+  if(!draft) return;
+  var desc=document.getElementById('bhaiDesc');
+  var priceInput=document.getElementById('bhaiPrice');
+  if(!desc) return;
+
+  desc.value = draft.text;
+  desc.dispatchEvent(new Event('input', {bubbles:true}));
+
+  if(draft.price!=null && priceInput){
+    priceInput.value=draft.price.toFixed(2);
+    priceInput.dispatchEvent(new Event('input', {bubbles:true}));
+  }
+  toast('Sent to Describe the Item'+(draft.price!=null?' with a suggested price':'')+' — review before adding to queue.');
+}
+
+document.addEventListener('click', function(e){
+  if(e.target && e.target.id==='wbVgLookupBtn'){ wbVgLookup(); return; }
+  if(e.target && e.target.id==='wbVgPullLive'){ wbVgPullLiveComps(); return; }
+  if(e.target && e.target.id==='wbVgUseBtn'){ wbVgUseInListing(); return; }
+});
+document.addEventListener('keydown', function(e){
+  if(e.target && e.target.id==='wbVgUpc' && e.key==='Enter'){ e.preventDefault(); wbVgLookup(); }
+});
 
 // ── Board background color picker ──────────────────────────────────
 // Overrides --wb-pnl (the panel surface every board panel is built on)
@@ -22667,6 +22891,102 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-syg{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--wb-pnl)}
   .wb-center:not(.syg-on) .wb-syg{display:none}
   .wb-center.syg-on .wb-wan{display:none}
+
+  /* ── Video game lookup — embedded IN the Wan tab, not its own pane ──
+     Sits above the existing Resolved/Wan-says readout as a self-contained
+     tool section. flex-shrink:0 + natural height, not flex:1 — it should
+     take exactly the room its own content needs and leave the rest of
+     the Wan tab's vertical space to the readout below it, the same way
+     the video game lookup's own result card only grows when there's
+     something in it to show. */
+  .wb-vg-tool{flex-shrink:0;padding-bottom:14px;margin-bottom:2px;
+    border-bottom:1px solid var(--wb-line)}
+  .wb-vg-hd{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+  .wb-vg-hd h3{font:700 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--wb-dim);margin:0}
+  .wb-vg-hd-note{font:500 10px var(--sans);color:var(--wb-faint)}
+
+  .wb-vg-search{display:flex;gap:7px;margin-bottom:12px}
+  .wb-vg-search input{flex:1;background:var(--wb-raised);border:1px solid var(--wb-line-hi);
+    border-radius:8px;padding:9px 12px;font:600 13px var(--mono);letter-spacing:.02em;
+    color:var(--wb-ink);outline:none}
+  .wb-vg-search input:focus{border-color:var(--wb-cy)}
+  .wb-vg-search input::placeholder{color:var(--wb-faint);font:500 12px var(--sans);letter-spacing:normal}
+  .wb-vg-search-btn{flex:none;background:var(--wb-bl);border:1px solid var(--wb-bl);
+    color:#031228;font:700 11.5px var(--sans);padding:9px 16px;border-radius:8px;cursor:pointer}
+  .wb-vg-search-btn:hover:not(:disabled){filter:brightness(1.08)}
+  .wb-vg-search-btn:disabled{opacity:.5;cursor:default}
+
+  /* Result card: cover art + name/console on the left, the price grid on
+     the right — matches the visual language already established for
+     comps (wb-lab-stat tiles, wb-comp-src pills) so this reads as part of
+     the same tool rather than a bolted-on feature with its own look. */
+  .wb-vg-card{display:flex;gap:14px;padding:14px;background:var(--wb-raised);
+    border:1px solid var(--wb-line-hi);border-radius:10px;margin-bottom:14px}
+  .wb-vg-cover{flex:none;width:84px;height:84px;border-radius:7px;overflow:hidden;
+    background:var(--wb-bg);display:flex;align-items:center;justify-content:center;font-size:26px}
+  .wb-vg-cover img{width:100%;height:100%;object-fit:cover;display:block}
+  .wb-vg-meta{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+  .wb-vg-name{font:700 14.5px var(--sans);color:var(--wb-ink);line-height:1.3}
+  .wb-vg-console{font:600 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--wb-cy)}
+  .wb-vg-page-link{font:500 10px var(--mono);color:var(--wb-faint);margin-top:2px}
+  .wb-vg-page-link a{color:inherit;text-decoration:underline}
+
+  .wb-vg-prices{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--wb-line);border:1px solid var(--wb-line);border-radius:8px;overflow:hidden;
+    margin-bottom:8px}
+  .wb-vg-tier{background:var(--wb-pnl);padding:10px 11px}
+  .wb-vg-tier u{display:block;text-decoration:none;font:600 8.5px var(--sans);
+    letter-spacing:.12em;text-transform:uppercase;color:var(--wb-faint);margin-bottom:3px}
+  .wb-vg-tier b{display:block;font:700 16px var(--mono);color:var(--wb-ink)}
+  .wb-vg-tier b.empty{color:var(--wb-faint);font-weight:500;font-size:13px}
+  .wb-vg-tier s{display:block;text-decoration:none;font:500 9px var(--sans);color:var(--wb-faint);margin-top:2px}
+  /* Color-coded by tier so "which condition am I actually listing" reads
+     at a glance — loose is the common case (teal, matches the store-sold
+     accent used everywhere else), sealed/new runs amber (rarer, higher
+     value, worth a second look before trusting it), graded is violet
+     (its own category of collectible, not a normal condition grade). */
+  .wb-vg-tier.loose b{color:var(--wb-cy)}
+  .wb-vg-tier.new b{color:var(--wb-am)}
+  .wb-vg-tier.graded b{color:#a78bfa}
+  .wb-vg-loose-flag{font:600 9.5px var(--sans);color:var(--wb-cy);margin:0 0 12px}
+
+  /* eBay is explicitly secondary here, by request — games are noisy on
+     eBay search (wrong editions, bundles, replica carts all bleeding into
+     a plain keyword match), so PriceCharting's tracked price drives the
+     suggestion and eBay is reference-only. Visually smaller and quieter
+     than the price grid above it, on purpose — the hierarchy in the code
+     should be legible in the hierarchy on screen. */
+  .wb-vg-ebay-btn{width:100%;background:transparent;border:1px dashed var(--wb-line-hi);
+    color:var(--wb-faint);font:600 10.5px var(--sans);padding:7px;border-radius:7px;
+    cursor:pointer;margin-bottom:10px}
+  .wb-vg-ebay-btn:hover:not(:disabled){border-color:var(--wb-dim);color:var(--wb-dim)}
+  .wb-vg-ebay-btn:disabled{opacity:.5;cursor:default}
+  .wb-vg-ebay-note{font:500 10px var(--sans);color:var(--wb-faint);margin:-4px 0 10px}
+
+  /* The preview — exactly what "Send to Describe the Item" is about to
+     write, shown BEFORE it's sent. Styled to visually echo the real
+     composer textarea one section below it (same mono font, same dark
+     surface) so it reads as "a preview of that specific box," not a
+     generic text block. */
+  .wb-vg-preview{background:var(--wb-bg);border:1px solid var(--wb-line-hi);border-radius:8px;
+    padding:10px 12px;margin-bottom:4px}
+  .wb-vg-preview-label{font:600 8.5px var(--sans);letter-spacing:.12em;text-transform:uppercase;
+    color:var(--wb-faint);margin-bottom:6px}
+  .wb-vg-preview-text{font:500 12px/1.5 var(--mono);color:var(--wb-dim);white-space:pre-wrap;
+    margin-bottom:8px}
+  .wb-vg-preview-price{display:flex;align-items:baseline;gap:6px;font:600 11px var(--sans);
+    color:var(--wb-ink);padding-top:8px;border-top:1px solid var(--wb-line)}
+  .wb-vg-preview-price b{font:700 15px var(--mono);color:var(--wb-cy)}
+  .wb-vg-preview-price span{color:var(--wb-faint);font-weight:500}
+
+  .wb-vg-actions{display:flex;gap:8px;margin-top:10px}
+  .wb-vg-actions button{flex:1;background:var(--wb-raised);border:1px solid var(--wb-line-hi);
+    color:var(--wb-dim);font:600 11px var(--sans);padding:9px;border-radius:8px;cursor:pointer}
+  .wb-vg-actions button:hover:not(:disabled){border-color:var(--wb-cy);color:var(--wb-ink)}
+  .wb-vg-actions button:disabled{opacity:.5;cursor:default}
+  .wb-vg-actions button.primary{background:var(--wb-bl);border-color:var(--wb-bl);color:#031228}
+  .wb-vg-actions button.primary:hover:not(:disabled){filter:brightness(1.08);color:#031228}
 
   .wb-syg-bar{display:flex;align-items:center;gap:7px;flex-shrink:0;
     padding:9px 18px;border-bottom:1px solid var(--wb-line)}
