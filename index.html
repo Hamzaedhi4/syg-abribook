@@ -5416,6 +5416,11 @@
             <span class="wb-shovo-sw"><i></i></span>
             <span class="wb-shovo-lbl">ThokyMode <em>— attach listing rulebook</em></span>
           </label>
+          <label class="wb-shovo-toggle wb-category-toggle" id="wbCategoryToggleRow" title="When on, if the item's type doesn't fit the fixed category list, Claude adds a new category and proceeds instead of holding the listing to wait for one.">
+            <input type="checkbox" id="wbCategoryMode">
+            <span class="wb-shovo-sw"><i></i></span>
+            <span class="wb-shovo-lbl">Add category where needed <em>— don't hold on category</em></span>
+          </label>
           <div class="wb-slot" id="wbSlotSend">
             <button type="button" class="wb-send-btn" id="wbSendCopy">Copy prompt with items</button>
           </div>
@@ -7865,6 +7870,14 @@ let ZHUAN_MODE = (function(){ try{ return localStorage.getItem('abribook:zhuanMo
 // the listing itself — a separate axis, can be on with either, both, or
 // neither of the other two.
 let THOKY_MODE = (function(){ try{ return localStorage.getItem('abribook:thokyMode')==='1'; }catch(e){ return false; } })();
+// CategoryMode: when the item's type doesn't fit the fixed category list
+// (⛔ Blocked on category), the standing behavior is to hold the listing
+// rather than guess. This toggle overrides that specifically — tells
+// Claude to add a new category where needed and proceed, instead of
+// stopping. Independent of ShovoMode/ZhuanMode/ThokyMode: this is about
+// whether a MISSING CATEGORY blocks the listing, not about autonomy level
+// or which rulebook applies.
+let CATEGORY_MODE = (function(){ try{ return localStorage.getItem('abribook:categoryMode')==='1'; }catch(e){ return false; } })();
 let _lastReviewedSnapshot = null;
 
 function entriesSnapshot(){
@@ -8095,6 +8108,17 @@ if(document.getElementById('wbThokyMode')){
     toast(THOKY_MODE
       ? 'ThokyMode on — the listing rulebook is now attached to every prompt'
       : 'ThokyMode off — prompts go out without the rulebook attached');
+  });
+}
+
+if(document.getElementById('wbCategoryMode')){
+  document.getElementById('wbCategoryMode').checked = CATEGORY_MODE;
+  document.getElementById('wbCategoryMode').addEventListener('change', (ev)=>{
+    CATEGORY_MODE = ev.target.checked;
+    try{ localStorage.setItem('abribook:categoryMode', CATEGORY_MODE ? '1' : '0'); }catch(e){}
+    toast(CATEGORY_MODE
+      ? 'On — items that don\'t fit the category list will get a new one added instead of holding'
+      : 'Off — items outside the fixed category list will hold as before');
   });
 }
 
@@ -11760,6 +11784,23 @@ function buildClaudePrepPrompt(entriesOverride){
   // reads as context before the actual task, the way a person would want
   // to be reminded of house style before being handed the work itself.
   if(THOKY_MODE) parts.push(THOKY_INSTRUCTIONS);
+
+  // Independent of ThokyMode — this overrides one specific standing
+  // behavior (holding a listing when the item's type doesn't fit the
+  // fixed category list) rather than attaching a whole rulebook. Kept as
+  // its own toggle rather than folded into Thoky's instructions since a
+  // person might want the category behavior changed without pulling in
+  // everything else Thoky attaches, or vice versa.
+  if(CATEGORY_MODE) parts.push(
+    'CATEGORY OVERRIDE — add category where needed, do not hold\n\n'+
+    'If this item\'s type doesn\'t fit the existing fixed category list, do NOT '+
+    'hold the listing waiting on a category decision. Instead, add a new '+
+    'category that reasonably fits the item (e.g. "Tablet", "Smart Home", '+
+    '"Camera", "Projector") and proceed with classification and listing '+
+    'generation using that category. Note the newly added category clearly '+
+    'in your response so it can be reviewed and folded into the standing '+
+    'list later.'
+  );
 
   // ── Batch → syg-listing-generator skill ──────────────────────
   if(batchEntries.length){
@@ -23653,6 +23694,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   #wbThokyMode:checked ~ .wb-shovo-sw{background:#5a9ef5}
   #wbThokyMode:checked ~ .wb-shovo-sw i{transform:translateX(13px);background:#0a1f38}
   #wbThokyMode:checked ~ .wb-shovo-lbl{color:#5a9ef5}
+
+  /* CategoryMode gets a fourth color — green, reads as "proceed" rather
+     than the amber/violet/blue used for the other three, since this one
+     specifically removes a block rather than adding a rule or changing
+     autonomy. */
+  .wb-category-toggle:has(#wbCategoryMode:checked){border-color:rgba(78,192,111,.45);
+    background:rgba(78,192,111,.08)}
+  #wbCategoryMode:checked ~ .wb-shovo-sw{background:#4ec06f}
+  #wbCategoryMode:checked ~ .wb-shovo-sw i{transform:translateX(13px);background:#0a2010}
+  #wbCategoryMode:checked ~ .wb-shovo-lbl{color:#4ec06f}
 
   .wb-send-btn{width:100%;background:var(--wb-bl);border:1px solid var(--wb-bl);
     color:#031228;font:700 12.5px var(--sans);padding:11px;border-radius:8px;cursor:pointer}
