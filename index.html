@@ -5309,6 +5309,7 @@
           <div class="wb-ctx-menu" id="wbCtxMenu" hidden role="menu">
             <button type="button" class="wb-ctx-item" id="wbCtxEdit" role="menuitem">&#9998; Edit entry</button>
             <button type="button" class="wb-ctx-item wb-ctx-danger" id="wbCtxDelete" role="menuitem">🗑 Delete from queue</button>
+            <button type="button" class="wb-ctx-item wb-ctx-danger" id="wbCtxDeleteShopify" role="menuitem">🗑 Delete + archive in Shopify</button>
           </div>
           <div class="wb-slot" id="wbSlotReview"></div>
         </div>
@@ -8207,7 +8208,25 @@ let bhaiNextId = 1;
 function bhaiLoadEntryForEdit(id){
   const src = bhaiEntriesData.find(e=>e.id===id);
   if(!src) return;
-  document.getElementById('bhaiWebsiteSku').value = src.websiteSku||'';
+  // THE FIX: this used to only set the raw input's .value, never the SKU
+  // MODE itself. bhaiMakeFromForm() (the save path) gates website_sku
+  // entirely on bhaiSkuMode — if mode was left however it happened to be
+  // (usually still 'new' from whatever was last touched), the pasted
+  // value in the input got silently ignored on save, a BRAND NEW sku got
+  // generated instead, and the entry flipped from EDIT to CREATE without
+  // any visible warning. That's the exact bug reported: "resets it to
+  // blank... switches it to CREATE."
+  //
+  // bhaiOriginalExistingSku is set EXPLICITLY here, not left to
+  // bhaiSetSkuMode('existing')'s own "only if currently empty" guard —
+  // that guard exists for a different case (first paste mid-session) and
+  // would silently keep whatever entry was edited PREVIOUSLY as the
+  // match-anchor if this ran right after that. Re-editing a DIFFERENT
+  // entry has to re-anchor explicitly, every time.
+  const hasSku = !!(src.websiteSku||'').trim();
+  document.getElementById('bhaiWebsiteSku').value = src.skuRenameTo || src.websiteSku || '';
+  bhaiOriginalExistingSku = src.websiteSku || '';
+  bhaiSetSkuMode(hasSku ? 'existing' : 'new');
   document.getElementById('bhaiDesc').value = src.desc||'';
   document.getElementById('bhaiClaudeNotes').value = src.claudeNotes||'';
   document.getElementById('bhaiReturnPolicy').value = src.returnPolicy||'30 Days Free Return';
@@ -9996,6 +10015,12 @@ document.addEventListener('click', function(e){
     if(editId!==null && typeof bhaiLoadEntryForEdit==='function') bhaiLoadEntryForEdit(editId);
     return;
   }
+  if(e.target.closest('#wbCtxDeleteShopify')){
+    var shopifyId=wbCtxTargetId;
+    wbCtxHide();
+    if(shopifyId!==null) wbDeleteQueueEntryAndArchive(shopifyId);
+    return;
+  }
   if(!e.target.closest('#wbCtxDelete')) return;
   var id=wbCtxTargetId;
   wbCtxHide();
@@ -10022,6 +10047,67 @@ function wbDeleteQueueEntry(id){
     if(typeof wanBoardQueue==='function') wanBoardQueue();
     toast('Restored entry');
   });
+}
+
+// ── Delete + archive in Shopify ──────────────────────────────────────
+// Only meaningfully different from a plain delete for a genuine EDIT-type
+// entry — one that already matches a real Shopify product (a real
+// website_sku, not a freshly-generated one that was never pushed). A
+// CREATE-type entry has nothing live to archive, so this falls back to a
+// local-only delete with an explanation rather than sending a prompt that
+// would have nothing real to act on.
+//
+// "Archive, never hard-delete" is the standing convention this whole
+// system already follows for duplicate/removed products — the prompt
+// sent here says exactly that, explicitly, rather than leaving it to
+// whatever Claude might assume "delete" means.
+function wbBuildArchivePrompt(entry){
+  var sku=entry.websiteSku||'';
+  return 'ARCHIVE REQUEST — remove from active inventory\n\n'+
+    'Find the Shopify product matching this exact SKU: '+sku+'\n\n'+
+    'Archive it — set status to ARCHIVED. Do not hard-delete it; standing '+
+    'convention here is that products get archived, never permanently '+
+    'deleted, so the record and photos stay recoverable. If nothing matches '+
+    'this SKU, say so plainly rather than archiving a different product.\n\n'+
+    'Confirm back with the product\'s title and its status once archived.';
+}
+
+async function wbDeleteQueueEntryAndArchive(id){
+  var entry=bhaiEntriesData.find(function(e){return e.id===id});
+  if(!entry){ wbDeleteQueueEntry(id); return; }
+
+  // Same check bhaiAction() uses elsewhere — a real match requires an
+  // actual website_sku that ISN'T one this session just generated fresh.
+  var isRealProduct = !!(entry.websiteSku && !entry.isFreshlyAssigned);
+  if(!isRealProduct){
+    toast('Nothing was ever pushed to Shopify for this entry — removing from the queue only.');
+    wbDeleteQueueEntry(id);
+    return;
+  }
+  if(typeof nexusAskExtension!=='function'){
+    toast('Extension bridge not available — removed from queue only, Shopify was not touched.');
+    wbDeleteQueueEntry(id);
+    return;
+  }
+
+  toast('Sending archive request for '+entry.websiteSku+'…');
+  try{
+    // Same relay ZhuanMode's listing pushes use — the "?" Ask Claude
+    // widget, not a separate channel — so this behaves exactly like the
+    // rest of the auto-send system rather than a one-off exception.
+    var res=await nexusAskExtension('ZHUAN_PUSH_TO_CLAUDE', {question: wbBuildArchivePrompt(entry)}, 120000);
+    if(res && res.ok){
+      toast('Archive request sent'+(res.text?': '+res.text.slice(0,120):' — check the Ask Claude panel.'));
+    }else{
+      toast('Archive request failed: '+((res&&res.error)||'no response')+' — the entry is still being removed from the queue.');
+    }
+  }catch(err){
+    toast('Archive request failed: '+((err&&err.message)||'unknown error'));
+  }
+  // Local removal happens regardless of how the archive send went — same
+  // reasoning as ZhuanMode elsewhere: never let a failed/slow network
+  // step block or lose a queue action that already succeeded locally.
+  wbDeleteQueueEntry(id);
 }
 
 // ── VG: video game barcode lookup ────────────────────────────────────
@@ -10696,6 +10782,14 @@ if(document.getElementById('bhaiAddEntry')) document.getElementById('bhaiAddEntr
       // ADDED to a new slot, an existing row is just refreshed in place.
       if(typeof wanBoardQueue==='function' && CURRENT_WORK_PAGE==='wanboard'){ wanBoardQueue(); }
       toast('Entry updated');
+      // Same reasoning as the CREATE path below: fires alongside the local
+      // update, not instead of it, so a failed/stalled send never loses
+      // the edit itself — it's already saved in bhaiEntriesData either
+      // way. zhuanPushEntry() doesn't need a separate "this is an edit"
+      // branch — buildClaudePrepPrompt() already determines CREATE vs
+      // EDIT from the entry's own website_sku/isFreshlyAssigned, which
+      // the SKU-mode fix above means now survives a re-edit correctly.
+      if(ZHUAN_MODE && CURRENT_WORK_PAGE==='wanboard' && typeof zhuanPushEntry==='function'){ zhuanPushEntry(e); }
       return;
     }
     bhaiEditingId = null;
@@ -20129,7 +20223,14 @@ if(document.getElementById('tbBgReset')){
 // right after tbBgReset's wiring specifically because that spot is
 // already proven safe (the toolbar's own markup has been parsed by the
 // time script execution reaches here).
-var WB_HIGHLIGHT_FIELDS = ['bhaiDesc','bhaiCost','bhaiPrice','bhaiWebsiteSku'];
+var WB_HIGHLIGHT_FIELDS = ['bhaiDesc','bhaiWebsiteSku','bhaiCost','bhaiPrice','bhaiInvLocation'];
+// New/Existing aren't text fields with an empty state to detect — they're
+// a standing decision every listing needs made, so they're treated
+// differently: always highlighted whenever highlighting is on (not tied
+// to emptiness), and in a DARKER shade of the picked color rather than
+// full brightness, so they read as "this needs a conscious choice" and
+// stay visually distinct from "this box is blank."
+var WB_HIGHLIGHT_DARK_TARGETS = ['bhaiSkuModeNew','bhaiSkuModeExisting'];
 var WB_HIGHLIGHT_ENABLED = (function(){ try{ return localStorage.getItem('abribook:wbHighlightOn')==='1'; }catch(e){ return false; } })();
 
 function wbHexToRgba(hex, alpha){
@@ -20143,8 +20244,23 @@ function wbApplyHighlightColor(hex){
   if(hex[0]!=='#') hex='#'+hex;
   board.style.setProperty('--wb-highlight-color', hex);
   board.style.setProperty('--wb-highlight-glow', wbHexToRgba(hex, 0.45));
+  // Kept in sync alongside the board-level variables — wbHighlightSync()
+  // reads these to stamp colors directly onto each pulsing element,
+  // rather than trusting the board-level values to inherit all the way
+  // down on their own.
+  WB_HIGHLIGHT_HEX = hex;
+  WB_HIGHLIGHT_GLOW_RGBA = wbHexToRgba(hex, 0.45);
+  // -60 out of 255 per channel — reuses the exact same darkening technique
+  // the background picker already uses (wbBgShade), so "darker shade of
+  // whatever was chosen" behaves consistently with how darkening works
+  // everywhere else in this file rather than a second, separate formula.
+  WB_HIGHLIGHT_DARK_HEX = wbBgShade(hex, -60);
+  WB_HIGHLIGHT_DARK_GLOW_RGBA = wbHexToRgba(WB_HIGHLIGHT_DARK_HEX, 0.30);
   var input=document.getElementById('tbHighlightColor');
   if(input) input.value=hex;
+  // Re-stamp anything already pulsing so a color change mid-session shows
+  // up immediately, not just on the next sync pass.
+  if(typeof wbHighlightSync==='function') wbHighlightSync();
 }
 function wbHighlightSyncToggleUI(){
   var btn=document.getElementById('tbHighlightToggle');
@@ -20180,6 +20296,28 @@ function wbHighlightSyncToggleUI(){
 // the collapsed "SKU, returns & notes" button — so the section reads as
 // needing attention even before it's opened, which is the actual ask:
 // highlight the section, not just the field buried inside it.
+// Hardened against inheritance failure: rather than trust
+// --wb-highlight-color/--wb-highlight-glow to correctly cascade down from
+// #wanboardPage through several layers of nested DOM to whichever field
+// needs it, the resolved values are stamped DIRECTLY onto each element
+// that gets the pulsing class. Same values either way when inheritance IS
+// working — this just removes the dependency on it working at all, which
+// is the one link in this chain that couldn't be fully verified without
+// rendering real CSS in a real browser.
+var WB_HIGHLIGHT_HEX = '#32d6c5';
+var WB_HIGHLIGHT_GLOW_RGBA = 'rgba(50,214,197,.45)';
+// Darker variant for New/Existing — same picked hue, shifted down so it
+// reads as a quieter, standing indicator rather than competing visually
+// with the brighter sweep on genuinely-empty fields.
+var WB_HIGHLIGHT_DARK_HEX = '#1c3a35';
+var WB_HIGHLIGHT_DARK_GLOW_RGBA = 'rgba(50,214,197,.28)';
+
+function wbStampHighlightVars(el, dark){
+  if(!el) return;
+  el.style.setProperty('--wb-highlight-color', dark?WB_HIGHLIGHT_DARK_HEX:WB_HIGHLIGHT_HEX);
+  el.style.setProperty('--wb-highlight-glow', dark?WB_HIGHLIGHT_DARK_GLOW_RGBA:WB_HIGHLIGHT_GLOW_RGBA);
+}
+
 function wbHighlightSync(){
   if(CURRENT_WORK_PAGE!=='wanboard') return;
   var STEP=1.2, seq=0;
@@ -20195,6 +20333,7 @@ function wbHighlightSync(){
     var needed = WB_HIGHLIGHT_ENABLED && relevant && !String(el.value||'').trim();
     el.classList.toggle('wb-highlight-needed', needed);
     if(needed){
+      wbStampHighlightVars(el);
       el.style.setProperty('--wb-highlight-delay', (Math.round(seq*STEP*10)/10)+'s');
       seq++;
     }
@@ -20203,8 +20342,27 @@ function wbHighlightSync(){
   var trigger=document.getElementById('wbDetailsTrigger');
   if(trigger){
     var skuField=document.getElementById('bhaiWebsiteSku');
-    trigger.classList.toggle('wb-highlight-needed', !!skuField && skuField.classList.contains('wb-highlight-needed'));
+    var triggerNeeded = !!skuField && skuField.classList.contains('wb-highlight-needed');
+    trigger.classList.toggle('wb-highlight-needed', triggerNeeded);
+    if(triggerNeeded) wbStampHighlightVars(trigger);
   }
+
+  // New/Existing: not an emptiness check — bhaiSkuMode always has a
+  // default value ('new'), so there's no "blank" state to detect the way
+  // a text field has one. These pulse together, in sync (same delay), as
+  // long as highlighting is on at all — a standing reminder that this is
+  // a decision every listing needs made, distinct from "this box is
+  // empty." Same sweep class as everything else, darker stamped color is
+  // what visually sets them apart.
+  WB_HIGHLIGHT_DARK_TARGETS.forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    el.classList.toggle('wb-highlight-needed', WB_HIGHLIGHT_ENABLED);
+    if(WB_HIGHLIGHT_ENABLED){
+      wbStampHighlightVars(el, true);
+      el.style.setProperty('--wb-highlight-delay','0s');
+    }
+  });
 
   // Ready-to-send ripple: the other half of the same signal. A totally
   // empty composer has zero fields "needed" too (nothing to check yet),
@@ -20217,6 +20375,7 @@ function wbHighlightSync(){
   if(addBtn){
     var ready = WB_HIGHLIGHT_ENABLED && seq===0 && descEl && String(descEl.value||'').trim().length>0;
     addBtn.classList.toggle('wb-ripple-ready', ready);
+    if(ready) wbStampHighlightVars(addBtn);
   }
 }
 if(document.getElementById('tbHighlightColor')){
@@ -22894,16 +23053,38 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      begins, reading as attention genuinely moving in order rather than
      four things blinking on their own separate schedules. */
   @keyframes wbHighlightSweep{
-    0%{ background-position:180% 0; border-color:var(--wb-line-hi) }
-    8%{ border-color:var(--wb-highlight-color) }
-    18%{ background-position:-180% 0; border-color:var(--wb-highlight-color) }
-    24%,100%{ background-position:-180% 0; border-color:var(--wb-line-hi) }
+    0%{ background-position:180% 0 }
+    18%{ background-position:-180% 0 }
+    24%,100%{ background-position:-180% 0 }
   }
+  /* Replaced the earlier synchronized "breathing" layer with this instead
+     — one sweep, following the actual workflow order (Description → SKU
+     → Cost → Price, see WB_HIGHLIGHT_FIELDS), rather than two separate
+     animated layers doing two different things at once. Simpler, and
+     matches what was actually asked for: a single pulse that moves
+     through the fields in the order they'd naturally get filled, ending
+     at the button ripple as the last step.
+     
+     border-color and box-shadow are set here as PLAIN, STATIC, !important
+     declarations — not left to the keyframes alone. Two failed rounds of
+     "should work, tested clean, still didn't" is enough signal that
+     something about relying entirely on the animation to make the field
+     look different isn't holding up in the real browser, for a reason
+     that hasn't been pinned down. This makes the static, non-animated
+     state undeniable on its own: the instant the class applies, the
+     border and glow are there — !important specifically so nothing else
+     in this file's cascade can quietly out-specificity it, which was one
+     of the harder-to-rule-out theories for why nothing was showing. The
+     sweep animation still runs for the directional motion on top of that,
+     but it's no longer the ONLY thing making this field look flagged. */
   .wb-highlight-needed{
+    border-color:var(--wb-highlight-color,#32d6c5) !important;
+    box-shadow:0 0 0 2px var(--wb-highlight-glow,rgba(50,214,197,.45)) !important;
     animation:wbHighlightSweep 4.8s linear infinite;
     animation-delay:var(--wb-highlight-delay,0s);
     background-image:linear-gradient(90deg,
-      transparent 0%, var(--wb-highlight-glow) 45%, var(--wb-highlight-glow) 55%, transparent 100%);
+      transparent 0%, var(--wb-highlight-glow,rgba(50,214,197,.45)) 45%,
+      var(--wb-highlight-glow,rgba(50,214,197,.45)) 55%, transparent 100%);
     background-size:260% 100%;
     background-repeat:no-repeat;
     background-position:180% 0;
@@ -22926,11 +23107,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      the sweep. Class is toggled by wbHighlightSync() itself — only true
      when highlighting is on, something's actually been typed, and zero
      watched fields are still flagged as needed. */
-  #bhaiAddEntry.wb-ripple-ready{ position:relative; z-index:0 }
+  #bhaiAddEntry.wb-ripple-ready{
+    position:relative; z-index:0;
+    border-color:var(--wb-highlight-color,#32d6c5) !important;
+  }
   #bhaiAddEntry.wb-ripple-ready::before,
   #bhaiAddEntry.wb-ripple-ready::after{
     content:'';position:absolute;inset:0;border-radius:inherit;
-    border:2px solid var(--wb-highlight-color);opacity:0;pointer-events:none;
+    border:2px solid var(--wb-highlight-color,#32d6c5);opacity:0;pointer-events:none;
     animation:wbRippleExpand 1.8s ease-out infinite;
   }
   #bhaiAddEntry.wb-ripple-ready::after{ animation-delay:.9s }
