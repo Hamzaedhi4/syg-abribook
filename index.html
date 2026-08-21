@@ -19573,6 +19573,10 @@ window.addEventListener('resize', ()=>{ if(gActive) renderStep(); });
     🎨<input type="color" id="tbBgColor" value="#111620">
   </label>
   <button class="tb-btn" id="tbBgReset" title="Reset background to default">↺</button>
+  <label class="tb-btn tb-bg-swatch" id="tbHighlightSwatchRow" title="Color used to pulse fields still needed for a listing — pick any color">
+    🔆<input type="color" id="tbHighlightColor" value="#32d6c5">
+  </label>
+  <button class="tb-btn" id="tbHighlightToggle" title="Turn required-field pulsing on or off">Highlight: Off</button>
   <button class="tb-btn" id="tbShortcuts" title="Keyboard shortcuts">⌨️</button>
   <button id="smokeBreakBtn" style="display:none;" title="Only Juan gets this">🚬 Smoke Break</button>
   <button class="tb-btn" id="tbLockBtn">Lock in</button>
@@ -20113,6 +20117,138 @@ if(document.getElementById('tbBgReset')){
   try{ saved=localStorage.getItem('abribook:wbBgColor'); }catch(e){}
   if(saved) wbApplyBgColor(saved);
 })();
+
+// ── Required-field highlight: pulse whatever still needs filling ────
+// Watches a fixed set of composer fields (description, cost, price, and
+// the website SKU used for EDIT matching) and pulses whichever are
+// currently empty, using the picked color. Off by default; the toggle
+// button is the only thing that turns it on.
+//
+// Same "element doesn't exist yet at this point in the document" lesson
+// from the background picker applies here too — this whole block sits
+// right after tbBgReset's wiring specifically because that spot is
+// already proven safe (the toolbar's own markup has been parsed by the
+// time script execution reaches here).
+var WB_HIGHLIGHT_FIELDS = ['bhaiDesc','bhaiCost','bhaiPrice','bhaiWebsiteSku'];
+var WB_HIGHLIGHT_ENABLED = (function(){ try{ return localStorage.getItem('abribook:wbHighlightOn')==='1'; }catch(e){ return false; } })();
+
+function wbHexToRgba(hex, alpha){
+  var m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if(!m) return 'rgba(50,214,197,'+alpha+')';
+  return 'rgba('+parseInt(m[1],16)+','+parseInt(m[2],16)+','+parseInt(m[3],16)+','+alpha+')';
+}
+function wbApplyHighlightColor(hex){
+  var board=document.getElementById('wanboardPage');
+  if(!board || !/^#?[0-9a-f]{6}$/i.test(hex)) return;
+  if(hex[0]!=='#') hex='#'+hex;
+  board.style.setProperty('--wb-highlight-color', hex);
+  board.style.setProperty('--wb-highlight-glow', wbHexToRgba(hex, 0.45));
+  var input=document.getElementById('tbHighlightColor');
+  if(input) input.value=hex;
+}
+function wbHighlightSyncToggleUI(){
+  var btn=document.getElementById('tbHighlightToggle');
+  if(!btn) return;
+  btn.textContent = 'Highlight: ' + (WB_HIGHLIGHT_ENABLED ? 'On' : 'Off');
+  btn.classList.toggle('wb-highlight-active', WB_HIGHLIGHT_ENABLED);
+}
+// The actual watcher. Deliberately re-checks every watched field's LIVE
+// value rather than trying to hook every place a field could get
+// filled, cleared, or loaded (Add, Edit, right-click Edit, ZhuanMode's
+// push-and-clear, Reset...) — there are enough of those code paths that
+// missing even one would leave a stale pulse behind. Cheap enough
+// (checking a handful of .value reads) to just run on a short interval
+// as a correctness backstop, on top of firing immediately on input for
+// instant feedback.
+//
+// STEP matches the CSS exactly — 4.8s animation ÷ 4 watched fields = a
+// 1.2s stagger, timed so one field's sweep finishes just before the next
+// one's begins (see the comment on @keyframes wbHighlightSweep). The
+// delay is assigned by position among fields that are EMPTY RIGHT NOW,
+// not fixed per field — fill in Description and the remaining three
+// re-sequence to close the gap immediately, rather than Cost/Price/SKU
+// keeping whatever delay they had while Description's old slot sits idle.
+//
+// Website SKU is watched CONDITIONALLY, not unconditionally like the
+// other three. Its own wrapper (#bhaiSkuExistingFields) starts
+// display:none and only appears during an explicit "paste an existing
+// SKU to edit" flow — for an ordinary new listing the SKU is
+// auto-generated and the panel's own copy says so ("SKU is optional").
+// Flagging it as needed on every plain CREATE entry would be flagging
+// something that was never actually required for that entry. When it IS
+// visible and empty, the state also propagates onto #wbDetailsTrigger —
+// the collapsed "SKU, returns & notes" button — so the section reads as
+// needing attention even before it's opened, which is the actual ask:
+// highlight the section, not just the field buried inside it.
+function wbHighlightSync(){
+  if(CURRENT_WORK_PAGE!=='wanboard') return;
+  var STEP=1.2, seq=0;
+
+  WB_HIGHLIGHT_FIELDS.forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    var relevant = true;
+    if(id==='bhaiWebsiteSku'){
+      var wrap=document.getElementById('bhaiSkuExistingFields');
+      relevant = !!wrap && wrap.style.display!=='none' && wrap.offsetParent!==null;
+    }
+    var needed = WB_HIGHLIGHT_ENABLED && relevant && !String(el.value||'').trim();
+    el.classList.toggle('wb-highlight-needed', needed);
+    if(needed){
+      el.style.setProperty('--wb-highlight-delay', (Math.round(seq*STEP*10)/10)+'s');
+      seq++;
+    }
+  });
+
+  var trigger=document.getElementById('wbDetailsTrigger');
+  if(trigger){
+    var skuField=document.getElementById('bhaiWebsiteSku');
+    trigger.classList.toggle('wb-highlight-needed', !!skuField && skuField.classList.contains('wb-highlight-needed'));
+  }
+
+  // Ready-to-send ripple: the other half of the same signal. A totally
+  // empty composer has zero fields "needed" too (nothing to check yet),
+  // which would trivially satisfy seq===0 without meaning anything — the
+  // description-has-content check exists specifically to rule that
+  // degenerate case out, so the ripple only ever means "this is actually
+  // ready," never "nothing has happened yet."
+  var addBtn=document.getElementById('bhaiAddEntry');
+  var descEl=document.getElementById('bhaiDesc');
+  if(addBtn){
+    var ready = WB_HIGHLIGHT_ENABLED && seq===0 && descEl && String(descEl.value||'').trim().length>0;
+    addBtn.classList.toggle('wb-ripple-ready', ready);
+  }
+}
+if(document.getElementById('tbHighlightColor')){
+  document.getElementById('tbHighlightColor').addEventListener('input', function(ev){
+    var hex=ev.target.value;
+    wbApplyHighlightColor(hex);
+    try{ localStorage.setItem('abribook:wbHighlightColor', hex); }catch(e){}
+  });
+}
+if(document.getElementById('tbHighlightToggle')){
+  wbHighlightSyncToggleUI();
+  document.getElementById('tbHighlightToggle').addEventListener('click', function(){
+    WB_HIGHLIGHT_ENABLED=!WB_HIGHLIGHT_ENABLED;
+    try{ localStorage.setItem('abribook:wbHighlightOn', WB_HIGHLIGHT_ENABLED?'1':'0'); }catch(e){}
+    wbHighlightSyncToggleUI();
+    wbHighlightSync();
+    toast(WB_HIGHLIGHT_ENABLED
+      ? 'Highlighting on — empty required fields will pulse'
+      : 'Highlighting off');
+  });
+}
+document.addEventListener('input', function(e){
+  if(e.target && WB_HIGHLIGHT_FIELDS.indexOf(e.target.id)!==-1) wbHighlightSync();
+});
+// Restore a previously chosen color on load, same as the background
+// picker — a color picked once and lost on refresh isn't a preference.
+(function(){
+  var saved=null;
+  try{ saved=localStorage.getItem('abribook:wbHighlightColor'); }catch(e){}
+  if(saved) wbApplyHighlightColor(saved);
+})();
+setInterval(wbHighlightSync, 400);
 
 // ══════════════════════════════════════════════════════════════════
 //  SESSION TIMER
@@ -22651,7 +22787,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     --warn:#e0a53a; --header:#0a0d12; --on-dark:#e8eef7; --on-dark-soft:#9aa7b8;
     --wb-bg:#0a0d12;--wb-pnl:#111620;--wb-raised:#161c27;--wb-line:#1f2733;
     --wb-line-hi:#2c3746;--wb-ink:#e8eef7;--wb-dim:#8492a5;--wb-faint:#556072;
-    --wb-cy:#32d6c5;--wb-am:#e0a53a;--wb-gr:#4ec06f;--wb-bl:#5a9ef5}
+    --wb-cy:#32d6c5;--wb-am:#e0a53a;--wb-gr:#4ec06f;--wb-bl:#5a9ef5;
+    --wb-highlight-color:#32d6c5;--wb-highlight-glow:rgba(50,214,197,.45)}
   /* The board is NOT a panel card. Work-pages render inside .wan-panel-body,
      which is a small draggable window — the board needs the whole screen. So
      it is moved to <body> at init (a draggable ancestor uses transform, and
@@ -22736,6 +22873,71 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      in the app on an ordinary day. */
   .wb-drag-shield{position:fixed;inset:0;z-index:9999;cursor:row-resize;background:transparent}
   .wb-drag-shield[hidden]{display:none}
+
+  /* ── Required-field highlight ────────────────────────────────────
+     A moving gradient band sweeps left-to-right across each field
+     (background-position animating on a wide gradient — the only way to
+     get real directional motion out of CSS on a plain <input>, since
+     Chrome doesn't render ::before/::after on form controls at all, so a
+     pseudo-element overlay was never on the table here). Layered as
+     background-image only, never the background shorthand, so the
+     field's own base color (set elsewhere via `background:var(--surface)`
+     etc.) shows through underneath instead of getting overwritten.
+     
+     The SEQUENCING — which field sweeps now vs a moment from now — comes
+     from animation-delay, set per-element in JS as --wb-highlight-delay
+     (see wbHighlightSync). Every field runs the identical 4.8s animation;
+     the delay just decides where in that cycle each one currently sits.
+     4.8s ÷ 4 fields = a clean 1.2s stagger step, and the active sweep
+     phase below is timed to under 1.15s specifically so consecutive
+     fields' sweeps never overlap — one finishes just before the next
+     begins, reading as attention genuinely moving in order rather than
+     four things blinking on their own separate schedules. */
+  @keyframes wbHighlightSweep{
+    0%{ background-position:180% 0; border-color:var(--wb-line-hi) }
+    8%{ border-color:var(--wb-highlight-color) }
+    18%{ background-position:-180% 0; border-color:var(--wb-highlight-color) }
+    24%,100%{ background-position:-180% 0; border-color:var(--wb-line-hi) }
+  }
+  .wb-highlight-needed{
+    animation:wbHighlightSweep 4.8s linear infinite;
+    animation-delay:var(--wb-highlight-delay,0s);
+    background-image:linear-gradient(90deg,
+      transparent 0%, var(--wb-highlight-glow) 45%, var(--wb-highlight-glow) 55%, transparent 100%);
+    background-size:260% 100%;
+    background-repeat:no-repeat;
+    background-position:180% 0;
+  }
+
+  #wanToolbar .tb-btn.wb-highlight-active{
+    background:var(--wb-highlight-color,#32d6c5);border-color:var(--wb-highlight-color,#32d6c5);
+    color:#06231f}
+
+  /* ── "Ready to send" ripple ─────────────────────────────────────
+     The natural other half of the sweep above: fields sweep while
+     they're EMPTY, and once nothing is left needing attention, the
+     signal moves to the button instead — two concentric rings expanding
+     outward from its edges and fading, offset by half a cycle so a new
+     ring launches just as the previous one fades out. Same
+     --wb-highlight-color/--wb-highlight-glow the fields use, so it reads
+     as one continuous system rather than a second, unrelated effect.
+     Real <button>, unlike the inputs above, so ::before/::after work
+     here without the pseudo-element limitation that ruled them out for
+     the sweep. Class is toggled by wbHighlightSync() itself — only true
+     when highlighting is on, something's actually been typed, and zero
+     watched fields are still flagged as needed. */
+  #bhaiAddEntry.wb-ripple-ready{ position:relative; z-index:0 }
+  #bhaiAddEntry.wb-ripple-ready::before,
+  #bhaiAddEntry.wb-ripple-ready::after{
+    content:'';position:absolute;inset:0;border-radius:inherit;
+    border:2px solid var(--wb-highlight-color);opacity:0;pointer-events:none;
+    animation:wbRippleExpand 1.8s ease-out infinite;
+  }
+  #bhaiAddEntry.wb-ripple-ready::after{ animation-delay:.9s }
+  @keyframes wbRippleExpand{
+    0%{ transform:scale(1); opacity:.7 }
+    100%{ transform:scale(1.4); opacity:0 }
+  }
   .wb-ctabs{display:flex;align-items:center;gap:0;flex:1;min-width:0}
   .wb-ctab{appearance:none;position:relative;background:transparent;
     border:1px solid transparent;border-radius:8px;padding:6px 13px 6px 11px;
