@@ -3640,29 +3640,138 @@
   /* Hide duplicate kbd legend */
   #blitzReview .blitz-kbd-legend ~ .blitz-kbd-legend { display: none !important; }
 </style>
+<!-- Added 2026-08-24 for the redesigned welcome screen's trend/donut/radar
+     charts — the first external script dependency this file has had.
+     Needs real internet access at load time; everything else in this
+     page has always been fully self-contained. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head><body>
 
-<!-- ── Welcome Screen ── -->
+<!-- ── Welcome Screen (redesigned 2026-08-24) ── -->
 <div class="welcome-backdrop" id="welcomeBackdrop">
-  <div class="nexus-home">
-    <div class="nexus-home-head"><div class="nexus-mark">SYG</div><div><div class="nexus-brand">SYG <span>Nexus</span></div><div class="nexus-kicker">Sell Your Gadgets · Elmwood Park</div></div><div class="nexus-date"><b>Operations Center</b>Intake · Listings · Health · Shipping</div></div>
-    <div class="nexus-home-body">
-      <div class="nexus-hero"><div><h1>Store operations, connected.</h1><p>Move from intake to healthy listings to physical-first shipping.</p></div><div class="nexus-health-mini"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-health-mini-row"><strong id="nexusOverallHealth">100%</strong><span id="nexusHealthSub">23 audited listings</span></div></div></div>
-      <div class="nexus-grid" id="nexusGridView0">
-        <button class="nexus-module" id="welcomeWan" style="--mod-color:var(--nexus-blue)"><div class="nexus-module-foot">List</div><div class="nexus-module-icon">📖</div><h2>Wan Workspace</h2><p>Listing intake, Abribook registry, manifests and batch tools.</p></button>
-        <button class="nexus-module" data-module="morning" style="--mod-color:#fbbf24"><div class="nexus-module-foot">Rounds</div><div class="nexus-module-icon">☀</div><h2>Morning Rounds</h2><p>Reviews, eBay messages, orders, cancellations and disputes — one click each.</p></button>
-        <button class="nexus-module" id="welcomePc" style="--mod-color:#f4bb55"><div class="nexus-module-foot">Audit</div><div class="nexus-module-icon">◉</div><h2>Listing Health</h2><p>Scan, audit, correct and understand every listing.</p></button>
-        <button class="nexus-module" id="welcomeHaz" style="--mod-color:#4ade80"><div class="nexus-module-foot">Buy</div><div class="nexus-module-icon">◇</div><h2>Haz Buying</h2><p>Customer intake, offer calculations and buying board.</p></button>
-        <button class="nexus-module" data-module="shipping" style="--mod-color:var(--nexus-cyan)"><div class="nexus-module-foot">Ship</div><div class="nexus-module-icon">▰</div><h2>Shipping Station</h2><p>Physical-first packing, package presets and eBay prefill.</p></button>
-        <button class="nexus-module" data-module="pricing" style="--mod-color:#34d399"><div class="nexus-module-foot">Price</div><div class="nexus-module-icon">$</div><h2>Pricing Lab</h2><p>Turn sold comps into a clear, defensible selling price.</p></button>
-        <button class="nexus-module" data-module="inventory" style="--mod-color:#22d3ee"><div class="nexus-module-foot">Locate</div><div class="nexus-module-icon">▦</div><h2>Inventory Map</h2><p>Navigate the store floor, relocate items and build storage without code.</p></button>
-        <button class="nexus-module" data-module="command" style="--mod-color:#c084fc"><div class="nexus-module-foot">Insights</div><div class="nexus-module-icon">⌁</div><h2>Command Center</h2><p>Health trends and smart operational suggestions.</p></button>
-        <button class="nexus-module" data-module="shovo" style="--mod-color:#fb7185"><div class="nexus-module-foot">Assist</div><div class="nexus-module-icon">✦</div><h2>Ask Shovo</h2><p>System guidance, shortcuts and operational answers.</p></button>
-        <button class="nexus-module" data-module="leads" style="--mod-color:#a78bfa"><div class="nexus-module-foot">Leads</div><div class="nexus-module-icon">◈</div><h2>Ckay Connect</h2><p>Pull in leads, sort by value, and reply — all in one place.</p></button>
+<div class="nexus-home">
+<div class="nx2-shell">
+
+  <div class="nx2-rail" id="nexusGridView0">
+    <div class="nx2-rail-mark">SYG</div>
+    <div class="nx2-rail-item nx2-on" id="welcomeWan" style="--r-g:linear-gradient(135deg,var(--nx2-cy),var(--nx2-bl))"><span class="nx2-rail-icon">📖</span><span class="nx2-rail-label">Wan Workspace</span></div>
+    <div class="nx2-rail-item" data-module="morning"><span class="nx2-rail-icon">☀</span><span class="nx2-rail-label">Morning Rounds</span><span class="nx2-rail-badge">4</span></div>
+    <div class="nx2-rail-item" id="welcomePc"><span class="nx2-rail-icon">◉</span><span class="nx2-rail-label">Listing Health</span></div>
+    <div class="nx2-rail-item" id="welcomeHaz"><span class="nx2-rail-icon">◇</span><span class="nx2-rail-label">Haz Buying</span></div>
+    <div class="nx2-rail-item" data-module="shipping"><span class="nx2-rail-icon">▰</span><span class="nx2-rail-label">Shipping Station</span><span class="nx2-rail-badge">3</span></div>
+    <div class="nx2-rail-item" data-module="pricing"><span class="nx2-rail-icon">$</span><span class="nx2-rail-label">Pricing Lab</span></div>
+    <div class="nx2-rail-item" data-module="inventory"><span class="nx2-rail-icon">▦</span><span class="nx2-rail-label">Inventory Map</span></div>
+    <div class="nx2-rail-item" data-module="command"><span class="nx2-rail-icon">⌁</span><span class="nx2-rail-label">Command Center</span></div>
+    <div class="nx2-rail-item" data-module="leads"><span class="nx2-rail-icon">◈</span><span class="nx2-rail-label">Ckay Connect</span><span class="nx2-rail-badge">5</span></div>
+    <div class="nx2-rail-item" data-module="shovo"><span class="nx2-rail-icon">✦</span><span class="nx2-rail-label">Ask Shovo</span></div>
+  </div>
+
+  <div class="nx2-main">
+    <div class="nx2-head">
+      <div>
+        <div class="nx2-brand">SYG Nexus</div>
+        <div class="nx2-kicker">Elmwood Park operations — Saturday, Aug 22</div>
       </div>
-      <div class="nexus-home-actions"><button class="nexus-quiet-btn" id="openAboutWelcomeBtn">About Nexus</button><button class="nexus-quiet-btn" id="gModeWelcomeBtn">Guided Tour</button></div>
+      <div class="nx2-head-right">
+        <button class="nx2-quiet-link" id="openAboutWelcomeBtn">About Nexus</button>
+        <button class="nx2-quiet-link" id="gModeWelcomeBtn">Guided Tour</button>
+        <div class="nx2-head-search"><span style="color:var(--nx2-faint)">⌕</span><input placeholder="Search SKU, batch, lister..."></div>
+        <div class="nx2-head-icon">✉<span class="nx2-dot"></span></div>
+        <div class="nx2-head-icon">🔔<span class="nx2-dot"></span></div>
+        <div class="nx2-head-icon">⚙</div>
+
+        <div class="nx2-theme-picker">
+          <div class="nx2-head-icon" id="themeIconBtn">🎨</div>
+          <div class="nx2-theme-pop" id="themePop">
+            <div class="nx2-theme-pop-hd">Background color</div>
+            <div class="nx2-theme-pop-row">
+              <input type="color" id="themeColorInput" value="#7c5bff">
+              <span class="nx2-theme-pop-hint">Applies site-wide</span>
+            </div>
+            <div class="nx2-theme-presets">
+              <span class="nx2-theme-preset" style="background:#7c5bff" data-c="#7c5bff"></span>
+              <span class="nx2-theme-preset" style="background:#32e6d4" data-c="#32e6d4"></span>
+              <span class="nx2-theme-preset" style="background:#ff5fa8" data-c="#ff5fa8"></span>
+              <span class="nx2-theme-preset" style="background:#ffc857" data-c="#ffc857"></span>
+              <span class="nx2-theme-preset" style="background:#4ee29a" data-c="#4ee29a"></span>
+              <span class="nx2-theme-preset nx2-light-preset" style="background:#e8e6ef" data-c="#e8e6ef"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nx2-lister-switcher">
+          <div class="nx2-avatar" id="avatarBtn">—</div>
+          <div class="nx2-lister-menu" id="listerMenu">
+            <div class="nx2-lister-menu-hd">Lister for this session</div>
+            <div class="nx2-lister-opt" data-value="J" data-initial="J">
+              <span class="nx2-lister-opt-av" style="background:linear-gradient(135deg,var(--nx2-pk),var(--nx2-vi))">J</span>Juan</div>
+            <div class="nx2-lister-opt" data-value="IS" data-initial="IS">
+              <span class="nx2-lister-opt-av" style="background:linear-gradient(135deg,var(--nx2-cy),var(--nx2-bl))">IS</span>Ibrahim</div>
+            <div class="nx2-lister-opt" data-value="P" data-initial="P">
+              <span class="nx2-lister-opt-av" style="background:linear-gradient(135deg,var(--nx2-am),var(--nx2-gr))">P</span>Paul</div>
+            <div class="nx2-lister-locked-note" id="nx2ListerLockedNote" hidden>Locked for this session — change from the intake bar to switch.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nx2-bento">
+      <div class="nx2-card nx2-trend-hero" style="animation-delay:0.0s">
+        <h3>Listings pushed, last 14 days</h3>
+        <div class="nx2-chart-box-trend"><canvas id="trendChart"></canvas></div>
+      </div>
+
+      <div class="nx2-stat-row-4">
+        <div class="nx2-stat nx2-stat-a" style="animation-delay:0.08s">
+          <div class="nx2-stat-lbl">Active batch</div>
+          <div class="nx2-stat-val">RTL0821</div>
+          <div class="nx2-stat-sub">42 items · 17 ready</div>
+        </div>
+        <div class="nx2-stat nx2-stat-b" style="animation-delay:0.14s">
+          <div class="nx2-stat-lbl">New leads</div>
+          <div class="nx2-stat-val">5</div>
+          <div class="nx2-stat-sub">unsorted, Ckay Connect</div>
+        </div>
+        <div class="nx2-stat nx2-stat-c" style="animation-delay:0.2s">
+          <div class="nx2-stat-lbl">Shipping</div>
+          <div class="nx2-stat-val">3</div>
+          <div class="nx2-stat-sub">orders pending pack</div>
+        </div>
+        <div class="nx2-stat nx2-stat-d" style="animation-delay:0.26s">
+          <div class="nx2-stat-lbl">Listing health</div>
+          <div class="nx2-stat-val" id="nexusOverallHealth">100%</div>
+          <div class="nx2-stat-sub" id="nexusHealthSub">23 audited listings</div>
+        </div>
+      </div>
+
+      <div class="nx2-bottom-row-4">
+        <div class="nx2-card" style="animation-delay:0.34s">
+          <h3>Daily goal</h3>
+          <div class="nx2-gauge-wrap">
+            <canvas id="gaugeGoal" width="150" height="115"></canvas>
+            <div class="nx2-gauge-num">31/45</div>
+            <div class="nx2-gauge-lbl">listings today</div>
+          </div>
+        </div>
+        <div class="nx2-card" style="animation-delay:0.4s">
+          <h3>Batch status — RTL0821</h3>
+          <div class="nx2-chart-box-sm"><canvas id="donutBatch"></canvas></div>
+        </div>
+        <div class="nx2-card" style="animation-delay:0.46s">
+          <h3>Activity by module</h3>
+          <div class="nx2-chart-box-sm"><canvas id="radarActivity"></canvas></div>
+        </div>
+        <div class="nx2-card nx2-mini-single" style="animation-delay:0.52s">
+          <h3>Haz Buying</h3>
+          <div class="nx2-mini-single-val">2</div>
+          <div class="nx2-mini-single-sub">active intakes right now</div>
+        </div>
+      </div>
     </div>
   </div>
+
+</div>
+</div>
 </div>
 
 <!-- ── Haz Tool ── -->
@@ -23907,6 +24016,167 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .pc-health-badge{display:inline-flex;align-items:center;gap:5px;margin-top:7px;padding:5px 8px;border-radius:7px;font:800 10px var(--mono);border:1px solid}.pc-health-badge.good{color:#4ADE80;background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)}.pc-health-badge.warn{color:#FBBF24;background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25)}.pc-health-badge.bad{color:#F87171;background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25)}.pc-scan-list{font:500 9.5px/1.45 var(--sans);color:rgba(253,230,138,.55);margin-top:5px}
   @media(max-width:1360px){.nexus-ship-body{grid-template-columns:minmax(0,1fr) minmax(330px,420px);grid-template-rows:minmax(0,1fr) auto}.nexus-seq-col{grid-column:1/-1;grid-row:2;max-height:200px}}
   @media(max-width:980px){.nexus-ship-body{grid-template-columns:1fr;grid-template-rows:minmax(240px,42vh) minmax(0,1fr) auto;overflow:auto}.nexus-seq-col{grid-column:1;grid-row:3;max-height:none}}@media(max-width:850px){.nexus-grid{grid-template-columns:1fr 1fr}.nexus-price-body{grid-template-columns:1fr}.nexus-hero{align-items:start;flex-direction:column}.nexus-health-mini{width:100%}}@media(max-width:560px){.nexus-grid{grid-template-columns:1fr}.nexus-home-body{padding:24px 16px}.nexus-home-head{padding:18px 16px}.nexus-date{display:none}.nexus-box-grid{grid-template-columns:1fr 1fr}.nexus-price-stats,.nexus-stat-grid{grid-template-columns:1fr 1fr}}
+
+  /* ── New welcome screen (redesigned 2026-08-24) ── */
+
+  :root{
+    --nx2-bg1:#1b1440; --nx2-bg2:#2a1f5e; --nx2-card:rgba(var(--nx2-overlay-rgb),.06); --nx2-overlay-rgb:255,255,255;
+    --nx2-ink:#f4f2ff; --nx2-dim:#b8b0e8; --nx2-faint:#8478c4;
+    --nx2-cy:#32e6d4; --nx2-am:#ffc857; --nx2-pk:#ff5fa8; --nx2-bl:#5b8cff; --nx2-gr:#4ee29a; --nx2-vi:#a06cff;
+    --nx2-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --nx2-mono:'SF Mono',ui-monospace,'Cascadia Code',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(circle at 85% 0%,var(--nx2-bg2),var(--nx2-bg1) 60%);
+    color:var(--nx2-ink);font-family:var(--nx2-sans);-webkit-font-smoothing:antialiased}
+
+  .nx2-shell{display:grid;grid-template-columns:78px 1fr;min-height:100vh}
+
+  /* Left rail — module nav, replaces the bottom launch row entirely.
+     overflow:visible on the rail itself is load-bearing here: a hovered
+     item grows past the rail's own 78px column width, so it needs to be
+     free to render outside its parent's box rather than getting clipped
+     at the edge. Only the ONE hovered item changes size — its siblings
+     never move, because width is set on the item itself (position:
+     relative, z-index raised on hover), not on any shared container. */
+  .nx2-rail{padding:20px 0;display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+    border-right:1px solid rgba(var(--nx2-overlay-rgb),.07);overflow:visible;position:relative;z-index:20}
+  .nx2-rail-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--nx2-cy),var(--nx2-bl));
+    display:flex;align-items:center;justify-content:center;font:800 13px var(--nx2-mono);color:#0d1a3d;margin:0 0 22px 20px;
+    flex:none}
+  .nx2-rail-item{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;
+    gap:0;cursor:pointer;position:relative;z-index:1;overflow:hidden;padding:0 0 0 15px;margin-left:13px;
+    transition:width .32s cubic-bezier(.22,1,.36,1),background .2s,box-shadow .32s;
+    flex:none}
+  .nx2-rail-item:hover{background:rgba(var(--nx2-overlay-rgb),.09);width:186px;z-index:30;
+    box-shadow:0 14px 30px -10px rgba(0,0,0,.5)}
+  .nx2-rail-item.nx2-on{background:var(--r-g,linear-gradient(135deg,var(--nx2-cy),var(--nx2-bl)))}
+  .nx2-rail-icon{font:700 15px var(--nx2-mono);color:var(--nx2-faint);flex:none;width:22px;text-align:center}
+  .nx2-rail-item.nx2-on .nx2-rail-icon{color:#0d1a3d}
+  /* Label stays width:0 and invisible until the item itself is wide
+     enough to hold it — opacity is delayed slightly behind the width
+     transition so it doesn't flash into a still-narrow box. */
+  .nx2-rail-label{font:600 12.5px var(--nx2-sans);color:var(--nx2-ink);white-space:nowrap;
+    opacity:0;margin-left:0;transition:opacity .18s ease .08s,margin-left .32s cubic-bezier(.22,1,.36,1)}
+  .nx2-rail-item:hover .nx2-rail-label{opacity:1;margin-left:12px}
+  .nx2-rail-item.nx2-on .nx2-rail-label{color:#0d1a3d}
+  .nx2-rail-badge{position:absolute;top:6px;right:8px;width:15px;height:15px;border-radius:50%;
+    background:var(--nx2-pk);color:#fff;font:800 8.5px var(--nx2-sans);display:flex;align-items:center;justify-content:center;
+    transition:right .32s cubic-bezier(.22,1,.36,1)}
+  .nx2-rail-item:hover .nx2-rail-badge{right:12px}
+
+  .nx2-main{padding:26px 32px 40px}
+  .nx2-head{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+  .nx2-brand{font:800 19px var(--nx2-sans);letter-spacing:-.01em}
+  .nx2-kicker{font:600 11px var(--nx2-sans);color:var(--nx2-faint);margin-top:2px}
+  .nx2-head-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+  .nx2-head-search{display:flex;align-items:center;gap:8px;background:rgba(var(--nx2-overlay-rgb),.06);
+    border:1px solid rgba(var(--nx2-overlay-rgb),.09);border-radius:12px;padding:9px 14px;width:220px}
+  .nx2-head-search input{background:none;border:0;outline:0;color:var(--nx2-ink);font:500 12.5px var(--nx2-sans);width:100%}
+  .nx2-head-search input::placeholder{color:var(--nx2-faint)}
+  .nx2-head-icon{width:38px;height:38px;border-radius:11px;background:rgba(var(--nx2-overlay-rgb),.06);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;
+    font:600 15px var(--nx2-sans);color:var(--nx2-dim);transition:background .18s,transform .18s cubic-bezier(.22,1,.36,1)}
+  .nx2-head-icon:hover{background:rgba(var(--nx2-overlay-rgb),.1);transform:translateY(-1px)}
+  .nx2-head-icon .nx2-dot{position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--nx2-pk)}
+  .nx2-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--nx2-pk),var(--nx2-vi));
+    display:flex;align-items:center;justify-content:center;font:800 13px var(--nx2-sans);color:#fff;
+    cursor:pointer;transition:transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s}
+  .nx2-avatar:hover{transform:scale(1.08);box-shadow:0 6px 18px -4px rgba(255,95,168,.55)}
+
+  /* Both dropdowns share the same open/close mechanics: hidden via
+     opacity+scale rather than display:none, so the collapse itself can
+     animate instead of just vanishing. transform-origin sits at the
+     corner nearest the trigger so the popover reads as growing FROM the
+     button, not appearing from nowhere. */
+  .nx2-theme-picker,.nx2-lister-switcher{position:relative}
+  .nx2-theme-pop,.nx2-lister-menu{position:absolute;top:calc(100% + 10px);right:0;
+    background:rgba(30,22,70,.92);backdrop-filter:blur(20px);border:1px solid rgba(var(--nx2-overlay-rgb),.12);
+    border-radius:16px;padding:16px;box-shadow:0 24px 50px -16px rgba(0,0,0,.6);
+    opacity:0;transform:scale(.92) translateY(-6px);transform-origin:top right;
+    pointer-events:none;transition:opacity .2s cubic-bezier(.22,1,.36,1),transform .2s cubic-bezier(.22,1,.36,1);
+    z-index:50}
+  .nx2-theme-pop.nx2-open,.nx2-lister-menu.nx2-open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
+
+  .nx2-theme-pop{width:210px}
+  .nx2-theme-pop-hd,.nx2-lister-menu-hd{font:700 10.5px var(--nx2-sans);letter-spacing:.06em;text-transform:uppercase;
+    color:var(--nx2-faint);margin-bottom:12px}
+  .nx2-theme-pop-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .nx2-theme-pop-row input[type=color]{-webkit-appearance:none;appearance:none;width:34px;height:34px;
+    border:none;border-radius:9px;cursor:pointer;background:none;padding:0}
+  .nx2-theme-pop-row input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+  .nx2-theme-pop-row input[type=color]::-webkit-color-swatch{border:1px solid rgba(var(--nx2-overlay-rgb),.2);border-radius:9px}
+  .nx2-theme-pop-hint{font:500 11px var(--nx2-sans);color:var(--nx2-dim)}
+  .nx2-theme-presets{display:flex;gap:8px}
+  .nx2-theme-preset{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid rgba(var(--nx2-overlay-rgb),.15);
+    transition:transform .15s cubic-bezier(.22,1,.36,1),border-color .15s}
+  .nx2-theme-preset:hover{transform:scale(1.18);border-color:rgba(var(--nx2-overlay-rgb),.5)}
+
+  .nx2-lister-menu{width:170px}
+  .nx2-lister-opt{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:10px;cursor:pointer;
+    font:600 12.5px var(--nx2-sans);color:var(--nx2-dim);transition:background .15s,color .15s}
+  .nx2-lister-opt:hover{background:rgba(var(--nx2-overlay-rgb),.07);color:var(--nx2-ink)}
+  .nx2-lister-opt.nx2-on{color:var(--nx2-ink)}
+  .nx2-lister-opt.nx2-on:after{content:'✓';margin-left:auto;color:var(--nx2-cy);font-weight:800}
+  .nx2-lister-opt-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font:800 11px var(--nx2-sans);color:#fff;flex:none}
+
+  /* Site-wide build-up on load — every card and stat tile fades and lifts
+     in, staggered by its position so the page assembles left-to-right,
+     top-to-bottom instead of the whole thing snapping in at once. Delay
+     is set per-element below via inline style rather than nth-child math,
+     since the bento grid mixes different element types (stat, card) that
+     nth-child can't cleanly index together in visual order. */
+  @keyframes buildUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .nx2-card,.nx2-stat{animation:buildUp .55s cubic-bezier(.22,1,.36,1) both}
+  .nx2-card{transition:transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s}
+  .nx2-card:hover{transform:translateY(-3px);box-shadow:0 26px 54px -22px rgba(0,0,0,.65)}
+  .nx2-stat{transition:transform .18s cubic-bezier(.22,1,.36,1)}
+  .nx2-stat:hover{transform:translateY(-2px)}
+
+  .nx2-card{background:var(--nx2-card);backdrop-filter:blur(14px);border:1px solid rgba(var(--nx2-overlay-rgb),.09);
+    border-radius:18px;padding:20px;box-shadow:0 18px 40px -20px rgba(0,0,0,.55)}
+  .nx2-card h3{font:700 11px var(--nx2-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--nx2-dim);margin-bottom:14px}
+
+  /* Asymmetric bento — the actual layout change. One tall hero on the
+     left (the chart most worth a second look), a stacked pair of
+     gradient stat tiles filling the same height on the right of it, then
+     a wide strip below carrying the two remaining charts unevenly sized
+     rather than three equal columns. */
+  .nx2-bento{display:grid;grid-template-columns:1fr;gap:16px}
+
+  .nx2-trend-hero{}
+  .nx2-chart-box-trend{position:relative;height:230px}
+
+  .nx2-stat-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .nx2-stat{border-radius:18px;padding:18px 20px;box-shadow:0 14px 34px -12px var(--sh,rgba(0,0,0,.4))}
+  .nx2-stat-a{background:linear-gradient(135deg,#ffb648,#ff7a3d);--sh:rgba(255,122,61,.4)}
+  .nx2-stat-b{background:linear-gradient(135deg,#ff5fa8,#c44bd8);--sh:rgba(196,75,216,.4)}
+  .nx2-stat-c{background:linear-gradient(135deg,#5b8cff,#7c5bff);--sh:rgba(91,140,255,.4)}
+  .nx2-stat-d{background:linear-gradient(135deg,#32e6d4,#22b8b0);--sh:rgba(50,230,212,.35)}
+  .nx2-stat-lbl{font:700 10.5px var(--nx2-sans);letter-spacing:.05em;text-transform:uppercase;color:rgba(var(--nx2-overlay-rgb),.8);margin-bottom:8px}
+  .nx2-stat-val{font:800 26px var(--nx2-sans);color:#fff;letter-spacing:-.01em}
+  .nx2-stat-sub{font:600 11px var(--nx2-sans);color:rgba(var(--nx2-overlay-rgb),.75);margin-top:4px}
+
+  .nx2-bottom-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .nx2-gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:150px}
+  .nx2-gauge-num{font:800 26px var(--nx2-sans);margin-top:-42px;background:linear-gradient(135deg,var(--nx2-cy),var(--nx2-gr));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .nx2-gauge-lbl{font:600 10.5px var(--nx2-sans);color:var(--nx2-faint);margin-top:2px}
+  .nx2-chart-box-sm{position:relative;height:150px}
+
+  .nx2-mini-single{display:flex;flex-direction:column;justify-content:center;height:150px}
+  .nx2-mini-single-val{font:800 40px var(--nx2-sans);background:linear-gradient(135deg,var(--nx2-pk),var(--nx2-vi));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .nx2-mini-single-sub{font:600 11px var(--nx2-sans);color:var(--nx2-faint);margin-top:4px}
+
+  .nx2-quiet-link{background:none;border:none;color:var(--nx2-faint);font:600 11.5px var(--sans);
+    cursor:pointer;padding:6px 4px;transition:color .15s}
+  .nx2-quiet-link:hover{color:var(--nx2-ink)}
+
+  .nx2-lister-locked-note{font:500 11px var(--sans);color:var(--nx2-faint);
+    padding-top:10px;margin-top:6px;border-top:1px solid rgba(var(--nx2-overlay-rgb),.09);line-height:1.5}
+
 </style>
 
 <div class="nexus-shipping" id="nexusShipping">
@@ -30143,4 +30413,245 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 
 
+<script>
+// New welcome screen JS (redesigned 2026-08-24). Placed as its own
+// script tag right before the closing body tag -- the latest possible
+// position, guaranteed to run after every element it touches
+// (#welcomeBackdrop markup, #listerSelect, #listerLockBtn,
+// #listerPillName) has already been parsed.
+
+// ── Dropdown open/close, shared mechanics ──────────────────────────
+// Both popovers close on outside click and on Escape, and only one is
+// ever open at a time — opening one explicitly closes the other rather
+// than letting them stack.
+function closeAllPopovers(){
+  document.getElementById('themePop').classList.remove('nx2-open');
+  document.getElementById('listerMenu').classList.remove('nx2-open');
+}
+document.getElementById('themeIconBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  var pop = document.getElementById('themePop');
+  var wasOpen = pop.classList.contains('nx2-open');
+  closeAllPopovers();
+  if(!wasOpen) pop.classList.add('nx2-open');
+});
+document.getElementById('avatarBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  var menu = document.getElementById('listerMenu');
+  var wasOpen = menu.classList.contains('nx2-open');
+  closeAllPopovers();
+  if(!wasOpen) menu.classList.add('nx2-open');
+});
+document.addEventListener('click', closeAllPopovers);
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeAllPopovers(); });
+document.querySelectorAll('.nx2-theme-pop, .nx2-lister-menu').forEach(function(el){
+  el.addEventListener('click', function(e){ e.stopPropagation(); });
+});
+
+// ── Lister switcher, wired to the REAL lock-in system ───────────────
+// Nexus already has a deliberate flow for this: #listerSelect + a
+// "Lock in" button (#listerLockBtn) that DISABLES the select once
+// pressed — very likely intentional, to stop a lister getting swapped
+// mid-batch by accident. This header widget is a shortcut INTO that
+// same flow, not a second, competing way to change who's active. If
+// nobody's locked in yet, picking a name here sets the real select's
+// value and fires the real lock button — the exact same path as using
+// the intake bar directly. If someone's already locked in, this shows
+// who (read-only) instead of quietly overriding a safety mechanism that
+// exists for a reason nobody documented as "just cosmetic."
+function nx2SyncAvatarFromRealLister(){
+  var av = document.getElementById('avatarBtn');
+  var lockedText = document.getElementById('listerPillName')?.textContent || '';
+  var note = document.getElementById('nx2ListerLockedNote');
+  // "👤 Juan (J) · RTL0821" — the initial code sits in parentheses.
+  var m = /\(([A-Za-z]+)\)/.exec(lockedText);
+  if(m){
+    av.textContent = m[1];
+    document.querySelectorAll('.nx2-lister-opt').forEach(function(opt){
+      opt.classList.toggle('nx2-on', opt.dataset.initial === m[1]);
+      opt.style.opacity = '.5';
+      opt.style.pointerEvents = 'none';
+    });
+    if(note) note.hidden = false;
+  } else {
+    av.textContent = '—';
+  }
+}
+document.querySelectorAll('.nx2-lister-opt').forEach(function(opt){
+  opt.addEventListener('click', function(){
+    var sel = document.getElementById('listerSelect');
+    var lockBtn = document.getElementById('listerLockBtn');
+    if(!sel || sel.disabled){
+      // Already locked elsewhere — don't fight it, just say so.
+      var note = document.getElementById('nx2ListerLockedNote');
+      if(note) note.hidden = false;
+      return;
+    }
+    sel.value = opt.dataset.value;
+    sel.dispatchEvent(new Event('change', {bubbles:true}));
+    if(lockBtn) lockBtn.click();
+    document.getElementById('avatarBtn').textContent = opt.dataset.initial;
+    document.querySelectorAll('.nx2-lister-opt').forEach(function(o){
+      o.classList.toggle('nx2-on', o === opt);
+    });
+    closeAllPopovers();
+  });
+});
+nx2SyncAvatarFromRealLister();
+document.getElementById('listerLockBtn')?.addEventListener('click', function(){
+  setTimeout(nx2SyncAvatarFromRealLister, 0);
+});
+// ── Universal background color wheel ────────────────────────────────
+// Deliberately scoped to the background gradient only (--bg1/--bg2) —
+// "background personalization" was the actual ask, not "recolor every
+// chart and accent in the app," which would fight the semantic meaning
+// those colors already carry (teal for health, amber for pending, pink
+// for the avatar/leads accent). HSL, not the simpler channel-shift math
+// used for the Wan Board's own bg picker — a gradient needs two colors
+// that read as the SAME hue family at different depths, and HSL keeps
+// hue fixed while only lightness/saturation move, which plain RGB
+// channel offsets can't guarantee.
+function hexToHsl(hex){
+  var r=parseInt(hex.slice(1,3),16)/255, g=parseInt(hex.slice(3,5),16)/255, b=parseInt(hex.slice(5,7),16)/255;
+  var max=Math.max(r,g,b), min=Math.min(r,g,b), h=0,s=0,l=(max+min)/2;
+  if(max!==min){
+    var d=max-min;
+    s = l>0.5 ? d/(2-max-min) : d/(max+min);
+    if(max===r) h=(g-b)/d+(g<b?6:0);
+    else if(max===g) h=(b-r)/d+2;
+    else h=(r-g)/d+4;
+    h/=6;
+  }
+  return [h*360, s*100, l*100];
+}
+function hslToHex(h,s,l){
+  s/=100; l/=100;
+  var c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2, r,g,b;
+  if(h<60){r=c;g=x;b=0} else if(h<120){r=x;g=c;b=0} else if(h<180){r=0;g=c;b=x}
+  else if(h<240){r=0;g=x;b=c} else if(h<300){r=x;g=0;b=c} else {r=c;g=0;b=x}
+  function toHex(v){ return Math.round((v+m)*255).toString(16).padStart(2,'0'); }
+  return '#'+toHex(r)+toHex(g)+toHex(b);
+}
+// Same YIQ brightness test used by the Wan Board's own background picker
+// — picking any light color (greyish-white included) needs the WHOLE
+// surface system to flip, not just the gradient itself. Everything that
+// currently reads as "translucent white over dark" — card fills, borders,
+// hover states, dropdown backgrounds — was written assuming a dark page.
+// On a light pick those same rgba(white, X) overlays would nearly vanish
+// against an equally light background, and --ink staying near-white would
+// be unreadable. --overlay-rgb is what makes this a single flip instead
+// of hunting down every individual surface: every translucent overlay in
+// the CSS now reads its base color from that one variable.
+function colorBrightness(hex){
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000;
+}
+function applyThemeColor(hex){
+  var hsl = hexToHsl(hex);
+  var h = hsl[0], s = hsl[1];
+  var light = colorBrightness(hex) > 175;
+
+  var bg2, bg1;
+  if(light){
+    // A near-white pick should still read as a soft gradient, not two
+    // identical off-whites — recessed tier goes darker, not lighter,
+    // same "recessed is always darker than the panel" rule the Wan
+    // Board's picker already settled on for exactly this reason.
+    bg2 = hslToHex(h, Math.min(18, s), 96);
+    bg1 = hslToHex(h, Math.min(14, s), 90);
+  } else {
+    bg2 = hslToHex(h, Math.min(72, s+12), 27);
+    bg1 = hslToHex(h, Math.min(58, s), 13);
+  }
+
+  var root = document.documentElement.style;
+  root.setProperty('--nx2-bg1', bg1);
+  root.setProperty('--nx2-bg2', bg2);
+  root.setProperty('--nx2-overlay-rgb', light ? '0,0,0' : '255,255,255');
+  root.setProperty('--nx2-ink', light ? '#221c3d' : '#f4f2ff');
+  root.setProperty('--nx2-dim', light ? '#5c5480' : '#b8b0e8');
+  root.setProperty('--nx2-faint', light ? '#8a82ab' : '#8478c4');
+  document.getElementById('themeColorInput').value = hex;
+}
+document.getElementById('themeColorInput').addEventListener('input', function(e){
+  applyThemeColor(e.target.value);
+  try{ localStorage.setItem('abribook:nexusHomeTheme', e.target.value); }catch(err){}
+});
+document.querySelectorAll('.nx2-theme-preset').forEach(function(sw){
+  sw.addEventListener('click', function(){
+    applyThemeColor(sw.dataset.c);
+    try{ localStorage.setItem('abribook:nexusHomeTheme', sw.dataset.c); }catch(err){}
+  });
+});
+// Restore a previously chosen theme on load — same reasoning as every
+// other picker in this file: a color picked once and lost on refresh
+// isn't really a preference.
+(function(){
+  var saved=null;
+  try{ saved=localStorage.getItem('abribook:nexusHomeTheme'); }catch(err){}
+  if(saved) applyThemeColor(saved);
+})();
+
+
+Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+
+new Chart(document.getElementById('radarActivity'), {
+  type: 'radar',
+  data: {
+    labels: ['Wan','Haz','Pricing','Shipping','Leads'],
+    datasets: [{ data: [82,45,60,38,70], backgroundColor:'rgba(160,108,255,.25)',
+      borderColor:'#a06cff', pointBackgroundColor:'#a06cff', borderWidth:2 }]
+  },
+  options: { maintainAspectRatio:false,
+    scales: { r: { grid:{color:'rgba(var(--overlay-rgb),.08)'}, angleLines:{color:'rgba(var(--overlay-rgb),.08)'},
+      pointLabels:{font:{size:12}}, ticks:{display:false} } },
+    plugins: { legend: { display:false } }
+  }
+});
+
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: ['Aug 9','10','11','12','13','14','15','16','17','18','19','20','21','22'],
+    datasets: [{
+      label: 'Listings pushed',
+      data: [18,22,19,25,29,24,31,27,33,30,26,35,31,31],
+      borderColor: '#32e6d4',
+      backgroundColor: (ctx) => {
+        const g = ctx.chart.ctx.createLinearGradient(0,0,0,230);
+        g.addColorStop(0,'rgba(50,230,212,.35)');
+        g.addColorStop(1,'rgba(50,230,212,0)');
+        return g;
+      },
+      fill: true, tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5
+    }]
+  },
+  options: {
+    maintainAspectRatio: false,
+    scales: {
+      x: { grid: { display:false }, ticks: { font:{size:10.5} } },
+      y: { grid: { color:'rgba(var(--overlay-rgb),.06)' }, ticks: { font:{size:10.5} } }
+    },
+    plugins: { legend: { display:false } }
+  }
+});
+
+new Chart(document.getElementById('gaugeGoal'), {
+  type: 'doughnut',
+  data: { datasets: [{ data: [31,14], backgroundColor: ['#32e6d4','rgba(var(--overlay-rgb),.08)'], borderWidth: 0 }] },
+  options: { maintainAspectRatio:false, rotation: -90, circumference: 180, cutout: '75%',
+    plugins: { legend: { display:false }, tooltip: { enabled:false } } }
+});
+
+new Chart(document.getElementById('donutBatch'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Listing ready','Awaiting draft','Pushed live'],
+    datasets: [{ data: [17,9,16], backgroundColor: ['#32e6d4','#ffc857','#4ee29a'], borderWidth: 0 }]
+  },
+  options: { maintainAspectRatio:false,
+    plugins: { legend: { position:'bottom', labels:{boxWidth:8,padding:10,font:{size:10}} } } }
+});
+
+</script>
 </body></html>
