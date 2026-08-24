@@ -3724,18 +3724,18 @@
       <div class="nx2-stat-row-4">
         <div class="nx2-stat nx2-stat-a" style="animation-delay:0.08s">
           <div class="nx2-stat-lbl">Active batch</div>
-          <div class="nx2-stat-val">RTL0821</div>
-          <div class="nx2-stat-sub">42 items · 17 ready</div>
+          <div class="nx2-stat-val" id="nx2StatBatch">—</div>
+          <div class="nx2-stat-sub" id="nx2StatBatchSub">no batch locked in yet</div>
         </div>
         <div class="nx2-stat nx2-stat-b" style="animation-delay:0.14s">
           <div class="nx2-stat-lbl">New leads</div>
-          <div class="nx2-stat-val">5</div>
-          <div class="nx2-stat-sub">unsorted, Ckay Connect</div>
+          <div class="nx2-stat-val">—</div>
+          <div class="nx2-stat-sub">not wired yet — status taxonomy unconfirmed</div>
         </div>
         <div class="nx2-stat nx2-stat-c" style="animation-delay:0.2s">
           <div class="nx2-stat-lbl">Shipping</div>
-          <div class="nx2-stat-val">3</div>
-          <div class="nx2-stat-sub">orders pending pack</div>
+          <div class="nx2-stat-val">—</div>
+          <div class="nx2-stat-sub">not wired yet — no pending-count source found</div>
         </div>
         <div class="nx2-stat nx2-stat-d" style="animation-delay:0.26s">
           <div class="nx2-stat-lbl">Listing health</div>
@@ -3749,7 +3749,7 @@
           <h3>Daily goal</h3>
           <div class="nx2-gauge-wrap">
             <canvas id="gaugeGoal" width="150" height="115"></canvas>
-            <div class="nx2-gauge-num">31/45</div>
+            <div class="nx2-gauge-num" id="nx2GaugeGoalNum">—</div>
             <div class="nx2-gauge-lbl">listings today</div>
           </div>
         </div>
@@ -7147,6 +7147,14 @@ document.getElementById('listerLockBtn').addEventListener('click', ()=>{
   // Hide any panel welcome overlays directly via DOM — createPanel() lives in a
   // separate <script> tag, so it can't reliably see this LISTER_LOCKED variable.
   document.querySelectorAll('.wan-welcome-overlay').forEach(el => el.style.display = 'none');
+  // Without this, the dashboard's "Active batch" tile stays on its
+  // pre-lock "no batch locked in yet" text until the NEXT entry gets
+  // added, since updateGoalCounter() was only ever called from
+  // entry-render code paths — this is the one action that changes
+  // LISTER_BATCH without also touching an entry list. Found by testing
+  // the actual sequence (lock in, then check the tile before adding
+  // anything), not by reading the code and assuming it'd be fine.
+  if(typeof updateGoalCounter==='function') updateGoalCounter();
 });
 
 // ── Draft Panel ──────────────────────────────────────────────────
@@ -12063,6 +12071,27 @@ function updateGoalCounter(){
   const input = document.getElementById('dailyGoalInput');
   const pill = document.getElementById('dailyGoalPill');
   const goal = parseInt(input?.value || '0', 10);
+  // Dashboard sync (added 2026-08-24) — kept INSIDE this existing function
+  // rather than a second, independently-wired listener elsewhere. Every
+  // trigger point that already calls updateGoalCounter() (adding an
+  // entry, editing the goal input, loading a session) now keeps the
+  // dashboard's batch/goal tiles correct for free, with no second place
+  // that could drift out of sync with this one. Placed BEFORE the
+  // pill-existence guard below so these still update on pages where the
+  // toolbar pill isn't present but the dashboard is.
+  const nx2BatchEl = document.getElementById('nx2StatBatch');
+  const nx2BatchSubEl = document.getElementById('nx2StatBatchSub');
+  if(nx2BatchEl){
+    nx2BatchEl.textContent = LISTER_BATCH || '—';
+    if(nx2BatchSubEl){
+      nx2BatchSubEl.textContent = LISTER_BATCH
+        ? total + ' item' + (total===1?'':'s') + ' today'
+        : 'no batch locked in yet';
+    }
+  }
+  const nx2GaugeNumEl = document.getElementById('nx2GaugeGoalNum');
+  if(nx2GaugeNumEl) nx2GaugeNumEl.textContent = goal ? total+'/'+goal : total+'/—';
+  if(typeof nx2UpdateGoalGauge==='function') nx2UpdateGoalGauge(total, goal);
   if(!pill) return;
   pill.textContent = goal ? `${total} / ${goal}` : `${total} / —`;
   pill.classList.toggle('goal-hit', !!goal && total >= goal);
@@ -30634,6 +30663,25 @@ document.querySelectorAll('.nx2-theme-preset').forEach(function(sw){
 })();
 
 
+// Chart.js loads from a CDN (see the <script src> tag in <head>) — the
+// one external dependency this whole file has. If it fails for any
+// reason (network blip, ad blocker, a firewall, file:// restrictions in
+// some browser configs), `Chart` is undefined here and every one of
+// these calls would throw uncaught, silently killing every chart on the
+// dashboard with nothing but a console error to explain why. This
+// guards that specifically: skip straight to a visible fallback message
+// in each chart's own container instead of a blank box and a stack
+// trace nobody sees.
+if(typeof Chart === 'undefined'){
+  ['radarActivity','gaugeGoal','donutBatch'].forEach(function(id){
+    var c = document.getElementById(id);
+    var box = c && c.closest('.nx2-chart-box-sm, .nx2-gauge-wrap');
+    if(box) box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;'
+      +'height:100%;color:var(--nx2-faint);font:500 11px var(--sans);text-align:center;padding:0 10px">'
+      +'Chart library didn\'t load</div>';
+  });
+} else {
+
 Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
 
 new Chart(document.getElementById('radarActivity'), {
@@ -30662,6 +30710,12 @@ var nx2TrendChart = null;
 function nx2RenderTrendChart(labels, data){
   var canvas = document.getElementById('trendChart');
   if(!canvas) return;
+  if(typeof Chart === 'undefined'){
+    var box = canvas.closest('.nx2-chart-box-trend');
+    if(box) box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;'
+      +'height:100%;color:var(--nx2-faint);font:500 12px var(--sans)">Chart library didn\'t load</div>';
+    return;
+  }
   if(nx2TrendChart){ nx2TrendChart.destroy(); }
   nx2TrendChart = new Chart(canvas, {
     type: 'line',
@@ -30724,12 +30778,33 @@ function nx2FormatTrendLabel(dateStr){
   try{ localStorage.setItem('abribook:nexusTrendCache', JSON.stringify({labels:labels, data:data})); }catch(e){}
 })();
 
-new Chart(document.getElementById('gaugeGoal'), {
+var nx2GaugeChart = new Chart(document.getElementById('gaugeGoal'), {
   type: 'doughnut',
-  data: { datasets: [{ data: [31,14], backgroundColor: ['#32e6d4','rgba(var(--overlay-rgb),.08)'], borderWidth: 0 }] },
+  data: { datasets: [{ data: [0,1], backgroundColor: ['#32e6d4','rgba(var(--overlay-rgb),.08)'], borderWidth: 0 }] },
   options: { maintainAspectRatio:false, rotation: -90, circumference: 180, cutout: '75%',
     plugins: { legend: { display:false }, tooltip: { enabled:false } } }
 });
+// Called from updateGoalCounter() itself — see the comment there. Starts
+// at [0,1] above (not the old hardcoded [31,14]) so a fresh load shows
+// an honestly-empty ring until the real count comes in on the first
+// call, rather than a fake head start.
+function nx2UpdateGoalGauge(total, goal){
+  if(!nx2GaugeChart) return;
+  try{
+    var target = goal > 0 ? goal : Math.max(total, 1);
+    var filled = Math.min(total, target);
+    var remaining = Math.max(target - total, 0);
+    nx2GaugeChart.data.datasets[0].data = [filled, remaining || 0.0001]; // Chart.js won't draw a 0-length arc cleanly
+    nx2GaugeChart.update();
+  }catch(err){
+    // Chart.js's own internal update path can throw in edge cases outside
+    // this file's control — never let that take down the rest of
+    // updateGoalCounter(), which has real, unrelated work left to do
+    // after this call (the pill text, the celebration check, the
+    // session strip). The gauge just stays visually stale for a beat
+    // rather than breaking everything downstream of it.
+  }
+}
 
 new Chart(document.getElementById('donutBatch'), {
   type: 'doughnut',
@@ -30740,6 +30815,17 @@ new Chart(document.getElementById('donutBatch'), {
   options: { maintainAspectRatio:false,
     plugins: { legend: { position:'bottom', labels:{boxWidth:8,padding:10,font:{size:10}} } } }
 });
+
+// One explicit refresh now that everything above is defined. Earlier
+// calls to updateGoalCounter() elsewhere in the app (on initial render,
+// before this — the very last script tag — has even run) would have
+// silently skipped the gauge update, since nx2UpdateGoalGauge didn't
+// exist yet at that point. Without this, the dashboard could sit on
+// stale zeros until the next entry gets added or removed, rather than
+// showing what's actually true right now.
+if(typeof updateGoalCounter==='function') updateGoalCounter();
+
+} // end typeof Chart guard
 
 </script>
 </body></html>
