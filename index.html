@@ -8219,6 +8219,14 @@ function zhuanPushEntry(formEntry){
     return nexusAskExtension('ZHUAN_PUSH_TO_CLAUDE', {question: question}, 120000).then(function(res){
       if(res && res.ok){
         zhuanLog('ok', '#'+seq+' done — '+label+(res.text?': '+res.text.slice(0,160).replace(/\s+/g,' '):''));
+        // Marks the SAME object sitting in bhaiEntriesData — formEntry is
+        // that exact reference, not a copy, since zhuanPushEntry(e) is
+        // always called with the entry right after e gets pushed into the
+        // array. Set only here, on a CONFIRMED successful response, not
+        // optimistically when the send starts — "pushed live" on the
+        // dashboard should mean genuinely confirmed, not attempted.
+        formEntry.zhuanPushed = true;
+        if(typeof updateGoalCounter==='function') updateGoalCounter();
       } else {
         zhuanLog('err', '#'+seq+' failed — '+label+' — '+((res&&res.error)||'no response from the Ask Claude panel'));
       }
@@ -12092,6 +12100,21 @@ function updateGoalCounter(){
   const nx2GaugeNumEl = document.getElementById('nx2GaugeGoalNum');
   if(nx2GaugeNumEl) nx2GaugeNumEl.textContent = goal ? total+'/'+goal : total+'/—';
   if(typeof nx2UpdateGoalGauge==='function') nx2UpdateGoalGauge(total, goal);
+  // "Pushed live" = entries genuinely confirmed sent (formEntry.zhuanPushed,
+  // set only on a successful ZhuanMode response — see zhuanPushEntry).
+  // "Listing ready" = whatever's still sitting in the queue without that
+  // flag — drafted and waiting, not yet auto-sent. "Awaiting draft" isn't
+  // from the same pool at all — it's the gap left before today's goal,
+  // so the three numbers read as one coherent story: of what needs to
+  // happen today, this much is confirmed done, this much is ready and
+  // waiting, this much still needs to be drafted.
+  if(typeof nx2UpdateBatchDonut==='function'){
+    var nx2AllEntries = [].concat(dpEntries||[], uniEntriesData||[], bhaiEntriesData||[]);
+    var nx2Pushed = nx2AllEntries.filter(function(e){ return e && e.zhuanPushed; }).length;
+    var nx2Ready = total - nx2Pushed;
+    var nx2Awaiting = Math.max(goal - total, 0);
+    nx2UpdateBatchDonut(nx2Ready, nx2Awaiting, nx2Pushed);
+  }
   if(!pill) return;
   pill.textContent = goal ? `${total} / ${goal}` : `${total} / —`;
   pill.classList.toggle('goal-hit', !!goal && total >= goal);
@@ -30806,15 +30829,36 @@ function nx2UpdateGoalGauge(total, goal){
   }
 }
 
-new Chart(document.getElementById('donutBatch'), {
+var nx2DonutChart = new Chart(document.getElementById('donutBatch'), {
   type: 'doughnut',
   data: {
     labels: ['Listing ready','Awaiting draft','Pushed live'],
-    datasets: [{ data: [17,9,16], backgroundColor: ['#32e6d4','#ffc857','#4ee29a'], borderWidth: 0 }]
+    datasets: [{ data: [0,0,0.0001], backgroundColor: ['#32e6d4','#ffc857','#4ee29a'], borderWidth: 0 }]
   },
   options: { maintainAspectRatio:false,
     plugins: { legend: { position:'bottom', labels:{boxWidth:8,padding:10,font:{size:10}} } } }
 });
+// Called from updateGoalCounter() — see the comment there for what each
+// of the three numbers actually means. Starts at [0,0,0.0001] above (not
+// the old hardcoded [17,9,16]) so a fresh load shows an honestly-empty
+// ring rather than a fake head start; the 0.0001 on the last slice is
+// the same "Chart.js won't draw a truly empty arc" workaround used for
+// the goal gauge.
+function nx2UpdateBatchDonut(ready, awaiting, pushed){
+  if(!nx2DonutChart) return;
+  try{
+    nx2DonutChart.data.datasets[0].data = [
+      Math.max(ready, 0),
+      Math.max(awaiting, 0),
+      Math.max(pushed, 0) || 0.0001
+    ];
+    nx2DonutChart.update();
+  }catch(err){
+    // Same reasoning as nx2UpdateGoalGauge's own try/catch — a Chart.js
+    // internal failure here shouldn't be able to take down the rest of
+    // updateGoalCounter()'s unrelated work.
+  }
+}
 
 // One explicit refresh now that everything above is defined. Earlier
 // calls to updateGoalCounter() elsewhere in the app (on initial render,
