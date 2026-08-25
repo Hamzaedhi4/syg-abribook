@@ -23999,6 +23999,45 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .nexus-label-match{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid var(--nexus-line)}.nexus-label-match b{font-size:10.5px}.nexus-label-match span{font:650 9px var(--mono);color:var(--nexus-soft)}.nexus-label-match em{font:750 9px var(--mono);font-style:normal}.nexus-label-match em.ok{color:#4ade80}.nexus-label-match em.warn{color:#fbbf24}.nexus-label-summary{margin-top:12px;padding:11px;border-radius:10px;background:#0b1019;border:1px solid var(--nexus-line);font:650 10px/1.6 var(--mono);color:var(--nexus-soft)}
   .nexus-pdf-drop{margin:12px 0;padding:25px 16px;border:1.5px dashed rgba(251,191,36,.32);border-radius:14px;background:rgba(251,191,36,.035);text-align:center;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}.nexus-pdf-drop:hover,.nexus-pdf-drop.dragover{background:rgba(251,191,36,.09);border-color:#FBBF24;transform:translateY(-1px)}.nexus-pdf-drop-icon{font-size:24px;margin-bottom:8px}.nexus-pdf-drop strong{display:block;font-size:12px;color:#FDE68A;margin-bottom:5px}.nexus-pdf-drop span{display:block;font-size:10.5px;color:rgba(253,230,138,.42)}.nexus-pdf-drop.loaded{border-style:solid;border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.055)}.nexus-pdf-drop.loaded strong{color:#4ADE80}
   .nexus-command{position:fixed;inset:0;z-index:10025;background:var(--nexus-bg);color:var(--nexus-text);display:none;flex-direction:column}.nexus-command.show{display:flex}.nexus-command-body{width:min(1180px,100%);margin:0 auto;padding:26px;overflow:auto}.nexus-command-hero{display:grid;grid-template-columns:260px 1fr;gap:16px}.nexus-score-card,.nexus-insight-card{border:1px solid var(--nexus-line);border-radius:18px;background:var(--nexus-panel);padding:20px}.nexus-score-ring{width:132px;height:132px;margin:16px auto;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--nexus-cyan) var(--score),#242c3a 0);position:relative}.nexus-score-ring:after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--nexus-panel)}.nexus-score-ring strong{position:relative;z-index:1;font:800 27px var(--mono)}.nexus-score-caption{text-align:center;color:var(--nexus-soft);font-size:11px}.nexus-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:16px}.nexus-stat{padding:13px;border:1px solid var(--nexus-line);border-radius:12px;background:#0d121c}.nexus-stat b{display:block;font:800 20px var(--mono);margin-bottom:5px}.nexus-stat span{font-size:10px;color:var(--nexus-soft)}.nexus-suggestion{padding:15px 16px;border:1px solid rgba(109,124,255,.22);border-radius:14px;background:rgba(109,124,255,.06);margin-top:10px}.nexus-suggestion-tag{font:750 9px var(--mono);color:#9da7ff;letter-spacing:.1em;text-transform:uppercase}.nexus-suggestion h4{font-size:13px;margin:8px 0 6px}.nexus-suggestion p{font-size:11.5px;line-height:1.55;color:var(--nexus-soft);margin:0}.nexus-suggestion-impact{display:inline-block;margin-top:9px;color:var(--nexus-cyan);font:700 10px var(--mono)}
+  /* ── Marketplace Connect scan terminal (added 2026-08-25) ──────────
+     Deliberately its own visual language, not the rest of Nexus's
+     styling — a plain monospace terminal reads as "this is watching a
+     live process run," which is what it actually is, rather than
+     another panel with charts and cards. z-index sits above both
+     nexus-command (10025) and nexus-storewide (10026) since the trigger
+     button lives inside Command Center and the terminal needs to cover
+     it fully once it opens. */
+  .nexus-mc-terminal{position:fixed;inset:0;z-index:10030;background:#080a0d;color:#32e6d4;
+    font-family:'SF Mono',ui-monospace,'Cascadia Code',monospace;display:none;flex-direction:column}
+  .nexus-mc-terminal.show{display:flex}
+
+  .mct-head{display:flex;align-items:center;gap:10px;padding:14px 20px;
+    border-bottom:1px solid #1a2128;flex:none}
+  .mct-dot{width:8px;height:8px;border-radius:50%;background:#4a5560;flex:none}
+  .mct-dot.mct-live{background:#4ee29a;box-shadow:0 0 6px #4ee29a;
+    animation:mctBlink 1.4s ease-in-out infinite}
+  @keyframes mctBlink{0%,100%{opacity:1}50%{opacity:.3}}
+  .mct-title{font:700 12px inherit;letter-spacing:.08em;color:#7c8794}
+  .mct-status{margin-left:auto;font:600 11.5px inherit;color:#4a5560;margin-right:14px}
+  .mct-close{background:none;border:1px solid #1a2128;color:#7c8794;border-radius:6px;
+    padding:6px 12px;font:600 11px inherit;cursor:pointer}
+  .mct-close:hover{border-color:#32e6d4;color:#32e6d4}
+
+  .mct-body{flex:1;overflow-y:auto;padding:16px 20px;font-size:12.5px;line-height:1.7}
+  .mct-line{white-space:pre-wrap;word-break:break-word}
+  .mct-dim{color:#4a5560}
+  .mct-ok{color:#4ee29a}
+  .mct-warn{color:#ffc857}
+  .mct-err{color:#ff5f6d}
+  .mct-sku{color:#7c8794}
+  .mct-cursor{display:inline-block;width:7px;height:13px;background:#32e6d4;
+    margin-left:2px;vertical-align:-2px;animation:mctBlink .9s step-end infinite}
+
+  .mct-foot{flex:none;border-top:1px solid #1a2128;padding:12px 20px;
+    display:none;gap:22px;font-size:11.5px;color:#7c8794}
+  .mct-foot.show{display:flex}
+  .mct-foot b{color:#e8eef7;font-size:13px;margin-right:5px}
+
   .nexus-storewide{position:fixed;inset:0;z-index:10026;background:var(--nexus-bg);color:var(--nexus-text);display:none;flex-direction:column}.nexus-storewide.show{display:flex}
   .nexus-sw-body{width:min(1280px,100%);margin:0 auto;padding:22px;overflow:auto}
   .nexus-sw-drop{margin-bottom:18px;padding:22px 16px;border:1.5px dashed rgba(50,214,197,.32);border-radius:14px;background:rgba(50,214,197,.035);text-align:center;cursor:pointer;transition:background .15s,border-color .15s}
@@ -24446,13 +24485,27 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
 </div>
 
 <div class="nexus-command" id="nexusCommand">
-  <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Listing Health Command Center</h2><button class="nexus-newsession" id="nexusCompanionInstall" style="border-color:rgba(192,132,252,.35);color:#c084fc">⬇ Nexus Companion Installation</button><button class="nexus-newsession" id="nexusOpenStoreWide" style="border-color:rgba(50,214,197,.35);color:var(--nexus-cyan)">🗂 Store Wide Audit</button><button class="nexus-back" id="nexusCommandBack">← Command</button></div>
+  <div class="nexus-ship-head"><div class="nexus-mark">SYG</div><h2>Listing Health Command Center</h2><button class="nexus-newsession" id="nexusMcScanBtn" style="border-color:rgba(50,214,197,.35);color:var(--nexus-cyan)">🖥 Scan Marketplace Connect</button><button class="nexus-newsession" id="nexusCompanionInstall" style="border-color:rgba(192,132,252,.35);color:#c084fc">⬇ Nexus Companion Installation</button><button class="nexus-newsession" id="nexusOpenStoreWide" style="border-color:rgba(50,214,197,.35);color:var(--nexus-cyan)">🗂 Store Wide Audit</button><button class="nexus-back" id="nexusCommandBack">← Command</button></div>
   <div class="nexus-command-body">
     <div class="nexus-command-hero">
       <div class="nexus-score-card"><div class="nexus-health-mini-label">Overall Listing Health</div><div class="nexus-score-ring" id="nexusScoreRing" style="--score:100%"><strong id="nexusCommandScore">100%</strong></div><div class="nexus-score-caption" id="nexusCommandCaption">23 listings included in health</div></div>
       <div class="nexus-insight-card"><div class="nexus-health-mini-label">Current audit snapshot</div><div class="nexus-stat-grid" id="nexusCommandStats"><div class="nexus-stat"><b>23</b><span><span class="nexus-health-dot healthy" style="margin-right:5px;vertical-align:1px"></span>Healthy</span></div><div class="nexus-stat"><b>0</b><span><span class="nexus-health-dot flagged" style="margin-right:5px;vertical-align:1px"></span>Needs attention</span></div><div class="nexus-stat"><b>0</b><span><span class="nexus-health-dot flagged" style="margin-right:5px;vertical-align:1px"></span>Unhealthy</span></div><div class="nexus-stat"><b>0</b><span>Unresolved</span></div></div><div id="nexusSuggestions"><div class="nexus-suggestion"><div class="nexus-suggestion-tag">Next best action</div><h4>Run the first Listing Health scan</h4><p>Move an imported card into Working On. Nexus will scan its available listing data, calculate health, and begin identifying operational patterns.</p></div><button class="nexus-next-btn" id="nexusWorkNext">What should I work on next?</button></div></div>
     </div>
   </div>
+</div>
+
+<!-- Marketplace Connect scan terminal (added 2026-08-25) -->
+<div class="nexus-mc-terminal" id="nexusMcTerminal">
+  <div class="mct-head">
+    <span class="mct-dot mct-live" id="mctLiveDot"></span>
+    <span class="mct-title">MARKETPLACE CONNECT — LISTING SCAN</span>
+    <span class="mct-status" id="mctStatusLine">idle</span>
+    <button class="mct-close" id="mctCloseBtn">✕ close</button>
+  </div>
+  <div class="mct-body" id="mctBody">
+    <div class="mct-line mct-dim">$ waiting for scan to start<span class="mct-cursor"></span></div>
+  </div>
+  <div class="mct-foot" id="mctFoot"></div>
 </div>
 
 <div class="nexus-storewide" id="nexusStoreWide">
@@ -28504,6 +28557,113 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       }
     });
     document.getElementById('nexusCommandBack').onclick=function(){document.getElementById('nexusCommand').classList.remove('show');document.getElementById('welcomeBackdrop').classList.remove('hidden')};
+
+    // ── Marketplace Connect scan terminal (added 2026-08-25) ──────────
+    // Not built on pcAskExtension/nexusAskExtension — those resolve once
+    // with a single answer, and this needs to keep receiving events for
+    // as long as the scan runs. Talks directly to the bridge's
+    // MC_SCAN_START/MC_SCAN_EVENT/MC_SCAN_STOP protocol instead.
+    var mctListener = null;
+    var mctCounts = { seen: 0, kept: 0, errored: 0 };
+
+    function mctLine(html, cls){
+      var body = document.getElementById('mctBody');
+      var line = document.createElement('div');
+      line.className = 'mct-line' + (cls ? ' ' + cls : '');
+      line.innerHTML = html;
+      body.appendChild(line);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function mctEsc(s){
+      return String(s==null?'':s).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; });
+    }
+
+    function mctHandleEvent(evt){
+      if(evt.type === 'started'){
+        document.getElementById('mctStatusLine').textContent = 'opening Marketplace Connect…';
+        mctLine('$ scan started — opening Marketplace Connect (can take up to ~20s to fully render)', 'mct-dim');
+        return;
+      }
+      if(evt.type === 'progress'){
+        var e = evt.event;
+        if(e.type === 'row-seen'){
+          mctCounts.seen++;
+          document.getElementById('mctStatusLine').textContent = mctCounts.seen + ' scanned…';
+          if((e.qty||0) < 1){
+            mctLine('  <span class="mct-dim">skip</span> <span class="mct-sku">'+mctEsc(e.sku)+'</span> <span class="mct-dim">— 0 in stock</span>');
+          }
+        } else if(e.type === 'row-done'){
+          mctCounts.kept++;
+          var hasErrors = e.errors && e.errors.length;
+          if(hasErrors) mctCounts.errored++;
+          var cls = hasErrors ? 'mct-err' : 'mct-ok';
+          var statusPart = '<span class="'+cls+'">'+mctEsc(e.status)+'</span>';
+          var line = '  <span class="mct-sku">'+mctEsc(e.sku)+'</span> — '+statusPart+' — qty '+mctEsc(e.qty);
+          mctLine(line);
+          if(hasErrors){
+            e.errors.forEach(function(err){
+              mctLine('      ↳ ' + mctEsc(err), 'mct-err');
+            });
+          }
+        }
+        return;
+      }
+      if(evt.type === 'complete'){
+        document.getElementById('mctStatusLine').textContent = 'done';
+        document.getElementById('mctLiveDot').classList.remove('mct-live');
+        mctLine('$ scan complete — '+mctCounts.kept+' listings with stock, '+mctCounts.errored+' flagged', 'mct-dim');
+        var foot = document.getElementById('mctFoot');
+        foot.innerHTML = '<span><b>'+mctCounts.seen+'</b>scanned</span><span><b>'+mctCounts.kept+'</b>qty ≥ 1</span><span><b>'+mctCounts.errored+'</b>flagged</span>';
+        foot.classList.add('show');
+        mctTeardown();
+        return;
+      }
+      if(evt.type === 'error'){
+        document.getElementById('mctStatusLine').textContent = 'error';
+        document.getElementById('mctLiveDot').classList.remove('mct-live');
+        mctLine('$ error — ' + mctEsc(evt.error), 'mct-err');
+        mctTeardown();
+        return;
+      }
+    }
+
+    function mctTeardown(){
+      if(mctListener){
+        window.removeEventListener('message', mctListener);
+        mctListener = null;
+      }
+    }
+
+    document.getElementById('nexusMcScanBtn').onclick=function(){
+      document.getElementById('nexusCommand').classList.remove('show');
+      var term = document.getElementById('nexusMcTerminal');
+      term.classList.add('show');
+      document.getElementById('mctBody').innerHTML = '';
+      document.getElementById('mctFoot').classList.remove('show');
+      document.getElementById('mctLiveDot').classList.add('mct-live');
+      document.getElementById('mctStatusLine').textContent = 'starting…';
+      mctCounts = { seen: 0, kept: 0, errored: 0 };
+
+      mctTeardown(); // in case a previous scan's listener never got torn down
+      mctListener = function(event){
+        if(event.source !== window) return;
+        var data = event.data;
+        if(!data || data.source !== 'syg-audit-extension') return;
+        if(data.type !== 'MC_SCAN_EVENT') return;
+        mctHandleEvent(data.event);
+      };
+      window.addEventListener('message', mctListener);
+      window.postMessage({ source: 'syg-audit-page', type: 'MC_SCAN_START' }, '*');
+    };
+
+    document.getElementById('mctCloseBtn').onclick=function(){
+      window.postMessage({ source: 'syg-audit-page', type: 'MC_SCAN_STOP' }, '*');
+      mctTeardown();
+      document.getElementById('nexusMcTerminal').classList.remove('show');
+      document.getElementById('welcomeBackdrop').classList.remove('hidden');
+    };
+
     // Opens the Google Drive folder where the Nexus Companion Toolkit
     // (the browser extension — Claude relay, eBay price checks, MC sync,
     // shipping prefill, HP lookup) is always kept, so anyone setting up a
