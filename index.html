@@ -26634,7 +26634,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   });
   function openModule(id){
     var welcome=document.getElementById('welcomeBackdrop');
-    if(id==='wan'){welcome.classList.add('hidden');return}
+    if(id==='wan'){
+      welcome.classList.add('hidden');
+      // initCanvas is guarded internally (wanCanvasBuilt flag) — safe to
+      // call here even though the id-based #welcomeWan listener elsewhere
+      // also calls it. Without this, only that one specific listener ever
+      // triggered the actual workspace setup — clicking the conveyor
+      // belt's duplicate Wan button (data-module="wan", not the id)
+      // correctly hid the welcome screen but left the canvas never
+      // initialized, which is why the board looked broken/blank when
+      // opened that way.
+      setTimeout(initCanvas, 50);
+      return;
+    }
     if(id==='audit'){welcome.classList.add('hidden');if(typeof window.pcOpen==='function')window.pcOpen();return}
     if(id==='haz'){welcome.classList.add('hidden');if(typeof window.hazOpen==='function')window.hazOpen();return}
     if(id==='shipping'){welcome.classList.add('hidden');document.getElementById('nexusShipping').classList.add('show');setTimeout(function(){document.getElementById('nexusShipSku').focus()},80);return}
@@ -30930,7 +30942,15 @@ document.querySelectorAll('.nx2-theme-preset').forEach(function(sw){
   }
 
   function nx2ConveyorTick(){
-    if(!nx2ConveyorDragging){
+    // offsetParent is null exactly when this (or an ancestor) has
+    // display:none — true whenever a module is open and #welcomeBackdrop
+    // is hidden. Skipping the advance while invisible isn't just about
+    // saving cycles: without this, nx2ConveyorX keeps growing the whole
+    // time a module is open, however long that is, with no wrap check
+    // actually correcting it (wrap only fires once X passes the real
+    // half-width, but there's no reason to let it grow unbounded in the
+    // background just because nothing's rendering it right now).
+    if(!nx2ConveyorDragging && track.offsetParent !== null){
       nx2ConveyorX += nx2ConveyorSpeed;
       if(nx2ConveyorHalfWidth > 0 && nx2ConveyorX >= nx2ConveyorHalfWidth){
         nx2ConveyorX -= nx2ConveyorHalfWidth; // wrap, not reset to 0 — keeps relative drag position meaningful
@@ -30979,7 +30999,7 @@ document.querySelectorAll('.nx2-theme-preset').forEach(function(sw){
   window.addEventListener('pointermove', function(e){
     if(nx2ConveyorDragging){
       var x = (e.touches ? e.touches[0].clientX : e.clientX);
-      if(Math.abs(x - nx2ConveyorDragStartX) > 4) nx2ConveyorMoved = true;
+      if(Math.abs(x - nx2ConveyorDragStartX) > 10) nx2ConveyorMoved = true;
       nx2ConveyorPointerMove(e);
     }
   });
