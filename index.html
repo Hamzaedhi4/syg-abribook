@@ -3652,20 +3652,6 @@
 <div class="nexus-home">
 <div class="nx2-shell">
 
-  <div class="nx2-rail" id="nexusGridView0">
-    <div class="nx2-rail-mark">SYG</div>
-    <div class="nx2-rail-item nx2-on" id="welcomeWan" style="--r-g:linear-gradient(135deg,var(--nx2-cy),var(--nx2-bl))"><span class="nx2-rail-icon">📖</span><span class="nx2-rail-label">Wan Workspace</span></div>
-    <div class="nx2-rail-item" data-module="morning"><span class="nx2-rail-icon">☀</span><span class="nx2-rail-label">Morning Rounds</span><span class="nx2-rail-badge">4</span></div>
-    <div class="nx2-rail-item" id="welcomePc"><span class="nx2-rail-icon">◉</span><span class="nx2-rail-label">Listing Health</span></div>
-    <div class="nx2-rail-item" id="welcomeHaz"><span class="nx2-rail-icon">◇</span><span class="nx2-rail-label">Haz Buying</span></div>
-    <div class="nx2-rail-item" data-module="shipping"><span class="nx2-rail-icon">▰</span><span class="nx2-rail-label">Shipping Station</span><span class="nx2-rail-badge">3</span></div>
-    <div class="nx2-rail-item" data-module="pricing"><span class="nx2-rail-icon">$</span><span class="nx2-rail-label">Pricing Lab</span></div>
-    <div class="nx2-rail-item" data-module="inventory"><span class="nx2-rail-icon">▦</span><span class="nx2-rail-label">Inventory Map</span></div>
-    <div class="nx2-rail-item" data-module="command"><span class="nx2-rail-icon">⌁</span><span class="nx2-rail-label">Command Center</span></div>
-    <div class="nx2-rail-item" data-module="leads"><span class="nx2-rail-icon">◈</span><span class="nx2-rail-label">Ckay Connect</span><span class="nx2-rail-badge">5</span></div>
-    <div class="nx2-rail-item" data-module="shovo"><span class="nx2-rail-icon">✦</span><span class="nx2-rail-label">Ask Shovo</span></div>
-  </div>
-
   <div class="nx2-main">
     <div class="nx2-head">
       <div>
@@ -3716,9 +3702,15 @@
     </div>
 
     <div class="nx2-bento">
-      <div class="nx2-card nx2-trend-hero" style="animation-delay:0.0s">
-        <h3>Listings pushed, last 14 days</h3>
-        <div class="nx2-chart-box-trend"><canvas id="trendChart"></canvas></div>
+      <div class="nx2-top-row">
+        <div class="nx2-card nx2-trend-hero" style="animation-delay:0.0s">
+          <h3>Listings pushed, last 14 days</h3>
+          <div class="nx2-chart-box-trend"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="nx2-card" style="animation-delay:0.05s">
+          <h3>Recent activity</h3>
+          <div class="nx2-feed" id="nx2Feed"><div class="nx2-feed-empty">Loading…</div></div>
+        </div>
       </div>
 
       <div class="nx2-stat-row-4">
@@ -3767,6 +3759,39 @@
           <div class="nx2-mini-single-sub">active intakes right now</div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="nx2-conveyor-viewport">
+    <div class="nx2-conveyor-track" id="nexusGridView0">
+      <!-- Copy A — the real, original elements. Same ids/data-module
+           attributes this whole app already depends on elsewhere
+           (Guided Tour's picker clicks these ids directly to navigate). -->
+      <div class="nx2-conveyor-item nx2-on" id="welcomeWan" style="--r-g:linear-gradient(135deg,var(--nx2-cy),var(--nx2-bl))"><span class="nx2-conveyor-icon">📖</span><span class="nx2-conveyor-label">Wan Workspace</span></div>
+      <div class="nx2-conveyor-item" data-module="morning"><span class="nx2-conveyor-icon">☀</span><span class="nx2-conveyor-label">Morning Rounds</span><span class="nx2-conveyor-badge">4</span></div>
+      <div class="nx2-conveyor-item" id="welcomePc"><span class="nx2-conveyor-icon">◉</span><span class="nx2-conveyor-label">Listing Health</span></div>
+      <div class="nx2-conveyor-item" id="welcomeHaz"><span class="nx2-conveyor-icon">◇</span><span class="nx2-conveyor-label">Haz Buying</span></div>
+      <div class="nx2-conveyor-item" data-module="shipping"><span class="nx2-conveyor-icon">▰</span><span class="nx2-conveyor-label">Shipping Station</span><span class="nx2-conveyor-badge">3</span></div>
+      <div class="nx2-conveyor-item" data-module="pricing"><span class="nx2-conveyor-icon">$</span><span class="nx2-conveyor-label">Pricing Lab</span></div>
+      <div class="nx2-conveyor-item" data-module="inventory"><span class="nx2-conveyor-icon">▦</span><span class="nx2-conveyor-label">Inventory Map</span></div>
+      <div class="nx2-conveyor-item" data-module="command"><span class="nx2-conveyor-icon">⌁</span><span class="nx2-conveyor-label">Command Center</span></div>
+      <div class="nx2-conveyor-item" data-module="leads"><span class="nx2-conveyor-icon">◈</span><span class="nx2-conveyor-label">Ckay Connect</span><span class="nx2-conveyor-badge">5</span></div>
+      <div class="nx2-conveyor-item" data-module="shovo"><span class="nx2-conveyor-icon">✦</span><span class="nx2-conveyor-label">Ask Shovo</span></div>
+      <!-- Copy B — visually identical, no duplicate ids. The three
+           special ones use data-module="wan"/"haz"/"audit" instead —
+           confirmed by reading openModule() directly that it already
+           handles those three values with the same hide-welcome +
+           hazOpen()/pcOpen() behavior the id-based listeners perform. -->
+      <div class="nx2-conveyor-item" data-module="wan"><span class="nx2-conveyor-icon">📖</span><span class="nx2-conveyor-label">Wan Workspace</span></div>
+      <div class="nx2-conveyor-item" data-module="morning"><span class="nx2-conveyor-icon">☀</span><span class="nx2-conveyor-label">Morning Rounds</span><span class="nx2-conveyor-badge">4</span></div>
+      <div class="nx2-conveyor-item" data-module="audit"><span class="nx2-conveyor-icon">◉</span><span class="nx2-conveyor-label">Listing Health</span></div>
+      <div class="nx2-conveyor-item" data-module="haz"><span class="nx2-conveyor-icon">◇</span><span class="nx2-conveyor-label">Haz Buying</span></div>
+      <div class="nx2-conveyor-item" data-module="shipping"><span class="nx2-conveyor-icon">▰</span><span class="nx2-conveyor-label">Shipping Station</span><span class="nx2-conveyor-badge">3</span></div>
+      <div class="nx2-conveyor-item" data-module="pricing"><span class="nx2-conveyor-icon">$</span><span class="nx2-conveyor-label">Pricing Lab</span></div>
+      <div class="nx2-conveyor-item" data-module="inventory"><span class="nx2-conveyor-icon">▦</span><span class="nx2-conveyor-label">Inventory Map</span></div>
+      <div class="nx2-conveyor-item" data-module="command"><span class="nx2-conveyor-icon">⌁</span><span class="nx2-conveyor-label">Command Center</span></div>
+      <div class="nx2-conveyor-item" data-module="leads"><span class="nx2-conveyor-icon">◈</span><span class="nx2-conveyor-label">Ckay Connect</span><span class="nx2-conveyor-badge">5</span></div>
+      <div class="nx2-conveyor-item" data-module="shovo"><span class="nx2-conveyor-icon">✦</span><span class="nx2-conveyor-label">Ask Shovo</span></div>
     </div>
   </div>
 
@@ -24162,40 +24187,49 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   body{background:radial-gradient(circle at 85% 0%,var(--nx2-bg2),var(--nx2-bg1) 60%);
     color:var(--nx2-ink);font-family:var(--nx2-sans);-webkit-font-smoothing:antialiased}
 
-  .nx2-shell{display:grid;grid-template-columns:78px 1fr;min-height:100vh}
+  .nx2-shell{display:flex;flex-direction:column;min-height:100vh}
 
-  /* Left rail — module nav, replaces the bottom launch row entirely.
-     overflow:visible on the rail itself is load-bearing here: a hovered
-     item grows past the rail's own 78px column width, so it needs to be
-     free to render outside its parent's box rather than getting clipped
-     at the edge. Only the ONE hovered item changes size — its siblings
-     never move, because width is set on the item itself (position:
-     relative, z-index raised on hover), not on any shared container. */
-  .nx2-rail{padding:20px 0;display:flex;flex-direction:column;align-items:flex-start;gap:6px;
-    border-right:1px solid rgba(var(--nx2-overlay-rgb),.07);overflow:visible;position:relative;z-index:20}
-  .nx2-rail-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--nx2-cy),var(--nx2-bl));
-    display:flex;align-items:center;justify-content:center;font:800 13px var(--nx2-mono);color:#0d1a3d;margin:0 0 22px 20px;
-    flex:none}
-  .nx2-rail-item{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;
-    gap:0;cursor:pointer;position:relative;z-index:1;overflow:hidden;padding:0 0 0 15px;margin-left:13px;
-    transition:width .32s cubic-bezier(.22,1,.36,1),background .2s,box-shadow .32s;
-    flex:none}
-  .nx2-rail-item:hover{background:rgba(var(--nx2-overlay-rgb),.09);width:186px;z-index:30;
-    box-shadow:0 14px 30px -10px rgba(0,0,0,.5)}
-  .nx2-rail-item.nx2-on{background:var(--r-g,linear-gradient(135deg,var(--nx2-cy),var(--nx2-bl)))}
-  .nx2-rail-icon{font:700 15px var(--nx2-mono);color:var(--nx2-faint);flex:none;width:22px;text-align:center}
-  .nx2-rail-item.nx2-on .nx2-rail-icon{color:#0d1a3d}
-  /* Label stays width:0 and invisible until the item itself is wide
-     enough to hold it — opacity is delayed slightly behind the width
-     transition so it doesn't flash into a still-narrow box. */
-  .nx2-rail-label{font:600 12.5px var(--nx2-sans);color:var(--nx2-ink);white-space:nowrap;
-    opacity:0;margin-left:0;transition:opacity .18s ease .08s,margin-left .32s cubic-bezier(.22,1,.36,1)}
-  .nx2-rail-item:hover .nx2-rail-label{opacity:1;margin-left:12px}
-  .nx2-rail-item.nx2-on .nx2-rail-label{color:#0d1a3d}
-  .nx2-rail-badge{position:absolute;top:6px;right:8px;width:15px;height:15px;border-radius:50%;
-    background:var(--nx2-pk);color:#fff;font:800 8.5px var(--nx2-sans);display:flex;align-items:center;justify-content:center;
-    transition:right .32s cubic-bezier(.22,1,.36,1)}
-  .nx2-rail-item:hover .nx2-rail-badge{right:12px}
+  /* Conveyor belt module nav — replaces the old left rail entirely.
+     Sits under the dashboard now instead of beside it. Auto-slide and
+     drag-to-scroll both work by setting the SAME transform:translateX
+     on the track via JS (see nx2ConveyorTick/nx2ConveyorDrag*) rather
+     than a CSS @keyframes animation — a JS-driven position is what lets
+     a drag hand control back to auto-slide from wherever it was
+     released, with no jump or fighting between the two. overflow:hidden
+     on the viewport is what actually crops the belt to one visible
+     strip; the track itself is much wider than the screen and just
+     slides underneath it.
+     
+     The track holds the module buttons TWICE in sequence — once is the
+     real, original set (same ids/data-module attributes every other
+     part of this app already depends on — the Guided Tour picker
+     literally does document.getElementById('welcomeWan').click() to
+     navigate, so those ids can't be removed), once is a duplicate
+     using data-module="wan"/"haz"/"audit" instead of ids (openModule()
+     already handles those three values correctly, confirmed by reading
+     it, not assumed) so IDs never appear twice in the document while
+     the belt still looks genuinely continuous once it's scrolled halfway
+     through — the second copy takes over seamlessly right as the first
+     one scrolls out of view. */
+  .nx2-conveyor-viewport{overflow:hidden;border-top:1px solid rgba(var(--nx2-overlay-rgb),.07);
+    padding:34px 0;flex:none;position:relative}
+  .nx2-conveyor-track{display:flex;align-items:center;gap:20px;width:max-content;
+    will-change:transform;cursor:grab}
+  .nx2-conveyor-track.nx2-dragging{cursor:grabbing}
+  .nx2-conveyor-item{display:flex;align-items:center;gap:18px;padding:28px 40px;border-radius:22px;
+    background:rgba(var(--nx2-overlay-rgb),.16);border:1.5px solid rgba(var(--nx2-overlay-rgb),.16);
+    box-shadow:0 10px 26px -10px rgba(0,0,0,.4);
+    flex:none;user-select:none;transition:background .15s,border-color .15s,transform .15s}
+  .nx2-conveyor-item:hover{background:rgba(var(--nx2-overlay-rgb),.26);border-color:rgba(var(--nx2-overlay-rgb),.3);
+    transform:translateY(-2px)}
+  .nx2-conveyor-item.nx2-on{background:var(--r-g,linear-gradient(135deg,var(--nx2-cy),var(--nx2-bl)));
+    border-color:transparent}
+  .nx2-conveyor-icon{font:700 38px var(--nx2-mono);color:var(--nx2-ink);flex:none;width:46px;text-align:center}
+  .nx2-conveyor-item.nx2-on .nx2-conveyor-icon{color:#0d1a3d}
+  .nx2-conveyor-label{font:700 24px var(--nx2-sans);color:var(--nx2-ink);white-space:nowrap}
+  .nx2-conveyor-item.nx2-on .nx2-conveyor-label{color:#0d1a3d}
+  .nx2-conveyor-badge{width:26px;height:26px;border-radius:50%;background:var(--nx2-pk);color:#fff;
+    font:800 13px var(--nx2-sans);display:flex;align-items:center;justify-content:center;flex:none}
 
   .nx2-main{padding:26px 32px 40px}
   .nx2-head{display:flex;align-items:center;gap:14px;margin-bottom:24px}
@@ -24277,8 +24311,25 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      rather than three equal columns. */
   .nx2-bento{display:grid;grid-template-columns:1fr;gap:16px}
 
+  /* Top row: trend chart + a real activity feed beside it — this is
+     the "stuff in the middle alongside the analytics" that was missing
+     once the trend chart became a lone full-width hero. Both panels
+     pull from the same underlying events log (see nx2RefreshModuleActivity),
+     so the feed isn't decorative — it's the same real data the radar
+     chart below uses, just shown as a readable log instead of a shape. */
+  .nx2-top-row{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}
   .nx2-trend-hero{}
   .nx2-chart-box-trend{position:relative;height:230px}
+
+  .nx2-feed{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow-y:auto}
+  .nx2-feed-empty{color:var(--nx2-faint);font:500 12px var(--nx2-sans);padding:20px 4px;text-align:center}
+  .nx2-feed-row{display:flex;align-items:baseline;gap:9px;padding:8px 2px;
+    border-bottom:1px solid rgba(var(--nx2-overlay-rgb),.06)}
+  .nx2-feed-row:last-child{border-bottom:none}
+  .nx2-feed-dot{width:6px;height:6px;border-radius:50%;flex:none;margin-top:4px}
+  .nx2-feed-text{flex:1;font:500 12px var(--nx2-sans);color:var(--nx2-dim);line-height:1.4}
+  .nx2-feed-text b{color:var(--nx2-ink);font-weight:700}
+  .nx2-feed-time{font:600 10px var(--nx2-mono);color:var(--nx2-faint);flex:none;white-space:nowrap}
 
   .nx2-stat-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
   .nx2-stat{border-radius:18px;padding:18px 20px;box-shadow:0 14px 34px -12px var(--sh,rgba(0,0,0,.4))}
@@ -28590,9 +28641,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
         if(e.type === 'row-seen'){
           mctCounts.seen++;
           document.getElementById('mctStatusLine').textContent = mctCounts.seen + ' scanned…';
-          if((e.qty||0) < 1){
-            mctLine('  <span class="mct-dim">skip</span> <span class="mct-sku">'+mctEsc(e.sku)+'</span> <span class="mct-dim">— 0 in stock</span>');
-          }
+          // No line printed here anymore — every row now also produces a
+          // row-done event right after (the qty filter that used to make
+          // row-seen the ONLY event some rows ever got is gone), so
+          // printing here too would show every row twice.
         } else if(e.type === 'row-done'){
           mctCounts.kept++;
           var hasErrors = e.errors && e.errors.length;
@@ -28612,9 +28664,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       if(evt.type === 'complete'){
         document.getElementById('mctStatusLine').textContent = 'done';
         document.getElementById('mctLiveDot').classList.remove('mct-live');
-        mctLine('$ scan complete — '+mctCounts.kept+' listings with stock, '+mctCounts.errored+' flagged', 'mct-dim');
+        mctLine('$ scan complete — '+mctCounts.kept+' listings reviewed, '+mctCounts.errored+' flagged', 'mct-dim');
         var foot = document.getElementById('mctFoot');
-        foot.innerHTML = '<span><b>'+mctCounts.seen+'</b>scanned</span><span><b>'+mctCounts.kept+'</b>qty ≥ 1</span><span><b>'+mctCounts.errored+'</b>flagged</span>';
+        foot.innerHTML = '<span><b>'+mctCounts.seen+'</b>scanned</span><span><b>'+mctCounts.errored+'</b>flagged</span>';
         foot.classList.add('show');
         mctTeardown();
         return;
@@ -30846,6 +30898,114 @@ document.querySelectorAll('.nx2-theme-preset').forEach(function(sw){
 })();
 
 
+// ── Conveyor belt module nav (added 2026-08-26) ──────────────────────
+// Auto-slide and drag both drive the SAME position variable
+// (nx2ConveyorX) via requestAnimationFrame, rather than a CSS
+// @keyframes animation — that's what lets a drag hand control back to
+// auto-slide from wherever it was released, with no jump or fighting
+// between the two systems. The belt is genuinely twice as wide as its
+// content (two copies of the module list back to back — see the HTML
+// comment on why the second copy uses data-module="wan"/"haz"/"audit"
+// instead of duplicate ids), and the position wraps at exactly the
+// halfway point, which is what makes the loop read as continuous
+// instead of snapping back to start.
+(function(){
+  var track = document.getElementById('nexusGridView0');
+  if(!track) return;
+  var nx2ConveyorX = 0;
+  var nx2ConveyorHalfWidth = 0;
+  var nx2ConveyorDragging = false;
+  var nx2ConveyorDragStartX = 0;
+  var nx2ConveyorDragStartOffset = 0;
+  var nx2ConveyorSpeed = 0.35; // px/frame — "slowly slide", not a marquee sprint
+
+  function nx2ConveyorMeasure(){
+    // Half the full (double-copy) track width is one real lap — wrap
+    // here so copy B seamlessly takes over as copy A scrolls out.
+    nx2ConveyorHalfWidth = track.scrollWidth / 2;
+  }
+
+  function nx2ConveyorApply(){
+    track.style.transform = 'translateX(' + (-nx2ConveyorX) + 'px)';
+  }
+
+  function nx2ConveyorTick(){
+    if(!nx2ConveyorDragging){
+      nx2ConveyorX += nx2ConveyorSpeed;
+      if(nx2ConveyorHalfWidth > 0 && nx2ConveyorX >= nx2ConveyorHalfWidth){
+        nx2ConveyorX -= nx2ConveyorHalfWidth; // wrap, not reset to 0 — keeps relative drag position meaningful
+      }
+      nx2ConveyorApply();
+    }
+    requestAnimationFrame(nx2ConveyorTick);
+  }
+
+  function nx2ConveyorPointerDown(e){
+    nx2ConveyorDragging = true;
+    track.classList.add('nx2-dragging');
+    nx2ConveyorDragStartX = (e.touches ? e.touches[0].clientX : e.clientX);
+    nx2ConveyorDragStartOffset = nx2ConveyorX;
+    // Real drags shouldn't also fire a click on whatever was under the
+    // pointer — that check lives in nx2ConveyorClick below, keyed off
+    // how far the pointer actually moved during this gesture.
+  }
+  function nx2ConveyorPointerMove(e){
+    if(!nx2ConveyorDragging) return;
+    var x = (e.touches ? e.touches[0].clientX : e.clientX);
+    var delta = x - nx2ConveyorDragStartX;
+    var next = nx2ConveyorDragStartOffset - delta; // drag right (positive delta) moves the belt backward
+    // Wrap during drag too, both directions — otherwise dragging far
+    // enough in either direction runs the position negative or past
+    // the lap length and the belt visually stalls at an edge.
+    if(nx2ConveyorHalfWidth > 0){
+      next = ((next % nx2ConveyorHalfWidth) + nx2ConveyorHalfWidth) % nx2ConveyorHalfWidth;
+    }
+    nx2ConveyorX = next;
+    nx2ConveyorApply();
+  }
+  function nx2ConveyorPointerUp(){
+    nx2ConveyorDragging = false;
+    track.classList.remove('nx2-dragging');
+    // No jump back to an auto-slide "track position" — nx2ConveyorTick
+    // just keeps incrementing from wherever nx2ConveyorX already is.
+  }
+  // Distinguish an actual drag from a click — a genuine module click
+  // shouldn't get eaten just because the belt is also draggable.
+  var nx2ConveyorMoved = false;
+  track.addEventListener('pointerdown', function(e){
+    nx2ConveyorMoved = false;
+    nx2ConveyorPointerDown(e);
+  });
+  window.addEventListener('pointermove', function(e){
+    if(nx2ConveyorDragging){
+      var x = (e.touches ? e.touches[0].clientX : e.clientX);
+      if(Math.abs(x - nx2ConveyorDragStartX) > 4) nx2ConveyorMoved = true;
+      nx2ConveyorPointerMove(e);
+    }
+  });
+  window.addEventListener('pointerup', function(){
+    nx2ConveyorPointerUp();
+    // NOT resetting nx2ConveyorMoved here — native browser event order
+    // is pointerdown -> pointermove -> pointerup -> click, so resetting
+    // on pointerup happens BEFORE the click listener below ever gets to
+    // check it, which defeats the suppression entirely (found this by
+    // testing the actual sequence, not by reasoning about it in the
+    // abstract). Reset stays on pointerdown only — every real click is
+    // preceded by its own pointerdown, so that's the correct, timing-
+    // safe place for it.
+  });
+  track.addEventListener('click', function(e){
+    if(nx2ConveyorMoved){ e.preventDefault(); e.stopPropagation(); }
+  }, true); // capture phase — has to run before the data-module delegated handler sees this click
+
+  // Re-measure after images/fonts settle and on resize — scrollWidth at
+  // the very first paint can be wrong if anything is still reflowing.
+  window.addEventListener('resize', nx2ConveyorMeasure);
+  setTimeout(nx2ConveyorMeasure, 50);
+  nx2ConveyorMeasure();
+  requestAnimationFrame(nx2ConveyorTick);
+})();
+
 // Chart.js loads from a CDN (see the <script src> tag in <head>) — the
 // one external dependency this whole file has. If it fails for any
 // reason (network blip, ad blocker, a firewall, file:// restrictions in
@@ -30867,11 +31027,11 @@ if(typeof Chart === 'undefined'){
 
 Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
 
-new Chart(document.getElementById('radarActivity'), {
+var nx2RadarChart = new Chart(document.getElementById('radarActivity'), {
   type: 'radar',
   data: {
     labels: ['Wan','Haz','Pricing','Shipping','Leads'],
-    datasets: [{ data: [82,45,60,38,70], backgroundColor:'rgba(160,108,255,.25)',
+    datasets: [{ data: [0,0,0,0,0], backgroundColor:'rgba(160,108,255,.25)',
       borderColor:'#a06cff', pointBackgroundColor:'#a06cff', borderWidth:2 }]
   },
   options: { maintainAspectRatio:false,
@@ -31020,6 +31180,180 @@ function nx2UpdateBatchDonut(ready, awaiting, pushed){
   }
 }
 
+// ── Real "Activity by module" + activity feed (added 2026-08-26) ────
+// Every value here comes from data that already exists elsewhere in
+// this app — nothing new is being tracked. The trick was finding it:
+// nexusEvent() already writes a real, general-purpose log to IndexedDB
+// (database 'your_gadget_nexus') for listing health scans, shipping
+// scans, price snapshots, and more. That closure isn't reachable from
+// this script tag, but IndexedDB itself is a shared browser API — the
+// same database can be opened independently here, by name, regardless
+// of which script originally created it. Same reasoning for leads
+// (localStorage 'syg_nexus_leads') and Haz board cards (sessionStorage
+// 'hazBoard') — read the storage layer directly instead of reaching
+// into another script's closured variables.
+//
+// Worth being honest about one thing: these five numbers aren't all
+// measuring the exact same kind of "activity." Wan and Haz are current
+// backlog size (how much is sitting in the queue/board right now).
+// Pricing, Shipping, and Leads are today's actual event count. Both are
+// legitimate readings of "how much is going on in this module," just
+// not identical in kind — flagging that here rather than pretending
+// it's a perfectly uniform metric.
+var NX2_DB_NAME = 'your_gadget_nexus';
+var NX2_DB_VERSION = 3;
+function nx2OpenSharedDb(){
+  return new Promise(function(resolve, reject){
+    var req = indexedDB.open(NX2_DB_NAME, NX2_DB_VERSION);
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ reject(req.error); };
+    // No onupgradeneeded here on purpose — this script never creates
+    // the database, only reads from it. If it doesn't exist yet (a
+    // genuinely fresh install with no activity logged at all), the
+    // catch() blocks below handle that as "no data yet," not an error.
+  });
+}
+function nx2QueryEventsByType(db, type){
+  return new Promise(function(resolve){
+    try{
+      var tx = db.transaction('events', 'readonly');
+      var idx = tx.objectStore('events').index('type');
+      var req = idx.getAll(type);
+      req.onsuccess = function(){ resolve(req.result || []); };
+      req.onerror = function(){ resolve([]); };
+    }catch(err){ resolve([]); }
+  });
+}
+function nx2QueryAllEvents(db){
+  return new Promise(function(resolve){
+    try{
+      var tx = db.transaction('events', 'readonly');
+      var req = tx.objectStore('events').getAll();
+      req.onsuccess = function(){ resolve(req.result || []); };
+      req.onerror = function(){ resolve([]); };
+    }catch(err){ resolve([]); }
+  });
+}
+function nx2IsToday(isoTimestamp){
+  if(!isoTimestamp) return false;
+  var today = new Date().toISOString().slice(0,10);
+  return isoTimestamp.slice(0,10) === today;
+}
+
+function nx2RelativeTime(isoTimestamp){
+  var diffMs = Date.now() - new Date(isoTimestamp).getTime();
+  var mins = Math.floor(diffMs/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return mins+'m ago';
+  var hrs = Math.floor(mins/60);
+  if(hrs < 24) return hrs+'h ago';
+  return Math.floor(hrs/24)+'d ago';
+}
+
+// Human-readable line + color-coded dot per event type. Deliberately
+// not every type gets a bespoke label — anything not explicitly listed
+// still renders, just with its raw type name, rather than being hidden.
+var NX2_EVENT_LABELS = {
+  listing_health_scanned: function(e){ return 'Listing health scanned' + (e.title?': <b>'+nx2FeedEsc(e.title)+'</b>':''); },
+  status_changed: function(e){ return 'Status changed' + (e.title?' — <b>'+nx2FeedEsc(e.title)+'</b>':'') + (e.data&&e.data.to?' → '+nx2FeedEsc(e.data.to):''); },
+  defect_added: function(e){ return 'Defect flagged' + (e.data&&e.data.defect?': <b>'+nx2FeedEsc(e.data.defect)+'</b>':''); },
+  shipping_item_scanned: function(e){ return 'Shipping scan' + (e.sku?' — <b>'+nx2FeedEsc(e.sku)+'</b>':''); },
+  shipping_prefill_requested: function(e){ return 'Shipping label prefilled' + (e.sku?' — <b>'+nx2FeedEsc(e.sku)+'</b>':''); },
+  price_snapshot: function(e){ return 'Comp pull' + (e.data&&e.data.query?': <b>'+nx2FeedEsc(e.data.query)+'</b>':''); },
+  price_trained: function(e){ return 'Price training saved'; },
+  label_pdf_analyzed: function(e){ return 'Label PDF analyzed'; },
+  sorted_label_pdf_created: function(e){ return 'Sorted label PDF created'; }
+};
+function nx2FeedEsc(s){
+  var d = document.createElement('div'); d.textContent = String(s==null?'':s); return d.innerHTML;
+}
+function nx2EventLine(e){
+  var fn = NX2_EVENT_LABELS[e.type];
+  return fn ? fn(e) : nx2FeedEsc(e.type||'Activity');
+}
+var NX2_EVENT_COLORS = {
+  listing_health_scanned: 'var(--nx2-cy)', status_changed: 'var(--nx2-am)',
+  defect_added: '#ff5f6d', shipping_item_scanned: 'var(--nx2-bl)',
+  shipping_prefill_requested: 'var(--nx2-bl)', price_snapshot: '#34d399',
+  price_trained: '#34d399', label_pdf_analyzed: 'var(--nx2-vi)', sorted_label_pdf_created: 'var(--nx2-vi)'
+};
+
+async function nx2RefreshModuleActivity(){
+  // Wan and Haz: current backlog, read directly, no DB needed.
+  var wanCount = (dpEntries||[]).length + (uniEntriesData||[]).length + (bhaiEntriesData||[]).length;
+  var hazCount = 0;
+  try{
+    var hazRaw = JSON.parse(sessionStorage.getItem('hazBoard') || '[]');
+    hazCount = Array.isArray(hazRaw) ? hazRaw.length : 0;
+  }catch(err){}
+
+  var leadsCount = 0;
+  try{
+    var leadsRaw = JSON.parse(localStorage.getItem('syg_nexus_leads') || '[]');
+    leadsCount = (leadsRaw||[]).filter(function(l){ return l && l.status === 'Auto Replied'; }).length;
+  }catch(err){}
+
+  // Update the two stat tiles that were sitting on "not wired yet" —
+  // same real leads/shipping data the radar chart below also uses.
+  var leadsValEl = document.querySelector('.nx2-stat-b .nx2-stat-val');
+  var leadsSubEl = document.querySelector('.nx2-stat-b .nx2-stat-sub');
+  if(leadsValEl){ leadsValEl.textContent = leadsCount; if(leadsSubEl) leadsSubEl.textContent = 'Auto Replied, unsorted'; }
+
+  var pricingCount = 0, shippingCount = 0;
+  try{
+    var db = await nx2OpenSharedDb();
+    var priceEvents = await nx2QueryEventsByType(db, 'price_snapshot');
+    var shipEvents = await nx2QueryEventsByType(db, 'shipping_item_scanned');
+    pricingCount = priceEvents.filter(function(e){ return nx2IsToday(e.timestamp); }).length;
+    shippingCount = shipEvents.filter(function(e){ return nx2IsToday(e.timestamp); }).length;
+
+    var shipValEl = document.querySelector('.nx2-stat-c .nx2-stat-val');
+    var shipSubEl = document.querySelector('.nx2-stat-c .nx2-stat-sub');
+    if(shipValEl){ shipValEl.textContent = shippingCount; if(shipSubEl) shipSubEl.textContent = 'scans today'; }
+
+    // Recent activity feed — last 8 events across every type, newest
+    // first. Same database, so this and the radar chart can never
+    // disagree about what actually happened.
+    var allEvents = await nx2QueryAllEvents(db);
+    allEvents.sort(function(a,b){ return (b.timestamp||'').localeCompare(a.timestamp||''); });
+    var feedEl = document.getElementById('nx2Feed');
+    if(feedEl){
+      var recent = allEvents.slice(0, 8);
+      if(!recent.length){
+        feedEl.innerHTML = '<div class="nx2-feed-empty">Nothing logged yet today</div>';
+      } else {
+        feedEl.innerHTML = recent.map(function(e){
+          var color = NX2_EVENT_COLORS[e.type] || 'var(--nx2-faint)';
+          return '<div class="nx2-feed-row"><span class="nx2-feed-dot" style="background:'+color+'"></span>'
+            + '<span class="nx2-feed-text">'+nx2EventLine(e)+'</span>'
+            + '<span class="nx2-feed-time">'+nx2RelativeTime(e.timestamp)+'</span></div>';
+        }).join('');
+      }
+    }
+  }catch(err){
+    // No IndexedDB data yet, or it failed to open — pricing/shipping
+    // event counts just stay 0 rather than blocking the rest of this
+    // function. Wan/Haz/Leads above already updated regardless.
+  }
+
+  // Radar chart — each axis normalized against a reasonable per-category
+  // cap so one high-volume category doesn't visually flatten the rest.
+  // These caps are a judgment call, not measured typical values — the
+  // shape is meant to read as "relatively busy/quiet," not a precise
+  // percentage of some proven target.
+  if(typeof nx2RadarChart !== 'undefined' && nx2RadarChart){
+    var norm = function(val, cap){ return Math.min(100, Math.round((val/cap)*100)); };
+    nx2RadarChart.data.datasets[0].data = [
+      norm(wanCount, 30),
+      norm(hazCount, 8),
+      norm(pricingCount, 15),
+      norm(shippingCount, 12),
+      norm(leadsCount, 8)
+    ];
+    try{ nx2RadarChart.update(); }catch(err){ /* same Chart.js-can-fail reasoning as the gauge/donut */ }
+  }
+}
+
 // One explicit refresh now that everything above is defined. Earlier
 // calls to updateGoalCounter() elsewhere in the app (on initial render,
 // before this — the very last script tag — has even run) would have
@@ -31028,6 +31362,16 @@ function nx2UpdateBatchDonut(ready, awaiting, pushed){
 // stale zeros until the next entry gets added or removed, rather than
 // showing what's actually true right now.
 if(typeof updateGoalCounter==='function') updateGoalCounter();
+
+// Module activity (radar + feed + leads/shipping tiles) runs on its own
+// schedule, separate from updateGoalCounter's entry-change triggers —
+// its data lives in IndexedDB/localStorage/sessionStorage, which this
+// page has no direct hook into when it changes (a scan happening in the
+// Shipping panel doesn't fire any event this script listens for). A
+// short interval is the honest way to stay reasonably current without
+// needing a hook into every module that writes to these stores.
+nx2RefreshModuleActivity();
+setInterval(nx2RefreshModuleActivity, 20000);
 
 } // end typeof Chart guard
 
