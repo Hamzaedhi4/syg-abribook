@@ -31589,6 +31589,7 @@ setInterval(nx2RefreshModuleActivity, 20000);
 #sygccBackdrop .sygcc-lk.mc{color:#7A3FA8;background:none;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace}
 #sygccBackdrop .sygcc-mcres{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1F7A4C;max-width:190px;white-space:normal}
 #sygccBackdrop .sygcc-mcres.bad{color:#B3241C}
+#sygccBackdrop .sygcc-mcres.warn{color:#B7761A}
 #sygccBackdrop .sygcc-mcres i{display:block;font-style:normal;font-weight:400;text-transform:none;letter-spacing:0;opacity:.8;margin-top:3px;line-height:1.35}
 #sygccBackdrop .sygcc-opts input[type=text]{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;padding:5px 6px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:0}
 
@@ -31612,7 +31613,7 @@ var SHOP_ADMIN = "https://xpp09p-dz.myshopify.com/admin/products/";
 var EBAY_ITEM  = "https://www.ebay.com/itm/";
 
 var built=false, RESULTS=[], FILTER='ALL', TYPE='ALL', LAST=null;
-var SEL={}, MC_CAP=10;
+var SEL={}, MC_CAP=10, MCRES={};   /* sku -> last MC result, for export */
 function selCount(){ var n=0; for(var k in SEL) if(SEL[k]) n++; return n }
 var FLAG={
   NOTLIVE:{l:'Not listed',c:'gap',fix:'Needs listing — check category + specifics'},
@@ -31851,12 +31852,23 @@ function mcAsk(sku,cell){
       cell.innerHTML='<span class="sygcc-mcres bad">'+esc(d.error||'not found')+'</span>';
       return;
     }
+    MCRES[sku]=d;
     var st=d.status||'Unknown';
-    var errs=(d.errors||[]);
-    var bad=errs.length||!/^active$/i.test(st);
-    cell.innerHTML='<span class="sygcc-mcres'+(bad?' bad':'')+'">'+esc(st)+
-      (d.offerStatus&&d.offerStatus!==st?' \u00b7 '+esc(d.offerStatus):'')+
-      (errs.length?'<i>'+errs.map(esc).join('<br>')+'</i>':'')+'</span>';
+    var errs=d.errors||[], warns=d.warnings||[];
+    var bad=errs.length>0;
+    var warn=!bad && (warns.length>0 || !/^active$/i.test(st));
+    var html='<span class="sygcc-mcres'+(bad?' bad':(warn?' warn':''))+'">'+esc(st);
+    if(d.offerStatus && d.offerStatus.toLowerCase()!==st.toLowerCase())
+      html+=' \u00b7 '+esc(d.offerStatus);
+    if(errs.length)  html+='<i>'+errs.map(function(x){return '\u2716 '+esc(x)}).join('<br>')+'</i>';
+    if(warns.length) html+='<i>'+warns.map(function(x){return '\u26a0 '+esc(x)}).join('<br>')+'</i>';
+    /* Popover opened but used markup we do not recognise — show its own
+       words rather than silently reporting nothing. */
+    if(!errs.length && !warns.length && d.raw)
+      html+='<i>'+esc(d.raw.slice(0,240))+'</i>';
+    if(!errs.length && !warns.length && !d.raw && d.dropdownOpened && /^active$/i.test(st))
+      html+='<i>no errors reported</i>';
+    cell.innerHTML=html+'</span>';
   }
   window.addEventListener('message',reply);
   /* Existing bridge contract (content-nexus-bridge.js ROUTES.MC_CHECK) —
@@ -31952,10 +31964,12 @@ function drawTable(){
 function exportCsv(){
   var list=visible();
   function q(v){return '"'+String(v===undefined||v===null?'':v).replace(/"/g,'""')+'"'}
-  var csv=['SKU,Title,Type,Flag,ShopifyQty,ShopifyPrice,eBayQty,eBayPrice,NextStep,ShopifyLink,eBayLink'].concat(
+  var csv=['SKU,Title,Type,Flag,ShopifyQty,ShopifyPrice,eBayQty,eBayPrice,NextStep,MCStatus,MCErrors,ShopifyLink,eBayLink'].concat(
     list.map(function(r){
       return [r.s?r.s.sku:r.e.sku,(r.s?r.s.title:r.e.title),(r.s&&r.s.type)||'',FLAG[r.f].l,
         r.s?r.s.qty:'',r.s?r.s.price:'',r.e?r.e.qty:'',r.e?r.e.price:'',FLAG[r.f].fix,
+        (MCRES[r.s?r.s.sku:(r.e?r.e.sku:'')]||{}).status||'',
+        (((MCRES[r.s?r.s.sku:(r.e?r.e.sku:'')]||{}).errors)||[]).join(' | '),
         (r.s&&r.s.pid)?SHOP_ADMIN+r.s.pid:'', (r.e&&r.e.id)?EBAY_ITEM+r.e.id:''].map(q).join(',');
     })).join('\n');
   var a=document.createElement('a');
