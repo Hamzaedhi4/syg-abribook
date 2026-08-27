@@ -22783,7 +22783,7 @@ window.pmStartPolling=function(){
     const items=getDesktopEntries(),store=getStore();let changed=false;
     for(const item of items){if(!(store[item.sku]||[]).length){const urls=await fetchCloudinaryURLs(item.sku);if(urls.length){store[item.sku]=urls;changed=true;}}}
     if(changed){saveStore(store);pmRenderCards();}pmUpdateStatus();
-  },14000);
+  },30000);
 };
 window.pmRefresh=async function(){
   const items=getDesktopEntries(),store=getStore();
@@ -31587,7 +31587,7 @@ setInterval(nx2RefreshModuleActivity, 20000);
 #sygccBackdrop .sygcc-lk.none{border:0;opacity:.35}
 #sygccBackdrop .sygcc-pick,#sygccBackdrop #sygccAll{width:16px;height:16px;accent-color:var(--ink);cursor:pointer}
 #sygccBackdrop .sygcc-lk.mc{color:#7A3FA8;background:none;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace}
-#sygccBackdrop .sygcc-mcres{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1F7A4C;max-width:190px;white-space:normal}
+#sygccBackdrop .sygcc-mcres{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1F7A4C;max-width:230px;white-space:normal}
 #sygccBackdrop .sygcc-mcres.bad{color:#B3241C}
 #sygccBackdrop .sygcc-mcres.warn{color:#B7761A}
 #sygccBackdrop .sygcc-mcres i{display:block;font-style:normal;font-weight:400;text-transform:none;letter-spacing:0;opacity:.8;margin-top:3px;line-height:1.35}
@@ -31842,7 +31842,7 @@ function mcUrl(){ try{ return localStorage.getItem(MC_KEY)||'' }catch(e){ return
    copied and MC is opened so the lister pastes into its own search. */
 var BATCH=false;
 function mcAsk(sku,cell){
-  cell.innerHTML='<span class="sygcc-lk none">checking\u2026</span>';
+  cell.innerHTML='<span class="sygcc-lk none">checking\u2026 (opens MC if needed)</span>';
   var rid='mc'+Date.now()+Math.random().toString(36).slice(2,7), done=false;
   function reply(e){
     var d=e.data;
@@ -31854,20 +31854,23 @@ function mcAsk(sku,cell){
     }
     MCRES[sku]=d;
     var st=d.status||'Unknown';
-    var errs=d.errors||[], warns=d.warnings||[];
-    var bad=errs.length>0;
-    var warn=!bad && (warns.length>0 || !/^active$/i.test(st));
+    var errs=d.errors||[], lerrs=d.listingErrors||[];
+    /* The row badge and the offer status disagree routinely — a listing
+       can be Listed on eBay while still carrying upload errors. Show both
+       rather than collapsing them into one word. */
+    /* The row badge alone can say "Errored" while wearing a green Polaris
+       class, so colour off the badge's own error bubble and the popover's
+       root class — never the tone class MC renders. */
+    var bad=(d.hasError===true)||(d.rowErrored===true)||errs.length>0||lerrs.length>0;
+    var warn=!bad && (d.statusBubble==='warning' || !/^(active|listed)$/i.test(st));
     var html='<span class="sygcc-mcres'+(bad?' bad':(warn?' warn':''))+'">'+esc(st);
-    if(d.offerStatus && d.offerStatus.toLowerCase()!==st.toLowerCase())
-      html+=' \u00b7 '+esc(d.offerStatus);
+    if(d.statusBubble==='error' && !/error/i.test(st)) html+=' \u2716';
+    if(d.offerStatus) html+=' \u00b7 offer: '+esc(d.offerStatus);
+    if(d.listingStatus) html+=' \u00b7 listing: '+esc(d.listingStatus);
     if(errs.length)  html+='<i>'+errs.map(function(x){return '\u2716 '+esc(x)}).join('<br>')+'</i>';
-    if(warns.length) html+='<i>'+warns.map(function(x){return '\u26a0 '+esc(x)}).join('<br>')+'</i>';
-    /* Popover opened but used markup we do not recognise — show its own
-       words rather than silently reporting nothing. */
-    if(!errs.length && !warns.length && d.raw)
-      html+='<i>'+esc(d.raw.slice(0,240))+'</i>';
-    if(!errs.length && !warns.length && !d.raw && d.dropdownOpened && /^active$/i.test(st))
-      html+='<i>no errors reported</i>';
+    if(lerrs.length) html+='<i>'+lerrs.map(function(x){return '\u2716 '+esc(x)}).join('<br>')+'</i>';
+    if(!errs.length && !lerrs.length && d.raw) html+='<i>'+esc(d.raw.slice(0,240))+'</i>';
+    if(!errs.length && !lerrs.length && !d.raw && d.dropdownOpened) html+='<i>no errors reported</i>';
     cell.innerHTML=html+'</span>';
   }
   window.addEventListener('message',reply);
@@ -31882,7 +31885,7 @@ function mcAsk(sku,cell){
     var u=mcUrl();
     cell.innerHTML='<span class="sygcc-lk none" title="No extension or no MC tab open">SKU copied</span>';
     if(u && !BATCH) window.open(u,'_blank','noopener');
-  },14000);
+  },30000);
 }
 function syncMcBtn(){
   var btn=$('sygccMcRun'); if(!btn) return;
@@ -31897,13 +31900,13 @@ function mcRunSelected(){
   skus=skus.slice(0,MC_CAP);
   if(!skus.length) return;
   var btn=$('sygccMcRun'); btn.disabled=true; BATCH=true;
-  setTimeout(function(){ BATCH=false },skus.length*4000+13000);
+  setTimeout(function(){ BATCH=false },skus.length*6000+30000);
   skus.forEach(function(sku,i){
     setTimeout(function(){
       var el=$('sygccOut').querySelector('[data-mc="'+sku.replace(/"/g,'\\"')+'"]');
       if(el) mcAsk(sku, el.parentNode);
-      if(i===skus.length-1) setTimeout(syncMcBtn,13000);
-    }, i*4000);   /* each one searches MC, waits for the grid, then reads the popover */
+      if(i===skus.length-1) setTimeout(syncMcBtn,30000);
+    }, i*6000);   /* each one searches MC, waits for the grid, then reads the popover */
   });
 }
 function links(r){
@@ -31964,12 +31967,15 @@ function drawTable(){
 function exportCsv(){
   var list=visible();
   function q(v){return '"'+String(v===undefined||v===null?'':v).replace(/"/g,'""')+'"'}
-  var csv=['SKU,Title,Type,Flag,ShopifyQty,ShopifyPrice,eBayQty,eBayPrice,NextStep,MCStatus,MCErrors,ShopifyLink,eBayLink'].concat(
+  var csv=['SKU,Title,Type,Flag,ShopifyQty,ShopifyPrice,eBayQty,eBayPrice,NextStep,MCStatus,MCErrored,MCOfferStatus,MCErrors,ShopifyLink,eBayLink'].concat(
     list.map(function(r){
       return [r.s?r.s.sku:r.e.sku,(r.s?r.s.title:r.e.title),(r.s&&r.s.type)||'',FLAG[r.f].l,
         r.s?r.s.qty:'',r.s?r.s.price:'',r.e?r.e.qty:'',r.e?r.e.price:'',FLAG[r.f].fix,
         (MCRES[r.s?r.s.sku:(r.e?r.e.sku:'')]||{}).status||'',
-        (((MCRES[r.s?r.s.sku:(r.e?r.e.sku:'')]||{}).errors)||[]).join(' | '),
+        ((MCRES[r.s?r.s.sku:(r.e?r.e.sku:'')]||{}).rowErrored?'YES':''),
+        (MCRES[r.s?r.s.sku:(r.e?r.e.sku:'')]||{}).offerStatus||'',
+        ((((MCRES[r.s?r.s.sku:(r.e?r.e.sku:'')]||{}).errors)||[])
+          .concat(((MCRES[r.s?r.s.sku:(r.e?r.e.sku:'')]||{}).listingErrors)||[])).join(' | '),
         (r.s&&r.s.pid)?SHOP_ADMIN+r.s.pid:'', (r.e&&r.e.id)?EBAY_ITEM+r.e.id:''].map(q).join(',');
     })).join('\n');
   var a=document.createElement('a');
