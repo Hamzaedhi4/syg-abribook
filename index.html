@@ -5679,75 +5679,6 @@
     <div class="dp-label" style="margin-top:4px">Preview</div>
     <div class="dp-preview entry-main-preview">—</div>
     <div class="entry-flags"></div>
-  </div><div class="dp-entry" id="dp-e-1">
-    <div class="dp-entry-head">
-      <span class="dp-drag-handle" title="Drag to reorder" data-dpid="1">⠿</span>
-      <span class="dp-sku" id="dp-sku-1">#1</span>
-      <span class="dp-resolved"></span>
-      <button class="dp-rmv" data-dpid="1" title="Remove entry">×</button>
-    </div>
-    <div class="dp-row">
-      <div>
-        <div class="dp-label">Code</div>
-        <input class="dp-input" placeholder="e.g. S2990P" data-dpid="1" data-dpfield="code" value="" autocomplete="off" spellcheck="false">
-      </div>
-      <div>
-        <div class="dp-label dp-result-label">Health %</div>
-        <input class="dp-input" placeholder="e.g. 96%" data-dpid="1" data-dpfield="result" value="" autocomplete="off">
-      </div>
-    </div>
-    
-    <div class="dp-row">
-      <div>
-        <div class="dp-label">Serial #</div>
-        <input class="dp-input" placeholder="S/N" data-dpid="1" data-dpfield="sn" value="" autocomplete="off" spellcheck="false">
-      </div>
-      <div>
-        <div class="dp-label">Notes</div>
-        <input class="dp-input" placeholder="optional" data-dpid="1" data-dpfield="notes" value="" autocomplete="off">
-      </div>
-    </div>
-    <details class="sku-assign-box">
-    <summary>🏷️ SKU Assignment <span class="sku-assign-empty">not assigned yet</span></summary>
-    <div class="dp-row" style="margin-top:8px;gap:6px;">
-      <button type="button" class="dp-add-entry" data-dpid="1" data-dpskumode="new" style="margin:0;padding:6px;font-size:11px;border-color:var(--accent);color:var(--accent-ink);background:var(--accent-tint);">🆕 New</button>
-      <button type="button" class="dp-add-entry" data-dpid="1" data-dpskumode="existing" style="margin:0;padding:6px;font-size:11px;">📋 Existing</button>
-    </div>
-    
-    <div class="dp-row" style="margin-top:8px">
-      <div style="grid-column:1/-1">
-        <div class="dp-label">PO Number <span style="opacity:.6;font-weight:400">(optional — swap in anytime)</span></div>
-        <input class="dp-input" placeholder="leave blank to use today&#39;s RTL code" data-dpid="1" data-dpfield="poNumber" value="" autocomplete="off" spellcheck="false">
-      </div>
-    </div>
-    <div class="dp-row" style="margin-top:7px">
-      <div>
-        <div class="dp-label">Unit Number <span style="opacity:.6;font-weight:400">(auto)</span></div>
-        <input class="dp-input" data-unit-display="1" value="" disabled="" style="opacity:.6;cursor:not-allowed">
-      </div>
-      <div>
-        <div class="dp-label">Inventory Location <span style="opacity:.6;font-weight:400">(shelf, bin, pallet — changeable)</span></div>
-        <input class="dp-input" placeholder="e.g. A12" data-dpid="1" data-dpfield="invLocation" value="" autocomplete="off" spellcheck="false">
-      </div>
-    </div>
-    
-    <div class="dp-label" style="margin-top:7px">Generated SKU</div>
-    <div class="dp-preview sku-assign-preview">Fill in above to generate — SKU is optional, Shovo will flag any entries missing one before you copy the prompt</div>
-  </details>
-  <div class="dp-row" style="margin-top:8px">
-    <div>
-      <div class="dp-label">Cost <span style="opacity:.6;font-weight:400">(per item)</span></div>
-      <input class="dp-input" placeholder="e.g. 12.50" data-dpid="1" data-dpfield="cost" value="" autocomplete="off" inputmode="decimal">
-    </div>
-    <div>
-      <div class="dp-label">Price <span style="opacity:.6;font-weight:400">(optional)</span></div>
-      <input class="dp-input" placeholder="e.g. 39.99" data-dpid="1" data-dpfield="price" value="" autocomplete="off" inputmode="decimal">
-    </div>
-  </div>
-  <button type="button" class="dp-add-entry" data-dpebayid="1" style="margin-top:7px;padding:7px;font-size:11px;background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);">🔍 Check Sold Prices on eBay</button>
-    <div class="dp-label" style="margin-top:4px">Preview</div>
-    <div class="dp-preview entry-main-preview">—</div>
-    <div class="entry-flags"></div>
   </div></div>
       <button class="dp-add-entry" id="dpAddEntry">+ Add batch entry</button>
     </div>
@@ -17248,7 +17179,7 @@ function hazVelocityMatch(text, category){
 
 // Local fuzzy matching — returns {title, price, source} or null
 // Sold listings weighted 1.5x. Requires meaningful keyword overlap to match.
-function hazLocalMatch(text){
+function hazLocalMatchBuiltin(text){
   // ── Normalise ────────────────────────────────────────────────────
   const lo = text.toLowerCase()
     .replace(/[\u2018\u2019]/g,"'").replace(/[^a-z0-9 .'\-\/+]/g,' ')
@@ -17400,9 +17331,50 @@ function hazLocalMatch(text){
   return {...best, source:sourceLabel, _score:bestScore};
 }
 
-const HAZ_FEE_RATE   = 0.13;
+/* ── Shared comp lookup (added 2026-08-27) ─────────────────────────────
+   Haz used to price off its own 1,604 hardcoded entries while Offer Check
+   used the 7,973-listing archive — two engines, two answers for the same
+   phone. Haz now asks the archive first and falls back to its built-in
+   table, so both tools agree.
+
+   Haz deliberately does NOT inherit Offer Check's refusal. A buyer at the
+   counter needs a number; low confidence is shown as a badge instead of
+   withheld. The only thing Haz refuses is an item too cheap to be worth
+   buying at all (see HAZ_MIN_RESALE). */
+function hazConfidenceOf(r){
+  if(!r) return null;
+  if(r.n>=3 && r.agree<=0.15 && r.sim>=0.30) return {level:'high',  label:'Solid',    badge:'🟢'};
+  if(r.n>=2 && r.agree<=0.60 && r.sim>=0.25) return {level:'medium',label:'Fair',     badge:'🟡'};
+  return                                            {level:'low',   label:'Rough',    badge:'🔴'};
+}
+function hazArchiveMatch(text){
+  if(!window.SYGComps) return null;
+  var r;
+  try{ r=window.SYGComps.retrieve(text,''); }catch(e){ return null }
+  if(!r || !r.hits || !r.hits.length) return null;
+  var c=hazConfidenceOf(r);
+  return {
+    title: r.hits[0].title,
+    price: Math.round(r.price),
+    source: 'SYG Archive ('+r.n+' comp'+(r.n===1?'':'s')+')',
+    conf: c, agree: r.agree, comps: r.n, days: r.days,
+    safe: Math.round(r.safe),
+    _score: 100
+  };
+}
+function hazLocalMatch(text){
+  var arch=hazArchiveMatch(text);
+  var builtin=hazLocalMatchBuiltin(text);
+  if(!arch) return builtin;
+  /* A high/medium-confidence archive hit beats the hardcoded table.
+     A low-confidence one only wins when there is nothing else. */
+  if(arch.conf.level!=='low') return arch;
+  return builtin || arch;
+}
+
+const HAZ_FEE_RATE   = 0.18;   // all-in: eBay + payment + promoted
 const HAZ_OFFER_RATE = 0.40;
-const HAZ_MIN_RESALE = 45;
+const HAZ_MIN_RESALE = 50;     // below this it isn't worth buying at all
 let _hazVibe = null;
 let _hazLastResult = null;
 
@@ -18597,8 +18569,14 @@ function hazHandleExplainOffer(){
     const vel = hazVelocityMatch(d.item, hazDetectCategory(d.item));
     const velLine = vel ? `<br><br>This category (${esc(vel.label)}) typically sells in ~${vel.avg} days here, worst case ${vel.max} — ${esc(vel.note)}` : '';
     const sourceLine = d.source ? `<br>Price source: <b>${esc(d.source)}</b>` : '';
+    const confLine = d.conf
+      ? `<br>Confidence: ${d.conf.badge} <b>${esc(d.conf.label)}</b>`
+        + (d.conf.level==='high' ? ' — comps agree closely.'
+          : d.conf.level==='medium' ? ' — comps vary a bit, check condition.'
+          : ' — thin or scattered comps, treat as a starting point.')
+      : '';
     hazAddBubble('haz',
-      `<b>Full breakdown for ${esc(d.item)}:</b><br>Market est: $${d.value}${sourceLine}<br>${details}<br>Fees at checkout: ~${Math.round(HAZ_FEE_RATE*100)}%${velLine}`,
+      `<b>Full breakdown for ${esc(d.item)}:</b><br>Market est: $${d.value}${sourceLine}${confLine}<br>${details}<br>Fees at checkout: ~${Math.round(HAZ_FEE_RATE*100)}%${velLine}`,
       true);
     return;
   }
@@ -32552,6 +32530,9 @@ function build(){
 }
 function close(){ closeCustomer(); $('hazoRoot').classList.remove('hazo-show') }
 
+/* Shared so Haz uses the same 7,973-listing corpus instead of its own
+   1,604 hardcoded comps. Index builds lazily on first use. */
+window.SYGComps={ retrieve:retrieve, verdict:verdict, buildIndex:buildIndex, size:DOCS.length };
 window.offerCheckOpen=function(){
   build();
   $('hazoRoot').classList.add('hazo-show');
