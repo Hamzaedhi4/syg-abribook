@@ -3778,6 +3778,7 @@
       <div class="nx2-conveyor-item" data-module="leads"><span class="nx2-conveyor-icon">◈</span><span class="nx2-conveyor-label">Ckay Connect</span><span class="nx2-conveyor-badge">5</span></div>
       <div class="nx2-conveyor-item" data-module="offercheck"><span class="nx2-conveyor-icon">◎</span><span class="nx2-conveyor-label">Offer Check</span></div>
       <div class="nx2-conveyor-item" data-module="crosscheck"><span class="nx2-conveyor-icon">⇄</span><span class="nx2-conveyor-label">Crosscheck</span></div>
+      <div class="nx2-conveyor-item" data-module="ordercheck"><span class="nx2-conveyor-icon">▣</span><span class="nx2-conveyor-label">Order Check</span></div>
       <div class="nx2-conveyor-item" data-module="shovo"><span class="nx2-conveyor-icon">✦</span><span class="nx2-conveyor-label">Ask Shovo</span></div>
       <!-- Copy B — visually identical, no duplicate ids. The three
            special ones use data-module="wan"/"haz"/"audit" instead —
@@ -3795,6 +3796,7 @@
       <div class="nx2-conveyor-item" data-module="leads"><span class="nx2-conveyor-icon">◈</span><span class="nx2-conveyor-label">Ckay Connect</span><span class="nx2-conveyor-badge">5</span></div>
       <div class="nx2-conveyor-item" data-module="offercheck"><span class="nx2-conveyor-icon">◎</span><span class="nx2-conveyor-label">Offer Check</span></div>
       <div class="nx2-conveyor-item" data-module="crosscheck"><span class="nx2-conveyor-icon">⇄</span><span class="nx2-conveyor-label">Crosscheck</span></div>
+      <div class="nx2-conveyor-item" data-module="ordercheck"><span class="nx2-conveyor-icon">▣</span><span class="nx2-conveyor-label">Order Check</span></div>
       <div class="nx2-conveyor-item" data-module="shovo"><span class="nx2-conveyor-icon">✦</span><span class="nx2-conveyor-label">Ask Shovo</span></div>
     </div>
   </div>
@@ -26542,6 +26544,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     if(id==='command'){buildCommandCenter();welcome.classList.add('hidden');document.getElementById('nexusCommand').classList.add('show');return}
     if(id==='leads'){welcome.classList.add('hidden');if(typeof window.leadsOpen==='function')window.leadsOpen();return}
     if(id==='offercheck'){if(typeof window.offerCheckOpen==='function')window.offerCheckOpen();return}
+    if(id==='ordercheck'){if(typeof window.orderCheckOpen==='function')window.orderCheckOpen();return}
     if(id==='crosscheck'){if(typeof window.crosscheckOpen==='function')window.crosscheckOpen();return}
     if(id==='morning'){openMorningRounds();return}
   }
@@ -31721,6 +31724,32 @@ function pick(head,guesses){
   return null;
 }
 
+function pullOrders(){
+  var btn=$('ocPull'); btn.disabled=true; btn.textContent='Pulling\u2026';
+  $('ocHintS').textContent='asking the extension\u2026';
+  var rid='oc'+Date.now(), done=false;
+  function reply(e){
+    var d=e.data;
+    if(!d||d.source!=='syg-audit-extension'||d.type!=='EBAY_ORDER_LIST_RESULT'||d.requestId!==rid) return;
+    done=true; window.removeEventListener('message',reply);
+    btn.disabled=false; btn.textContent='Pull orders from eBay';
+    if(d.ok===false||!d.orders){ $('ocHintS').textContent=(d.error||'failed').slice(0,60); return }
+    AWAIT=d.orders;
+    $('ocZoneS').classList.add('loaded');
+    $('ocNameS').textContent=d.orders.length+' orders awaiting shipment';
+    $('ocHintS').textContent='pulled '+new Date().toLocaleTimeString();
+    $('ocRun').disabled=!(EBAY&&AWAIT);
+    if(EBAY) run();
+  }
+  window.addEventListener('message',reply);
+  window.postMessage({source:'syg-audit-page',type:'EBAY_ORDER_LIST',requestId:rid},'*');
+  setTimeout(function(){
+    if(done) return;
+    window.removeEventListener('message',reply);
+    btn.disabled=false; btn.textContent='Pull orders from eBay';
+    $('ocHintS').textContent='no response \u2014 is the extension loaded?';
+  },45000);
+}
 function build(){
   if(built) return;
   var m=document.createElement('div');
@@ -32073,6 +32102,7 @@ function exportCsv(){
   URL.revokeObjectURL(a.href);
 }
 function close(){ var m=$('sygccBackdrop'); if(m) m.classList.remove('sygcc-show') }
+window.SYGCatalog=SYGCC_SNAP;   /* [sku,title,type,qty,price,productId] */
 window.crosscheckOpen=function(){ build(); $('sygccBackdrop').classList.add('sygcc-show') };
 })();
 </script>
@@ -32579,6 +32609,32 @@ function showCustomer(){
 }
 function closeCustomer(){ $('hazoCust').classList.remove('hazo-show') }
 
+function pullOrders(){
+  var btn=$('ocPull'); btn.disabled=true; btn.textContent='Pulling\u2026';
+  $('ocHintS').textContent='asking the extension\u2026';
+  var rid='oc'+Date.now(), done=false;
+  function reply(e){
+    var d=e.data;
+    if(!d||d.source!=='syg-audit-extension'||d.type!=='EBAY_ORDER_LIST_RESULT'||d.requestId!==rid) return;
+    done=true; window.removeEventListener('message',reply);
+    btn.disabled=false; btn.textContent='Pull orders from eBay';
+    if(d.ok===false||!d.orders){ $('ocHintS').textContent=(d.error||'failed').slice(0,60); return }
+    AWAIT=d.orders;
+    $('ocZoneS').classList.add('loaded');
+    $('ocNameS').textContent=d.orders.length+' orders awaiting shipment';
+    $('ocHintS').textContent='pulled '+new Date().toLocaleTimeString();
+    $('ocRun').disabled=!(EBAY&&AWAIT);
+    if(EBAY) run();
+  }
+  window.addEventListener('message',reply);
+  window.postMessage({source:'syg-audit-page',type:'EBAY_ORDER_LIST',requestId:rid},'*');
+  setTimeout(function(){
+    if(done) return;
+    window.removeEventListener('message',reply);
+    btn.disabled=false; btn.textContent='Pull orders from eBay';
+    $('ocHintS').textContent='no response \u2014 is the extension loaded?';
+  },45000);
+}
 function build(){
   if(built) return;
   var root=document.createElement('div');
@@ -32654,5 +32710,426 @@ window.offerCheckOpen=function(){
 
 
 
+
+
+<style>
+/* ══ Order Check ══════════════════════════════════════════════════════
+   Drops the eBay paid/shipped orders report against Shopify's orders and
+   the catalog snapshot. Join key is the eBay order number, which Shopify
+   stores on the order as sourceIdentifier — the same field the
+   fulfillment pipeline already matches on. */
+#ocRoot{position:fixed;inset:0;z-index:9200;display:none;background:rgba(8,6,24,.72);
+  backdrop-filter:blur(6px);overflow-y:auto;padding:24px 16px;
+  --ink:#15171C;--paper:#FBFBF9;--dust:#ECEDEA;--line:#D8DAD5;--accent:#1F4E79;--soft:#EAF0F6;
+  --ok:#1E7A4B;--gap:#B23A2F;--ghost:#6B4A9E;--warn:#A8722A;--mute:#8A8F98;
+  font-family:'Archivo',system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.45}
+#ocRoot.oc-show{display:block}
+#ocRoot *{box-sizing:border-box;margin:0;padding:0}
+#ocRoot .oc-card{max-width:1080px;margin:0 auto;background:var(--paper);color:var(--ink);
+  border:1px solid var(--line);border-radius:4px;box-shadow:0 40px 90px -20px rgba(0,0,0,.7);overflow:hidden}
+#ocRoot .oc-head{background:var(--ink);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:16px}
+#ocRoot .oc-head h2{font-size:28px;font-weight:900;letter-spacing:-.035em;text-transform:uppercase;line-height:1}
+#ocRoot .oc-head h2 em{font-style:normal;color:#9FC2E3}
+#ocRoot .oc-x{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.35);color:#fff;
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.1em;
+  text-transform:uppercase;padding:9px 15px;cursor:pointer;border-radius:3px}
+#ocRoot .oc-x:hover{background:var(--accent);border-color:var(--accent)}
+#ocRoot .oc-intake{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+#ocRoot .oc-drop{flex:1 1 300px;padding:18px 22px;border-right:1px solid var(--line)}
+#ocRoot .oc-drop:last-child{border-right:0}
+#ocRoot .oc-drop h3{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.15em;
+  text-transform:uppercase;opacity:.55;margin-bottom:4px}
+#ocRoot .oc-drop p{font-size:12.5px;opacity:.6;margin-bottom:10px;line-height:1.4}
+#ocRoot .oc-zone{border:2px dashed var(--line);border-radius:4px;padding:20px 14px;text-align:center;
+  cursor:pointer;background:#fff;display:block}
+#ocRoot .oc-zone:hover,#ocRoot .oc-zone.over{background:var(--soft);border-color:var(--accent)}
+#ocRoot .oc-zone.loaded{border-style:solid;border-color:var(--accent);background:var(--soft)}
+#ocRoot .oc-zone b{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12.5px;display:block;word-break:break-all}
+#ocRoot .oc-zone small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;opacity:.55;display:block;margin-top:4px}
+#ocRoot input[type=file]{display:none}
+#ocRoot .oc-bar{padding:14px 22px;border-bottom:1px solid var(--line);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+#ocRoot .oc-btn{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;letter-spacing:.1em;
+  text-transform:uppercase;padding:10px 16px;border:1px solid var(--ink);background:var(--paper);
+  color:var(--ink);cursor:pointer;border-radius:3px}
+#ocRoot .oc-btn.go{background:var(--ink);color:#fff}
+#ocRoot .oc-btn:hover:not(:disabled){background:var(--accent);color:#fff;border-color:var(--accent)}
+#ocRoot .oc-btn:disabled{opacity:.3;cursor:not-allowed}
+#ocRoot .oc-tally{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+#ocRoot .oc-tally button{flex:1 1 130px;border:0;border-right:1px solid var(--line);background:var(--paper);
+  padding:14px 14px 12px;text-align:left;cursor:pointer;font-family:inherit;color:inherit}
+#ocRoot .oc-tally button:last-child{border-right:0}
+#ocRoot .oc-tally button:hover{background:var(--dust)}
+#ocRoot .oc-tally button[aria-pressed=true]{background:var(--soft);box-shadow:inset 0 -3px 0 var(--accent)}
+#ocRoot .oc-tally b{display:block;font-size:30px;font-weight:900;letter-spacing:-.04em;line-height:1}
+#ocRoot .oc-tally span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;letter-spacing:.12em;
+  text-transform:uppercase;display:block;margin-top:3px}
+#ocRoot .c-all{color:var(--ink)} #ocRoot .c-ok{color:var(--ok)} #ocRoot .c-bad{color:var(--gap)}
+#ocRoot .c-warn{color:var(--warn)} #ocRoot .c-ghost{color:var(--ghost)}
+#ocRoot .oc-stage{padding:20px 22px 26px;min-height:300px}
+#ocRoot .oc-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+#ocRoot .oc-nav button{border:1px solid var(--line);background:var(--paper);color:var(--ink);width:36px;height:36px;
+  font:700 15px inherit;cursor:pointer;border-radius:3px}
+#ocRoot .oc-nav button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+#ocRoot .oc-pos{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.1em}
+#ocRoot .oc-pos b{font-size:16px}
+#ocRoot .oc-keys{margin-left:auto;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;
+  letter-spacing:.11em;text-transform:uppercase;opacity:.45}
+#ocRoot .oc-keys kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:1px 5px;margin:0 1px}
+#ocRoot .oc-item{border:1px solid var(--line);border-radius:4px}
+#ocRoot .oc-item.f-bad{border-left:4px solid var(--gap)}
+#ocRoot .oc-item.f-warn{border-left:4px solid var(--warn)}
+#ocRoot .oc-item.f-ghost{border-left:4px solid var(--ghost)}
+#ocRoot .oc-item.f-ok{border-left:4px solid var(--ok)}
+#ocRoot .oc-top{display:flex;gap:14px;align-items:flex-start;padding:16px 18px 13px;border-bottom:1px solid var(--line)}
+#ocRoot .oc-ord{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:18px;font-weight:600}
+#ocRoot .oc-sku{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;opacity:.7;margin-top:3px;word-break:break-all}
+#ocRoot .oc-title{font-size:15px;margin-top:5px;line-height:1.4}
+#ocRoot .oc-flag{margin-left:auto;flex:none;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:5px 9px;border:1.5px solid currentColor;border-radius:3px}
+#ocRoot .oc-meta{display:flex;flex-wrap:wrap}
+#ocRoot .oc-meta div{flex:1 1 120px;padding:11px 18px;border-right:1px solid var(--line)}
+#ocRoot .oc-meta div:last-child{border-right:0}
+#ocRoot .oc-meta small{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;
+  letter-spacing:.13em;text-transform:uppercase;opacity:.5;margin-bottom:3px}
+#ocRoot .oc-meta b{font-size:14px;font-family:'IBM Plex Mono',ui-monospace,monospace}
+#ocRoot .oc-acts{display:flex;gap:10px;padding:13px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+#ocRoot .oc-lk{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;padding:8px 13px;border:1.5px solid currentColor;
+  border-radius:3px;text-decoration:none}
+#ocRoot .oc-lk.shop{color:var(--ok)} #ocRoot .oc-lk.bay{color:#144E8C} #ocRoot .oc-lk.none{opacity:.3;border:0}
+#ocRoot .oc-lk:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+#ocRoot .oc-issues{padding:13px 18px 16px;border-top:1px solid var(--line);background:#FAFAF7}
+#ocRoot .oc-issues h4{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;letter-spacing:.15em;
+  text-transform:uppercase;opacity:.5;margin-bottom:7px}
+#ocRoot .oc-issue{font-size:14px;line-height:1.5;padding:3px 0 3px 16px;position:relative}
+#ocRoot .oc-issue:before{content:'';position:absolute;left:0;top:10px;width:6px;height:6px;border-radius:50%;
+  background:currentColor;opacity:.5}
+#ocRoot .oc-issue.bad{color:var(--gap)} #ocRoot .oc-issue.warn{color:var(--warn)} #ocRoot .oc-issue.ok{color:var(--ok)}
+#ocRoot .oc-empty{padding:50px 20px;text-align:center;font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:12px;opacity:.5;line-height:1.8}
+#ocRoot .oc-foot{border-top:1px solid var(--line);padding:11px 22px;font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.55;display:flex;justify-content:space-between;
+  gap:12px;flex-wrap:wrap}
+</style>
+<script>
+(function(){
+var SHOP_ADMIN_ORDER='https://xpp09p-dz.myshopify.com/admin/orders/';
+var EBAY_ORDER='https://www.ebay.com/mesh/ord/details?orderid=';
+var built=false, ROWS=[], FILTER='ALL', POS=0, EBAY=null, AWAIT=null;
+
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})}
+function norm(s){return String(s||'').trim().toUpperCase()}
+/* eBay order numbers appear with and without dashes depending on which
+   report they came from, so compare on digits alone. */
+function ordKey(s){return String(s||'').replace(/[^0-9]/g,'')}
+function money(s){var n=parseFloat(String(s||'').replace(/[^0-9.\-]/g,''));return isNaN(n)?null:n}
+function toInt(s){var n=parseInt(String(s||'').replace(/[^0-9\-]/g,''),10);return isNaN(n)?null:n}
+
+function splitRow(line,d){
+  var out=[],cur='',q=false;
+  for(var i=0;i<line.length;i++){
+    var ch=line[i];
+    if(q){ if(ch==='"'){ if(line[i+1]==='"'){cur+='"';i++} else q=false } else cur+=ch }
+    else { if(ch==='"') q=true; else if(ch===d){out.push(cur);cur=''} else cur+=ch }
+  }
+  out.push(cur);
+  return out.map(function(s){return s.trim().replace(/^"|"$/g,'')});
+}
+/* eBay reports carry a few preamble lines before the real header, and the
+   header wording differs between the Orders report and the Paid & Shipped
+   one — so find the header by looking for known column words instead of
+   assuming a row number. */
+function parseTable(text,hints){
+  text=text.replace(/^\uFEFF/,'');
+  var lines=text.replace(/\r/g,'').split('\n').filter(function(l){return l.trim()!==''});
+  if(!lines.length) return null;
+  var sample=lines.slice(0,15).join('\n');
+  var d=(sample.split('\t').length>sample.split(',').length)?'\t':',';
+  var hi=0;
+  for(var i=0;i<Math.min(lines.length,40);i++){
+    var low=lines[i].toLowerCase();
+    if(hints.some(function(h){return low.indexOf(h)>-1})){ hi=i; break }
+  }
+  var head=splitRow(lines[hi],d), rows=[];
+  for(var j=hi+1;j<lines.length;j++){
+    var raw=lines[j];
+    /* eBay closes its reports with "1825,record(s) downloaded," and
+       "Seller ID : gadgetpirates". Both parse as ordinary rows and turn
+       into phantom orders, so stop at the first one. */
+    if(/record\(s\)\s*downloaded/i.test(raw) || /^\s*"?Seller ID\s*:/i.test(raw)) break;
+    var c=splitRow(raw,d);
+    if(c.length<2||c.every(function(v){return v===''})) continue;
+    var o={}; head.forEach(function(h,k){o[h]=c[k]===undefined?'':c[k]});
+    rows.push(o);
+  }
+  return {head:head,rows:rows};
+}
+function pick(head,guesses){
+  var low=head.map(function(h){return h.toLowerCase()});
+  for(var i=0;i<guesses.length;i++)
+    for(var j=0;j<low.length;j++) if(low[j].indexOf(guesses[i])>-1) return head[j];
+  return null;
+}
+
+/* The CSV is Paid & Shipped. The scrape is Awaiting Shipment. A SKU in
+   BOTH means that item already went out on an earlier order — this one
+   cannot be filled. That is the whole point of the check. */
+var FLAG={
+  SHIPPED:{l:'Already shipped',c:'bad'},
+  TITLEDUP:{l:'Same item, different SKU',c:'bad'},
+  DUPE:{l:'Twice in this queue',c:'bad'},
+  NOSTOCK:{l:'No stock left',c:'warn'},
+  NOSKU:{l:'No SKU on order',c:'ghost'},
+  OK:{l:'Good to ship',c:'ok'}
+};
+var ORDER=['SHIPPED','TITLEDUP','DUPE','NOSTOCK','NOSKU','OK'];
+
+/* Titles are compared as well as SKUs. A mis-keyed custom label would
+   slip past a SKU-only match, and on single-quantity stock the same item
+   title selling twice is nearly always the same physical unit. */
+function titleKey(t){
+  return String(t||'').toLowerCase().replace(/[^a-z0-9 ]+/g,' ')
+    .replace(/\b(free shipping|used|for parts|read|as is|new|open box|tested|working|only)\b/g,'')
+    .replace(/\s+/g,' ').trim().slice(0,60);
+}
+function run(){
+  if(!AWAIT || !AWAIT.length){
+    $('ocOut').innerHTML='<div class="oc-empty">Pull the awaiting-shipment orders first.</div>'; return;
+  }
+  var shippedSku={}, shippedTitle={};
+  if(EBAY){
+    var eh=EBAY.head;
+    var cSku=pick(eh,['custom label','sku']);
+    var cTitle=pick(eh,['item title','title']);
+    var cOrd=pick(eh,['order number','order id','sales record','record number']);
+    var cShip=pick(eh,['shipped on','date shipped','shipped date']);
+    EBAY.rows.forEach(function(r){
+      var rec={ord:cOrd?r[cOrd]:'', when:cShip?r[cShip]:'', title:cTitle?r[cTitle]:''};
+      var k=norm(cSku?r[cSku]:'');
+      /* Skip spacer rows: no SKU and no order number that looks like one. */
+      if(!k && !/\d{2}-\d{5}-\d{5}/.test(String(rec.ord||''))) return;
+      if(k && !shippedSku[k]) shippedSku[k]=rec;
+      var tk=titleKey(cTitle?r[cTitle]:'');
+      if(tk && !shippedTitle[tk]) shippedTitle[tk]=rec;
+    });
+  }
+  var cat={};
+  if(window.SYGCatalog) window.SYGCatalog.forEach(function(p){
+    cat[norm(p[0])]={qty:p[3],title:p[1],type:p[2],pid:p[5]};
+  });
+
+  var seen={};
+  AWAIT.forEach(function(o){ var k=norm(o.sku); if(k) seen[k]=(seen[k]||0)+1 });
+
+  var out=[];
+  AWAIT.forEach(function(o){
+    var k=norm(o.sku), tk=titleKey(o.title), c=cat[k];
+    var issues=[], flag='OK';
+    if(!o.sku){
+      flag='NOSKU';
+      issues.push({c:'warn',t:'This order has no custom label, so it cannot be matched against the shipped report.'});
+    }
+    var hitSku=k?shippedSku[k]:null;
+    var hitTitle=(!hitSku && tk)?shippedTitle[tk]:null;
+    if(hitSku){
+      flag='SHIPPED';
+      issues.push({c:'bad',t:'This exact SKU is already on the Paid & Shipped report'+
+        (hitSku.ord?' as order '+hitSku.ord:'')+(hitSku.when?', shipped '+hitSku.when:'')+
+        '. The unit is gone \u2014 this order cannot be filled from it.'});
+    } else if(hitTitle){
+      flag='TITLEDUP';
+      issues.push({c:'bad',t:'A different SKU with the same item title already shipped'+
+        (hitTitle.ord?' as order '+hitTitle.ord:'')+
+        '. Either the label was mis-keyed or you had two \u2014 verify before packing.'});
+    }
+    if(seen[k]>1){
+      if(flag==='OK') flag='DUPE';
+      issues.push({c:'bad',t:'This SKU is on '+seen[k]+' orders in the awaiting-shipment queue.'});
+    }
+    if(c && c.qty<=0 && flag==='OK'){
+      flag='NOSTOCK';
+      issues.push({c:'warn',t:'Shopify shows no stock left for this SKU.'});
+    }
+    if(!c && k && flag==='OK')
+      issues.push({c:'warn',t:'Not in the catalog snapshot \u2014 may be archived or created after the snapshot.'});
+    if(flag==='OK') issues.push({c:'ok',t:'Not on the shipped report. Safe to pack.'});
+
+    out.push({flag:flag, ord:o.order, rec:'', sku:o.sku, title:o.title, qty:o.qty,
+      price:o.total, shipped:o.shipBy?'ship by '+o.shipBy:'', track:'',
+      buyer:o.buyer, zip:o.zip, shop:null, cat:c||null, issues:issues});
+  });
+  out.sort(function(a,b){ return ORDER.indexOf(a.flag)-ORDER.indexOf(b.flag) });
+  ROWS=out; FILTER='ALL'; POS=0;
+  drawTally(); drawCard();
+  $('ocExport').disabled=false;
+  $('ocTs').textContent=AWAIT.length+' awaiting \u00b7 run '+new Date().toLocaleString();
+}
+
+function visible(){ return FILTER==='ALL'?ROWS:ROWS.filter(function(r){return r.flag===FILTER}) }
+function drawTally(){
+  var n={ALL:ROWS.length};
+  ORDER.forEach(function(f){ n[f]=ROWS.filter(function(r){return r.flag===f}).length });
+  var cls={ALL:'c-all',OK:'c-ok',DUPE:'c-bad',STILLLIVE:'c-bad',MISSING:'c-bad',UNFULFILLED:'c-warn',UNKNOWN:'c-ghost'};
+  var keys=['ALL'].concat(ORDER).filter(function(k){return k==='ALL'||n[k]>0});
+  $('ocTally').innerHTML=keys.map(function(k){
+    return '<button type="button" class="'+cls[k]+'" data-f="'+k+'" aria-pressed="'+(FILTER===k)+'">'+
+      '<b>'+n[k]+'</b><span>'+(k==='ALL'?'Order lines':FLAG[k].l)+'</span></button>';
+  }).join('');
+  Array.prototype.forEach.call($('ocTally').querySelectorAll('button'),function(b){
+    b.addEventListener('click',function(){ FILTER=b.getAttribute('data-f'); POS=0; drawTally(); drawCard() });
+  });
+}
+function step(d){ var n=visible().length; if(!n) return; POS=(POS+d+n)%n; drawCard() }
+function drawCard(){
+  var list=visible();
+  if(!list.length){ $('ocOut').innerHTML='<div class="oc-empty">Nothing in this bucket.</div>'; return }
+  if(POS>=list.length) POS=0;
+  var r=list[POS], F=FLAG[r.flag];
+  var links=[];
+  if(r.shop&&r.shop.id) links.push('<a class="oc-lk shop" href="'+SHOP_ADMIN_ORDER+esc(r.shop.id)+'" target="_blank" rel="noopener">Shopify order \u2197</a>');
+  if(r.cat&&r.cat.pid) links.push('<a class="oc-lk shop" href="https://xpp09p-dz.myshopify.com/admin/products/'+esc(r.cat.pid)+'" target="_blank" rel="noopener">Product \u2197</a>');
+  if(r.ord) links.push('<a class="oc-lk bay" href="'+EBAY_ORDER+encodeURIComponent(r.ord)+'" target="_blank" rel="noopener">eBay order \u2197</a>');
+  if(!links.length) links.push('<span class="oc-lk none">\u2014</span>');
+
+  $('ocOut').innerHTML=
+    '<div class="oc-nav">'+
+      '<button type="button" id="ocPrev" title="Previous (Q)">\u2039</button>'+
+      '<button type="button" id="ocNext" title="Next (E)">\u203a</button>'+
+      '<span class="oc-pos"><b>'+(POS+1)+'</b> / '+list.length+'</span>'+
+      '<span class="oc-keys"><kbd>Q</kbd> prev <kbd>E</kbd> next</span>'+
+    '</div>'+
+    '<div class="oc-item f-'+F.c+'">'+
+      '<div class="oc-top"><div>'+
+        '<div class="oc-ord">'+esc(r.ord||'\u2014')+(r.rec?' <span style="font-size:12px;opacity:.5">rec '+esc(r.rec)+'</span>':'')+'</div>'+
+        '<div class="oc-sku">'+esc(r.sku||'no SKU on this line')+'</div>'+
+        '<div class="oc-title">'+esc(r.title||'\u2014')+'</div>'+
+      '</div><span class="oc-flag" style="color:var(--'+(F.c==='bad'?'gap':F.c==='warn'?'warn':F.c==='ghost'?'ghost':'ok')+')">'+F.l+'</span></div>'+
+      '<div class="oc-meta">'+
+        '<div><small>Qty sold</small><b>'+(r.qty===null?'\u2014':r.qty)+'</b></div>'+
+        '<div><small>Sold for</small><b>'+(r.price===null?'\u2014':'$'+r.price.toFixed(2))+'</b></div>'+
+        '<div><small>Shipped</small><b>'+esc(r.shipped||'\u2014')+'</b></div>'+
+        '<div><small>Buyer</small><b>'+esc(r.buyer||'\u2014')+'</b></div>'+
+        '<div><small>Stock now</small><b>'+(r.cat?r.cat.qty:'\u2014')+'</b></div>'+
+      '</div>'+
+      '<div class="oc-acts">'+links.join('')+'</div>'+
+      '<div class="oc-issues"><h4>Findings</h4>'+
+        r.issues.map(function(x){return '<div class="oc-issue '+x.c+'">'+esc(x.t)+'</div>'}).join('')+
+      '</div>'+
+    '</div>';
+  $('ocPrev').onclick=function(){ step(-1) };
+  $('ocNext').onclick=function(){ step(1) };
+}
+
+function exportCsv(){
+  var list=visible();
+  function q(v){return '"'+String(v===undefined||v===null?'':v).replace(/"/g,'""')+'"'}
+  var csv=['eBayOrder,SKU,Title,Flag,Qty,Total,ShipBy,Buyer,ZIP,StockNow,Findings'].concat(
+    list.map(function(r){
+      return [r.ord,r.sku,r.title,FLAG[r.flag].l,r.qty,r.price,r.shipped,r.buyer,r.zip,r.cat?r.cat.qty:'',
+        r.issues.map(function(x){return x.t}).join(' | ')].map(q).join(',');
+    })).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='order-check-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function wire(side,hints,onload){
+  var zone=$('ocZone'+side), input=$('ocFile'+side);
+  function load(file){
+    var rd=new FileReader();
+    rd.onload=function(){
+      var t=parseTable(rd.result,hints);
+      if(!t||!t.rows.length){ $('ocHint'+side).textContent="Couldn't read that file"; return }
+      onload(t);
+      zone.classList.add('loaded');
+      $('ocName'+side).textContent=file.name;
+      $('ocHint'+side).textContent=t.rows.length+' rows';
+      $('ocRun').disabled=!(EBAY&&AWAIT);
+    };
+    rd.readAsText(file);
+  }
+  input.addEventListener('change',function(e){ if(e.target.files[0]) load(e.target.files[0]) });
+  ['dragenter','dragover'].forEach(function(ev){ zone.addEventListener(ev,function(e){e.preventDefault();zone.classList.add('over')}) });
+  ['dragleave','drop'].forEach(function(ev){ zone.addEventListener(ev,function(e){e.preventDefault();zone.classList.remove('over')}) });
+  zone.addEventListener('drop',function(e){ if(e.dataTransfer.files[0]) load(e.dataTransfer.files[0]) });
+  zone.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault();input.click()} });
+}
+
+function pullOrders(){
+  var btn=$('ocPull'); btn.disabled=true; btn.textContent='Pulling\u2026';
+  $('ocHintS').textContent='asking the extension\u2026';
+  var rid='oc'+Date.now(), done=false;
+  function reply(e){
+    var d=e.data;
+    if(!d||d.source!=='syg-audit-extension'||d.type!=='EBAY_ORDER_LIST_RESULT'||d.requestId!==rid) return;
+    done=true; window.removeEventListener('message',reply);
+    btn.disabled=false; btn.textContent='Pull orders from eBay';
+    if(d.ok===false||!d.orders){ $('ocHintS').textContent=(d.error||'failed').slice(0,60); return }
+    AWAIT=d.orders;
+    $('ocZoneS').classList.add('loaded');
+    $('ocNameS').textContent=d.orders.length+' orders awaiting shipment';
+    $('ocHintS').textContent='pulled '+new Date().toLocaleTimeString();
+    $('ocRun').disabled=!(EBAY&&AWAIT);
+    if(EBAY) run();
+  }
+  window.addEventListener('message',reply);
+  window.postMessage({source:'syg-audit-page',type:'EBAY_ORDER_LIST',requestId:rid},'*');
+  setTimeout(function(){
+    if(done) return;
+    window.removeEventListener('message',reply);
+    btn.disabled=false; btn.textContent='Pull orders from eBay';
+    $('ocHintS').textContent='no response \u2014 is the extension loaded?';
+  },45000);
+}
+function build(){
+  if(built) return;
+  var root=document.createElement('div');
+  root.id='ocRoot';
+  root.innerHTML='<div class="oc-card">'+
+    '<div class="oc-head"><h2>Order<em>Check</em></h2><button type="button" class="oc-x" id="ocClose">\u2715 Close</button></div>'+
+    '<div class="oc-intake">'+
+      '<div class="oc-drop"><h3>eBay orders</h3>'+
+        '<p>Seller Hub \u2192 Orders \u2192 Download report (paid and shipped).</p>'+
+        '<label class="oc-zone" id="ocZoneE" for="ocFileE" tabindex="0"><b id="ocNameE">Drop the eBay orders report</b><small id="ocHintE">.csv or .tsv</small></label>'+
+        '<input type="file" id="ocFileE" accept=".csv,.tsv,.txt"></div>'+
+      '<div class="oc-drop"><h3>Awaiting shipment</h3>'+
+        '<p>Pulled live from Seller Hub. Opens the orders page itself if it is not already open.</p>'+
+        '<label class="oc-zone" id="ocZoneS" tabindex="0" style="cursor:default"><b id="ocNameS">Not pulled yet</b>'+
+        '<small id="ocHintS">click Pull orders below</small></label></div>'+
+    '</div>'+
+    '<div class="oc-bar">'+
+      '<button type="button" class="oc-btn" id="ocPull">Pull orders from eBay</button>'+
+      '<button type="button" class="oc-btn go" id="ocRun" disabled>Run check</button>'+
+      '<button type="button" class="oc-btn" id="ocExport" disabled>Export CSV</button>'+
+    '</div>'+
+    '<div class="oc-tally" id="ocTally"></div>'+
+    '<div class="oc-stage"><div id="ocOut"><div class="oc-empty">Drop the eBay orders report, then run the check.<br>Everything stays on this device.</div></div></div>'+
+    '<div class="oc-foot"><span>SYG Nexus \u2014 Order Check</span><span id="ocTs"></span></div>'+
+  '</div>';
+  document.body.appendChild(root);
+  wire('E',['sales record','order number','custom label','item title'],function(t){EBAY=t});
+  $('ocPull').addEventListener('click',pullOrders);
+  $('ocRun').addEventListener('click',run);
+  $('ocExport').addEventListener('click',exportCsv);
+  $('ocClose').addEventListener('click',close);
+  root.addEventListener('click',function(e){ if(e.target===root) close() });
+  document.addEventListener('keydown',function(e){
+    if(!root.classList.contains('oc-show')) return;
+    if(e.key==='Escape'){ e.stopPropagation(); close(); return }
+    var tag=((e.target||{}).tagName||'').toUpperCase();
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return;
+    var k=(e.key||'').toLowerCase();
+    if(k==='q'||e.key==='ArrowLeft'){ e.preventDefault(); e.stopPropagation(); step(-1) }
+    else if(k==='e'||e.key==='ArrowRight'){ e.preventDefault(); e.stopPropagation(); step(1) }
+  },true);
+  built=true;
+}
+function close(){ $('ocRoot').classList.remove('oc-show') }
+window.orderCheckOpen=function(){ build(); $('ocRoot').classList.add('oc-show') };
+})();
+</script>
 
 </html>
