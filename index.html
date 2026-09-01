@@ -5207,10 +5207,10 @@ html.nx-light .wb-shovo-sw i{background:#fff}
             <textarea class="uni-textarea uni-main-textarea" id="bhaiDesc" placeholder="e.g. This is a Corsair TX650 650W power supply, Hi-Pot tested OK, model 75-001315, SN 121871160000005961209..."></textarea>
             <div class="bhai-quick" id="bhaiQuick">
               <div class="bhai-quick-hd">Condition shortcuts <span>appended to this entry only</span></div>
-              <label class="bhai-chip" title="Adds &quot;Dents on the body&quot; to this entry. Dents are a grading trigger — the listing will come back as Used – Fair, not Good.">
+              <label class="bhai-chip" title="Shift+D · Adds &quot;Dents on the body&quot; to this entry. Dents are a grading trigger — the listing will come back as Used – Fair, not Good.">
                 <input type="checkbox" id="bhaiDents"><span></span>Dents on body
               </label>
-              <label class="bhai-chip" title="Adds &quot;No charger or power adapter included&quot; to this entry. Can be pre-ticked by default in the Send panel.">
+              <label class="bhai-chip" title="Shift+N · Adds &quot;No charger or power adapter included&quot; to this entry. Can be pre-ticked by default in the Send panel.">
                 <input type="checkbox" id="bhaiNoCharger"><span></span>No charger
               </label>
               <div class="bhai-quick-nums">
@@ -22616,11 +22616,23 @@ function renderAnswer(q) {
       bodyEl.innerHTML = '<p>No lister called <b>' + who + '</b>. Known: ' + names + '.</p>';
       return;
     }
+    // Two intake bars exist: the original pair on the Abribook page, and the
+    // Wan canvas toolbar. tbLockBtn mirrors toolbar -> originals and then
+    // clicks the original, but nothing ever syncs the other way. Setting only
+    // the originals therefore locks correctly while the toolbar you are
+    // looking at still reads empty. Fill both, then click whichever lock
+    // button is actually on screen so its own visual state updates too.
+    const tbSel = document.getElementById('tbListerSelect');
+    const tbBat = document.getElementById('tbListerBatch');
+    const tbBtn = document.getElementById('tbLockBtn');
     sel.value = matched;
     sel.dispatchEvent(new Event('change', {bubbles:true}));
     bIn.value = batch;
     bIn.dispatchEvent(new Event('input', {bubbles:true}));
-    btn.click();
+    if (tbSel) { tbSel.value = matched; tbSel.dispatchEvent(new Event('change', {bubbles:true})); }
+    if (tbBat) { tbBat.value = batch;   tbBat.dispatchEvent(new Event('input',  {bubbles:true})); }
+    if (tbBtn && tbBtn.offsetParent !== null) tbBtn.click();   // visible toolbar wins
+    else btn.click();
     const ok = (typeof LISTER_LOCKED !== 'undefined' && LISTER_LOCKED);
     bodyEl.innerHTML = ok
       ? '<p>Locked in as <b>' + sel.options[sel.selectedIndex].text +
@@ -31819,7 +31831,7 @@ setInterval(nx2RefreshModuleActivity, 20000);
             <span class="wb-shovo-sw"><i></i></span>
             <span class="wb-shovo-lbl">Standard wear <em>— add generic used-item wear text</em></span>
           </label>
-          <label class="wb-auto-row" id="wbAutoRow" title="Turns all five on at once and locks them. Nothing else changes — AUTO adds no text of its own.">
+          <label class="wb-auto-row" id="wbAutoRow" title="Shift+A · Turns all five on at once and locks them. Nothing else changes — AUTO adds no text of its own.">
             <input type="checkbox" id="wbAutoMode">
             <span class="wb-auto-box"></span>
             <span class="wb-auto-lbl">AUTO <em>— all five on</em></span>
@@ -33656,6 +33668,69 @@ function nxWheelInit(){
         {weekday:'long', month:'long', day:'numeric', year:'numeric'})
         .toUpperCase() + ' \u00b7 ELMWOOD PARK NJ';
     }
+  });
+})();
+
+// ── Wan Board keyboard shortcuts ──────────────────────────────────────
+// Shift+letter is just a capital letter, so these MUST stand down while a
+// text field has focus — otherwise typing "Dents" or "No charger" into a
+// description would silently flip the chips. Text inputs, textareas and
+// contenteditable are excluded; checkboxes and buttons are not, since a
+// letter keystroke there does nothing anyway.
+//
+// Keyed on e.code, not e.key: with Shift held, e.key is 'D' rather than 'd'
+// and changes under other keyboard layouts. e.code is the physical key.
+(function wbShortcuts(){
+  var MAP = {
+    KeyD: {kind:'check', id:'bhaiDents',        name:'Dents on body'},
+    KeyN: {kind:'check', id:'bhaiNoCharger',    name:'No charger'},
+    KeyA: {kind:'check', id:'wbAutoMode',       name:'AUTO'},
+    KeyP: {kind:'focus', id:'bhaiPrice',        name:'Price'},
+    KeyC: {kind:'focus', id:'bhaiCost',         name:'Cost'},
+    KeyS: {kind:'pane',  pane:'syg',            name:'SYG portal'}
+  };
+  function typing(el){
+    if(!el) return false;
+    if(el.isContentEditable) return true;
+    var t = (el.tagName||'').toUpperCase();
+    if(t === 'TEXTAREA') return true;
+    if(t === 'INPUT'){
+      var ty = (el.type||'text').toLowerCase();
+      return ['text','number','search','email','url','tel','password','date'].indexOf(ty) !== -1;
+    }
+    return false;
+  }
+  function visible(el){ return !!(el && el.offsetParent !== null); }
+
+  document.addEventListener('keydown', function(e){
+    if(!e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    if(typing(e.target)) return;
+    var hit = MAP[e.code];
+    if(!hit) return;
+
+    if(hit.kind === 'pane'){
+      var tab = document.querySelector('[data-wb-pane="'+hit.pane+'"]');
+      if(!visible(tab)) return;                 // not on the board — let the key through
+      e.preventDefault();
+      if(typeof wbSygSwitch === 'function') wbSygSwitch(hit.pane); else tab.click();
+      if(typeof toast === 'function') toast('SYG portal');
+      return;
+    }
+
+    var el = document.getElementById(hit.id);
+    if(!visible(el)) return;                    // element not on screen — don't swallow the key
+    e.preventDefault();
+
+    if(hit.kind === 'focus'){
+      el.focus();
+      if(el.select) el.select();                // highlight so typing replaces
+      return;
+    }
+
+    // checkbox: flip it and let every existing listener run
+    el.checked = !el.checked;
+    el.dispatchEvent(new Event('change', {bubbles:true}));
+    if(typeof toast === 'function') toast(hit.name + (el.checked ? ' on' : ' off'));
   });
 })();
 </script>
