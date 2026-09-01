@@ -7918,324 +7918,343 @@ if(document.getElementById('reviewSessionBtn')){
   document.getElementById('reviewSessionBtn').addEventListener('click', showEosSummary);
 }
 
-if(document.getElementById('wbShovoMode')){
-  document.getElementById('wbShovoMode').checked = SHOVO_MODE;
-  document.getElementById('wbShovoMode').addEventListener('change', (ev)=>{
-    SHOVO_MODE = ev.target.checked;
-    try{ localStorage.setItem('abribook:shovoMode', SHOVO_MODE ? '1' : '0'); }catch(e){}
-    toast(SHOVO_MODE
-      ? 'ShovoMode on — the copied prompt will tell Claude to push edits as given instead of asking'
-      : 'ShovoMode off — Claude will ask before guessing on anything ambiguous, as usual');
-  });
-}
-
-// Single source of truth for the add-button's label. Called from several
-// places (the toggle itself, page switches, after a normal add completes)
-// rather than trying to catch every spot that resets the label back to
-// default — computing the right label fresh each time means there's
-// nothing to keep in sync by hand. Edit-mode's "✎ Update entry" label is
-// left alone deliberately: ZhuanMode pushes NEW entries as they're added,
-// not edits to something already sitting in the queue.
-// ── ZhuanMode send engine ─────────────────────────────────────────
-// Builds ONE entry into the exact same prompt shape buildClaudePrepPrompt
-// already produces for a full batch — just with an array of one — then
-// wraps it with a directive ShovoMode never sees, because the two exist for
-// different reasons. ShovoMode's block lives inside buildClaudePrepPrompt
-// itself and shows up in a manually copied prompt too. This one is added
-// here, only on the path that actually fires the extension, because it's
-// answering a question that only applies to an unattended send: nobody is
-// sitting at that claude.ai tab to answer a follow-up.
-function zhuanDirective(){
-  return 'ZHUANMODE — AUTOMATED SEND, NO ONE IS WATCHING THIS CHAT.\n'+
-    'This came in automatically from Nexus\u2019s Wan Board — nobody is at the keyboard to answer follow-up questions right now. Do not pause to ask anything. Where a field is genuinely ambiguous, make the single most reasonable call, disclose it in the Filled From Knowledge / Missing Info columns exactly as the base instructions below require, and keep going.\n'+
-    'This does not relax the classification or metafield rules below it. If nothing on the fixed type list fits, or something looks like a genuine mistake rather than ordinary ambiguity — a website_sku matching no live product, a price that looks like a typo, an EDIT with nothing found to edit — hold and flag THAT item, say plainly what you need, and stop there for this one rather than guessing past it. There is no batch of other items riding on this response, so there is nothing to \"continue past it\" for.\n'+
-    'If you are able to act on this (e.g. a connected Shopify tool is available), push the edit through once you finish — this is a live production store, not a draft sitting somewhere for later review.\n\n';
-}
-
-// Builds the same object shape allManifestObjects() would produce for this
-// one entry, without needing this entry to already be sitting in
-// bhaiEntriesData — the click handler that calls this runs BEFORE render,
-// so reusing allManifestObjects() here would mean scraping the DOM back out
-// of what was just pushed. Building it directly from the form object is
-// more direct and can't drift from what the person actually just typed.
-function zhuanBuildBhaiObject(formEntry){
-  var obj = bhaiEntryObject(formEntry, 0);
-  return Object.assign({}, obj, {
-    batch_id: (typeof LISTER_BATCH!=='undefined' && LISTER_BATCH) || '',
-    lister: (typeof LISTER_INITIAL!=='undefined' && LISTER_INITIAL) || '',
-    internal_sku: (typeof listerSKU==='function') ? listerSKU(1) : ''
-  });
-}
-
-function zhuanLog(kind, text){
-  // Status now shows up in the SAME floating "Ask Claude" panel a person
-  // already uses by hand — the panel opens itself, fills in, and shows the
-  // busy dot / answer exactly as it does for a typed question. A second log
-  // living inside Wan Board would just be the same information twice, in
-  // two different places, and the toast is enough to confirm from inside
-  // Nexus that a send went out or came back without needing that.
-  toast((kind==='sending'?'📨 ':kind==='ok'?'✓ ':'⚠ ')+text);
-}
-
-// Serialized on purpose: the automation types into ONE composer in ONE
-// claude.ai tab. Two sends racing would mean the second push's text lands
-// mid-keystroke in the first one's still-streaming reply. Chaining onto
-// this promise means a fast run of Shift+Enter, Shift+Enter, Shift+Enter
-// queues up and goes out one at a time instead of colliding.
-var zhuanQueue=Promise.resolve();
-var zhuanSeq=0;
-
-function zhuanPushEntry(formEntry){
-  if(typeof buildClaudePrepPrompt!=='function' || typeof nexusAskExtension!=='function'){
-    zhuanLog('err','ZhuanMode could not build a prompt — buildClaudePrepPrompt or the extension bridge is missing.');
-    return;
-  }
-  var obj=zhuanBuildBhaiObject(formEntry);
-  var base=buildClaudePrepPrompt([obj]);
-  if(!base){ zhuanLog('err','Nothing to send — the prompt came back empty.'); return; }
-
-  var question=zhuanDirective()+base;
-  var seq=++zhuanSeq;
-  var label=(formEntry.desc||'item').slice(0,44);
-  zhuanLog('sending', '#'+seq+' sending — '+label);
-  formEntry.wbState='sending'; formEntry.wbWhy='';
-  if(typeof wanBoardQueue==='function'){ try{ wanBoardQueue(); }catch(e){} }
-
-  zhuanQueue=zhuanQueue.then(function(){
-    // 120s, not the ~12s default — content-claude.js itself allows up to
-    // 90s for a reply to finish streaming, plus tab-open and settle time
-    // on top of that. The default timeout exists for near-instant calls
-    // like a cookie read; this is not that.
-    //
-    // ZHUAN_PUSH_TO_CLAUDE, not ASK_CLAUDE directly — this is the existing
-    // floating "?" Ask Claude panel (content-wan.js), the same one a person
-    // uses by hand. nexusAskExtension() is a generic window.postMessage
-    // request/response helper; it doesn't care which content script answers
-    // it, only that something posts back {source:'syg-audit-extension',
-    // type:'ZHUAN_PUSH_TO_CLAUDE_RESULT', requestId}. content-wan.js opens
-    // its panel, fills the SAME textarea, and clicks its OWN Ask button —
-    // so the busy dot, the answer text, all of it is the widget the person
-    // already has open, not a second one built here.
-    return nexusAskExtension('ZHUAN_PUSH_TO_CLAUDE', {question: question}, 120000).then(function(res){
-      if(res && res.ok){
-        zhuanLog('ok', '#'+seq+' done — '+label+(res.text?': '+res.text.slice(0,160).replace(/\s+/g,' '):''));
-        // Marks the SAME object sitting in bhaiEntriesData — formEntry is
-        // that exact reference, not a copy, since zhuanPushEntry(e) is
-        // always called with the entry right after e gets pushed into the
-        // array. Set only here, on a CONFIRMED successful response, not
-        // optimistically when the send starts — "pushed live" on the
-        // dashboard should mean genuinely confirmed, not attempted.
-        formEntry.zhuanPushed = true;
-        // Heuristic read of the reply so the queue can separate "pushed clean"
-        // from "pushed but something had to be corrected" — the latter being
-        // the normal outcome. Deliberately conservative: anything that looks
-        // like a hold wins over a flag, and a flag wins over clean, so the row
-        // never reads calmer than the reply actually was.
-        var txt = (res.text||'');
-        if(/\bHELD\b|\bH[1-5]\b|not pushed/i.test(txt)){
-          formEntry.wbState='held';
-          var m = txt.match(/\bH[1-5]\b[^\n]{0,80}/);
-          formEntry.wbWhy = m ? m[0].trim() : 'held';
-        } else if(/\bflags?\b|corrected|conflict|unverified|left blank/i.test(txt)){
-          formEntry.wbState='flagged'; formEntry.wbWhy='';
-        } else {
-          formEntry.wbState='pushed'; formEntry.wbWhy='';
-        }
-        if(typeof updateGoalCounter==='function') updateGoalCounter();
-      } else {
-        zhuanLog('err', '#'+seq+' failed — '+label+' — '+((res&&res.error)||'no response from the Ask Claude panel'));
-        formEntry.wbState='failed';
-        formEntry.wbWhy=((res&&res.error)||'no response');
-      }
-      if(typeof wanBoardQueue==='function'){ try{ wanBoardQueue(); }catch(e){} }
+// ── Wan Board toggle wiring ───────────────────────────────────────────
+// This whole block used to run inline, right here. That is ~23,000 lines
+// BEFORE the toggle markup exists in the document, so every
+// `if(document.getElementById('wbXxx'))` guard was false and NOTHING was
+// ever bound — not the AUTO box, not WearMode, and not the original four.
+// The modes still reached the prompt because SHOVO_MODE/ZHUAN_MODE/etc are
+// seeded from localStorage at declaration, so the symptom was subtle:
+// clicking a switch did nothing and the switches never showed their state,
+// while sends behaved as though the modes were on.
+function wbWireToggles(){
+  if(wbWireToggles._done) return;
+  if(!document.getElementById('wbShovoMode')) return;   // markup not up yet
+  wbWireToggles._done = true;
+  if(document.getElementById('wbShovoMode')){
+    document.getElementById('wbShovoMode').checked = SHOVO_MODE;
+    document.getElementById('wbShovoMode').addEventListener('change', (ev)=>{
+      SHOVO_MODE = ev.target.checked;
+      try{ localStorage.setItem('abribook:shovoMode', SHOVO_MODE ? '1' : '0'); }catch(e){}
+      toast(SHOVO_MODE
+        ? 'ShovoMode on — the copied prompt will tell Claude to push edits as given instead of asking'
+        : 'ShovoMode off — Claude will ask before guessing on anything ambiguous, as usual');
     });
-  });
-}
-
-function zhuanSyncAddBtnLabel(){
-  var addBtn=document.getElementById('bhaiAddEntry');
-  if(!addBtn || bhaiEditingId!==null) return;
-  addBtn.textContent = (ZHUAN_MODE && CURRENT_WORK_PAGE==='wanboard') ? '🚀 Push to Claude/Shopify' : '+ Add to manifest queue';
-}
-
-if(document.getElementById('wbZhuanMode')){
-  document.getElementById('wbZhuanMode').checked = ZHUAN_MODE;
-  document.getElementById('wbZhuanMode').addEventListener('change', (ev)=>{
-    ZHUAN_MODE = ev.target.checked;
-    try{ localStorage.setItem('abribook:zhuanMode', ZHUAN_MODE ? '1' : '0'); }catch(e){}
-    zhuanSyncAddBtnLabel();
-    toast(ZHUAN_MODE
-      ? 'ZhuanMode on — each item you add now goes straight to Claude, no review'
-      : 'ZhuanMode off — items go back to the local queue only');
-  });
-  // Deliberately NOT calling zhuanSyncAddBtnLabel() here on load. This runs
-  // as part of the page's early setup, well before bhaiEditingId is
-  // declared further down (bhaiEditingId TDZ crash, found live 2026-08-11 —
-  // an uncaught ReferenceError here doesn't just fail this block, it halts
-  // ALL script execution after it, which is why unrelated errors like
-  // "MANIFEST_PROMPT is not defined" and "uniEntriesData is not defined"
-  // cascaded from a single bad line up here). switchWorkPage('bhai') already
-  // runs during bootstrap, well after bhaiEditingId exists, and already
-  // calls zhuanSyncAddBtnLabel() itself — so the label still ends up
-  // correct on a reload with ZhuanMode already on, just synced from a spot
-  // in the file where it's actually safe to touch bhaiEditingId.
-}
-
-if(document.getElementById('wbThokyMode')){
-  document.getElementById('wbThokyMode').checked = THOKY_MODE;
-  document.getElementById('wbThokyMode').addEventListener('change', (ev)=>{
-    THOKY_MODE = ev.target.checked;
-    try{ localStorage.setItem('abribook:thokyMode', THOKY_MODE ? '1' : '0'); }catch(e){}
-    toast(THOKY_MODE
-      ? 'ThokyMode on — the listing rulebook is now attached to every prompt'
-      : 'ThokyMode off — prompts go out without the rulebook attached');
-  });
-}
-
-if(document.getElementById('wbCategoryMode')){
-  document.getElementById('wbCategoryMode').checked = CATEGORY_MODE;
-  document.getElementById('wbCategoryMode').addEventListener('change', (ev)=>{
-    CATEGORY_MODE = ev.target.checked;
-    try{ localStorage.setItem('abribook:categoryMode', CATEGORY_MODE ? '1' : '0'); }catch(e){}
-    toast(CATEGORY_MODE
-      ? 'On — items that don\'t fit the category list will get a new one added instead of holding'
-      : 'Off — items outside the fixed category list will hold as before');
-  });
-}
-
-if(document.getElementById('wbWearMode')){
-  document.getElementById('wbWearMode').checked = WEAR_MODE;
-  document.getElementById('wbWearMode').addEventListener('change', (ev)=>{
-    WEAR_MODE = ev.target.checked;
-    try{ localStorage.setItem('abribook:wearMode', WEAR_MODE ? '1' : '0'); }catch(e){}
-    toast(WEAR_MODE
-      ? 'Standard wear on — used items get the generic wear line appended automatically'
-      : 'Standard wear off — only what you type will describe the condition');
-    syncModeUi();
-  });
-}
-
-// ── AUTO preset + the one hard dependency ────────────────────────────
-// ZhuanMode requires ShovoMode. "Send unattended" and "stop and ask before
-// proceeding on anything ambiguous" cannot both be true — the run stalls on
-// the first ambiguity with nobody at the keyboard to answer. That exact pair
-// is what made the old prompt contradict itself, so it is enforced here in
-// the UI rather than left as a note someone has to remember.
-function setToggle(id, on){
-  const el = document.getElementById(id);
-  if(el && el.checked !== on){ el.checked = on; el.dispatchEvent(new Event('change')); }
-}
-function syncModeUi(){
-  const rows = {
-    wbShovoMode:'wbShovoToggleRow', wbZhuanMode:'wbZhuanToggleRow',
-    wbThokyMode:'wbThokyToggleRow', wbCategoryMode:'wbCategoryToggleRow',
-    wbWearMode:'wbWearToggleRow'
-  };
-  Object.keys(rows).forEach(id=>{
-    const row = document.getElementById(rows[id]);
-    const inp = document.getElementById(id);
-    if(!row || !inp) return;
-    row.classList.toggle('wb-locked', AUTO_MODE);
-    inp.disabled = AUTO_MODE;
-  });
-  // ShovoMode is also locked (without AUTO) whenever ZhuanMode is holding it on.
-  const shovoRow = document.getElementById('wbShovoToggleRow');
-  const note = document.getElementById('wbDepNote');
-  if(shovoRow && !AUTO_MODE) shovoRow.classList.toggle('wb-locked', ZHUAN_MODE);
-  if(note) note.classList.toggle('wb-dep-hot', ZHUAN_MODE && !AUTO_MODE);
-  const auto = document.getElementById('wbAutoMode');
-  if(auto) auto.checked = AUTO_MODE;
-}
-if(document.getElementById('wbNoChargerDefault')){
-  document.getElementById('wbNoChargerDefault').checked = NO_CHARGER_DEFAULT;
-  document.getElementById('wbNoChargerDefault').addEventListener('change', (ev)=>{
-    NO_CHARGER_DEFAULT = ev.target.checked;
-    try{ localStorage.setItem('abribook:noChargerDefault', NO_CHARGER_DEFAULT ? '1' : '0'); }catch(e){}
-    const nc=document.getElementById('bhaiNoCharger');
-    if(nc && !nc.checked && NO_CHARGER_DEFAULT) nc.checked = true;
-    toast(NO_CHARGER_DEFAULT
-      ? 'New entries will start with "No charger" ticked'
-      : 'New entries will start with "No charger" unticked');
-  });
-  const _nc0=document.getElementById('bhaiNoCharger');
-  if(_nc0 && NO_CHARGER_DEFAULT) _nc0.checked = true;
-}
-// Flips a set of switches one after another so the change is visible as a
-// sweep rather than an instant, easily-missed jump. Accepts ['id',...] with a
-// shared target, or [['id',bool],...] for per-switch targets.
-function autoSweep(ids, target){
-  ids.forEach(function(item, n){
-    var id  = Array.isArray(item) ? item[0] : item;
-    var val = Array.isArray(item) ? item[1] : target;
-    setTimeout(function(){
-      setToggle(id, val);
-      var row = document.getElementById(id);
-      row = row && row.closest ? row.closest('.wb-shovo-toggle') : null;
-      if(row){
-        row.classList.remove('wb-sweep');
-        void row.offsetWidth;            // restart the animation if re-triggered
-        row.classList.add('wb-sweep');
-        setTimeout(function(){ row.classList.remove('wb-sweep'); }, 400);
-      }
-    }, n * 55);
-  });
-}
-
-if(document.getElementById('wbAutoMode')){
-  document.getElementById('wbAutoMode').checked = AUTO_MODE;
-  // If AUTO was left on, the five must actually BE on when the page comes
-  // back — otherwise the box says AUTO while a switch underneath it reads
-  // off, and the emitted prompt would match the switches, not the box.
-  if(AUTO_MODE){
-    ['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode']
-      .forEach(function(id){ setToggle(id, true); });
   }
-  document.getElementById('wbAutoMode').addEventListener('change', (ev)=>{
-    AUTO_MODE = ev.target.checked;
-    try{ localStorage.setItem('abribook:autoMode', AUTO_MODE ? '1' : '0'); }catch(e){}
+
+  // Single source of truth for the add-button's label. Called from several
+  // places (the toggle itself, page switches, after a normal add completes)
+  // rather than trying to catch every spot that resets the label back to
+  // default — computing the right label fresh each time means there's
+  // nothing to keep in sync by hand. Edit-mode's "✎ Update entry" label is
+  // left alone deliberately: ZhuanMode pushes NEW entries as they're added,
+  // not edits to something already sitting in the queue.
+  // ── ZhuanMode send engine ─────────────────────────────────────────
+  // Builds ONE entry into the exact same prompt shape buildClaudePrepPrompt
+  // already produces for a full batch — just with an array of one — then
+  // wraps it with a directive ShovoMode never sees, because the two exist for
+  // different reasons. ShovoMode's block lives inside buildClaudePrepPrompt
+  // itself and shows up in a manually copied prompt too. This one is added
+  // here, only on the path that actually fires the extension, because it's
+  // answering a question that only applies to an unattended send: nobody is
+  // sitting at that claude.ai tab to answer a follow-up.
+  function zhuanDirective(){
+    return 'ZHUANMODE — AUTOMATED SEND, NO ONE IS WATCHING THIS CHAT.\n'+
+      'This came in automatically from Nexus\u2019s Wan Board — nobody is at the keyboard to answer follow-up questions right now. Do not pause to ask anything. Where a field is genuinely ambiguous, make the single most reasonable call, disclose it in the Filled From Knowledge / Missing Info columns exactly as the base instructions below require, and keep going.\n'+
+      'This does not relax the classification or metafield rules below it. If nothing on the fixed type list fits, or something looks like a genuine mistake rather than ordinary ambiguity — a website_sku matching no live product, a price that looks like a typo, an EDIT with nothing found to edit — hold and flag THAT item, say plainly what you need, and stop there for this one rather than guessing past it. There is no batch of other items riding on this response, so there is nothing to \"continue past it\" for.\n'+
+      'If you are able to act on this (e.g. a connected Shopify tool is available), push the edit through once you finish — this is a live production store, not a draft sitting somewhere for later review.\n\n';
+  }
+
+  // Builds the same object shape allManifestObjects() would produce for this
+  // one entry, without needing this entry to already be sitting in
+  // bhaiEntriesData — the click handler that calls this runs BEFORE render,
+  // so reusing allManifestObjects() here would mean scraping the DOM back out
+  // of what was just pushed. Building it directly from the form object is
+  // more direct and can't drift from what the person actually just typed.
+  function zhuanBuildBhaiObject(formEntry){
+    var obj = bhaiEntryObject(formEntry, 0);
+    return Object.assign({}, obj, {
+      batch_id: (typeof LISTER_BATCH!=='undefined' && LISTER_BATCH) || '',
+      lister: (typeof LISTER_INITIAL!=='undefined' && LISTER_INITIAL) || '',
+      internal_sku: (typeof listerSKU==='function') ? listerSKU(1) : ''
+    });
+  }
+
+  function zhuanLog(kind, text){
+    // Status now shows up in the SAME floating "Ask Claude" panel a person
+    // already uses by hand — the panel opens itself, fills in, and shows the
+    // busy dot / answer exactly as it does for a typed question. A second log
+    // living inside Wan Board would just be the same information twice, in
+    // two different places, and the toast is enough to confirm from inside
+    // Nexus that a send went out or came back without needing that.
+    toast((kind==='sending'?'📨 ':kind==='ok'?'✓ ':'⚠ ')+text);
+  }
+
+  // Serialized on purpose: the automation types into ONE composer in ONE
+  // claude.ai tab. Two sends racing would mean the second push's text lands
+  // mid-keystroke in the first one's still-streaming reply. Chaining onto
+  // this promise means a fast run of Shift+Enter, Shift+Enter, Shift+Enter
+  // queues up and goes out one at a time instead of colliding.
+  var zhuanQueue=Promise.resolve();
+  var zhuanSeq=0;
+
+  function zhuanPushEntry(formEntry){
+    if(typeof buildClaudePrepPrompt!=='function' || typeof nexusAskExtension!=='function'){
+      zhuanLog('err','ZhuanMode could not build a prompt — buildClaudePrepPrompt or the extension bridge is missing.');
+      return;
+    }
+    var obj=zhuanBuildBhaiObject(formEntry);
+    var base=buildClaudePrepPrompt([obj]);
+    if(!base){ zhuanLog('err','Nothing to send — the prompt came back empty.'); return; }
+
+    var question=zhuanDirective()+base;
+    var seq=++zhuanSeq;
+    var label=(formEntry.desc||'item').slice(0,44);
+    zhuanLog('sending', '#'+seq+' sending — '+label);
+    formEntry.wbState='sending'; formEntry.wbWhy='';
+    if(typeof wanBoardQueue==='function'){ try{ wanBoardQueue(); }catch(e){} }
+
+    zhuanQueue=zhuanQueue.then(function(){
+      // 120s, not the ~12s default — content-claude.js itself allows up to
+      // 90s for a reply to finish streaming, plus tab-open and settle time
+      // on top of that. The default timeout exists for near-instant calls
+      // like a cookie read; this is not that.
+      //
+      // ZHUAN_PUSH_TO_CLAUDE, not ASK_CLAUDE directly — this is the existing
+      // floating "?" Ask Claude panel (content-wan.js), the same one a person
+      // uses by hand. nexusAskExtension() is a generic window.postMessage
+      // request/response helper; it doesn't care which content script answers
+      // it, only that something posts back {source:'syg-audit-extension',
+      // type:'ZHUAN_PUSH_TO_CLAUDE_RESULT', requestId}. content-wan.js opens
+      // its panel, fills the SAME textarea, and clicks its OWN Ask button —
+      // so the busy dot, the answer text, all of it is the widget the person
+      // already has open, not a second one built here.
+      return nexusAskExtension('ZHUAN_PUSH_TO_CLAUDE', {question: question}, 120000).then(function(res){
+        if(res && res.ok){
+          zhuanLog('ok', '#'+seq+' done — '+label+(res.text?': '+res.text.slice(0,160).replace(/\s+/g,' '):''));
+          // Marks the SAME object sitting in bhaiEntriesData — formEntry is
+          // that exact reference, not a copy, since zhuanPushEntry(e) is
+          // always called with the entry right after e gets pushed into the
+          // array. Set only here, on a CONFIRMED successful response, not
+          // optimistically when the send starts — "pushed live" on the
+          // dashboard should mean genuinely confirmed, not attempted.
+          formEntry.zhuanPushed = true;
+          // Heuristic read of the reply so the queue can separate "pushed clean"
+          // from "pushed but something had to be corrected" — the latter being
+          // the normal outcome. Deliberately conservative: anything that looks
+          // like a hold wins over a flag, and a flag wins over clean, so the row
+          // never reads calmer than the reply actually was.
+          var txt = (res.text||'');
+          if(/\bHELD\b|\bH[1-5]\b|not pushed/i.test(txt)){
+            formEntry.wbState='held';
+            var m = txt.match(/\bH[1-5]\b[^\n]{0,80}/);
+            formEntry.wbWhy = m ? m[0].trim() : 'held';
+          } else if(/\bflags?\b|corrected|conflict|unverified|left blank/i.test(txt)){
+            formEntry.wbState='flagged'; formEntry.wbWhy='';
+          } else {
+            formEntry.wbState='pushed'; formEntry.wbWhy='';
+          }
+          if(typeof updateGoalCounter==='function') updateGoalCounter();
+        } else {
+          zhuanLog('err', '#'+seq+' failed — '+label+' — '+((res&&res.error)||'no response from the Ask Claude panel'));
+          formEntry.wbState='failed';
+          formEntry.wbWhy=((res&&res.error)||'no response');
+        }
+        if(typeof wanBoardQueue==='function'){ try{ wanBoardQueue(); }catch(e){} }
+      });
+    });
+  }
+
+  function zhuanSyncAddBtnLabel(){
+    var addBtn=document.getElementById('bhaiAddEntry');
+    if(!addBtn || bhaiEditingId!==null) return;
+    addBtn.textContent = (ZHUAN_MODE && CURRENT_WORK_PAGE==='wanboard') ? '🚀 Push to Claude/Shopify' : '+ Add to manifest queue';
+  }
+
+  if(document.getElementById('wbZhuanMode')){
+    document.getElementById('wbZhuanMode').checked = ZHUAN_MODE;
+    document.getElementById('wbZhuanMode').addEventListener('change', (ev)=>{
+      ZHUAN_MODE = ev.target.checked;
+      try{ localStorage.setItem('abribook:zhuanMode', ZHUAN_MODE ? '1' : '0'); }catch(e){}
+      zhuanSyncAddBtnLabel();
+      toast(ZHUAN_MODE
+        ? 'ZhuanMode on — each item you add now goes straight to Claude, no review'
+        : 'ZhuanMode off — items go back to the local queue only');
+    });
+    // Deliberately NOT calling zhuanSyncAddBtnLabel() here on load. This runs
+    // as part of the page's early setup, well before bhaiEditingId is
+    // declared further down (bhaiEditingId TDZ crash, found live 2026-08-11 —
+    // an uncaught ReferenceError here doesn't just fail this block, it halts
+    // ALL script execution after it, which is why unrelated errors like
+    // "MANIFEST_PROMPT is not defined" and "uniEntriesData is not defined"
+    // cascaded from a single bad line up here). switchWorkPage('bhai') already
+    // runs during bootstrap, well after bhaiEditingId exists, and already
+    // calls zhuanSyncAddBtnLabel() itself — so the label still ends up
+    // correct on a reload with ZhuanMode already on, just synced from a spot
+    // in the file where it's actually safe to touch bhaiEditingId.
+  }
+
+  if(document.getElementById('wbThokyMode')){
+    document.getElementById('wbThokyMode').checked = THOKY_MODE;
+    document.getElementById('wbThokyMode').addEventListener('change', (ev)=>{
+      THOKY_MODE = ev.target.checked;
+      try{ localStorage.setItem('abribook:thokyMode', THOKY_MODE ? '1' : '0'); }catch(e){}
+      toast(THOKY_MODE
+        ? 'ThokyMode on — the listing rulebook is now attached to every prompt'
+        : 'ThokyMode off — prompts go out without the rulebook attached');
+    });
+  }
+
+  if(document.getElementById('wbCategoryMode')){
+    document.getElementById('wbCategoryMode').checked = CATEGORY_MODE;
+    document.getElementById('wbCategoryMode').addEventListener('change', (ev)=>{
+      CATEGORY_MODE = ev.target.checked;
+      try{ localStorage.setItem('abribook:categoryMode', CATEGORY_MODE ? '1' : '0'); }catch(e){}
+      toast(CATEGORY_MODE
+        ? 'On — items that don\'t fit the category list will get a new one added instead of holding'
+        : 'Off — items outside the fixed category list will hold as before');
+    });
+  }
+
+  if(document.getElementById('wbWearMode')){
+    document.getElementById('wbWearMode').checked = WEAR_MODE;
+    document.getElementById('wbWearMode').addEventListener('change', (ev)=>{
+      WEAR_MODE = ev.target.checked;
+      try{ localStorage.setItem('abribook:wearMode', WEAR_MODE ? '1' : '0'); }catch(e){}
+      toast(WEAR_MODE
+        ? 'Standard wear on — used items get the generic wear line appended automatically'
+        : 'Standard wear off — only what you type will describe the condition');
+      syncModeUi();
+    });
+  }
+
+  // ── AUTO preset + the one hard dependency ────────────────────────────
+  // ZhuanMode requires ShovoMode. "Send unattended" and "stop and ask before
+  // proceeding on anything ambiguous" cannot both be true — the run stalls on
+  // the first ambiguity with nobody at the keyboard to answer. That exact pair
+  // is what made the old prompt contradict itself, so it is enforced here in
+  // the UI rather than left as a note someone has to remember.
+  function setToggle(id, on){
+    const el = document.getElementById(id);
+    if(el && el.checked !== on){ el.checked = on; el.dispatchEvent(new Event('change')); }
+  }
+  function syncModeUi(){
+    const rows = {
+      wbShovoMode:'wbShovoToggleRow', wbZhuanMode:'wbZhuanToggleRow',
+      wbThokyMode:'wbThokyToggleRow', wbCategoryMode:'wbCategoryToggleRow',
+      wbWearMode:'wbWearToggleRow'
+    };
+    Object.keys(rows).forEach(id=>{
+      const row = document.getElementById(rows[id]);
+      const inp = document.getElementById(id);
+      if(!row || !inp) return;
+      row.classList.toggle('wb-locked', AUTO_MODE);
+      inp.disabled = AUTO_MODE;
+    });
+    // ShovoMode is also locked (without AUTO) whenever ZhuanMode is holding it on.
+    const shovoRow = document.getElementById('wbShovoToggleRow');
+    const note = document.getElementById('wbDepNote');
+    if(shovoRow && !AUTO_MODE) shovoRow.classList.toggle('wb-locked', ZHUAN_MODE);
+    if(note) note.classList.toggle('wb-dep-hot', ZHUAN_MODE && !AUTO_MODE);
+    const auto = document.getElementById('wbAutoMode');
+    if(auto) auto.checked = AUTO_MODE;
+  }
+  if(document.getElementById('wbNoChargerDefault')){
+    document.getElementById('wbNoChargerDefault').checked = NO_CHARGER_DEFAULT;
+    document.getElementById('wbNoChargerDefault').addEventListener('change', (ev)=>{
+      NO_CHARGER_DEFAULT = ev.target.checked;
+      try{ localStorage.setItem('abribook:noChargerDefault', NO_CHARGER_DEFAULT ? '1' : '0'); }catch(e){}
+      const nc=document.getElementById('bhaiNoCharger');
+      if(nc && !nc.checked && NO_CHARGER_DEFAULT) nc.checked = true;
+      toast(NO_CHARGER_DEFAULT
+        ? 'New entries will start with "No charger" ticked'
+        : 'New entries will start with "No charger" unticked');
+    });
+    const _nc0=document.getElementById('bhaiNoCharger');
+    if(_nc0 && NO_CHARGER_DEFAULT) _nc0.checked = true;
+  }
+  // Flips a set of switches one after another so the change is visible as a
+  // sweep rather than an instant, easily-missed jump. Accepts ['id',...] with a
+  // shared target, or [['id',bool],...] for per-switch targets.
+  function autoSweep(ids, target){
+    ids.forEach(function(item, n){
+      var id  = Array.isArray(item) ? item[0] : item;
+      var val = Array.isArray(item) ? item[1] : target;
+      setTimeout(function(){
+        setToggle(id, val);
+        var row = document.getElementById(id);
+        row = row && row.closest ? row.closest('.wb-shovo-toggle') : null;
+        if(row){
+          row.classList.remove('wb-sweep');
+          void row.offsetWidth;            // restart the animation if re-triggered
+          row.classList.add('wb-sweep');
+          setTimeout(function(){ row.classList.remove('wb-sweep'); }, 400);
+        }
+      }, n * 55);
+    });
+  }
+
+  if(document.getElementById('wbAutoMode')){
+    document.getElementById('wbAutoMode').checked = AUTO_MODE;
+    // If AUTO was left on, the five must actually BE on when the page comes
+    // back — otherwise the box says AUTO while a switch underneath it reads
+    // off, and the emitted prompt would match the switches, not the box.
     if(AUTO_MODE){
-      _autoPrev = {s:SHOVO_MODE, z:ZHUAN_MODE, t:THOKY_MODE, c:CATEGORY_MODE, w:WEAR_MODE};
       ['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode']
-        .forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=false; });
-      autoSweep(['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode'], true);
-      toast('AUTO on — all five modes active and held');
-    } else {
-      ['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode']
-        .forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=false; });
-      if(_autoPrev){
-        // Zhuan first on the way down: dropping Shovo while Zhuan is still on
-        // would trip the dependency and switch Zhuan off for us anyway, which
-        // would then overwrite the remembered value.
-        setToggle('wbZhuanMode',_autoPrev.z);
-        autoSweep([['wbShovoMode',_autoPrev.s],['wbThokyMode',_autoPrev.t],
-                   ['wbCategoryMode',_autoPrev.c],['wbWearMode',_autoPrev.w]]);
+        .forEach(function(id){ setToggle(id, true); });
+    }
+    document.getElementById('wbAutoMode').addEventListener('change', (ev)=>{
+      AUTO_MODE = ev.target.checked;
+      try{ localStorage.setItem('abribook:autoMode', AUTO_MODE ? '1' : '0'); }catch(e){}
+      if(AUTO_MODE){
+        _autoPrev = {s:SHOVO_MODE, z:ZHUAN_MODE, t:THOKY_MODE, c:CATEGORY_MODE, w:WEAR_MODE};
+        ['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode']
+          .forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=false; });
+        autoSweep(['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode'], true);
+        toast('AUTO on — all five modes active and held');
+      } else {
+        ['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode']
+          .forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=false; });
+        if(_autoPrev){
+          // Zhuan first on the way down: dropping Shovo while Zhuan is still on
+          // would trip the dependency and switch Zhuan off for us anyway, which
+          // would then overwrite the remembered value.
+          setToggle('wbZhuanMode',_autoPrev.z);
+          autoSweep([['wbShovoMode',_autoPrev.s],['wbThokyMode',_autoPrev.t],
+                     ['wbCategoryMode',_autoPrev.c],['wbWearMode',_autoPrev.w]]);
+        }
+        toast('AUTO off — switches restored to how you had them');
       }
-      toast('AUTO off — switches restored to how you had them');
-    }
-    syncModeUi();
-  });
+      syncModeUi();
+    });
+  }
+  // Enforce the dependency in both directions, with the cost stated rather
+  // than a silent refusal.
+  if(document.getElementById('wbZhuanMode')){
+    document.getElementById('wbZhuanMode').addEventListener('change', ()=>{
+      if(ZHUAN_MODE && !SHOVO_MODE){
+        setToggle('wbShovoMode', true);
+        toast('ShovoMode switched on too — ZhuanMode requires it');
+      }
+      syncModeUi();
+    });
+  }
+  if(document.getElementById('wbShovoMode')){
+    document.getElementById('wbShovoMode').addEventListener('change', ()=>{
+      if(!SHOVO_MODE && ZHUAN_MODE){
+        setToggle('wbZhuanMode', false);
+        toast('ZhuanMode switched off too — it can\'t run without ShovoMode. Sends will return rows without pushing.');
+      }
+      syncModeUi();
+    });
+  }
+  try{ syncModeUi(); }catch(e){}
 }
-// Enforce the dependency in both directions, with the cost stated rather
-// than a silent refusal.
-if(document.getElementById('wbZhuanMode')){
-  document.getElementById('wbZhuanMode').addEventListener('change', ()=>{
-    if(ZHUAN_MODE && !SHOVO_MODE){
-      setToggle('wbShovoMode', true);
-      toast('ShovoMode switched on too — ZhuanMode requires it');
-    }
-    syncModeUi();
-  });
-}
-if(document.getElementById('wbShovoMode')){
-  document.getElementById('wbShovoMode').addEventListener('change', ()=>{
-    if(!SHOVO_MODE && ZHUAN_MODE){
-      setToggle('wbZhuanMode', false);
-      toast('ZhuanMode switched off too — it can\'t run without ShovoMode. Sends will return rows without pushing.');
-    }
-    syncModeUi();
-  });
-}
-try{ syncModeUi(); }catch(e){}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', wbWireToggles);
+} else { wbWireToggles(); }
+// The board can also be mounted/re-mounted after load, so try again then.
+if(typeof window !== 'undefined') window.wbWireToggles = wbWireToggles;
 
 // Shared prep for both "Copy" and "Send to Claude Desktop" — same gates
 // (lister locked, Guided mode review, export scope), different delivery.
@@ -11179,6 +11198,9 @@ function switchWorkPage(page){
   if(typeof wanBuildComposer==='function') wanBuildComposer();
   // Board takes over the whole workspace; the panel canvas hides behind it.
   if(typeof wanMountBoard==='function') wanMountBoard();
+  // The toggles live inside the board's markup; wire them the first time it
+  // actually exists, whenever that is.
+  if(typeof wbWireToggles==='function') wbWireToggles();
   document.body.classList.toggle('wb-on', page==='wanboard');
   if(page==='wanboard'){ if(typeof wanBoardSync==='function') wanBoardSync();
                          if(typeof wanBoardGlow==='function') wanBoardGlow();
