@@ -8029,7 +8029,7 @@ function wbWireToggles(){
       // its panel, fills the SAME textarea, and clicks its OWN Ask button —
       // so the busy dot, the answer text, all of it is the widget the person
       // already has open, not a second one built here.
-      return nexusAskExtension('ZHUAN_PUSH_TO_CLAUDE', {question: question}, 120000).then(function(res){
+      return window.nexusAskExtension('ZHUAN_PUSH_TO_CLAUDE', {question: question}, 120000).then(function(res){
         if(res && res.ok){
           zhuanLog('ok', '#'+seq+' done — '+label+(res.text?': '+res.text.slice(0,160).replace(/\s+/g,' '):''));
           // Marks the SAME object sitting in bhaiEntriesData — formEntry is
@@ -9516,7 +9516,7 @@ function wbSygLoad(){
   // install — Bubble reissues the session on activity, and a rule holding
   // last week's value fails in exactly the same silent way as no rule.
   var prep = (typeof nexusAskExtension==='function')
-    ? nexusAskExtension('SYG_FRAME_PREP',{},8000)
+    ? window.nexusAskExtension('SYG_FRAME_PREP',{},8000)
     : Promise.resolve({ok:false,error:'Extension bridge not present on this page.'});
 
   prep.then(function(res){
@@ -9566,7 +9566,7 @@ window.addEventListener('message',function(e){
     var uid=d.uid?String(d.uid):'';
     wbSygNote((d.path||'')+(uid?'  ·  uid '+uid.slice(0,10):''));
     if(uid && typeof nexusAskExtension==='function'){
-      nexusAskExtension('SYG_FRAME_PREP',{},8000).then(function(r){
+      window.nexusAskExtension('SYG_FRAME_PREP',{},8000).then(function(r){
         var want=r&&r.result&&r.result.uid;
         if(want && String(want)!==uid){
           wbSygState('warn','Rendering as the wrong user',
@@ -9652,7 +9652,7 @@ async function wbFetchLiveComps(query){
   if(typeof nexusAskExtension!=='function') return {ok:false, error:'extension not loaded'};
   try{
     var condId=(typeof nexusResolveConditionId==='function')?nexusResolveConditionId():null;
-    var res=await nexusAskExtension('CHECK_EBAY_LIVE',{query:query,conditionId:condId},32000);
+    var res=await window.nexusAskExtension('CHECK_EBAY_LIVE',{query:query,conditionId:condId},32000);
     if(!res||!res.ok) return {ok:false, error:(res&&res.error)||'live check failed'};
     var listings=res.listings||(res.result&&res.result.listings)||[];
     if(typeof NexusSpec!=='undefined' && NexusSpec.filterComps){
@@ -10309,7 +10309,7 @@ async function wbDeleteQueueEntryAndArchive(id){
     // Same relay ZhuanMode's listing pushes use — the "?" Ask Claude
     // widget, not a separate channel — so this behaves exactly like the
     // rest of the auto-send system rather than a one-off exception.
-    var res=await nexusAskExtension('ZHUAN_PUSH_TO_CLAUDE', {question: wbBuildArchivePrompt(entry)}, 120000);
+    var res=await window.nexusAskExtension('ZHUAN_PUSH_TO_CLAUDE', {question: wbBuildArchivePrompt(entry)}, 120000);
     if(res && res.ok){
       toast('Archive request sent'+(res.text?': '+res.text.slice(0,120):' — check the Ask Claude panel.'));
     }else{
@@ -10365,7 +10365,7 @@ async function wbVgLookup(){
   wbVgSetBusy(true);
   if(resultEl) resultEl.innerHTML='<div class="wb-empty">Looking up '+esc(upc)+'… this opens a background tab, usually 5–15s.</div>';
   try{
-    var res=await nexusAskExtension('LOOKUP_PRICECHARTING', {upc:upc}, 45000);
+    var res=await window.nexusAskExtension('LOOKUP_PRICECHARTING', {upc:upc}, 45000);
     if(!res||!res.ok){
       wbVgLast=null;
       if(resultEl) resultEl.innerHTML='<div class="wb-empty">'+esc((res&&res.error)||'No response from the lookup.')+'</div>';
