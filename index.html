@@ -122,11 +122,15 @@
     box-shadow:0 0 0 3px rgba(50,214,197,.12)}
   #bhaiPage .wan-composer .wan-price-row{margin:9px 0 0}
   #bhaiPage .wan-composer #bhaiAddEntry{margin:9px 0 0}
-  .bhai-quick{margin-top:8px;padding:8px 9px;border:1px solid var(--line-2);
-    border-radius:7px;display:flex;flex-wrap:wrap;align-items:center;gap:7px 12px}
-  .bhai-quick-hd{flex:0 0 100%;font:700 10px var(--sans);letter-spacing:.05em;
-    text-transform:uppercase;opacity:.6}
-  .bhai-quick-hd span{font-weight:400;text-transform:none;letter-spacing:0;opacity:.75}
+  /* One line, not three. This block sits inside #wbComposer, and the centre
+     pane's maximum height is computed as (centre height - composer height).
+     Every row added here is a row the Wan/Lab/SYG/Notes pane can no longer
+     use — at three rows tall it pushed the ceiling down onto the 200px floor
+     and the divider had nowhere left to travel. */
+  .bhai-quick{margin-top:6px;padding:5px 8px;border:1px solid var(--line-2);
+    border-radius:7px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}
+  .bhai-quick-hd{font:700 9.5px var(--sans);letter-spacing:.09em;opacity:.45;
+    cursor:help;flex:none}
   .bhai-chip{display:inline-flex;align-items:center;gap:6px;cursor:pointer;
     font:600 11.5px var(--sans);user-select:none}
   .bhai-chip input{position:absolute;opacity:0;width:0;height:0}
@@ -5206,7 +5210,7 @@ html.nx-light .wb-shovo-sw i{background:#fff}
             </div>
             <textarea class="uni-textarea uni-main-textarea" id="bhaiDesc" placeholder="e.g. This is a Corsair TX650 650W power supply, Hi-Pot tested OK, model 75-001315, SN 121871160000005961209..."></textarea>
             <div class="bhai-quick" id="bhaiQuick">
-              <div class="bhai-quick-hd">Condition shortcuts <span>appended to this entry only</span></div>
+              <span class="bhai-quick-hd" title="Appended to this entry only">COND</span>
               <label class="bhai-chip" title="Shift+D · Adds &quot;Dents on the body&quot; to this entry. Dents are a grading trigger — the listing will come back as Used – Fair, not Good.">
                 <input type="checkbox" id="bhaiDents"><span></span>Dents on body
               </label>
@@ -9590,6 +9594,7 @@ function wbSygSwitch(pane){
   var c=document.getElementById('wbCenter'); if(!c) return;
   c.classList.toggle('syg-on',pane==='syg');
   c.classList.toggle('lab-on',pane==='lab');
+  c.classList.toggle('notes-on',pane==='notes');
   Array.prototype.forEach.call(document.querySelectorAll('.wb-ctab'),function(t){
     var on=t.dataset.wbPane===pane;
     t.classList.toggle('on',on);
@@ -10680,6 +10685,10 @@ var wbCenterResizeApply = null; // exposed so wbSygSwitch can reapply on tab cha
   function activePane(){
     if(center.classList.contains('syg-on')) return document.getElementById('wbSyg');
     if(center.classList.contains('lab-on')) return document.getElementById('wbLab');
+    // Without this the Notes tab fell through to wbWan — which is hidden while
+    // Notes is up — so the drag silently resized an invisible pane and the
+    // divider looked frozen.
+    if(center.classList.contains('notes-on')) return document.getElementById('wbNotes');
     return document.getElementById('wbWan');
   }
   function maxH(){
@@ -11205,6 +11214,7 @@ function switchWorkPage(page){
   // The toggles live inside the board's markup; wire them the first time it
   // actually exists, whenever that is.
   if(typeof wbWireToggles==='function') wbWireToggles();
+  if(typeof wbNotesInit==='function') wbNotesInit();
   document.body.classList.toggle('wb-on', page==='wanboard');
   if(page==='wanboard'){ if(typeof wanBoardSync==='function') wanBoardSync();
                          if(typeof wanBoardGlow==='function') wanBoardGlow();
@@ -23764,6 +23774,45 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-lab-row.store em{color:var(--wb-cy)} .wb-lab-row.live em{color:var(--wb-am)}
 
   .wb-syg{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--wb-pnl)}
+  .wb-center:not(.notes-on) .wb-notes{display:none}
+  .wb-center.notes-on .wb-wan{display:none}
+  .wb-notes{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;
+    background:var(--wb-bg);font:400 12.5px/1.45 var(--sans)}
+  .wb-notes-bar{display:flex;align-items:center;gap:8px;padding:7px 10px;
+    border-bottom:1px solid var(--wb-line)}
+  .wb-notes-spacer{flex:1}
+  .wb-notes-count{font:600 11px var(--sans);opacity:.55;letter-spacing:.03em}
+  .wb-notes-btn{font:600 11.5px var(--sans);color:var(--wb-fg);cursor:pointer;
+    background:transparent;border:1px solid var(--wb-line-hi);border-radius:6px;padding:4px 10px}
+  .wb-notes-btn:hover{border-color:var(--wb-bl);color:var(--wb-bl)}
+  .wb-notes-add{border-color:var(--wb-bl);color:var(--wb-bl)}
+  .wb-notes-head,.wb-notes-row{display:grid;
+    grid-template-columns:minmax(130px,1fr) minmax(130px,1.3fr) minmax(160px,1.9fr) minmax(90px,.8fr) 84px 74px;
+    gap:8px;padding:6px 10px;align-items:start}
+  .wb-notes-head{position:sticky;top:0;z-index:2;background:var(--wb-bg);
+    border-bottom:1px solid var(--wb-line);font:700 9.5px var(--sans);
+    letter-spacing:.09em;text-transform:uppercase;opacity:.5}
+  .wb-notes-rows{overflow:auto;flex:1;min-height:0}
+  .wb-notes-row{border-bottom:1px solid var(--wb-line)}
+  .wb-notes-row:hover{background:rgba(255,255,255,.02)}
+  .wb-notes-row input,.wb-notes-row textarea{width:100%;background:transparent;
+    border:1px solid transparent;border-radius:5px;padding:4px 6px;color:var(--wb-fg);
+    font:400 12.5px/1.4 var(--sans);resize:none;overflow:hidden}
+  .wb-notes-row input:hover,.wb-notes-row textarea:hover{border-color:var(--wb-line)}
+  .wb-notes-row input:focus,.wb-notes-row textarea:focus{outline:none;
+    border-color:var(--wb-bl);background:rgba(90,160,240,.06)}
+  .wb-notes-row .wb-n-sku{font-family:ui-monospace,'IBM Plex Mono',monospace;font-size:11.5px}
+  .wb-notes-row .wb-n-loc{font-size:12px;opacity:.9}
+  .wb-notes-row .wb-n-price{text-align:right;font-family:ui-monospace,'IBM Plex Mono',monospace}
+  .wb-notes-acts{display:flex;gap:4px;justify-content:flex-end;padding-top:3px}
+  .wb-notes-acts button{background:transparent;border:1px solid var(--wb-line-hi);
+    border-radius:5px;color:var(--wb-fg);cursor:pointer;font-size:11px;
+    width:22px;height:22px;line-height:1;padding:0;opacity:.75}
+  .wb-notes-acts button:hover{opacity:1;border-color:var(--wb-bl);color:var(--wb-bl)}
+  .wb-notes-acts .wb-n-del:hover{border-color:#e0645a;color:#e0645a}
+  .wb-notes-empty{padding:22px 14px;text-align:center;opacity:.45;
+    font:400 12px var(--sans);max-width:46ch;margin:0 auto}
+  .wb-notes-empty.gone{display:none}
   .wb-center:not(.syg-on) .wb-syg{display:none}
   .wb-center.syg-on .wb-wan{display:none}
 
@@ -31751,6 +31800,21 @@ setInterval(nx2RefreshModuleActivity, 20000);
           <div class="wb-lab-comps" id="wbLabComps"></div>
         </div>
 
+        <div class="wb-notes" id="wbNotes">
+          <div class="wb-notes-bar">
+            <button type="button" class="wb-notes-btn wb-notes-add" id="wbNotesAdd">+ Row</button>
+            <span class="wb-notes-count" id="wbNotesCount">0 items</span>
+            <span class="wb-notes-spacer"></span>
+            <button type="button" class="wb-notes-btn" id="wbNotesCopyAll" title="Copy every row as SKU - Issues - Item data - Location - Price">Copy all</button>
+            <button type="button" class="wb-notes-btn" id="wbNotesClear" title="Delete every row">Clear</button>
+          </div>
+          <div class="wb-notes-head">
+            <span>SKU</span><span>Issues</span><span>Item data</span><span>Location</span><span>List at</span><span></span>
+          </div>
+          <div class="wb-notes-rows" id="wbNotesRows"></div>
+          <div class="wb-notes-empty" id="wbNotesEmpty">Nothing yet. Add a row as you go through the bin \u2014 it saves as you type and survives a reload.</div>
+        </div>
+
         <div class="wb-syg" id="wbSyg">
           <div class="wb-syg-bar">
             <span class="wb-syg-crumb" id="wbSygCrumb">buyer.sellyourgadgets.com / dashboard / inventory</span>
@@ -31794,6 +31858,7 @@ setInterval(nx2RefreshModuleActivity, 20000);
             <button type="button" class="wb-ctab on" data-wb-pane="wan" role="tab" aria-selected="true"><i class="wb-ct-dot"></i>Wan</button>
             <button type="button" class="wb-ctab" data-wb-pane="lab" role="tab" aria-selected="false"><i class="wb-ct-dot"></i>Lab</button>
             <button type="button" class="wb-ctab" data-wb-pane="syg" role="tab" aria-selected="false"><i class="wb-ct-dot"></i>SYG</button>
+            <button type="button" class="wb-ctab" data-wb-pane="notes" role="tab" aria-selected="false"><i class="wb-ct-dot"></i>Notes</button>
             <span class="wb-ctab-note" id="wbSygNote"></span>
           </div>
         </div>
@@ -33670,6 +33735,154 @@ function nxWheelInit(){
     }
   });
 })();
+
+// ── Notes tab ─────────────────────────────────────────────────────────
+// A scratchpad for the bin: jot SKU / issues / item data / target price as
+// you handle each unit, then push a row straight into the composer instead
+// of retyping it. Kept deliberately separate from the queue — these are
+// notes about things you have NOT decided to list yet.
+var WB_NOTES_KEY='abribook:wbNotes';
+var wbNotes=[];
+try{ wbNotes = JSON.parse(localStorage.getItem(WB_NOTES_KEY)||'[]') || []; }catch(e){ wbNotes=[]; }
+
+function wbNotesSave(){
+  try{ localStorage.setItem(WB_NOTES_KEY, JSON.stringify(wbNotes)); }catch(e){}
+  var c=document.getElementById('wbNotesCount');
+  if(c) c.textContent = wbNotes.length + (wbNotes.length===1?' item':' items');
+  var em=document.getElementById('wbNotesEmpty');
+  if(em) em.classList.toggle('gone', wbNotes.length>0);
+}
+function wbNotesLine(n){
+  return [n.sku||'', n.issues||'', n.data||'', n.loc||'', n.price?('$'+String(n.price).replace(/^\$/,'')):'']
+    .map(function(x){ return String(x).replace(/\s*\n\s*/g,' ').trim(); })
+    .join(' - ');
+}
+function wbNotesGrow(t){ t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,140)+'px'; }
+
+function wbNotesRender(){
+  var box=document.getElementById('wbNotesRows'); if(!box) return;
+  box.innerHTML='';
+  wbNotes.forEach(function(n,i){
+    var row=document.createElement('div'); row.className='wb-notes-row';
+    row.innerHTML =
+      '<input class="wb-n-sku" data-f="sku"   placeholder="NJ02-…" value="">'+
+      '<textarea data-f="issues" rows="1" placeholder="cracked back, no charger"></textarea>'+
+      '<textarea data-f="data"   rows="1" placeholder="model, storage, colour, IMEI…"></textarea>'+
+      '<input class="wb-n-loc"   data-f="loc"   placeholder="shelf / bin" value="">'+
+      '<input class="wb-n-price" data-f="price" placeholder="0.00" value="">'+
+      '<span class="wb-notes-acts">'+
+        '<button type="button" class="wb-n-go"   title="Open the portal ready to search this SKU">\u2197</button>'+
+        '<button type="button" class="wb-n-push" title="Send to the composer">\u21e5</button>'+
+        '<button type="button" class="wb-n-copy" title="Copy as SKU - Issues - Item data - Location - Price">\u2398</button>'+
+        '<button type="button" class="wb-n-del"  title="Delete row">\u2715</button>'+
+      '</span>';
+    row.querySelectorAll('[data-f]').forEach(function(el){
+      el.value = n[el.dataset.f] || '';
+      if(el.tagName==='TEXTAREA') wbNotesGrow(el);
+      el.addEventListener('input', function(){
+        n[el.dataset.f]=el.value;
+        if(el.tagName==='TEXTAREA') wbNotesGrow(el);
+        wbNotesSave();
+      });
+    });
+    row.querySelector('.wb-n-del').addEventListener('click', function(){
+      wbNotes.splice(i,1); wbNotesSave(); wbNotesRender();
+    });
+    row.querySelector('.wb-n-copy').addEventListener('click', function(){
+      wbCopy(wbNotesLine(n), 'Row copied');
+    });
+    row.querySelector('.wb-n-push').addEventListener('click', function(){ wbNotesToComposer(n); });
+    row.querySelector('.wb-n-go').addEventListener('click', function(){ wbNotesPortal(n.sku); });
+    box.appendChild(row);
+  });
+  wbNotesSave();
+}
+function wbCopy(text, msg){
+  var done=function(){ if(typeof toast==='function') toast(msg||'Copied'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, function(){ wbCopyFallback(text); done(); });
+  } else { wbCopyFallback(text); done(); }
+}
+function wbCopyFallback(text){
+  var ta=document.createElement('textarea'); ta.value=text;
+  ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta);
+  ta.select(); try{ document.execCommand('copy'); }catch(e){} ta.remove();
+}
+
+// Drop a note straight into the BhaiMode composer. This is the point of the
+// tab — the alternative was copy, switch, paste, switch back, four times.
+function wbNotesToComposer(n){
+  var desc=document.getElementById('bhaiDesc');
+  var price=document.getElementById('bhaiPrice');
+  if(!desc){ if(typeof toast==='function') toast('Composer is not on screen'); return; }
+  // The SKU is deliberately NOT filled. It is the one field that has to be
+  // assigned deliberately per unit, and pre-filling it from a note is exactly
+  // how the wrong SKU ends up on the wrong item. Everything else is prepared
+  // so the SKU is the only thing left to do.
+  var body=[n.data||'', n.issues||'', n.loc?('Location: '+n.loc):'']
+             .filter(Boolean).join('\n');
+  desc.value = body;
+  if(price && n.price) price.value=String(n.price).replace(/^\$/,'');
+  [desc,price].forEach(function(el){
+    if(el) el.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  if(typeof switchWorkPage==='function') switchWorkPage('bhai');
+  desc.focus();
+  if(typeof toast==='function') toast('Sent to composer');
+}
+
+// The portal is a different origin, so nothing here can type into its search
+// box directly — the browser forbids it. What we CAN do is put the SKU on the
+// clipboard, bring the portal up, and ask the extension's content script to
+// run the search if it supports it. If it doesn't, one paste finishes the job.
+function wbNotesPortal(sku){
+  sku=(sku||'').trim();
+  if(!sku){ if(typeof toast==='function') toast('No SKU on that row'); return; }
+  wbCopy(sku, 'SKU copied \u2014 paste into the portal search');
+  var f=document.getElementById('wbSygFrame');
+  if(f && typeof wbSygSwitch==='function'){
+    wbSygSwitch('syg');
+    // Speculative, and harmless if unhandled: the frame's content script can
+    // pick this up and fill #standardLivesearch itself. Documented shape so
+    // the extension side has something definite to listen for.
+    setTimeout(function(){
+      try{
+        f.contentWindow.postMessage(
+          {source:'syg-nexus-host', type:'SYG_PORTAL_SEARCH', query:sku},
+          'https://buyer.sellyourgadgets.com');
+      }catch(e){}
+    }, 600);
+  } else {
+    window.open('https://buyer.sellyourgadgets.com/dashboard/inventory','_blank','noopener');
+  }
+}
+
+function wbNotesInit(){
+  if(wbNotesInit._done) return;
+  if(!document.getElementById('wbNotesRows')) return;
+  wbNotesInit._done=true;
+  document.getElementById('wbNotesAdd').addEventListener('click', function(){
+    wbNotes.push({sku:'',issues:'',data:'',loc:'',price:''});
+    wbNotesRender();
+    var rows=document.querySelectorAll('#wbNotesRows .wb-notes-row');
+    var last=rows[rows.length-1];
+    if(last) last.querySelector('input').focus();
+  });
+  document.getElementById('wbNotesCopyAll').addEventListener('click', function(){
+    if(!wbNotes.length){ if(typeof toast==='function') toast('Nothing to copy'); return; }
+    wbCopy(wbNotes.map(wbNotesLine).join('\n'), wbNotes.length+' rows copied');
+  });
+  document.getElementById('wbNotesClear').addEventListener('click', function(){
+    if(!wbNotes.length) return;
+    if(!confirm('Delete all '+wbNotes.length+' notes? This cannot be undone.')) return;
+    wbNotes=[]; wbNotesRender();
+  });
+  wbNotesRender();
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', wbNotesInit);
+} else { wbNotesInit(); }
+window.wbNotesInit=wbNotesInit;
 
 // ── Wan Board keyboard shortcuts ──────────────────────────────────────
 // Shift+letter is just a capital letter, so these MUST stand down while a
