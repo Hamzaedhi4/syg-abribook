@@ -8160,8 +8160,36 @@ if(document.getElementById('wbNoChargerDefault')){
   const _nc0=document.getElementById('bhaiNoCharger');
   if(_nc0 && NO_CHARGER_DEFAULT) _nc0.checked = true;
 }
+// Flips a set of switches one after another so the change is visible as a
+// sweep rather than an instant, easily-missed jump. Accepts ['id',...] with a
+// shared target, or [['id',bool],...] for per-switch targets.
+function autoSweep(ids, target){
+  ids.forEach(function(item, n){
+    var id  = Array.isArray(item) ? item[0] : item;
+    var val = Array.isArray(item) ? item[1] : target;
+    setTimeout(function(){
+      setToggle(id, val);
+      var row = document.getElementById(id);
+      row = row && row.closest ? row.closest('.wb-shovo-toggle') : null;
+      if(row){
+        row.classList.remove('wb-sweep');
+        void row.offsetWidth;            // restart the animation if re-triggered
+        row.classList.add('wb-sweep');
+        setTimeout(function(){ row.classList.remove('wb-sweep'); }, 400);
+      }
+    }, n * 55);
+  });
+}
+
 if(document.getElementById('wbAutoMode')){
   document.getElementById('wbAutoMode').checked = AUTO_MODE;
+  // If AUTO was left on, the five must actually BE on when the page comes
+  // back — otherwise the box says AUTO while a switch underneath it reads
+  // off, and the emitted prompt would match the switches, not the box.
+  if(AUTO_MODE){
+    ['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode']
+      .forEach(function(id){ setToggle(id, true); });
+  }
   document.getElementById('wbAutoMode').addEventListener('change', (ev)=>{
     AUTO_MODE = ev.target.checked;
     try{ localStorage.setItem('abribook:autoMode', AUTO_MODE ? '1' : '0'); }catch(e){}
@@ -8169,17 +8197,18 @@ if(document.getElementById('wbAutoMode')){
       _autoPrev = {s:SHOVO_MODE, z:ZHUAN_MODE, t:THOKY_MODE, c:CATEGORY_MODE, w:WEAR_MODE};
       ['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode']
         .forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=false; });
-      setToggle('wbShovoMode',true); setToggle('wbZhuanMode',true);
-      setToggle('wbThokyMode',true); setToggle('wbCategoryMode',true);
-      setToggle('wbWearMode',true);
-      toast('AUTO on — all five modes active and locked');
+      autoSweep(['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode'], true);
+      toast('AUTO on — all five modes active and held');
     } else {
       ['wbShovoMode','wbZhuanMode','wbThokyMode','wbCategoryMode','wbWearMode']
         .forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=false; });
       if(_autoPrev){
-        setToggle('wbZhuanMode',_autoPrev.z); setToggle('wbShovoMode',_autoPrev.s);
-        setToggle('wbThokyMode',_autoPrev.t); setToggle('wbCategoryMode',_autoPrev.c);
-        setToggle('wbWearMode',_autoPrev.w);
+        // Zhuan first on the way down: dropping Shovo while Zhuan is still on
+        // would trip the dependency and switch Zhuan off for us anyway, which
+        // would then overwrite the remembered value.
+        setToggle('wbZhuanMode',_autoPrev.z);
+        autoSweep([['wbShovoMode',_autoPrev.s],['wbThokyMode',_autoPrev.t],
+                   ['wbCategoryMode',_autoPrev.c],['wbWearMode',_autoPrev.w]]);
       }
       toast('AUTO off — switches restored to how you had them');
     }
@@ -10083,6 +10112,10 @@ function wanBoardQueue(){
   if(!list) return;
   var data=(typeof bhaiEntriesData!=='undefined'?bhaiEntriesData:[]);
   document.getElementById('wbQueueCount').textContent=data.length;
+  // Keep the home's core disc in step — the queue can change without
+  // updateGoalCounter() firing (reorder, delete).
+  var _nxQ=document.getElementById('nxQueued');
+  if(_nxQ) _nxQ.textContent=data.length;
   if(!data.length){ list.innerHTML='<div class="wb-empty">Nothing queued yet.</div>'; wanBoardSend(); return }
   list.innerHTML=data.map(function(e,i){
     var ready=!!e.desc;
@@ -11132,6 +11165,16 @@ function switchWorkPage(page){
   };
   Object.entries(pages).forEach(([k,el])=>{ if(el) el.classList.toggle('on', k===page); });
   CURRENT_WORK_PAGE = page;
+  // Reflect the switch in both dropdowns. Callers other than the dropdown
+  // itself (the home's Wan Board tag, the 'bhai' default on load) used to
+  // leave the select showing whatever page it was on before, so the label
+  // and the visible page disagreed. Assigning .value only — dispatching
+  // change here would re-enter this function through the select's own
+  // listener.
+  var _wps = document.getElementById('workPageSelect');
+  if(_wps && _wps.value !== page) _wps.value = page;
+  var _tbp = document.getElementById('tbWorkPage');
+  if(_tbp && _tbp.value !== page) _tbp.value = page;
   if(typeof zhuanSyncAddBtnLabel==='function') zhuanSyncAddBtnLabel();
   if(typeof wanBuildComposer==='function') wanBuildComposer();
   // Board takes over the whole workspace; the panel canvas hides behind it.
@@ -12134,6 +12177,13 @@ function updateGoalCounter(){
   // that could drift out of sync with this one. Placed BEFORE the
   // pill-existence guard below so these still update on pages where the
   // toolbar pill isn't present but the dashboard is.
+  // Radial home core disc — same source, same trigger points as the tiles
+  // below, so the two can never disagree.
+  const nxBatchEl  = document.getElementById('nxBatch');
+  const nxQueuedEl = document.getElementById('nxQueued');
+  if(nxBatchEl)  nxBatchEl.textContent  = LISTER_BATCH || '\u2014';
+  if(nxQueuedEl) nxQueuedEl.textContent = (bhaiEntriesData||[]).length;
+
   const nx2BatchEl = document.getElementById('nx2StatBatch');
   const nx2BatchSubEl = document.getElementById('nx2StatBatchSub');
   if(nx2BatchEl){
@@ -20107,6 +20157,12 @@ const LS_STICKIES = 'wan_stickies_v2';
 // every re-entry after that just re-shows the existing canvas as-is —
 // same panels, same content, same lock-in state, untouched.
 let wanCanvasBuilt = false;
+// Exported because openModule() lives in a different <script> IIFE and has
+// no way to see this otherwise. The data-module="wan" path has been throwing
+// a silent ReferenceError here since it was added — openModule's try/catch
+// swallowed it, so the home's Wan Board button hid the welcome screen and
+// then did nothing. Only the #welcomeWan listener (same block as this
+// function) ever actually reached it.
 function initCanvas() {
   const toolbar = document.getElementById('wanToolbar');
   const canvas  = document.getElementById('wanCanvas');
@@ -21253,6 +21309,8 @@ document.getElementById('tbListerSelect')?.addEventListener('change', e => check
 document.getElementById('tbLockBtn')?.addEventListener('click', () => {
   setTimeout(() => checkSmokeBreakAccess(document.getElementById('tbListerSelect')?.value), 250);
 }, true);
+
+window.initCanvas = initCanvas;
 
 })();
 </script>
@@ -22493,6 +22551,58 @@ function renderAnswer(q) {
   // ── 1. Check custom shortcuts first ────────────────────────────
   const customMatch = resolveCustomCmd(q);
   if (customMatch) { renderCustomCmd(customMatch, q); return; }
+
+  // ── 1a. Lock-in by sentence — "im Juan RTL0901" ────────────────
+  // Runs AFTER custom shortcuts so a user-defined command always wins.
+  // Deliberately drives the real listerLockBtn instead of setting
+  // LISTER_INITIAL/LISTER_BATCH directly: that button also disables the
+  // inputs, shows the pill, refreshes all three SKU previews, hides the
+  // panel welcome overlays and calls updateGoalCounter(). Reproducing
+  // that here would be a second copy to keep in sync. Clicking by hand
+  // still works exactly as before — this is just another way in.
+  const lockM = /^\s*(?:i'?m|this is|lock(?:\s*in)?(?:\s*as)?)\s+([A-Za-z]+)\s*[, ]\s*(RTL\s*\d+)\s*$/i.exec(q);
+  if (lockM) {
+    const who = lockM[1].trim();
+    const batch = lockM[2].replace(/\s+/g,'').toUpperCase();
+    const sel = document.getElementById('listerSelect');
+    const bIn = document.getElementById('listerBatch');
+    const btn = document.getElementById('listerLockBtn');
+    labelEl.textContent = 'Lock in';
+    if (!sel || !bIn || !btn) {
+      bodyEl.innerHTML = '<p>The intake bar is not on screen, so there is nothing to lock in to.</p>';
+      return;
+    }
+    if (typeof LISTER_LOCKED !== 'undefined' && LISTER_LOCKED) {
+      bodyEl.innerHTML = '<p>Already locked in as <b>' +
+        (document.getElementById('listerPillName')?.textContent || '').replace(/^\u{1F464}\s*/u,'') +
+        '</b>. Reload to change it \u2014 the lock is deliberately one-way per session.</p>';
+      return;
+    }
+    // Match against the real options so this keeps working if the team changes.
+    let matched = '';
+    for (const opt of sel.options) {
+      if (!opt.value) continue;
+      if (opt.value.toLowerCase() === who.toLowerCase() ||
+          opt.text.toLowerCase().indexOf(who.toLowerCase()) === 0) { matched = opt.value; break; }
+    }
+    if (!matched) {
+      const names = [...sel.options].filter(o=>o.value).map(o=>o.text).join(', ');
+      bodyEl.innerHTML = '<p>No lister called <b>' + who + '</b>. Known: ' + names + '.</p>';
+      return;
+    }
+    sel.value = matched;
+    sel.dispatchEvent(new Event('change', {bubbles:true}));
+    bIn.value = batch;
+    bIn.dispatchEvent(new Event('input', {bubbles:true}));
+    btn.click();
+    const ok = (typeof LISTER_LOCKED !== 'undefined' && LISTER_LOCKED);
+    bodyEl.innerHTML = ok
+      ? '<p>Locked in as <b>' + sel.options[sel.selectedIndex].text +
+        '</b> on batch <b>' + batch + '</b>.</p>'
+      : '<p>Could not lock in \u2014 check the intake bar for what it is asking for.</p>';
+    if (ok) setTimeout(closeGModeAI, 900);
+    return;
+  }
 
   // ── 1b. Specs lookup command — "specs {tag}" opens Dell's support
   // page and copies the Service Tag to the clipboard. The ?servicetag=
@@ -24032,9 +24142,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-auto-lbl em{font-style:normal;font-weight:500;opacity:.62}
   #wbAutoMode:checked ~ .wb-auto-lbl{color:var(--wb-bl)}
   /* Locked-by-AUTO state: shown as on, but clearly not editable. */
-  .wb-shovo-toggle.wb-locked{opacity:.72;cursor:not-allowed}
-  .wb-shovo-toggle.wb-locked .wb-shovo-lbl:after{content:" · locked by AUTO";
-    font-style:normal;font-weight:500;opacity:.55}
+  /* Locked by AUTO. Previously this dimmed the row to .72, which read as
+     "disabled/off" — the opposite of what AUTO just did to it. Keep the row
+     at full strength (it IS on) and show the hold with a rail down the left
+     edge instead. */
+  .wb-shovo-toggle.wb-locked{cursor:not-allowed;position:relative}
+  .wb-shovo-toggle.wb-locked::before{content:"";position:absolute;
+    left:0;top:6px;bottom:6px;width:2px;border-radius:2px;
+    background:var(--wb-bl);opacity:.85}
+  .wb-shovo-toggle.wb-locked .wb-shovo-lbl:after{content:" \00b7 held by AUTO";
+    font-style:normal;font-weight:600;opacity:.6;font-size:.92em}
+
+  /* The flip itself. Without this the five switches change state in the same
+     frame as the click, which is easy to miss when your eye is on the AUTO
+     box at the bottom — the stagger makes it read as one deliberate sweep. */
+  @keyframes wbAutoSweep{
+    0%{transform:translateX(0)}
+    35%{transform:translateX(4px)}
+    100%{transform:translateX(0)}
+  }
+  .wb-shovo-toggle.wb-sweep{animation:wbAutoSweep .34s cubic-bezier(.2,.9,.3,1)}
+  .wb-shovo-toggle.wb-sweep .wb-shovo-sw{box-shadow:0 0 0 3px rgba(90,160,240,.28)}
+  @media (prefers-reduced-motion: reduce){
+    .wb-shovo-toggle.wb-sweep{animation:none}
+  }
   .wb-dep-note{font:500 10.5px var(--sans);opacity:.55;margin:5px 2px 0;
     line-height:1.45}
   .wb-dep-note.wb-dep-hot{opacity:1;color:var(--wb-am)}
@@ -26765,7 +26896,17 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       // correctly hid the welcome screen but left the canvas never
       // initialized, which is why the board looked broken/blank when
       // opened that way.
-      setTimeout(initCanvas, 50);
+      setTimeout(function(){
+        if(typeof window.initCanvas === 'function') window.initCanvas();
+        else console.error('openModule(wan): initCanvas not exported');
+        // The hub tag says "Wan Board", so it has to land on the board.
+        // initCanvas only reveals the canvas at whatever CURRENT_WORK_PAGE
+        // happened to be — 'batch' by default — so opening from the home
+        // showed the batch page under a Wan Board label. switchWorkPage
+        // also runs the board's own sync/glow/composer setup, which
+        // initCanvas doesn't.
+        if(typeof switchWorkPage === 'function') switchWorkPage('wanboard');
+      }, 50);
       return;
     }
     if(id==='audit'){welcome.classList.add('hidden');if(typeof window.pcOpen==='function')window.pcOpen();return}
