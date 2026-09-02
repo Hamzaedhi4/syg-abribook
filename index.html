@@ -33258,6 +33258,11 @@ window.offerCheckOpen=function(){
   letter-spacing:.07em;text-transform:uppercase;padding:8px 13px;border:1.5px solid currentColor;
   border-radius:3px;text-decoration:none}
 #ocRoot .oc-lk.shop{color:var(--ok)} #ocRoot .oc-lk.bay{color:#144E8C} #ocRoot .oc-lk.none{opacity:.3;border:0}
+#ocRoot .oc-lk.msg{color:#8A6212;border-color:#8A6212}
+/* Destructive, and it leaves the app — it should not read like the others. */
+#ocRoot .oc-lk.cancel{color:#9B2F22;border-color:#9B2F22}
+#ocRoot .oc-lk.cancel:hover{background:#9B2F22;border-color:#9B2F22;color:#fff}
+#ocRoot .oc-lk.msg:hover{background:#8A6212;border-color:#8A6212;color:#fff}
 #ocRoot .oc-lk:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 #ocRoot .oc-issues{padding:13px 18px 16px;border-top:1px solid var(--line);background:#FAFAF7}
 #ocRoot .oc-issues h4{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;letter-spacing:.15em;
@@ -33276,6 +33281,12 @@ window.offerCheckOpen=function(){
 (function(){
 var SHOP_ADMIN_ORDER='https://xpp09p-dz.myshopify.com/admin/orders/';
 var EBAY_ORDER='https://www.ebay.com/mesh/ord/details?orderid=';
+// Cancellation goes straight to eBay's cancel intent screen. The order
+// number is the whole payload, so the link is safe to build client-side.
+var EBAY_CANCEL='https://www.ebay.com/cmr/Start?userIntent=Cancel&omsOrderId=';
+// Same order-details page, plus a hash the extension can act on to click
+// through to the message composer (see the note by the button).
+var EBAY_MSG='https://www.ebay.com/mesh/ord/details?redirect=true&orderid=';
 var built=false, ROWS=[], FILTER='ALL', POS=0, EBAY=null, AWAIT=null;
 
 function $(i){return document.getElementById(i)}
@@ -33483,6 +33494,17 @@ function drawCard(){
   if(r.shop&&r.shop.id) links.push('<a class="oc-lk shop" href="'+SHOP_ADMIN_ORDER+esc(r.shop.id)+'" target="_blank" rel="noopener">Shopify order \u2197</a>');
   if(r.cat&&r.cat.pid) links.push('<a class="oc-lk shop" href="https://xpp09p-dz.myshopify.com/admin/products/'+esc(r.cat.pid)+'" target="_blank" rel="noopener">Product \u2197</a>');
   if(r.ord) links.push('<a class="oc-lk bay" href="'+EBAY_ORDER+encodeURIComponent(r.ord)+'" target="_blank" rel="noopener">eBay order \u2197</a>');
+  // Cancel and Message are shown only where the unit is genuinely gone
+  // (SHIPPED / TITLEDUP). Putting a one-click cancel next to every order,
+  // including the healthy ones, is how a good order gets cancelled at 6pm on
+  // a Friday. SKUREUSE is deliberately excluded — that flag now means "the
+  // label was reused", i.e. this order is probably fine.
+  if(r.ord && (r.flag==='SHIPPED' || r.flag==='TITLEDUP')){
+    links.push('<a class="oc-lk msg" href="'+EBAY_MSG+encodeURIComponent(r.ord)+'#syg-msg" '+
+      'target="_blank" rel="noopener" title="Opens the eBay order ready to message the buyer">Message buyer \u2197</a>');
+    links.push('<a class="oc-lk cancel" href="'+EBAY_CANCEL+encodeURIComponent(r.ord)+'" '+
+      'target="_blank" rel="noopener" title="Opens eBay\u2019s cancellation screen for this order. eBay still asks you to confirm.">Cancel order \u2197</a>');
+  }
   if(!links.length) links.push('<span class="oc-lk none">\u2014</span>');
 
   $('ocOut').innerHTML=
