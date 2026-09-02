@@ -9595,6 +9595,8 @@ function wbSygSwitch(pane){
   c.classList.toggle('syg-on',pane==='syg');
   c.classList.toggle('lab-on',pane==='lab');
   c.classList.toggle('notes-on',pane==='notes');
+  // Textareas can only be measured once they are on screen.
+  if(pane==='notes' && typeof wbNotesRegrow==='function') setTimeout(wbNotesRegrow,0);
   Array.prototype.forEach.call(document.querySelectorAll('.wb-ctab'),function(t){
     var on=t.dataset.wbPane===pane;
     t.classList.toggle('on',on);
@@ -23811,11 +23813,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   @media (prefers-reduced-motion: reduce){
     .wb-note-ghost{transition:opacity .2s ease}
   }
-  .wb-notes-row{border-bottom:1px solid var(--wb-line)}
+  .wb-notes-row{border-bottom:1px solid var(--wb-line);position:relative}
   .wb-notes-row:hover{background:rgba(255,255,255,.02)}
   .wb-notes-row input,.wb-notes-row textarea{width:100%;background:transparent;
     border:1px solid transparent;border-radius:5px;padding:4px 6px;color:var(--wb-fg);
-    font:400 12.5px/1.4 var(--sans);resize:none;overflow:hidden}
+    font:400 12.5px/1.4 var(--sans);resize:none;overflow:hidden;
+    min-height:28px;box-sizing:border-box;
+    transition:transform .13s ease, box-shadow .13s ease, background .13s ease}
+  .wb-notes-row textarea{display:block}
+
+  /* Focused cell lifts and magnifies. These cells are narrow and sit in a
+     dense grid, so the usual 1px focus ring is easy to lose — especially
+     mid-batch when you are looking at the item, not the screen. Scaling from
+     the left edge keeps the text you are typing anchored where it already
+     was, and the raised z-index lets it overlap its neighbours rather than
+     being clipped by the column. */
+  .wb-notes-row input:focus,.wb-notes-row textarea:focus{
+    outline:none;transform:scale(1.045);transform-origin:left center;
+    position:relative;z-index:6;
+    background:var(--wb-pnl,#141922);border-color:var(--wb-bl);
+    box-shadow:0 0 0 2px var(--wb-bl), 0 8px 26px rgba(0,0,0,.38)}
+  .wb-notes-row .wb-n-price:focus{transform-origin:right center}
+  @media (prefers-reduced-motion: reduce){
+    .wb-notes-row input:focus,.wb-notes-row textarea:focus{transform:none}
+  }
   .wb-notes-row input:hover,.wb-notes-row textarea:hover{border-color:var(--wb-line)}
   .wb-notes-row input:focus,.wb-notes-row textarea:focus{outline:none;
     border-color:var(--wb-bl);background:rgba(90,160,240,.06)}
@@ -33258,6 +33279,11 @@ window.offerCheckOpen=function(){
   letter-spacing:.07em;text-transform:uppercase;padding:8px 13px;border:1.5px solid currentColor;
   border-radius:3px;text-decoration:none}
 #ocRoot .oc-lk.shop{color:var(--ok)} #ocRoot .oc-lk.bay{color:#144E8C} #ocRoot .oc-lk.none{opacity:.3;border:0}
+#ocRoot .oc-notrack{color:var(--warn,#8A6212)}
+#ocRoot .oc-armed{display:inline-flex;align-items:center;gap:6px;font-size:11px;
+  font-weight:600;opacity:.8;cursor:pointer;margin-right:4px}
+#ocRoot .oc-lk.cancel.is-locked{opacity:.4;cursor:not-allowed}
+#ocRoot .oc-lk.cancel.is-locked:hover{background:transparent;color:#9B2F22}
 #ocRoot .oc-lk.msg{color:#8A6212;border-color:#8A6212}
 /* Destructive, and it leaves the app — it should not read like the others. */
 #ocRoot .oc-lk.cancel{color:#9B2F22;border-color:#9B2F22}
@@ -33337,6 +33363,9 @@ function parseTable(text,hints){
   }
   return {head:head,rows:rows};
 }
+// eBay writes order numbers with and without separators depending on which
+// export produced them, so compare on digits only.
+function r_ordNorm(v){ return String(v||'').replace(/[^0-9]/g,''); }
 function pick(head,guesses){
   var low=head.map(function(h){return h.toLowerCase()});
   for(var i=0;i<guesses.length;i++)
@@ -33348,6 +33377,8 @@ function pick(head,guesses){
    BOTH means that item already went out on an earlier order — this one
    cannot be filled. That is the whole point of the check. */
 var FLAG={
+  SELFSHIP:{l:'This order already shipped',c:'warn'},
+  NOTRACK:{l:'Shipped, no tracking',c:'warn'},
   SHIPPED:{l:'Already shipped',c:'bad'},
   TITLEDUP:{l:'Same item, different SKU',c:'bad'},
   DUPE:{l:'Twice in this queue',c:'bad'},
@@ -33356,7 +33387,7 @@ var FLAG={
   NOSKU:{l:'No SKU on order',c:'ghost'},
   OK:{l:'Good to ship',c:'ok'}
 };
-var ORDER=['SHIPPED','TITLEDUP','DUPE','SKUREUSE','NOSTOCK','NOSKU','OK'];
+var ORDER=['SELFSHIP','NOTRACK','SHIPPED','TITLEDUP','DUPE','SKUREUSE','NOSTOCK','NOSKU','OK'];
 
 /* Titles are compared as well as SKUs. A mis-keyed custom label would
    slip past a SKU-only match, and on single-quantity stock the same item
@@ -33376,6 +33407,9 @@ function run(){
   // The pair index is the one that decides; the two single-key indexes stay
   // so the softer signals can still be reported instead of thrown away.
   var shippedPair={}, shippedSku={}, shippedTitle={};
+  // One tracking number against several shipped rows means the label was
+  // copied, not that several parcels moved.
+  var trackCount={};
   var PAIRSEP='\u241F';
   if(EBAY){
     var eh=EBAY.head;
@@ -33383,8 +33417,21 @@ function run(){
     var cTitle=pick(eh,['item title','title']);
     var cOrd=pick(eh,['order number','order id','sales record','record number']);
     var cShip=pick(eh,['shipped on','date shipped','shipped date']);
+    // Tracking is the tell for "marked shipped but never actually left".
+    // eBay's export headers vary by report, so try the common spellings.
+    var cTrack=pick(eh,['tracking number','tracking no','tracking','track number','shipment tracking']);
+    // Buyer is the sharpest disambiguator available: a reused label that sold
+    // twice went to two different people. Same buyer means it is far more
+    // likely to be the same sale.
+    var cBuyer=pick(eh,['buyer username','buyer user id','buyer id','buyer name','buyer']);
     EBAY.rows.forEach(function(r){
-      var rec={ord:cOrd?r[cOrd]:'', when:cShip?r[cShip]:'', title:cTitle?r[cTitle]:''};
+      var trk=cTrack?String(r[cTrack]||'').trim():'';
+      // A literal dash is how the export writes "no tracking here" — treat it
+      // as empty rather than as a tracking number that happens to be "-".
+      if(/^[-\u2013\u2014.]*$/.test(trk)) trk='';
+      var rec={ord:cOrd?r[cOrd]:'', when:cShip?r[cShip]:'', title:cTitle?r[cTitle]:'',
+               track:trk, buyer:cBuyer?String(r[cBuyer]||'').trim():''};
+      if(trk) trackCount[trk]=(trackCount[trk]||0)+1;
       var k=norm(cSku?r[cSku]:'');
       /* Skip spacer rows: no SKU and no order number that looks like one. */
       if(!k && !/\d{2}-\d{5}-\d{5}/.test(String(rec.ord||''))) return;
@@ -33421,11 +33468,39 @@ function run(){
     var hitPair =(k&&tk)?shippedPair[k+PAIRSEP+tk]:null;
     var hitSku  =(!hitPair && k)?shippedSku[k]:null;
     var hitTitle=(!hitPair && !hitSku && tk)?shippedTitle[tk]:null;
-    if(hitPair){
-      flag='SHIPPED';
-      issues.push({c:'bad',t:'This SKU and item title both appear on the Paid & Shipped report'+
-        (hitPair.ord?' as order '+hitPair.ord:'')+(hitPair.when?', shipped '+hitPair.when:'')+
-        '. The unit is gone \u2014 this order cannot be filled from it.'});
+    // ── Same order on both reports ────────────────────────────────
+    // The awaiting pull and the shipped export overlap in time, so the very
+    // order in front of you can appear on both. That is not a duplicate and
+    // not a conflict — it means this order already shipped. Cancelling it
+    // would be cancelling a parcel the buyer already has, the worst outcome
+    // this screen can produce, so it is checked first and it suppresses the
+    // cancel button entirely.
+    var sameOrder = hitPair && r_ordNorm(o.order) &&
+                    r_ordNorm(o.order) === r_ordNorm(hitPair.ord);
+    if(sameOrder){
+      flag='SELFSHIP';
+      issues.push({c:'warn',t:'This is the same order number on both reports'+
+        (hitPair.track?', tracking '+hitPair.track:'')+
+        '. It has already shipped \u2014 there is nothing to fill and nothing to '+
+        'cancel. The awaiting-shipment pull is just older than the shipped report.'});
+    } else if(hitPair){
+      if(hitPair.track){
+        flag='SHIPPED';
+        issues.push({c:'bad',t:'This SKU and item title both appear on the Paid & Shipped report'+
+          (hitPair.ord?' as order '+hitPair.ord:'')+(hitPair.when?', shipped '+hitPair.when:'')+
+          ', with tracking '+hitPair.track+
+          '. The unit is gone \u2014 this order cannot be filled from it.'});
+      } else {
+        // Marked shipped but nothing was ever handed to a carrier. In practice
+        // that usually means the unit is still on the shelf and the report is
+        // ahead of reality — the opposite conclusion from a tracked row, so it
+        // gets its own bucket rather than being buried among real shipments.
+        flag='NOTRACK';
+        issues.push({c:'warn',t:'On the Paid & Shipped report'+
+          (hitPair.ord?' as order '+hitPair.ord:'')+(hitPair.when?', dated '+hitPair.when:'')+
+          ', but with no tracking number. Nothing was scanned by a carrier, so the '+
+          'unit may still be here. Check the shelf before cancelling anything.'});
+      }
     } else if(hitSku){
       // Previously this was a SHIPPED blocker. It is the false positive:
       // the label was reused on a different item, so the shipped row is not
@@ -33451,6 +33526,25 @@ function run(){
       issues.push({c:'warn',t:'This SKU is on '+seenSku[k]+
         ' orders in the queue, but for different items. Reused label \u2014 verify each one.'});
     }
+    // ── Corroboration: added to the verdict, never replacing it ──────
+    var hit = hitPair||hitSku||hitTitle;
+    if(hit && (flag==='SHIPPED'||flag==='NOTRACK')){
+      // Shopify still holding stock contradicts "the unit is gone". Either it
+      // is on the shelf or stock never decremented — both worth knowing
+      // before cancelling on the strength of a report.
+      if(c && c.qty>0){
+        issues.push({c:'warn',t:'Shopify still shows '+c.qty+' in stock for this SKU. '+
+          'That contradicts the shipped report \u2014 check the shelf before cancelling.'});
+      }
+      if(hit.buyer && o.buyer && hit.buyer.toLowerCase()!==String(o.buyer).toLowerCase()){
+        issues.push({c:'warn',t:'The shipped row went to a different buyer ('+hit.buyer+
+          ' vs '+o.buyer+'). Likely a separate sale on the same label, not this unit.'});
+      }
+      if(hit.track && trackCount[hit.track]>1){
+        issues.push({c:'warn',t:'That tracking number appears on '+trackCount[hit.track]+
+          ' shipped rows. A copied label \u2014 it does not prove this unit moved.'});
+      }
+    }
     if(c && c.qty<=0 && flag==='OK'){
       flag='NOSTOCK';
       issues.push({c:'warn',t:'Shopify shows no stock left for this SKU.'});
@@ -33460,7 +33554,8 @@ function run(){
     if(flag==='OK') issues.push({c:'ok',t:'Not on the shipped report. Safe to pack.'});
 
     out.push({flag:flag, ord:o.order, rec:'', sku:o.sku, title:o.title, qty:o.qty,
-      price:o.total, shipped:o.shipBy?'ship by '+o.shipBy:'', track:'',
+      price:o.total, shipped:o.shipBy?'ship by '+o.shipBy:'',
+      track:(hitPair&&hitPair.track)||(hitSku&&hitSku.track)||(hitTitle&&hitTitle.track)||'',
       buyer:o.buyer, zip:o.zip, shop:null, cat:c||null, issues:issues});
   });
   out.sort(function(a,b){ return ORDER.indexOf(a.flag)-ORDER.indexOf(b.flag) });
@@ -33499,11 +33594,19 @@ function drawCard(){
   // including the healthy ones, is how a good order gets cancelled at 6pm on
   // a Friday. SKUREUSE is deliberately excluded — that flag now means "the
   // label was reused", i.e. this order is probably fine.
+  // SELFSHIP never gets a cancel link — see the guard in run().
   if(r.ord && (r.flag==='SHIPPED' || r.flag==='TITLEDUP')){
     links.push('<a class="oc-lk msg" href="'+EBAY_MSG+encodeURIComponent(r.ord)+'#syg-msg" '+
       'target="_blank" rel="noopener" title="Opens the eBay order ready to message the buyer">Message buyer \u2197</a>');
-    links.push('<a class="oc-lk cancel" href="'+EBAY_CANCEL+encodeURIComponent(r.ord)+'" '+
-      'target="_blank" rel="noopener" title="Opens eBay\u2019s cancellation screen for this order. eBay still asks you to confirm.">Cancel order \u2197</a>');
+    // The cancel link is inert until the shelf has been checked. Everything
+    // above this point is inference from two CSVs; the only thing that
+    // actually proves a unit is gone is looking at where it should be. One
+    // deliberate tick is cheap next to cancelling a fillable order.
+    links.push('<label class="oc-armed"><input type="checkbox" id="ocArm"> '+
+      'I checked '+(r.cat&&r.cat.pid?'the shelf':'the bin')+' \u2014 it is not here</label>');
+    links.push('<a class="oc-lk cancel is-locked" id="ocCancel" href="'+EBAY_CANCEL+encodeURIComponent(r.ord)+'" '+
+      'target="_blank" rel="noopener" aria-disabled="true" '+
+      'title="Tick the box first. Opens eBay\u2019s cancellation screen; eBay still asks you to confirm.">Cancel order \u2197</a>');
   }
   if(!links.length) links.push('<span class="oc-lk none">\u2014</span>');
 
@@ -33524,6 +33627,8 @@ function drawCard(){
         '<div><small>Qty sold</small><b>'+(r.qty===null?'\u2014':r.qty)+'</b></div>'+
         '<div><small>Sold for</small><b>'+(r.price===null?'\u2014':'$'+r.price.toFixed(2))+'</b></div>'+
         '<div><small>Shipped</small><b>'+esc(r.shipped||'\u2014')+'</b></div>'+
+        '<div><small>Tracking</small><b'+(r.track?'':' class="oc-notrack" title="No carrier scan against this order"')+'>'+
+          esc(r.track||'\u2014')+'</b></div>'+
         '<div><small>Buyer</small><b>'+esc(r.buyer||'\u2014')+'</b></div>'+
         '<div><small>Stock now</small><b>'+(r.cat?r.cat.qty:'\u2014')+'</b></div>'+
       '</div>'+
@@ -33532,6 +33637,18 @@ function drawCard(){
         r.issues.map(function(x){return '<div class="oc-issue '+x.c+'">'+esc(x.t)+'</div>'}).join('')+
       '</div>'+
     '</div>';
+  var arm=$('ocArm'), can=$('ocCancel');
+  if(arm && can){
+    // Re-created with every card, so the tick never carries from one order to
+    // the next — arming has to be a decision about the order in front of you.
+    can.addEventListener('click', function(ev){
+      if(!arm.checked){ ev.preventDefault(); arm.focus(); }
+    });
+    arm.addEventListener('change', function(){
+      can.classList.toggle('is-locked', !arm.checked);
+      can.setAttribute('aria-disabled', arm.checked ? 'false' : 'true');
+    });
+  }
   $('ocPrev').onclick=function(){ step(-1) };
   $('ocNext').onclick=function(){ step(1) };
 }
@@ -33539,9 +33656,9 @@ function drawCard(){
 function exportCsv(){
   var list=visible();
   function q(v){return '"'+String(v===undefined||v===null?'':v).replace(/"/g,'""')+'"'}
-  var csv=['eBayOrder,SKU,Title,Flag,Qty,Total,ShipBy,Buyer,ZIP,StockNow,Findings'].concat(
+  var csv=['eBayOrder,SKU,Title,Flag,Qty,Total,ShipBy,Tracking,Buyer,ZIP,StockNow,Findings'].concat(
     list.map(function(r){
-      return [r.ord,r.sku,r.title,FLAG[r.flag].l,r.qty,r.price,r.shipped,r.buyer,r.zip,r.cat?r.cat.qty:'',
+      return [r.ord,r.sku,r.title,FLAG[r.flag].l,r.qty,r.price,r.shipped,r.track,r.buyer,r.zip,r.cat?r.cat.qty:'',
         r.issues.map(function(x){return x.t}).join(' | ')].map(q).join(',');
     })).join('\n');
   var a=document.createElement('a');
@@ -33829,7 +33946,19 @@ function wbNotesLine(n){
     .map(function(x){ return String(x).replace(/\s*\n\s*/g,' ').trim(); })
     .join(' - ');
 }
-function wbNotesGrow(t){ t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,140)+'px'; }
+// A textarea measured while its pane is display:none reports scrollHeight 0,
+// so the rows rendered on init came out as hairlines — which is exactly what
+// happens when wbNotesRender() runs before anyone has opened the Notes tab.
+// Floor the result and re-measure when the pane is actually shown.
+function wbNotesGrow(t){
+  t.style.height='auto';
+  var h=t.scrollHeight;
+  t.style.height=(h>0 ? Math.min(Math.max(h,28),140) : 28)+'px';
+}
+function wbNotesRegrow(){
+  var box=document.getElementById('wbNotesRows'); if(!box) return;
+  Array.prototype.forEach.call(box.querySelectorAll('textarea'), wbNotesGrow);
+}
 
 function wbNotesRender(){
   var box=document.getElementById('wbNotesRows'); if(!box) return;
