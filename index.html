@@ -23789,10 +23789,28 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .wb-notes-head,.wb-notes-row{display:grid;
     grid-template-columns:minmax(130px,1fr) minmax(130px,1.3fr) minmax(160px,1.9fr) minmax(90px,.8fr) 84px 74px;
     gap:8px;padding:6px 10px;align-items:start}
-  .wb-notes-head{position:sticky;top:0;z-index:2;background:var(--wb-bg);
-    border-bottom:1px solid var(--wb-line);font:700 9.5px var(--sans);
+  /* margin-top:auto on the header pushes header+rows to the bottom of the
+     pane, so the input sits directly above the composer's top edge instead
+     of stranded at the top of a mostly-empty column. The rows area then
+     grows upward from there rather than filling the space. */
+  .wb-notes-head{margin-top:auto;flex:none;background:var(--wb-bg);
+    border-top:1px solid var(--wb-line);border-bottom:1px solid var(--wb-line);
+    font:700 9.5px var(--sans);
     letter-spacing:.09em;text-transform:uppercase;opacity:.5}
-  .wb-notes-rows{overflow:auto;flex:1;min-height:0}
+  .wb-notes-rows{overflow:auto;flex:0 1 auto;min-height:0}
+  .wb-notes-empty{order:-1}
+
+  /* Ghost that flies to the queue on send. Fixed-position clone so it can
+     travel across panel boundaries without being clipped by any overflow. */
+  .wb-note-ghost{position:fixed;z-index:99999;pointer-events:none;
+    border-radius:7px;padding:5px 9px;
+    background:var(--wb-pnl,#141922);border:1px solid var(--wb-bl);
+    color:var(--wb-fg);font:600 12px var(--sans);white-space:nowrap;
+    box-shadow:0 6px 22px rgba(0,0,0,.4);
+    transition:transform .52s cubic-bezier(.4,.02,.2,1), opacity .52s ease}
+  @media (prefers-reduced-motion: reduce){
+    .wb-note-ghost{transition:opacity .2s ease}
+  }
   .wb-notes-row{border-bottom:1px solid var(--wb-line)}
   .wb-notes-row:hover{background:rgba(255,255,255,.02)}
   .wb-notes-row input,.wb-notes-row textarea{width:100%;background:transparent;
@@ -33322,11 +33340,12 @@ var FLAG={
   SHIPPED:{l:'Already shipped',c:'bad'},
   TITLEDUP:{l:'Same item, different SKU',c:'bad'},
   DUPE:{l:'Twice in this queue',c:'bad'},
+  SKUREUSE:{l:'SKU reused, different item',c:'warn'},
   NOSTOCK:{l:'No stock left',c:'warn'},
   NOSKU:{l:'No SKU on order',c:'ghost'},
   OK:{l:'Good to ship',c:'ok'}
 };
-var ORDER=['SHIPPED','TITLEDUP','DUPE','NOSTOCK','NOSKU','OK'];
+var ORDER=['SHIPPED','TITLEDUP','DUPE','SKUREUSE','NOSTOCK','NOSKU','OK'];
 
 /* Titles are compared as well as SKUs. A mis-keyed custom label would
    slip past a SKU-only match, and on single-quantity stock the same item
@@ -33340,7 +33359,13 @@ function run(){
   if(!AWAIT || !AWAIT.length){
     $('ocOut').innerHTML='<div class="oc-empty">Pull the awaiting-shipment orders first.</div>'; return;
   }
-  var shippedSku={}, shippedTitle={};
+  // Indexed three ways on purpose. A SKU alone is no longer enough to call
+  // something shipped: the same custom label has been reused across genuinely
+  // different items, so a SKU-only hit was condemning orders that were fine.
+  // The pair index is the one that decides; the two single-key indexes stay
+  // so the softer signals can still be reported instead of thrown away.
+  var shippedPair={}, shippedSku={}, shippedTitle={};
+  var PAIRSEP='\u241F';
   if(EBAY){
     var eh=EBAY.head;
     var cSku=pick(eh,['custom label','sku']);
@@ -33355,6 +33380,7 @@ function run(){
       if(k && !shippedSku[k]) shippedSku[k]=rec;
       var tk=titleKey(cTitle?r[cTitle]:'');
       if(tk && !shippedTitle[tk]) shippedTitle[tk]=rec;
+      if(k && tk && !shippedPair[k+PAIRSEP+tk]) shippedPair[k+PAIRSEP+tk]=rec;
     });
   }
   var cat={};
@@ -33362,8 +33388,15 @@ function run(){
     cat[norm(p[0])]={qty:p[3],title:p[1],type:p[2],pid:p[5]};
   });
 
-  var seen={};
-  AWAIT.forEach(function(o){ var k=norm(o.sku); if(k) seen[k]=(seen[k]||0)+1 });
+  // Same reasoning for "twice in this queue": two orders sharing a SKU are
+  // only a real duplicate if they are the same item. seenSku is kept so the
+  // reuse itself can still be mentioned without raising a blocker.
+  var seen={}, seenSku={};
+  AWAIT.forEach(function(o){
+    var k=norm(o.sku), tk=titleKey(o.title);
+    if(k) seenSku[k]=(seenSku[k]||0)+1;
+    if(k && tk) seen[k+PAIRSEP+tk]=(seen[k+PAIRSEP+tk]||0)+1;
+  });
 
   var out=[];
   AWAIT.forEach(function(o){
@@ -33373,22 +33406,39 @@ function run(){
       flag='NOSKU';
       issues.push({c:'warn',t:'This order has no custom label, so it cannot be matched against the shipped report.'});
     }
-    var hitSku=k?shippedSku[k]:null;
-    var hitTitle=(!hitSku && tk)?shippedTitle[tk]:null;
-    if(hitSku){
+    // Both must agree before an order is called shipped.
+    var hitPair =(k&&tk)?shippedPair[k+PAIRSEP+tk]:null;
+    var hitSku  =(!hitPair && k)?shippedSku[k]:null;
+    var hitTitle=(!hitPair && !hitSku && tk)?shippedTitle[tk]:null;
+    if(hitPair){
       flag='SHIPPED';
-      issues.push({c:'bad',t:'This exact SKU is already on the Paid & Shipped report'+
-        (hitSku.ord?' as order '+hitSku.ord:'')+(hitSku.when?', shipped '+hitSku.when:'')+
+      issues.push({c:'bad',t:'This SKU and item title both appear on the Paid & Shipped report'+
+        (hitPair.ord?' as order '+hitPair.ord:'')+(hitPair.when?', shipped '+hitPair.when:'')+
         '. The unit is gone \u2014 this order cannot be filled from it.'});
+    } else if(hitSku){
+      // Previously this was a SHIPPED blocker. It is the false positive:
+      // the label was reused on a different item, so the shipped row is not
+      // this unit. Worth surfacing, not worth stopping a pack for.
+      flag='SKUREUSE';
+      issues.push({c:'warn',t:'This SKU is on the shipped report'+
+        (hitSku.ord?' as order '+hitSku.ord:'')+
+        ', but against a different item title'+
+        (hitSku.title?' ("'+String(hitSku.title).slice(0,60)+'")':'')+
+        '. The label has been reused \u2014 check you are packing the right unit.'});
     } else if(hitTitle){
       flag='TITLEDUP';
       issues.push({c:'bad',t:'A different SKU with the same item title already shipped'+
         (hitTitle.ord?' as order '+hitTitle.ord:'')+
         '. Either the label was mis-keyed or you had two \u2014 verify before packing.'});
     }
-    if(seen[k]>1){
+    if(k && tk && seen[k+PAIRSEP+tk]>1){
       if(flag==='OK') flag='DUPE';
-      issues.push({c:'bad',t:'This SKU is on '+seen[k]+' orders in the awaiting-shipment queue.'});
+      issues.push({c:'bad',t:'This SKU and title are on '+seen[k+PAIRSEP+tk]+
+        ' orders in the awaiting-shipment queue.'});
+    } else if(k && seenSku[k]>1){
+      if(flag==='OK') flag='SKUREUSE';
+      issues.push({c:'warn',t:'This SKU is on '+seenSku[k]+
+        ' orders in the queue, but for different items. Reused label \u2014 verify each one.'});
     }
     if(c && c.qty<=0 && flag==='OK'){
       flag='NOSTOCK';
@@ -33791,7 +33841,10 @@ function wbNotesRender(){
     row.querySelector('.wb-n-copy').addEventListener('click', function(){
       wbCopy(wbNotesLine(n), 'Row copied');
     });
-    row.querySelector('.wb-n-push').addEventListener('click', function(){ wbNotesToComposer(n); });
+    row.querySelector('.wb-n-push').addEventListener('click', function(){
+      wbNotesFly(row, n.sku || n.data || 'note');
+      wbNotesToComposer(n);
+    });
     row.querySelector('.wb-n-go').addEventListener('click', function(){ wbNotesPortal(n.sku); });
     box.appendChild(row);
   });
@@ -33855,6 +33908,45 @@ function wbNotesPortal(sku){
   } else {
     window.open('https://buyer.sellyourgadgets.com/dashboard/inventory','_blank','noopener');
   }
+}
+
+// Sends a visible acknowledgement of where the row went. Without it the row
+// stays put and the composer fills silently somewhere off-screen, which reads
+// as "nothing happened" — the same failure mode as a button with no feedback.
+function wbNotesFly(fromEl, label){
+  if(!fromEl) return;
+  var target = document.getElementById('wbQueueList')
+            || document.getElementById('wbQueueCount');
+  if(!target) return;
+  var a = fromEl.getBoundingClientRect();
+  var b = target.getBoundingClientRect();
+
+  var g = document.createElement('div');
+  g.className = 'wb-note-ghost';
+  g.textContent = (label || 'note').slice(0, 34);
+  g.style.left = a.left + 'px';
+  g.style.top  = a.top  + 'px';
+  g.style.maxWidth = Math.max(140, a.width) + 'px';
+  g.style.overflow = 'hidden';
+  g.style.textOverflow = 'ellipsis';
+  document.body.appendChild(g);
+
+  var reduce = window.matchMedia &&
+               window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Aim at the top of the queue list, where a new entry would land.
+  var dx = (b.left + 12) - a.left;
+  var dy = (b.top  + 10) - a.top;
+
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      if(reduce){ g.style.opacity = '0'; }
+      else {
+        g.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(.55)';
+        g.style.opacity = '0';
+      }
+    });
+  });
+  setTimeout(function(){ g.remove(); }, reduce ? 260 : 580);
 }
 
 function wbNotesInit(){
