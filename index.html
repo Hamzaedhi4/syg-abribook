@@ -27164,6 +27164,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
        'S-4363':  {desc:'16 x 12 x 4 Corrugated Boxes',  per:25,  qtyIs:'each', unit:1.23},
        'S-4210':  {desc:'20 x 20 x 12 Corrugated Boxes', per:15,  qtyIs:'each', unit:2.73},
        'S-4162':  {desc:'24 x 16 x 12 Corrugated Boxes', per:15,  qtyIs:'each', unit:2.68},
+       'S-4536':  {desc:'16 x 16 x 6 Corrugated Boxes',  per:25,  qtyIs:'each'},
        'S-1947':  {desc:'Kraft Tape 3in x 375ft',        per:8,   qtyIs:'pack', unit:76.00},
        'S-13053': {desc:'Anti-Static Bubble Roll 12in x 300ft', per:1, qtyIs:'pack', unit:47.00},
        'S-6802':  {desc:'Desktop Thermal Labels 4 x 6',  per:1,   qtyIs:'pack', unit:10.00},
@@ -27188,14 +27189,18 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
        // turns an order for 1 case into 8 cases.
        {id:'8x4x4',    name:'8 × 4 × 4',    kind:'box', model:'S-4245',  size:25, uline:'each', bundles:0, loose:0},
        {id:'8x6x4',    name:'8 × 6 × 4',    kind:'box', model:'S-4080',  size:25, uline:'each', bundles:3, loose:0},
+       {id:'10x10x4', name:'10 \u00d7 10 \u00d7 4', kind:'box', model:'S-4346', size:25, uline:'each', bundles:0, loose:0, counted:false},
        {id:'12x6x6',   name:'12 × 6 × 6',   kind:'box', model:'S-4128',  size:25, uline:'each', bundles:3, loose:0},
        {id:'12x10x4',  name:'12 × 10 × 4',  kind:'box', model:'S-4119',  size:25, uline:'each', bundles:1, loose:0},
+       {id:'12x10x8', name:'12 \u00d7 10 \u00d7 8', kind:'box', model:'S-4120', size:25, uline:'each', bundles:0, loose:0, counted:false},
        {id:'16x10x4',  name:'16 × 10 × 4',  kind:'box', model:'S-4944',  size:25, uline:'each', bundles:0, loose:0},
+       {id:'16x10x8', name:'16 \u00d7 10 \u00d7 8', kind:'box', model:'S-4161', size:25, uline:'each', bundles:0, loose:0, counted:false},
        {id:'16x12x4',  name:'16 × 12 × 4',  kind:'box', model:'S-4363',  size:25, uline:'each', bundles:0, loose:0},
-       {id:'16x16x6',  name:'16 × 16 × 6',  kind:'box', model:'',        size:25, uline:'each', bundles:1, loose:0},
+       {id:'16x16x6',  name:'16 × 16 × 6',  kind:'box', model:'S-4536',        size:25, uline:'each', bundles:1, loose:0},
        {id:'18x12x6',  name:'18 × 12 × 6',  kind:'box', model:'S-4187',  size:25, uline:'each', bundles:2, loose:0},
        {id:'20x20x12', name:'20 × 20 × 12', kind:'box', model:'S-4210',  size:15, uline:'each', bundles:0, loose:8},
        {id:'24x12x24', name:'24 × 12 × 24', kind:'box', model:'S-4114',  size:10, uline:'each', bundles:0, loose:25},
+       {id:'24x16x12', name:'24 \u00d7 16 \u00d7 12', kind:'box', model:'S-4162', size:15, uline:'each', bundles:0, loose:0, counted:false},
        {id:'yellow-mailers', name:'Yellow mailers', kind:'supply', model:'', size:1, uline:'pack', bundles:0, loose:19},
        {id:'usps-mailers',   name:'USPS mailers',   kind:'supply', model:'', size:1, uline:'pack', bundles:0, loose:1},
        // 8 rolls to a case; Uline's Qty is cases.
@@ -27228,6 +27233,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     return l?(l+' loose'):'0';
   }
   function supplyState(x){
+    // A size we just started tracking has a count of zero because nobody has
+    // looked yet, not because the shelf is empty. Calling that 'out' would put
+    // it straight into the next Uline order and buy boxes already on the rack.
+    if(x.counted===false) return 'unknown';
     var t=totalUnits(x);
     if(t<=0)return 'out';
     if(t<=minUnits(x))return 'low';
@@ -27487,7 +27496,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   }
   function renderSuppliesInventory(){
     var list=document.getElementById('nexusSupList');
-    var rank={out:0,low:1,ok:2};
+    var rank={out:0,low:1,unknown:2,ok:3};
     var rows=supplies.slice().sort(function(a,b){
       var d=rank[supplyState(a)]-rank[supplyState(b)];
       if(d)return d;
@@ -27536,13 +27545,15 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   var supRecount=false;
   function supBuying(x){
     if(x.id in SUP_BUY) return SUP_BUY[x.id];
-    return supplyState(x)==='ok' ? 0 : bundlesNeeded(x);
+    var st=supplyState(x);
+    return (st==='ok'||st==='unknown') ? 0 : bundlesNeeded(x);
   }
   function supUnitWord(x){
     if(x.kind==='box') return 'bundle';
     return bundleSize(x)>1 ? 'case' : 'unit';
   }
   function supHaveText(x){
+    if(x.counted===false) return 'Never counted \u2014 count it before ordering.';
     if(totalUnits(x)<=0) return 'Nothing on the shelf.';
     if(x.kind!=='box'){
       var n=totalUnits(x), u=supUnitWord(x);
@@ -27573,7 +27584,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     renderSupSummary();
     if(supView==='inventory'){ renderSuppliesInventory(); return; }
 
-    var rank={out:0,low:1,ok:2};
+    var rank={out:0,low:1,unknown:2,ok:3};
     var rows=supplies.slice().sort(function(a,b){
       var d=rank[supplyState(a)]-rank[supplyState(b)];
       if(d)return d;
@@ -27585,6 +27596,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     list.innerHTML='<div class="nexus-sup-rows">'+rows.map(function(x){
       var st=supplyState(x), b=supBuying(x);
       var tag = st==='out' ? '<span class="nexus-sup-tag out">NONE LEFT</span>'
+              : st==='unknown' ? '<span class="nexus-sup-tag unk">NOT COUNTED</span>'
               : st==='low' ? '<span class="nexus-sup-tag low">RUNNING LOW</span>'
               : '<span class="nexus-sup-tag ok">FINE</span>';
       // The recount controls keep every data-sup-* hook the existing handlers
@@ -27764,10 +27776,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
         renderSupplies();
         return;
       }
-      if(ev.target.hasAttribute('data-sup-linc')){x.loose=looseOf(x)+1;x.restocked=todayStr();saveSupplies()}
-      else if(ev.target.hasAttribute('data-sup-ldec')){x.loose=Math.max(0,looseOf(x)-1);x.restocked=todayStr();saveSupplies()}
-      else if(ev.target.hasAttribute('data-sup-binc')){x.bundles=bundlesOf(x)+1;x.restocked=todayStr();saveSupplies()}
-      else if(ev.target.hasAttribute('data-sup-bdec')){x.bundles=Math.max(0,bundlesOf(x)-1);x.restocked=todayStr();saveSupplies()}
+      if(ev.target.hasAttribute('data-sup-linc')){x.loose=looseOf(x)+1;x.counted=true;x.restocked=todayStr();saveSupplies()}
+      else if(ev.target.hasAttribute('data-sup-ldec')){x.loose=Math.max(0,looseOf(x)-1);x.counted=true;x.restocked=todayStr();saveSupplies()}
+      else if(ev.target.hasAttribute('data-sup-binc')){x.bundles=bundlesOf(x)+1;x.counted=true;x.restocked=todayStr();saveSupplies()}
+      else if(ev.target.hasAttribute('data-sup-bdec')){x.bundles=Math.max(0,bundlesOf(x)-1);x.counted=true;x.restocked=todayStr();saveSupplies()}
       else if(ev.target.hasAttribute('data-sup-del')){
         if(confirm('Remove '+x.name+' from supplies?')){supplies=supplies.filter(function(y){return y.id!==x.id});invDelete(x.id);saveSupplies();supStatus('Removed '+x.name+'.')}
       }
@@ -27789,8 +27801,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       var row=ev.target.closest('[data-sup-id]');if(!row)return;
       var x=findSupply(row.getAttribute('data-sup-id'));if(!x)return;
       var v=Math.max(0,parseInt(ev.target.value,10)||0);
-      if(ev.target.hasAttribute('data-sup-bundles')){x.bundles=v;x.restocked=todayStr();saveSupplies()}
-      else if(ev.target.hasAttribute('data-sup-loose')){x.loose=v;x.restocked=todayStr();saveSupplies()}
+      if(ev.target.hasAttribute('data-sup-bundles')){x.bundles=v;x.counted=true;x.restocked=todayStr();saveSupplies()}
+      else if(ev.target.hasAttribute('data-sup-loose')){x.loose=v;x.counted=true;x.restocked=todayStr();saveSupplies()}
       else if(ev.target.hasAttribute('data-sup-size')){x.size=Math.max(1,v);saveSupplies()}
       else if(ev.target.hasAttribute('data-sup-min')){x.minBundles=v;saveSupplies()}
     });
@@ -27838,13 +27850,20 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       // what you bought before, not anywhere you can buy anything. Quick Order
       // is the form that actually takes model numbers.
       var txt=lines.join('\n');
+      // The order also rides on the URL hash. The extension's Quick Order
+      // script reads it and types the rows in; if the extension isn't loaded
+      // the hash is simply ignored and the clipboard copy is still there to
+      // paste. Same button either way, so nobody has to know which they have.
+      var hash='#syg='+encodeURIComponent(lines.map(function(l){
+        return l.replace(',',':');           // S-4944,25 -> S-4944:25
+      }).join(','));
       function go(){
-        var note='Quick Order is open and '+lines.length+' line'+(lines.length===1?'':'s')+
-                 ' copied \u2014 use the Paste Items link on that page.';
+        var note='Quick Order is open with '+lines.length+' line'+(lines.length===1?'':'s')+
+                 '. If the rows are empty, use the Paste Items link \u2014 the list is copied.';
         if(missing.length) note+=' No model number for '+missing.join(', ')+
                  ' \u2014 add by hand.';
         supStatus(note);
-        window.open('https://www.uline.com/Ordering/QuickOrder','_blank','noopener');
+        window.open('https://www.uline.com/Ordering/QuickOrder'+hash,'_blank','noopener');
       }
       if(txt && navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(txt).then(go).catch(function(){ fallbackCopySku(txt,go); });
@@ -33745,6 +33764,10 @@ window.offerCheckOpen=function(){
   #nexusSuppliesPanel .nexus-sup-cellbox:hover{border-color:var(--line-hi,#334054)}
   #nexusSuppliesPanel .nexus-sup-cellbox:focus-visible{outline:2px solid #35D0C0;outline-offset:2px}
   #nexusSuppliesPanel .nexus-sup-cellbox.open{border-color:#35D0C0;background:rgba(53,208,192,.07)}
+
+  #nexusSuppliesPanel .nexus-sup-tag.unk{color:#8D99AC;border-color:var(--line-hi,#334054)}
+  #nexusSuppliesPanel .nexus-sup-cellbox.unknown{opacity:.8;border-style:dashed}
+  #nexusSuppliesPanel .nexus-sup-row.unknown{opacity:.78}
 </style>
 <script>
 (function(){
