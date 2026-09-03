@@ -24876,7 +24876,7 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
         <h3>Shelving &amp; supplies <span class="nexus-sup-sync error" id="nexusSupSync">offline — local only</span></h3>
         <div class="nexus-sup-summary" id="nexusSupSummary"><span class="nexus-sup-pill out">5 out</span><span class="nexus-sup-pill low">5 low</span><span class="nexus-sup-sum-note">10 bundles to order</span></div>
         <div class="nexus-sup-tools">
-          <button class="nexus-price-btn" id="nexusSupCopyOrder">Copy reorder list</button>
+          <button type="button" class="nexus-price-btn" id="nexusSupView">Order view</button><button type="button" class="nexus-price-btn" id="nexusSupRecount">Recount</button><button class="nexus-price-btn" id="nexusSupCopyOrder">Copy reorder list</button>
           <button class="nexus-price-btn" id="nexusSupChecklist">Order checklist</button>
           <button class="nexus-price-btn primary" id="nexusSupUline">Order from Uline ↗</button>
         </div>
@@ -27140,28 +27140,71 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   // bundle and bundle size varies by box (25, 15, 10), so each item carries
   // its own size and its Uline model number for reordering.
   var supplies=[],suppliesBound=false;
-  var SUPPLY_SEED_VERSION=2;
+  var SUPPLY_SEED_VERSION=3;
   // Seeded from the Shipping Front count sheet, with Uline model numbers and
   // real bundle sizes off the order history. Blank model = not on that order.
-  var SUPPLY_SEED=[
-    {id:'8x4x4',    name:'8 × 4 × 4',    kind:'box', model:'S-4245',  size:25, bundles:0, loose:0},
-    {id:'8x6x4',    name:'8 × 6 × 4',    kind:'box', model:'S-4080',  size:25, bundles:3, loose:0},
-    {id:'12x6x6',   name:'12 × 6 × 6',   kind:'box', model:'S-4128',  size:25, bundles:3, loose:0},
-    {id:'12x10x4',  name:'12 × 10 × 4',  kind:'box', model:'S-4119',  size:25, bundles:1, loose:0},
-    {id:'16x10x4',  name:'16 × 10 × 4',  kind:'box', model:'S-4944',  size:25, bundles:0, loose:0},
-    {id:'16x12x4',  name:'16 × 12 × 4',  kind:'box', model:'S-4363',  size:25, bundles:0, loose:0},
-    {id:'16x16x6',  name:'16 × 16 × 6',  kind:'box', model:'',        size:25, bundles:1, loose:0},
-    {id:'18x12x6',  name:'18 × 12 × 6',  kind:'box', model:'S-4187',  size:25, bundles:2, loose:0},
-    {id:'20x20x12', name:'20 × 20 × 12', kind:'box', model:'S-4210',  size:15, bundles:0, loose:8},
-    {id:'24x12x24', name:'24 × 12 × 24', kind:'box', model:'S-4114',  size:10, bundles:0, loose:25},
-    {id:'yellow-mailers', name:'Yellow mailers', kind:'supply', model:'', size:1, bundles:0, loose:19},
-    {id:'usps-mailers',   name:'USPS mailers',   kind:'supply', model:'', size:1, bundles:0, loose:1},
-    {id:'tape',           name:'Tape',           kind:'supply', model:'S-1947',  size:8, bundles:3, loose:0},
-    {id:'bubble-wrap',    name:'Bubble wrap',    kind:'supply', model:'S-6683P', size:4, bundles:0, loose:0},
-    {id:'tech-bubble-wrap',name:'Tech bubble wrap',kind:'supply',model:'S-13053',size:1, bundles:0, loose:1},
-    {id:'peanuts',        name:'Peanuts',        kind:'supply', model:'S-15245', size:1, bundles:0, loose:2},
-    {id:'thermal-labels', name:'Thermal labels 4 × 6', kind:'supply', model:'S-6802', size:1, bundles:0, loose:0}
-  ];
+     // ── Uline model codes ─────────────────────────────────────────────
+     // Hardcoded off the real order of 09/01/2026 (order 58972278): the model
+     // number, what Uline's Qty box counts for it, the pack size, and the unit
+     // price we actually paid. This is a reference table, not an inventory —
+     // what is on the shelf stays in SUPPLY_SEED below. Codes for things we do
+     // not currently stock are kept anyway, because the code is the tedious
+     // part to find again.
+     //   qtyIs 'each' — Qty is individual boxes, ordered in whole bundles.
+     //   qtyIs 'pack' — Qty is the carton, case, roll or bag itself.
+     var ULINE_CODES={
+       'S-4245':  {desc:'8 x 4 x 4 Corrugated Boxes',    per:25,  qtyIs:'each', unit:0.43},
+       'S-4080':  {desc:'8 x 6 x 4 Corrugated Boxes',    per:25,  qtyIs:'each', unit:0.46},
+       'S-4346':  {desc:'10 x 10 x 4 Corrugated Boxes',  per:25,  qtyIs:'each', unit:0.72},
+       'S-4128':  {desc:'12 x 6 x 6 Corrugated Boxes',   per:25,  qtyIs:'each', unit:0.65},
+       'S-4119':  {desc:'12 x 10 x 4 Corrugated Boxes',  per:25,  qtyIs:'each', unit:0.92},
+       'S-4120':  {desc:'12 x 10 x 8 Corrugated Boxes',  per:25,  qtyIs:'each', unit:0.96},
+       'S-4944':  {desc:'16 x 10 x 4 Corrugated Boxes',  per:25,  qtyIs:'each', unit:1.33},
+       'S-4161':  {desc:'16 x 10 x 8 Corrugated Boxes',  per:25,  qtyIs:'each', unit:1.67},
+       'S-4363':  {desc:'16 x 12 x 4 Corrugated Boxes',  per:25,  qtyIs:'each', unit:1.23},
+       'S-4210':  {desc:'20 x 20 x 12 Corrugated Boxes', per:15,  qtyIs:'each', unit:2.73},
+       'S-4162':  {desc:'24 x 16 x 12 Corrugated Boxes', per:15,  qtyIs:'each', unit:2.68},
+       'S-1947':  {desc:'Kraft Tape 3in x 375ft',        per:8,   qtyIs:'pack', unit:76.00},
+       'S-13053': {desc:'Anti-Static Bubble Roll 12in x 300ft', per:1, qtyIs:'pack', unit:47.00},
+       'S-6802':  {desc:'Desktop Thermal Labels 4 x 6',  per:1,   qtyIs:'pack', unit:10.00},
+       'S-1564':  {desc:'Biodegradable Peanuts 12 Cu Ft Bag', per:1, qtyIs:'pack', unit:24.00},
+       'S-20213': {desc:'Kraft Paper Dispenser Box 12in x 1500ft', per:1, qtyIs:'pack', unit:33.00},
+       'S-1301':  {desc:'12 x 15in Reclosable Bags',     per:1000,qtyIs:'pack', unit:98.00},
+       'S-1701':  {desc:'10 x 12in Reclosable Bags',     per:1000,qtyIs:'pack', unit:69.00},
+       'S-1898':  {desc:'4 x 7in Reclosable Bags',       per:1000,qtyIs:'pack', unit:35.00},
+       'S-13490': {desc:'16 x 20in Reclosable Bags',     per:500, qtyIs:'pack', unit:147.00}
+     };
+     function ulineCode(x){ return x && x.model ? ULINE_CODES[x.model] : null; }
+
+     var SUPPLY_SEED=[
+       // uline: how ULINE counts the Qty box, which is not how we count the shelf.
+       //   'each'  — Uline's quantity is individual boxes, sold in whole bundles.
+       //             Order history confirms it: every box line is an exact multiple
+       //             of its bundle size (175 of a 25-bundle, 15 of a 15-bundle), and
+       //             the per-piece prices land where corrugated actually costs.
+       //   'pack'  — Uline's quantity is the case, roll or bag itself. Tape reads
+       //             '8 rolls/case' and we ordered 3, meaning 3 cases at $76 each.
+       // Getting this backwards is the whole ballgame: treating tape as 'each'
+       // turns an order for 1 case into 8 cases.
+       {id:'8x4x4',    name:'8 × 4 × 4',    kind:'box', model:'S-4245',  size:25, uline:'each', bundles:0, loose:0},
+       {id:'8x6x4',    name:'8 × 6 × 4',    kind:'box', model:'S-4080',  size:25, uline:'each', bundles:3, loose:0},
+       {id:'12x6x6',   name:'12 × 6 × 6',   kind:'box', model:'S-4128',  size:25, uline:'each', bundles:3, loose:0},
+       {id:'12x10x4',  name:'12 × 10 × 4',  kind:'box', model:'S-4119',  size:25, uline:'each', bundles:1, loose:0},
+       {id:'16x10x4',  name:'16 × 10 × 4',  kind:'box', model:'S-4944',  size:25, uline:'each', bundles:0, loose:0},
+       {id:'16x12x4',  name:'16 × 12 × 4',  kind:'box', model:'S-4363',  size:25, uline:'each', bundles:0, loose:0},
+       {id:'16x16x6',  name:'16 × 16 × 6',  kind:'box', model:'',        size:25, uline:'each', bundles:1, loose:0},
+       {id:'18x12x6',  name:'18 × 12 × 6',  kind:'box', model:'S-4187',  size:25, uline:'each', bundles:2, loose:0},
+       {id:'20x20x12', name:'20 × 20 × 12', kind:'box', model:'S-4210',  size:15, uline:'each', bundles:0, loose:8},
+       {id:'24x12x24', name:'24 × 12 × 24', kind:'box', model:'S-4114',  size:10, uline:'each', bundles:0, loose:25},
+       {id:'yellow-mailers', name:'Yellow mailers', kind:'supply', model:'', size:1, uline:'pack', bundles:0, loose:19},
+       {id:'usps-mailers',   name:'USPS mailers',   kind:'supply', model:'', size:1, uline:'pack', bundles:0, loose:1},
+       // 8 rolls to a case; Uline's Qty is cases.
+       {id:'tape',           name:'Tape',           kind:'supply', model:'S-1947',  size:8, uline:'pack', bundles:3, loose:0},
+       {id:'bubble-wrap',    name:'Bubble wrap',    kind:'supply', model:'S-6683P', size:4, uline:'pack', bundles:0, loose:0},
+       {id:'tech-bubble-wrap',name:'Tech bubble wrap',kind:'supply',model:'S-13053',size:1, uline:'pack', bundles:0, loose:1},
+       {id:'peanuts',        name:'Peanuts',        kind:'supply', model:'S-1564' , size:1, uline:'pack', bundles:0, loose:2},
+       {id:'thermal-labels', name:'Thermal labels 4 × 6', kind:'supply', model:'S-6802', size:1, uline:'pack', bundles:0, loose:0}
+     ];
   function todayStr(){return new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})}
   function supplySlug(name){return String(name||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
   // Accepts 14x14x14, 14 X 14 X 14, 14×14×14, with or without inch marks.
@@ -27323,6 +27366,38 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     else{x.bundles=bundlesOf(x)-1;x.loose=bundleSize(x)-1}
     saveSupplies();
   }
+  // Uline's Quick Order takes a model number and a UNIT quantity per row, and
+  // its Paste Items page takes the same as comma-separated lines. Both want
+  // units, not bundles — two bundles of a 25-pack is a quantity of 50. Getting
+  // that wrong is a 25x error in either direction, so the conversion lives here
+  // rather than in whoever is placing the order.
+  // What Nexus says vs what Uline receives — the two are deliberately different
+  // and both are shown, because guessing wrong in either direction is the
+  // expensive mistake here.
+  //   we count : whole bundles on the shelf, plus loose boxes from an open one
+  //   Uline    : 'each' items want the piece count (2 bundles of 25 = 50)
+  //              'pack' items want the case/roll/bag count (1 case = 1)
+  function ulineQty(x){
+    var b=supBuying(x);
+    return (x.uline==='pack') ? b : b*bundleSize(x);
+  }
+  // Plain English for the Nexus side, naming both numbers so nobody has to
+  // reverse-engineer which one the Qty box wants.
+  function orderPhrase(x){
+    var b=bundlesNeeded(x), n=bundleSize(x), q=ulineQty(x);
+    if(x.uline==='pack'){
+      return b+(n>1 ? ' case'+(b===1?'':'s')+' ('+(b*n)+' rolls)' : ' ×');
+    }
+    return b+' bundle'+(b===1?'':'s')+' — type '+q+' in Uline’s Qty box';
+  }
+  function ulineLines(){
+    return supplies.filter(function(x){ return supBuying(x)>0 && !!x.model; })
+      .map(function(x){ return x.model+','+ulineQty(x); });
+  }
+  function ulineMissing(){
+    return supplies.filter(function(x){ return supBuying(x)>0 && !x.model; })
+      .map(function(x){return x.name});
+  }
   function reorderLines(){
     return supplies.filter(function(x){var st=supplyState(x);return st==='out'||st==='low'})
       .map(function(x){
@@ -27331,9 +27406,87 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
           +' ('+bundleSize(x)+'/bundle)  \u2014  have '+countText(x);
       });
   }
-  function renderSupplies(){
-    var list=document.getElementById('nexusSupList'),sum=document.getElementById('nexusSupSummary');
-    if(!list||!sum)return;
+  // ── Item drawings ───────────────────────────────────────────────────
+  // Boxes are drawn from their real dimensions and scaled against the largest
+  // on the shelf, so a size can be picked out by shape before the label is
+  // read. Orthographic on purpose: perspective would make equal dimensions look
+  // unequal. Consumables get shapes instead — a roll of tape has no meaningful
+  // size next to a 24-inch box — but share the stroke weight and status colour.
+  // Dimensions are parsed from the item name, so a custom size drawn correctly
+  // needs nothing extra typed in.
+  function supDims(x){
+    var m=String(x.name||'').replace(/[×x]/g,'x')
+          .match(/(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)/);
+    return m?{L:+m[1],W:+m[2],H:+m[3]}:null;
+  }
+  function supInk(x){
+    var st=supplyState(x);
+    return {line: st==='out'?'#E0645A':st==='low'?'#E0A13C':'#7C8798',
+            fill: st==='out'?'#E0645A22':st==='low'?'#E0A13C22':'#7C879814'};
+  }
+  function supIcon(x){
+    var n=String(x.name||'').toLowerCase();
+    if(/tape/.test(n))return 'tape';
+    if(/label/.test(n))return 'labels';
+    if(/peanut|foam/.test(n))return 'bag';
+    if(/mailer|envelope/.test(n))return 'mailer';
+    if(/bubble/.test(n))return 'bubbleroll';
+    return 'generic';
+  }
+  function supGlyph(x,px){
+    px=px||30;
+    var c=supInk(x), S='stroke="'+c.line+'" stroke-width="1" fill="'+c.fill+'"',
+        LN='stroke="'+c.line+'" stroke-width="1" fill="none"';
+    function svg(w,h,inner){return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'+inner+'</svg>'}
+    var d3=supDims(x);
+    if(d3){
+      var maxDim=1;
+      supplies.forEach(function(o){var q=supDims(o); if(q)maxDim=Math.max(maxDim,q.L,q.W,q.H)});
+      var sc=(px-6)/maxDim, w=Math.max(5,d3.L*sc), h=Math.max(5,d3.H*sc), dp=Math.max(3,d3.W*sc*0.42);
+      return svg(w+dp+2, h+dp+2,
+        '<polygon points="1,'+(dp+1)+' '+(dp+1)+',1 '+(w+dp+1)+',1 '+(w+1)+','+(dp+1)+'" '+S+'/>'+
+        '<polygon points="'+(w+1)+','+(dp+1)+' '+(w+dp+1)+',1 '+(w+dp+1)+','+(h+1)+' '+(w+1)+','+(h+dp+1)+'" '+S+'/>'+
+        '<rect x="1" y="'+(dp+1)+'" width="'+w+'" height="'+h+'" '+S+'/>');
+    }
+    var k=px+2, P=function(f){return (k*f).toFixed(1)};
+    switch(supIcon(x)){
+      case 'tape': return svg(k,k,'<circle cx="'+P(.44)+'" cy="'+P(.5)+'" r="'+P(.31)+'" '+S+'/><circle cx="'+P(.44)+'" cy="'+P(.5)+'" r="'+P(.12)+'" '+LN+'/><path d="M'+P(.74)+' '+P(.39)+' L'+P(.94)+' '+P(.29)+' L'+P(.94)+' '+P(.42)+' L'+P(.76)+' '+P(.52)+'" '+S+'/>');
+      case 'bubbleroll': return svg(k,k,'<circle cx="'+P(.33)+'" cy="'+P(.5)+'" r="'+P(.25)+'" '+S+'/><circle cx="'+P(.33)+'" cy="'+P(.5)+'" r="'+P(.09)+'" '+LN+'/><path d="M'+P(.58)+' '+P(.39)+' L'+P(.94)+' '+P(.39)+' L'+P(.94)+' '+P(.61)+' L'+P(.58)+' '+P(.61)+'" '+S+'/><circle cx="'+P(.69)+'" cy="'+P(.5)+'" r="'+P(.05)+'" '+LN+'/><circle cx="'+P(.83)+'" cy="'+P(.5)+'" r="'+P(.05)+'" '+LN+'/>');
+      case 'labels': return svg(k,k,'<circle cx="'+P(.36)+'" cy="'+P(.44)+'" r="'+P(.25)+'" '+S+'/><circle cx="'+P(.36)+'" cy="'+P(.44)+'" r="'+P(.09)+'" '+LN+'/><path d="M'+P(.59)+' '+P(.63)+' L'+P(.94)+' '+P(.63)+' L'+P(.94)+' '+P(.85)+' L'+P(.59)+' '+P(.85)+' Z" '+S+'/><path d="M'+P(.72)+' '+P(.63)+' L'+P(.72)+' '+P(.85)+' M'+P(.83)+' '+P(.63)+' L'+P(.83)+' '+P(.85)+'" '+LN+'/>');
+      case 'bag': return svg(k,k,'<path d="M'+P(.27)+' '+P(.36)+' L'+P(.73)+' '+P(.36)+' L'+P(.8)+' '+P(.88)+' L'+P(.2)+' '+P(.88)+' Z" '+S+'/><path d="M'+P(.34)+' '+P(.36)+' L'+P(.34)+' '+P(.19)+' L'+P(.66)+' '+P(.19)+' L'+P(.66)+' '+P(.36)+'" '+LN+'/><path d="M'+P(.27)+' '+P(.28)+' L'+P(.73)+' '+P(.28)+'" '+LN+'/>');
+      case 'mailer': return svg(k,k,'<rect x="'+P(.16)+'" y="'+P(.2)+'" width="'+P(.68)+'" height="'+P(.62)+'" rx="1.5" '+S+'/><path d="M'+P(.16)+' '+P(.41)+' L'+P(.84)+' '+P(.41)+'" '+LN+'/><path d="M'+P(.28)+' '+P(.3)+' L'+P(.72)+' '+P(.3)+'" '+LN+'/>');
+    }
+    return svg(k,k,'<rect x="'+P(.18)+'" y="'+P(.24)+'" width="'+P(.64)+'" height="'+P(.56)+'" rx="2" '+S+'/><path d="M'+P(.18)+' '+P(.42)+' L'+P(.82)+' '+P(.42)+'" '+LN+'/>');
+  }
+
+  // Two views. Inventory is the default and is just the shelf as pictures —
+  // what is here, how much, nothing to decide. Ordering is a separate job with
+  // different questions, so it gets its own view rather than seven controls
+  // being present on every row all the time.
+  var supView='inventory';
+  var supOpen=null;      // which inventory tile is showing its B / L steppers
+  function renderSupSummary(){
+    var sum=document.getElementById('nexusSupSummary'); if(!sum)return;
+    var nOut=0,nLow=0,nBundles=0,cost=0;
+    supplies.forEach(function(x){
+      var st=supplyState(x);
+      if(st!=='out'&&st!=='low')return;
+      if(st==='out')nOut++; else nLow++;
+      var b=bundlesNeeded(x); nBundles+=b;
+      var c=ulineCode(x);
+      if(c) cost += (c.qtyIs==='each') ? b*bundleSize(x)*c.unit : b*c.unit;
+    });
+    var chips=[];
+    if(nOut)chips.push('<span class="nexus-sup-pill out">'+nOut+' out</span>');
+    if(nLow)chips.push('<span class="nexus-sup-pill low">'+nLow+' low</span>');
+    if(!nOut&&!nLow)chips.push('<span class="nexus-sup-pill ok">Fully stocked</span>');
+    if(nBundles)chips.push('<span class="nexus-sup-sum-note">'+nBundles+' bundle'+(nBundles===1?'':'s')+
+      ' to order'+(cost?' \u00b7 about $'+cost.toFixed(2):'')+'</span>');
+    sum.innerHTML=chips.join('');
+    updateFloorCounts();
+  }
+  function renderSuppliesInventory(){
+    var list=document.getElementById('nexusSupList');
     var rank={out:0,low:1,ok:2};
     var rows=supplies.slice().sort(function(a,b){
       var d=rank[supplyState(a)]-rank[supplyState(b)];
@@ -27341,40 +27494,129 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       if(a.kind!==b.kind)return a.kind==='box'?-1:1;
       return String(a.name).localeCompare(String(b.name));
     });
-    var nOut=0,nLow=0,nBundles=0;
-    rows.forEach(function(x){
+    list.innerHTML='<div class="nexus-sup-grid">'+rows.map(function(x){
       var st=supplyState(x);
-      if(st==='out'){nOut++;nBundles+=bundlesNeeded(x)}
-      else if(st==='low'){nLow++;nBundles+=bundlesNeeded(x)}
+      return '<div class="nexus-sup-cellbox '+st+(x.id===supOpen?' open':'')+
+               '" data-sup-id="'+escapeHtml(x.id)+'" tabindex="0" role="button" aria-expanded="'+
+               (x.id===supOpen?'true':'false')+'" title="'+
+               escapeHtml(x.name+' — '+countText(x)+' — click to adjust')+'">'
+        +'<span class="nexus-sup-ic">'+supGlyph(x,46)+'</span>'
+        +'<span class="nexus-sup-cn">'+escapeHtml(x.name)+'</span>'
+        +'<span class="nexus-sup-cq">'+escapeHtml(countText(x))+'</span>'
+        // Adjust straight from the tile, but only on the one you opened. B is
+        // whole bundles, L is loose boxes from an open bundle — two rows rather
+        // than one control, because those are different things and a single
+        // number would have to guess which you meant. Reuses data-sup-binc/bdec
+        // so the existing bundle handler does the work; loose gets its own pair.
+        // Collapsed by default: seventeen tiles each showing four buttons is the
+        // wall of controls this view exists to get away from.
+        +(x.id===supOpen ? '<span class="nexus-sup-adj">'
+          +'<span class="nexus-sup-adjrow"><i>B</i>'
+            +'<button type="button" data-sup-bdec aria-label="One fewer bundle of '+escapeHtml(x.name)+'">\u2212</button>'
+            +'<b>'+bundlesOf(x)+'</b>'
+            +'<button type="button" data-sup-binc aria-label="One more bundle of '+escapeHtml(x.name)+'">+</button>'
+          +'</span>'
+          +'<span class="nexus-sup-adjrow"><i>L</i>'
+            +'<button type="button" data-sup-ldec aria-label="One fewer loose '+escapeHtml(x.name)+'">\u2212</button>'
+            +'<b>'+looseOf(x)+'</b>'
+            +'<button type="button" data-sup-linc aria-label="One more loose '+escapeHtml(x.name)+'">+</button>'
+          +'</span>'
+        +'</span>' : '')
+        +'</div>';
+    }).join('')+'</div>';
+  }
+
+  // Ordering is a different job from counting, so the order view says the same
+  // three things on every line — how many bundles you are buying, how many
+  // boxes that is, and the exact number Uline's Qty box wants. Those are three
+  // different numbers and confusing them is the only expensive mistake here.
+  // Everything below is built from `supplies`; nothing about any item is
+  // written into this function.
+  var SUP_BUY={};
+  var supRecount=false;
+  function supBuying(x){
+    if(x.id in SUP_BUY) return SUP_BUY[x.id];
+    return supplyState(x)==='ok' ? 0 : bundlesNeeded(x);
+  }
+  function supUnitWord(x){
+    if(x.kind==='box') return 'bundle';
+    return bundleSize(x)>1 ? 'case' : 'unit';
+  }
+  function supHaveText(x){
+    if(totalUnits(x)<=0) return 'Nothing on the shelf.';
+    if(x.kind!=='box'){
+      var n=totalUnits(x), u=supUnitWord(x);
+      return n+' '+u+(n===1?'':'s')+' left.';
+    }
+    var b=bundlesOf(x), l=looseOf(x), bits=[];
+    if(b) bits.push(b+' full bundle'+(b===1?'':'s'));
+    if(l) bits.push(l+' loose from an open bundle');
+    return bits.join(' and ')+'.';
+  }
+  function supBuyText(x){
+    var b=supBuying(x); if(!b) return '';
+    var per=bundleSize(x), u=supUnitWord(x);
+    if(x.kind==='box')
+      return 'Buy <em>'+b+' bundle'+(b===1?'':'s')+"</em>. That's <em>"+(b*per)+' boxes</em>, '+per+' to a bundle.';
+    var t='Buy <em>'+b+' '+u+(b===1?'':'s')+'</em>.';
+    if(per>1) t+=" That's <em>"+(b*per)+' items</em>, and Uline counts '+u+'s.';
+    return t;
+  }
+  function supTypeText(x){
+    if(!x.model) return '<span class="nexus-sup-type none">No Uline number saved \u2014 add it on the site</span>';
+    return '<span class="nexus-sup-type">'+escapeHtml(x.model)+' \u2192 '+ulineQty(x)+' <i>in the Qty box</i></span>';
+  }
+
+  function renderSupplies(){
+    var list=document.getElementById('nexusSupList'),sum=document.getElementById('nexusSupSummary');
+    if(!list||!sum)return;
+    renderSupSummary();
+    if(supView==='inventory'){ renderSuppliesInventory(); return; }
+
+    var rank={out:0,low:1,ok:2};
+    var rows=supplies.slice().sort(function(a,b){
+      var d=rank[supplyState(a)]-rank[supplyState(b)];
+      if(d)return d;
+      if(a.kind!==b.kind)return a.kind==='box'?-1:1;
+      return String(a.name).localeCompare(String(b.name));
     });
-    var chips=[];
-    if(nOut)chips.push('<span class="nexus-sup-pill out">'+nOut+' out</span>');
-    if(nLow)chips.push('<span class="nexus-sup-pill low">'+nLow+' low</span>');
-    if(!nOut&&!nLow)chips.push('<span class="nexus-sup-pill ok">Fully stocked</span>');
-    if(nBundles)chips.push('<span class="nexus-sup-sum-note">'+nBundles+' bundle'+(nBundles===1?'':'s')+' to order</span>');
-    sum.innerHTML=chips.join('');
-    updateFloorCounts();
     if(!rows.length){list.innerHTML='<div class="nexus-status">No supplies tracked yet.</div>';return}
-    list.innerHTML='<table class="nexus-sup-table"><thead><tr>'
-      +'<th>Item</th><th>Model #</th><th>Bundles</th><th>Loose</th><th>Per</th><th>Min</th><th></th>'
-      +'</tr></thead><tbody>'
-      +rows.map(function(x){
-        var st=supplyState(x);
-        var label=st==='out'?'Out':st==='low'?'Low':'OK';
-        return '<tr class="'+st+'" data-sup-id="'+escapeHtml(x.id)+'">'
-          +'<td class="nexus-sup-item"><span class="nexus-sup-dot '+st+'" title="'+label+'"></span>'
-            +'<span class="nexus-sup-name">'+escapeHtml(x.name)+'</span>'
-            +'<span class="nexus-sup-sub">'+escapeHtml(countText(x))+(x.restocked?' \u00b7 '+escapeHtml(x.restocked):'')+'</span></td>'
-          +'<td class="nexus-sup-model">'+(x.model?escapeHtml(x.model):'\u2014')+'</td>'
-          +'<td><div class="nexus-sup-stepper"><button type="button" data-sup-bdec>\u2212</button>'
+
+    list.innerHTML='<div class="nexus-sup-rows">'+rows.map(function(x){
+      var st=supplyState(x), b=supBuying(x);
+      var tag = st==='out' ? '<span class="nexus-sup-tag out">NONE LEFT</span>'
+              : st==='low' ? '<span class="nexus-sup-tag low">RUNNING LOW</span>'
+              : '<span class="nexus-sup-tag ok">FINE</span>';
+      // The recount controls keep every data-sup-* hook the existing handlers
+      // already bind to, so counting, resizing and deleting work untouched.
+      var count = supRecount
+        ? '<span class="nexus-sup-count">'
+          +'<i>bundles</i><span class="nexus-sup-stepper">'
+            +'<button type="button" data-sup-bdec>\u2212</button>'
             +'<input type="number" min="0" data-sup-bundles value="'+bundlesOf(x)+'">'
-            +'<button type="button" data-sup-binc>+</button></div></td>'
-          +'<td><input class="nexus-sup-cell" type="number" min="0" data-sup-loose value="'+looseOf(x)+'"></td>'
-          +'<td><input class="nexus-sup-cell" type="number" min="1" data-sup-size value="'+bundleSize(x)+'"></td>'
-          +'<td><input class="nexus-sup-cell" type="number" min="0" data-sup-min value="'+(x.minBundles>0?x.minBundles:0)+'"></td>'
-          +'<td><button type="button" class="nexus-sup-del" data-sup-del aria-label="Remove '+escapeHtml(x.name)+'">\u00d7</button></td>'
-          +'</tr>';
-      }).join('')+'</tbody></table>';
+            +'<button type="button" data-sup-binc>+</button></span>'
+          +'<i>loose</i><input class="nexus-sup-cell" type="number" min="0" data-sup-loose value="'+looseOf(x)+'">'
+          +'<i>per</i><input class="nexus-sup-cell" type="number" min="1" data-sup-size value="'+bundleSize(x)+'">'
+          +'<i>min</i><input class="nexus-sup-cell" type="number" min="0" data-sup-min value="'+(x.minBundles>0?x.minBundles:0)+'">'
+          +'<button type="button" class="nexus-sup-del" data-sup-del aria-label="Remove '+escapeHtml(x.name)+'">\u00d7</button>'
+          +'</span>'
+        : '';
+      return '<div class="nexus-sup-row '+st+'" data-sup-id="'+escapeHtml(x.id)+'">'
+        +'<span class="nexus-sup-glyph">'+supGlyph(x,38)+'</span>'
+        + tag
+        +'<span class="nexus-sup-body">'
+          +'<span class="nexus-sup-name">'+escapeHtml(x.name)+'</span>'
+          +'<span class="nexus-sup-said">'+escapeHtml(supHaveText(x))+' '+supBuyText(x)+'</span>'
+          +(b?supTypeText(x):'')
+          + count
+        +'</span>'
+        +'<span class="nexus-sup-buy">'
+          +'<button type="button" data-sup-buydec aria-label="One fewer">\u2212</button>'
+          +'<b>'+b+'</b>'
+          +'<button type="button" data-sup-buyinc aria-label="One more">+</button>'
+        +'</span>'
+      +'</div>';
+    }).join('')+'</div>';
   }
   function supStatus(msg){var el=document.getElementById('nexusSupStatus');if(el)el.textContent=msg}
   function addSupplyFromText(rawName,rawBundles,rawSize,rawModel){
@@ -27513,11 +27755,35 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     list.addEventListener('click',function(ev){
       var row=ev.target.closest('[data-sup-id]');if(!row)return;
       var x=findSupply(row.getAttribute('data-sup-id'));if(!x)return;
-      if(ev.target.hasAttribute('data-sup-binc')){x.bundles=bundlesOf(x)+1;x.restocked=todayStr();saveSupplies()}
+      // On the inventory grid a click anywhere on the tile that is not one of
+      // its own steppers opens or closes it. Only one is open at a time — the
+      // point of hiding them was to stop the grid becoming a wall of buttons,
+      // and leaving every visited tile open rebuilds exactly that.
+      if(supView==='inventory' && !ev.target.closest('.nexus-sup-adj')){
+        supOpen = (supOpen===x.id) ? null : x.id;
+        renderSupplies();
+        return;
+      }
+      if(ev.target.hasAttribute('data-sup-linc')){x.loose=looseOf(x)+1;x.restocked=todayStr();saveSupplies()}
+      else if(ev.target.hasAttribute('data-sup-ldec')){x.loose=Math.max(0,looseOf(x)-1);x.restocked=todayStr();saveSupplies()}
+      else if(ev.target.hasAttribute('data-sup-binc')){x.bundles=bundlesOf(x)+1;x.restocked=todayStr();saveSupplies()}
       else if(ev.target.hasAttribute('data-sup-bdec')){x.bundles=Math.max(0,bundlesOf(x)-1);x.restocked=todayStr();saveSupplies()}
       else if(ev.target.hasAttribute('data-sup-del')){
         if(confirm('Remove '+x.name+' from supplies?')){supplies=supplies.filter(function(y){return y.id!==x.id});invDelete(x.id);saveSupplies();supStatus('Removed '+x.name+'.')}
       }
+    });
+    list.addEventListener('keydown',function(ev){
+      if(ev.key!=='Enter' && ev.key!==' ') return;
+      if(supView!=='inventory') return;
+      var row=ev.target.closest && ev.target.closest('.nexus-sup-cellbox[data-sup-id]');
+      if(!row) return;
+      ev.preventDefault();
+      var x=findSupply(row.getAttribute('data-sup-id')); if(!x) return;
+      supOpen = (supOpen===x.id) ? null : x.id;
+      renderSupplies();
+      // The re-render replaces the node, so focus has to be put back on it.
+      var again=document.querySelector('.nexus-sup-cellbox[data-sup-id="'+x.id+'"]');
+      if(again) again.focus();
     });
     list.addEventListener('change',function(ev){
       var row=ev.target.closest('[data-sup-id]');if(!row)return;
@@ -27537,13 +27803,53 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     document.getElementById('nexusSupNewName').addEventListener('keydown',function(e){
       if(e.key==='Enter'){e.preventDefault();document.getElementById('nexusSupAdd').click()}
     });
+    var vb=document.getElementById('nexusSupView');
+    if(vb) vb.onclick=function(){
+      supView = supView==='inventory' ? 'order' : 'inventory';
+      vb.textContent = supView==='inventory' ? 'Order view' : 'Inventory';
+      renderSupplies();
+    };
+    var supL=document.getElementById('nexusSupList');
+    if(supL && !supL._supBuyBound){
+      supL._supBuyBound=true;
+      supL.addEventListener('click',function(ev){
+        var btn=ev.target.closest && ev.target.closest('[data-sup-buyinc],[data-sup-buydec]');
+        if(!btn)return;
+        var row=btn.closest('[data-sup-id]'); if(!row)return;
+        var x=findSupply(row.getAttribute('data-sup-id')); if(!x)return;
+        SUP_BUY[x.id]=Math.max(0, supBuying(x)+(btn.hasAttribute('data-sup-buyinc')?1:-1));
+        renderSupplies();
+      });
+    }
+    var rcb=document.getElementById('nexusSupRecount');
+    if(rcb) rcb.onclick=function(){
+      supRecount=!supRecount;
+      rcb.textContent=supRecount?'Done counting':'Recount';
+      if(supView!=='order'){ supView='order';
+        var vb2=document.getElementById('nexusSupView');
+        if(vb2) vb2.textContent='Inventory'; }
+      renderSupplies();
+    };
     document.getElementById('nexusSupCopyOrder').onclick=copyReorderList;
     document.getElementById('nexusSupUline').onclick=function(){
-      var lines=reorderLines();
-      var n=supplies.filter(function(x){var st=supplyState(x);return st==='out'||st==='low'})
-        .reduce(function(a,x){return a+bundlesNeeded(x)},0);
-      supStatus(lines.length?('Opening Uline \u2014 '+n+' bundle'+(n===1?'':'s')+' across '+lines.length+' item'+(lines.length===1?'':'s')+'. Copy the list first if you need the model numbers.'):'Opening Uline order history.');
-      window.open('https://www.uline.com/MyAccount/MyOrderHistory','_blank','noopener');
+      var lines=ulineLines(), missing=ulineMissing();
+      if(!lines.length && !missing.length){ supStatus('Nothing is at or below min right now.'); return; }
+      // This used to open My Order History, which is the wrong page — it shows
+      // what you bought before, not anywhere you can buy anything. Quick Order
+      // is the form that actually takes model numbers.
+      var txt=lines.join('\n');
+      function go(){
+        var note='Quick Order is open and '+lines.length+' line'+(lines.length===1?'':'s')+
+                 ' copied \u2014 use the Paste Items link on that page.';
+        if(missing.length) note+=' No model number for '+missing.join(', ')+
+                 ' \u2014 add by hand.';
+        supStatus(note);
+        window.open('https://www.uline.com/Ordering/QuickOrder','_blank','noopener');
+      }
+      if(txt && navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(go).catch(function(){ fallbackCopySku(txt,go); });
+      } else if(txt){ fallbackCopySku(txt,go); }
+      else go();
     };
     // Custom size field — Use sends it to eBay, + Stock also tracks it.
     document.getElementById('nexusCustomBoxUse').onclick=function(){
@@ -33377,6 +33683,68 @@ window.offerCheckOpen=function(){
 #ocRoot .oc-foot{border-top:1px solid var(--line);padding:11px 22px;font-family:'IBM Plex Mono',ui-monospace,monospace;
   font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.55;display:flex;justify-content:space-between;
   gap:12px;flex-wrap:wrap}
+
+  #nexusSuppliesPanel .nexus-sup-grid{display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
+  #nexusSuppliesPanel .nexus-sup-cellbox{display:flex;flex-direction:column;align-items:center;
+    gap:5px;padding:12px 8px 10px;border:1px solid var(--line,#242D3D);border-radius:10px;
+    text-align:center;cursor:default}
+  #nexusSuppliesPanel .nexus-sup-cellbox.out{border-color:#E0645A55;background:#E0645A0D}
+  #nexusSuppliesPanel .nexus-sup-cellbox.low{border-color:#E0A13C55;background:#E0A13C0D}
+  #nexusSuppliesPanel .nexus-sup-cellbox.ok{opacity:.62}
+  #nexusSuppliesPanel .nexus-sup-ic{height:48px;display:flex;align-items:center;justify-content:center}
+  #nexusSuppliesPanel .nexus-sup-cn{font:600 11.5px var(--sans);line-height:1.3}
+  #nexusSuppliesPanel .nexus-sup-cq{font:500 10.5px var(--sans);opacity:.6}
+  #nexusSuppliesPanel .nexus-sup-cellbox.out .nexus-sup-cq{color:#E0645A;opacity:1}
+  #nexusSuppliesPanel .nexus-sup-cellbox.low .nexus-sup-cq{color:#E0A13C;opacity:1}
+  #nexusSuppliesPanel .nexus-sup-pill.unk{color:#8D99AC}
+
+  #nexusSuppliesPanel .nexus-sup-rows{display:flex;flex-direction:column}
+  #nexusSuppliesPanel .nexus-sup-row{display:flex;gap:11px;align-items:flex-start;
+    padding:11px 2px;border-bottom:1px solid var(--line,#242D3D)}
+  #nexusSuppliesPanel .nexus-sup-row:last-child{border-bottom:0}
+  #nexusSuppliesPanel .nexus-sup-row.ok{opacity:.45}
+  #nexusSuppliesPanel .nexus-sup-glyph{flex:0 0 42px;min-height:38px;display:flex;
+    align-items:center;justify-content:center}
+  #nexusSuppliesPanel .nexus-sup-tag{align-self:center;flex:0 0 auto;white-space:nowrap;
+    font:600 9.5px var(--sans);letter-spacing:.06em;padding:2px 6px;border-radius:99px;border:1px solid}
+  #nexusSuppliesPanel .nexus-sup-tag.out{color:#E0645A;border-color:#E0645A55;background:#E0645A14}
+  #nexusSuppliesPanel .nexus-sup-tag.low{color:#E0A13C;border-color:#E0A13C55;background:#E0A13C14}
+  #nexusSuppliesPanel .nexus-sup-tag.ok{color:#4EC06F;border-color:#4EC06F44;background:#4EC06F10}
+  #nexusSuppliesPanel .nexus-sup-body{flex:1;min-width:0;display:block}
+  #nexusSuppliesPanel .nexus-sup-name{display:block;font:600 14.5px var(--sans);letter-spacing:-.01em}
+  #nexusSuppliesPanel .nexus-sup-said{display:block;font-size:12.5px;opacity:.72;margin-top:3px;line-height:1.5}
+  #nexusSuppliesPanel .nexus-sup-said em{font-style:normal;font-weight:600;opacity:1}
+  #nexusSuppliesPanel .nexus-sup-type{display:block;margin-top:5px;
+    font:500 12px 'IBM Plex Mono',ui-monospace,monospace;color:#35D0C0}
+  #nexusSuppliesPanel .nexus-sup-type i{font-style:normal;font-family:var(--sans);opacity:.55}
+  #nexusSuppliesPanel .nexus-sup-type.none{color:#E0A13C;font-family:var(--sans);font-size:12px}
+  #nexusSuppliesPanel .nexus-sup-buy{align-self:center;display:inline-flex;align-items:center;
+    border:1px solid var(--line-hi,#334054);border-radius:8px;overflow:hidden;flex:0 0 auto}
+  #nexusSuppliesPanel .nexus-sup-buy button{width:28px;height:28px;border:0;background:transparent;
+    color:inherit;cursor:pointer;font-size:15px;line-height:1}
+  #nexusSuppliesPanel .nexus-sup-buy button:hover{color:#35D0C0}
+  #nexusSuppliesPanel .nexus-sup-buy b{min-width:28px;text-align:center;
+    font:600 13px 'IBM Plex Mono',ui-monospace,monospace}
+  #nexusSuppliesPanel .nexus-sup-count{display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+    margin-top:8px;font-size:11px;opacity:.75}
+  #nexusSuppliesPanel .nexus-sup-count i{font-style:normal;opacity:.65}
+
+  #nexusSuppliesPanel .nexus-sup-adj{display:flex;flex-direction:column;gap:3px;margin-top:6px;width:100%}
+  #nexusSuppliesPanel .nexus-sup-adjrow{display:flex;align-items:center;gap:2px;justify-content:center}
+  #nexusSuppliesPanel .nexus-sup-adjrow i{font-style:normal;font:700 9.5px var(--sans);
+    opacity:.45;width:11px;text-align:left}
+  #nexusSuppliesPanel .nexus-sup-adjrow button{width:20px;height:20px;padding:0;line-height:1;
+    border:1px solid var(--line-hi,#334054);border-radius:5px;background:transparent;
+    color:inherit;cursor:pointer;font-size:12px;opacity:.75}
+  #nexusSuppliesPanel .nexus-sup-adjrow button:hover{opacity:1;border-color:#35D0C0;color:#35D0C0}
+  #nexusSuppliesPanel .nexus-sup-adjrow b{min-width:20px;text-align:center;
+    font:600 11.5px 'IBM Plex Mono',ui-monospace,monospace}
+
+  #nexusSuppliesPanel .nexus-sup-cellbox{cursor:pointer;transition:border-color .12s ease}
+  #nexusSuppliesPanel .nexus-sup-cellbox:hover{border-color:var(--line-hi,#334054)}
+  #nexusSuppliesPanel .nexus-sup-cellbox:focus-visible{outline:2px solid #35D0C0;outline-offset:2px}
+  #nexusSuppliesPanel .nexus-sup-cellbox.open{border-color:#35D0C0;background:rgba(53,208,192,.07)}
 </style>
 <script>
 (function(){
