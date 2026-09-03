@@ -28840,6 +28840,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       labelPageTexts.push(pageText);labelPageModes.push(normalizeLabelText(pageText).length>=30?'PDF text':'OCR needed');
     }
     var ocrPages=labelPageModes.map(function(mode,i){return mode==='OCR needed'?i:-1}).filter(function(i){return i>=0});
+    if(ocrPages.length) await wbLoadTesseract();
     if(ocrPages.length&&window.Tesseract){
       status.textContent=ocrPages.length+' image-based label page'+(ocrPages.length===1?' needs':'s need')+' local OCR…';
       try{
@@ -30596,7 +30597,9 @@ function closeDeck(){
 SYG_NEXUS_INVENTORY_END"></textarea><div class="nim-actions"><button class="nim-btn primary" id="nimApplyPaste">Validate and import</button></div></div></div>
 <div class="nim-toast" id="nimToast"></div>
 
-<script src="./SYG Nexus_files/tesseract.min.js.download"></script>
+<!-- tesseract is loaded on demand by wbLoadTesseract(); see the OCR call
+     site. Parsing it on every page load cost a multi-megabyte compile for
+     a feature most sessions never touch. -->
 <script>
 (function(){
 'use strict';
@@ -34172,6 +34175,25 @@ if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded', wbNotesInit);
 } else { wbNotesInit(); }
 window.wbNotesInit=wbNotesInit;
+
+// Injects tesseract.min.js the first time OCR is actually needed. The worker
+// was already lazy, but the library itself was in a plain <script src> at the
+// top of the document, so every single page load paid to fetch and compile it
+// — for a label-OCR path that only runs when a shipping PDF turns out to be
+// image-based.
+var _wbTessLoad=null;
+function wbLoadTesseract(){
+  if(window.Tesseract) return Promise.resolve(true);
+  if(_wbTessLoad) return _wbTessLoad;
+  _wbTessLoad = new Promise(function(res){
+    var t=document.createElement('script');
+    t.src='./SYG Nexus_files/tesseract.min.js.download';
+    t.onload=function(){ res(!!window.Tesseract); };
+    t.onerror=function(){ _wbTessLoad=null; res(false); };
+    document.head.appendChild(t);
+  });
+  return _wbTessLoad;
+}
 
 // ── Wan Board keyboard shortcuts ──────────────────────────────────────
 // Shift+letter is just a capital letter, so these MUST stand down while a
