@@ -33303,6 +33303,57 @@ window.offerCheckOpen=function(){
   letter-spacing:.07em;text-transform:uppercase;padding:8px 13px;border:1.5px solid currentColor;
   border-radius:3px;text-decoration:none}
 #ocRoot .oc-lk.shop{color:var(--ok)} #ocRoot .oc-lk.bay{color:#144E8C} #ocRoot .oc-lk.none{opacity:.3;border:0}
+
+#ocReport{display:none;position:fixed;inset:0;z-index:100000;background:rgba(8,10,16,.72);
+  align-items:flex-start;justify-content:center;padding:26px 16px;overflow:auto}
+#ocReport.on{display:flex}
+#ocReport .ocr-sheet{background:#fff;color:#14181d;width:min(860px,100%);border-radius:10px;
+  box-shadow:0 20px 60px rgba(0,0,0,.45);overflow:hidden}
+#ocReport .ocr-head{display:flex;justify-content:space-between;align-items:center;gap:14px;
+  padding:13px 18px;border-bottom:1px solid #dfe3e8;font:600 14px var(--sans)}
+#ocReport .ocr-head span{display:block;font-weight:400;font-size:11.5px;opacity:.6;margin-top:2px}
+#ocReport .ocr-acts button{font:600 12px var(--sans);cursor:pointer;background:#fff;
+  border:1px solid #cbd2d9;border-radius:6px;padding:5px 12px;margin-left:6px;color:#14181d}
+#ocReport .ocr-acts button:hover{border-color:#1F4E79;color:#1F4E79}
+#ocReport .ocr-body{margin:0;padding:18px 20px;white-space:pre-wrap;word-break:break-word;
+  font:400 12.5px/1.55 'IBM Plex Mono',ui-monospace,monospace;max-height:74vh;overflow:auto}
+/* Printing should hand you a clean sheet to carry to the rack, not a
+   screenshot of the whole app. */
+@media print{
+  body > *:not(#ocReport){display:none !important}
+  #ocReport{position:static;display:block;background:#fff;padding:0}
+  #ocReport .ocr-sheet{box-shadow:none;width:auto;border-radius:0}
+  #ocReport .ocr-acts{display:none}
+  #ocReport .ocr-body{max-height:none;overflow:visible;font-size:11px}
+}
+
+#ocCatPanel{display:none;position:fixed;inset:0;z-index:100001;background:rgba(8,10,16,.72);
+  align-items:center;justify-content:center;padding:24px 16px}
+#ocCatPanel.on{display:flex}
+#ocCatPanel .occ-sheet{background:#fff;color:#14181d;width:min(560px,100%);border-radius:10px;
+  box-shadow:0 20px 60px rgba(0,0,0,.45);overflow:hidden;font:400 13px/1.5 var(--sans)}
+#ocCatPanel .occ-head{display:flex;justify-content:space-between;align-items:center;
+  padding:13px 18px;border-bottom:1px solid #dfe3e8;font-size:14.5px}
+#ocCatPanel .occ-head button{font:600 12px var(--sans);cursor:pointer;background:#fff;
+  border:1px solid #cbd2d9;border-radius:6px;padding:5px 12px;color:#14181d}
+#ocCatPanel .occ-now{padding:11px 18px;background:#F4F6F8;font-size:12.5px;border-bottom:1px solid #eceff2}
+#ocCatPanel .occ-steps{margin:0;padding:14px 18px 8px 36px}
+#ocCatPanel .occ-steps li{margin-bottom:5px}
+#ocCatPanel .occ-drop{display:block;margin:6px 18px 14px;padding:22px 14px;text-align:center;
+  border:2px dashed #cbd2d9;border-radius:9px;cursor:pointer;font-size:12.5px;color:#5A6472}
+#ocCatPanel .occ-drop:hover,#ocCatPanel .occ-drop.over{border-color:#1F4E79;color:#1F4E79;background:#F5F9FD}
+#ocCatPanel .occ-msg{padding:0 18px 12px;font-size:12.5px;min-height:18px}
+#ocCatPanel .occ-msg.ok{color:#2C6A4E;font-weight:600}
+#ocCatPanel .occ-msg.bad{color:#9E2B20;font-weight:600}
+#ocCatPanel .occ-foot{padding:11px 18px;border-top:1px solid #eceff2;display:flex;
+  flex-direction:column;gap:8px;align-items:flex-start}
+#ocCatPanel .occ-foot button{font:600 12px var(--sans);cursor:pointer;background:#fff;
+  border:1px solid #cbd2d9;border-radius:6px;padding:5px 12px;color:#14181d}
+#ocCatPanel .occ-note{font-size:11px;opacity:.6;line-height:1.45}
+#ocRoot .oc-snapage{margin-left:auto;font:600 11px var(--sans);opacity:.55;cursor:pointer;
+  padding:4px 8px;border-radius:6px;border:1px solid transparent}
+#ocRoot .oc-snapage:hover{opacity:.9;border-color:#cbd2d9}
+#ocRoot .oc-snapage.stale{opacity:1;color:#8A6212;border-color:#8A6212}
 #ocRoot .oc-notrack{color:var(--warn,#8A6212)}
 #ocRoot .oc-armed{display:inline-flex;align-items:center;gap:6px;font-size:11px;
   font-weight:600;opacity:.8;cursor:pointer;margin-right:4px}
@@ -33390,6 +33441,127 @@ function parseTable(text,hints){
 // eBay writes order numbers with and without separators depending on which
 // export produced them, so compare on digits only.
 function r_ordNorm(v){ return String(v||'').replace(/[^0-9]/g,''); }
+
+
+// ── Catalog refresh from a Shopify products export ────────────────────
+// The snapshot used to be a hand-pasted array, which meant refreshing it was
+// "edit 182KB of literal inside the HTML" — a job nobody does weekly. This
+// takes Shopify's own CSV export instead and keeps the result in
+// localStorage, so the file itself never has to be touched again.
+//
+// One honest limitation: Shopify's products export does NOT include product
+// IDs. The baked-in array has them, and they power the direct "Shopify order"
+// links. Rows imported from CSV therefore fall back to a SKU search link
+// rather than a direct one. Everything else — SKU, title, type, qty, price —
+// comes through exactly.
+var SYG_CAT_KEY='abribook:catalogImport';
+
+function catalogActive(){
+  try{
+    var raw=localStorage.getItem(SYG_CAT_KEY);
+    if(raw){
+      var o=JSON.parse(raw);
+      if(o && o.rows && o.rows.length) return o;
+    }
+  }catch(e){}
+  return null;   // fall back to the baked-in SYGCC_SNAP
+}
+function catalogRows(){
+  var imp=catalogActive();
+  return imp ? imp.rows : (window.SYGCatalog||[]);
+}
+function catalogDate(){
+  var imp=catalogActive();
+  return imp ? imp.date : (window.SYGCC_DATE||'');
+}
+
+// Minimal CSV reader — Shopify quotes fields containing commas and doubles
+// internal quotes, and product descriptions are full of both.
+function csvParse(text){
+  var rows=[], row=[], f='', q=false;
+  for(var i=0;i<text.length;i++){
+    var ch=text[i];
+    if(q){
+      if(ch==='"'){ if(text[i+1]==='"'){ f+='"'; i++; } else q=false; }
+      else f+=ch;
+    } else if(ch==='"') q=true;
+    else if(ch===','){ row.push(f); f=''; }
+    else if(ch==='\n'){ row.push(f); f=''; rows.push(row); row=[]; }
+    else if(ch!=='\r') f+=ch;
+  }
+  if(f.length||row.length){ row.push(f); rows.push(row); }
+  return rows.filter(function(r){ return r.length>1; });
+}
+
+function catalogFromCsv(text){
+  var rows=csvParse(text);
+  if(!rows.length) throw new Error('empty file');
+  var head=rows[0].map(function(h){ return h.trim().toLowerCase(); });
+  function col(){ 
+    for(var a=0;a<arguments.length;a++){
+      var i=head.indexOf(arguments[a]);
+      if(i>-1) return i;
+    }
+    return -1;
+  }
+  var cSku=col('variant sku'), cTitle=col('title'), cType=col('type','product category'),
+      cQty=col('variant inventory qty'), cPrice=col('variant price');
+  if(cSku<0) throw new Error('no "Variant SKU" column — is this the products export?');
+
+  // A Shopify export repeats the product title only on the first variant row
+  // and leaves it blank on the rest, so carry it down.
+  var lastTitle='', lastType='', out=[], seen={};
+  for(var i=1;i<rows.length;i++){
+    var r=rows[i];
+    var t=(cTitle>-1?r[cTitle]:'')||''; if(t.trim()) lastTitle=t.trim();
+    var ty=(cType>-1?r[cType]:'')||''; if(ty.trim()) lastType=ty.trim();
+    var sku=((cSku>-1?r[cSku]:'')||'').trim();
+    if(!sku) continue;                      // variants with no SKU cannot be matched
+    var key=sku.toUpperCase();
+    if(seen[key]) continue;                 // first variant wins, same as the old array
+    seen[key]=1;
+    out.push([sku, lastTitle, lastType,
+              parseInt((cQty>-1?r[cQty]:'0')||'0',10)||0,
+              parseFloat((cPrice>-1?r[cPrice]:'0')||'0')||0,
+              '']);                          // no product id in a CSV export
+  }
+  if(!out.length) throw new Error('no rows with a SKU');
+  return out;
+}
+
+function catalogImport(text){
+  var rows=catalogFromCsv(text);
+  var rec={date:new Date().toISOString().slice(0,10), rows:rows, src:'csv'};
+  localStorage.setItem(SYG_CAT_KEY, JSON.stringify(rec));
+  return rec;
+}
+function catalogReset(){
+  localStorage.removeItem(SYG_CAT_KEY);
+}
+
+// ── Catalog snapshot age ──────────────────────────────────────────────
+// SYGCC_SNAP is a hardcoded export of the Shopify product list, taken on
+// SYGCC_DATE. Nothing refreshes it — it is exactly as old as the last time
+// someone pasted it in. Every statement derived from it therefore has to
+// carry its own age, or it gets read as live data. That is what happened
+// with "Shopify still shows N in stock", which was really "the 27 Aug paste
+// showed N in stock" — a materially different claim on a screen whose output
+// is "should I cancel this order".
+function snapAgeDays(){
+  try{
+    var d=new Date(String(catalogDate()||'')+'T00:00:00');
+    if(isNaN(d)) return null;
+    return Math.max(0, Math.floor((Date.now()-d.getTime())/86400000));
+  }catch(e){ return null; }
+}
+function snapLabel(){
+  var d=snapAgeDays();
+  if(d===null) return 'undated snapshot';
+  if(d===0) return "today's snapshot";
+  return (catalogDate()||'?')+' catalog, '+d+' day'+(d===1?'':'s')+' old';
+}
+function snapStale(){ var d=snapAgeDays(); return d===null || d>3; }
+
 function pick(head,guesses){
   var low=head.map(function(h){return h.toLowerCase()});
   for(var i=0;i<guesses.length;i++)
@@ -33466,7 +33638,7 @@ function run(){
     });
   }
   var cat={};
-  if(window.SYGCatalog) window.SYGCatalog.forEach(function(p){
+  catalogRows().forEach(function(p){
     cat[norm(p[0])]={qty:p[3],title:p[1],type:p[2],pid:p[5]};
   });
 
@@ -33557,8 +33729,9 @@ function run(){
       // is on the shelf or stock never decremented — both worth knowing
       // before cancelling on the strength of a report.
       if(c && c.qty>0){
-        issues.push({c:'warn',t:'Shopify still shows '+c.qty+' in stock for this SKU. '+
-          'That contradicts the shipped report \u2014 check the shelf before cancelling.'});
+        issues.push({c:'warn',t:'The '+snapLabel()+' had '+c.qty+' in stock for this SKU. '+
+          'That contradicts the shipped report \u2014 but the snapshot is not live, so '+
+          'check the shelf rather than trusting either number.'});
       }
       if(hit.buyer && o.buyer && hit.buyer.toLowerCase()!==String(o.buyer).toLowerCase()){
         issues.push({c:'warn',t:'The shipped row went to a different buyer ('+hit.buyer+
@@ -33571,10 +33744,15 @@ function run(){
     }
     if(c && c.qty<=0 && flag==='OK'){
       flag='NOSTOCK';
-      issues.push({c:'warn',t:'Shopify shows no stock left for this SKU.'});
+      issues.push({c:'warn',t:'The '+snapLabel()+' shows no stock left for this SKU.'});
     }
     if(!c && k && flag==='OK')
-      issues.push({c:'warn',t:'Not in the catalog snapshot \u2014 may be archived or created after the snapshot.'});
+      issues.push({c: snapStale()?'ghost':'warn',
+        t:'Not in the '+snapLabel()+'. That list is a paste, not a live lookup, so this '+
+          'usually just means the product was created after it was taken. It can also mean '+
+          'archived, or a SKU that never existed \u2014 the snapshot cannot tell them apart. '+
+          (snapStale()?'Refresh the catalog or hand this off to Claude to settle it.'
+                     :'')});
     if(flag==='OK') issues.push({c:'ok',t:'Not on the shipped report. Safe to pack.'});
 
     out.push({flag:flag, ord:o.order, rec:'', sku:o.sku, title:o.title, qty:o.qty,
@@ -33586,6 +33764,7 @@ function run(){
   ROWS=out; FILTER='ALL'; POS=0;
   drawTally(); drawCard();
   $('ocExport').disabled=false;
+  $('ocHandoff').disabled=false;
   $('ocTs').textContent=AWAIT.length+' awaiting \u00b7 run '+new Date().toLocaleString();
 }
 
@@ -33654,7 +33833,9 @@ function drawCard(){
         '<div><small>Tracking</small><b'+(r.track?'':' class="oc-notrack" title="No carrier scan against this order"')+'>'+
           esc(r.track||'\u2014')+'</b></div>'+
         '<div><small>Buyer</small><b>'+esc(r.buyer||'\u2014')+'</b></div>'+
-        '<div><small>Stock now</small><b>'+(r.cat?r.cat.qty:'\u2014')+'</b></div>'+
+        '<div><small>Stock '+(snapAgeDays()===0?'today':'@ snapshot')+'</small><b'+
+          (snapStale()?' class="oc-notrack" title="'+snapLabel()+' \u2014 not live"':'')+'>'+
+          (r.cat?r.cat.qty:'\u2014')+'</b></div>'+
       '</div>'+
       '<div class="oc-acts">'+links.join('')+'</div>'+
       '<div class="oc-issues"><h4>Findings</h4>'+
@@ -33675,6 +33856,236 @@ function drawCard(){
   }
   $('ocPrev').onclick=function(){ step(-1) };
   $('ocNext').onclick=function(){ step(1) };
+}
+
+
+// ── Hand-off to Claude ────────────────────────────────────────────────
+// Order Check can say an order looks wrong; it cannot say why. It sees three
+// things and nothing else — the awaiting-shipment pull, the Paid & Shipped
+// report, and a baked-in catalog snapshot. "Not in the catalog snapshot" in
+// particular is a shrug: archived, created after the snapshot, or genuinely
+// gone all look identical from here. Settling it needs a live look at the
+// store, which the Ask Claude bridge already does elsewhere. This bundles the
+// currently-filtered rows so the question is asked once for the whole set.
+function ocHandoffPrompt(list){
+  var L=[];
+  L.push('ORDER CHECK - INVESTIGATION HAND-OFF');
+  L.push('');
+  L.push('These are awaiting-shipment eBay orders that Order Check could not clear on');
+  L.push('its own. It compares the eBay awaiting pull, the Paid & Shipped report, and a');
+  L.push('baked-in Shopify catalog snapshot. It cannot see live Shopify, so everything');
+  L.push('below is a question rather than a verdict.');
+  L.push('');
+  L.push('FOR EACH ITEM: look the SKU up in the live Shopify store and say what actually');
+  L.push('happened to that unit. Use the Shopify tools - do not reason from this table');
+  L.push('alone. If no live product holds the SKU, say so plainly instead of guessing.');
+  L.push('');
+  L.push('Give ONE verdict per item from this closed list:');
+  L.push('  SOLD_ELSEWHERE   sold through another channel (in store, Shopify direct)');
+  L.push('  OVERSOLD         one unit sold more than once - this order cannot be filled');
+  L.push('  STILL_IN_STOCK   inventory is there; order is fillable, the reports are stale');
+  L.push('  ARCHIVED         archived or deleted in Shopify since the snapshot');
+  L.push('  CREATED_LATER    exists live, created after the snapshot was taken');
+  L.push('  NOT_FOUND        no product in Shopify holds this SKU at all');
+  L.push('  INCONCLUSIVE     the store does not settle it - say what is missing');
+  L.push('');
+  L.push('Then a RECOMMENDATION: FILL, CANCEL or CHECK_SHELF. Recommend CANCEL only when');
+  L.push('the store genuinely shows the unit is gone. Where the evidence conflicts, say');
+  L.push('CHECK_SHELF - a physical look beats an inference, and nobody has regretted');
+  L.push('walking to the rack.');
+  L.push('');
+  L.push('Output one block per item, exactly this shape, nothing before or after:');
+  L.push('');
+  L.push('  ITEM <n> | <sku>');
+  L.push('  VERDICT: <one of the above>');
+  L.push('  WHY: <two sentences, citing what you found in Shopify>');
+  L.push('  RECOMMENDATION: <FILL | CANCEL | CHECK_SHELF>');
+  L.push('');
+  L.push('==================================================================');
+  L.push('BATCH: '+list.length+' order'+(list.length===1?'':'s')+
+         '   -   generated '+new Date().toLocaleString());
+  L.push('==================================================================');
+  list.forEach(function(r,i){
+    L.push('');
+    L.push('ITEM '+(i+1));
+    L.push('  SKU            : '+(r.sku||'(none on the order)'));
+    L.push('  Title          : '+(r.title||'-'));
+    L.push('  eBay order     : '+(r.ord||'-'));
+    L.push('  Qty / sold for : '+(r.qty||'-')+'  /  '+
+      (r.price===null||r.price===undefined?'-':'$'+r.price));
+    L.push('  Order Check say: '+(FLAG[r.flag]?FLAG[r.flag].l:r.flag));
+    L.push('  Tracking       : '+(r.track||'none on the shipped report'));
+    L.push('  Snapshot stock : '+(r.cat?r.cat.qty:'not in the snapshot'));
+    (r.issues||[]).forEach(function(x){ L.push('  - '+x.t); });
+  });
+  L.push('');
+  return L.join('\n');
+}
+
+// Refreshing the snapshot is a manual paste, so the least we can do is remove
+// the part that takes thinking: this hands Claude the exact output shape, so
+// the answer is a block that can be pasted straight over SYGCC_SNAP.
+
+// The instructions and the import live in the same panel on purpose. Telling
+// someone where the export button is, then leaving them to hand-edit a 182KB
+// array, is why the catalog went seven days stale in the first place.
+function ocCatalogPanel(){
+  var w=document.getElementById('ocCatPanel');
+  if(!w){ w=document.createElement('div'); w.id='ocCatPanel'; document.body.appendChild(w); }
+  var imp=catalogActive();
+  w.innerHTML=
+    '<div class="occ-sheet">'+
+      '<div class="occ-head"><b>Refresh the catalog</b>'+
+        '<button type="button" id="occX">Close</button></div>'+
+      '<div class="occ-now">Currently using: <b>'+snapLabel()+'</b>'+
+        (imp?' \u00b7 imported CSV \u00b7 '+imp.rows.length+' SKUs'
+            :' \u00b7 the list baked into this file')+'</div>'+
+      '<ol class="occ-steps">'+
+        '<li>Shopify admin \u2192 <b>Products</b></li>'+
+        '<li>Top right \u2192 <b>Export</b></li>'+
+        '<li>Choose <b>All products</b></li>'+
+        '<li>Format: <b>CSV for Excel, Numbers, or other spreadsheet programs</b></li>'+
+        '<li><b>Export products</b> \u2014 Shopify emails the file if the store is large</li>'+
+        '<li>Drop that CSV below</li>'+
+      '</ol>'+
+      '<label class="occ-drop" id="occDrop">'+
+        '<input type="file" id="occFile" accept=".csv,text/csv" hidden>'+
+        '<span>Drop products_export.csv here, or click to choose</span>'+
+      '</label>'+
+      '<div class="occ-msg" id="occMsg"></div>'+
+      '<div class="occ-foot">'+
+        (imp?'<button type="button" id="occReset">Revert to the built-in list</button>':'')+
+        '<span class="occ-note">Stored in this browser only. The HTML file is not modified, '+
+        'so a git pull will not wipe it \u2014 and it will not follow you to another machine.</span>'+
+      '</div>'+
+    '</div>';
+  w.classList.add('on');
+  var msg=w.querySelector('#occMsg'), drop=w.querySelector('#occDrop'), file=w.querySelector('#occFile');
+  function load(f){
+    if(!f){ return; }
+    msg.className='occ-msg'; msg.textContent='Reading '+f.name+'\u2026';
+    var fr=new FileReader();
+    fr.onload=function(){
+      try{
+        var rec=catalogImport(String(fr.result));
+        msg.className='occ-msg ok';
+        msg.textContent='Imported '+rec.rows.length+' SKUs. Re-run the check to use it.';
+        var a=document.getElementById('ocSnapAge');
+        if(a){ a.textContent='Catalog: '+snapLabel(); a.classList.toggle('stale', snapStale()); }
+      }catch(e){
+        msg.className='occ-msg bad';
+        msg.textContent='Could not read that file: '+e.message;
+      }
+    };
+    fr.onerror=function(){ msg.className='occ-msg bad'; msg.textContent='Could not read that file.'; };
+    fr.readAsText(f);
+  }
+  drop.addEventListener('click', function(){ file.click(); });
+  file.addEventListener('change', function(){ load(file.files[0]); });
+  ['dragenter','dragover'].forEach(function(ev){
+    drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.add('over'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.remove('over'); });
+  });
+  drop.addEventListener('drop', function(e){ load(e.dataTransfer.files[0]); });
+  w.querySelector('#occX').onclick=function(){ w.classList.remove('on'); };
+  var rs=w.querySelector('#occReset');
+  if(rs) rs.onclick=function(){
+    catalogReset(); w.classList.remove('on');
+    var a=document.getElementById('ocSnapAge');
+    if(a){ a.textContent='Catalog: '+snapLabel(); a.classList.toggle('stale', snapStale()); }
+  };
+}
+
+function ocRefreshCatalog(){
+  var p=[
+    'REFRESH THE NEXUS CATALOG SNAPSHOT',
+    '',
+    'Nexus has a hardcoded Shopify product list baked into its HTML. It was',
+    'taken on '+(window.SYGCC_DATE||'an unknown date')+' and is '+
+      (snapAgeDays()===null?'of unknown age':snapAgeDays()+' days old')+'.',
+    'Order Check and Crosscheck both read it, so while it is stale they report',
+    'recently-created products as missing.',
+    '',
+    'Pull EVERY product variant from the live Shopify store and return a fresh',
+    'array in exactly this shape, one row per variant, nothing else in the reply:',
+    '',
+    'SYGCC_DATE = \'YYYY-MM-DD\';   // today',
+    'SYGCC_SNAP = [',
+    '["<sku>","<product title>","<product type>",<inventory qty>,<price as number>,"<numeric product id>"],',
+    '...',
+    '];',
+    '',
+    'Notes on the fields, from the existing data:',
+    '  - sku       variant SKU exactly as stored, including spaces and slashes',
+    '  - title     product title',
+    '  - type      Shopify product type ("Laptop", "Cell Phone", "Video Game"...)',
+    '  - qty       total inventory available, 0 is normal and must be kept',
+    '  - price     variant price as a plain number, no currency symbol',
+    '  - id        numeric product id only, no gid:// prefix',
+    '',
+    'Include archived products only if they still hold a SKU that could appear on',
+    'an order. Do not summarise, do not truncate, do not add commentary \u2014 the',
+    'reply is pasted directly into the file.'
+  ].join('\n');
+  ocCopy(p);
+  alert('Refresh prompt copied.\n\nPaste it into Claude, then paste its reply over '+
+        'SYGCC_DATE and SYGCC_SNAP in the HTML.');
+}
+
+function ocCopy(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t); return; }
+  var a=document.createElement('textarea'); a.value=t;
+  a.style.cssText='position:fixed;opacity:0'; document.body.appendChild(a);
+  a.select(); try{document.execCommand('copy')}catch(e){} a.remove();
+}
+
+function handoff(){
+  var list=visible();
+  if(!list.length){ alert('Nothing in the current filter to hand off.'); return; }
+  var prompt=ocHandoffPrompt(list);
+  var btn=$('ocHandoff'), was=btn.textContent;
+  btn.disabled=true; btn.textContent='Sending '+list.length+'\u2026';
+  function finish(txt, ok){
+    btn.disabled=false; btn.textContent=was;
+    if(ok && txt){ ocShowReport(txt, list.length); return; }
+    // Fall back to the clipboard rather than losing the work — assembling the
+    // prompt is the expensive part and it pastes anywhere.
+    ocCopy(prompt);
+    alert('Could not reach the Ask Claude panel, so the prompt is on your clipboard '+
+          'instead. Paste it into Claude and it works the same.');
+  }
+  if(typeof window.nexusAskExtension==='function'){
+    window.nexusAskExtension('ZHUAN_PUSH_TO_CLAUDE',{question:prompt},180000)
+      .then(function(res){ finish(res&&res.text, !!(res&&res.text)); })
+      .catch(function(){ finish('',false); });
+  } else finish('',false);
+}
+
+// The point of the hand-off is a sheet you can carry to the rack, so the reply
+// gets a printable panel rather than living in a chat log.
+function ocShowReport(txt, n){
+  var w=document.getElementById('ocReport');
+  if(!w){ w=document.createElement('div'); w.id='ocReport'; document.body.appendChild(w); }
+  w.innerHTML=
+    '<div class="ocr-sheet">'+
+      '<div class="ocr-head">'+
+        '<div><b>Order Check \u2014 investigation</b>'+
+        '<span>'+n+' order'+(n===1?'':'s')+' \u00b7 '+new Date().toLocaleString()+'</span></div>'+
+        '<div class="ocr-acts">'+
+          '<button type="button" id="ocrPrint">Print</button>'+
+          '<button type="button" id="ocrCopy">Copy</button>'+
+          '<button type="button" id="ocrClose">Close</button>'+
+        '</div>'+
+      '</div>'+
+      '<pre class="ocr-body"></pre>'+
+    '</div>';
+  w.querySelector('.ocr-body').textContent=txt;
+  w.classList.add('on');
+  w.querySelector('#ocrPrint').onclick=function(){ window.print(); };
+  w.querySelector('#ocrCopy').onclick=function(){ ocCopy(txt); };
+  w.querySelector('#ocrClose').onclick=function(){ w.classList.remove('on'); };
 }
 
 function exportCsv(){
@@ -33759,6 +34170,9 @@ function build(){
       '<button type="button" class="oc-btn" id="ocPull">Pull orders from eBay</button>'+
       '<button type="button" class="oc-btn go" id="ocRun" disabled>Run check</button>'+
       '<button type="button" class="oc-btn" id="ocExport" disabled>Export CSV</button>'+
+      '<button type="button" class="oc-btn" id="ocHandoff" disabled title="Send everything currently filtered to Claude for a per-item verdict">Ask Claude \u2192</button>'+
+      '<span class="oc-snapage" id="ocSnapAge"></span>'+
+      '<button type="button" class="oc-btn" id="ocSnapUpd" title="How to refresh the catalog from Shopify">Update</button>'+
     '</div>'+
     '<div class="oc-tally" id="ocTally"></div>'+
     '<div class="oc-stage"><div id="ocOut"><div class="oc-empty">Drop the eBay orders report, then run the check.<br>Everything stays on this device.</div></div></div>'+
@@ -33769,6 +34183,19 @@ function build(){
   $('ocPull').addEventListener('click',pullOrders);
   $('ocRun').addEventListener('click',run);
   $('ocExport').addEventListener('click',exportCsv);
+  $('ocHandoff').addEventListener('click',handoff);
+  (function(){
+    var el=$('ocSnapAge'); if(!el) return;
+    el.textContent='Catalog: '+snapLabel();
+    el.classList.toggle('stale', snapStale());
+    // Clickable rather than a passive label: a warning you cannot act on just
+    // becomes wallpaper. Clicking builds the refresh prompt.
+    el.title = snapStale()
+      ? 'This is a hardcoded paste and it has gone stale. Click to build a refresh prompt.'
+      : 'Hardcoded catalog paste. Click to build a refresh prompt.';
+    el.addEventListener('click', ocCatalogPanel);
+    var u=$('ocSnapUpd'); if(u) u.addEventListener('click', ocCatalogPanel);
+  })();
   $('ocClose').addEventListener('click',close);
   root.addEventListener('click',function(e){ if(e.target===root) close() });
   document.addEventListener('keydown',function(e){
