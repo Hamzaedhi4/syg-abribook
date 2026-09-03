@@ -9595,6 +9595,16 @@ function wbSygSwitch(pane){
   c.classList.toggle('syg-on',pane==='syg');
   c.classList.toggle('lab-on',pane==='lab');
   c.classList.toggle('notes-on',pane==='notes');
+  // Load the portal on first use, not on page load. With src baked into the
+  // markup, every Nexus load also booted the whole buyer portal — a Bubble
+  // app that pulls in Google Maps, Looker Studio, reCAPTCHA, deck.gl and
+  // maplibre. That is a second application running inside this page whether
+  // or not anyone opens the SYG tab, and it is the single biggest thing
+  // making the board feel heavy.
+  if(pane==='syg'){
+    var _sf=document.getElementById('wbSygFrame');
+    if(_sf && !_sf.src && _sf.dataset.src) _sf.src=_sf.dataset.src;
+  }
   // Textareas can only be measured once they are on screen.
   if(pane==='notes' && typeof wbNotesRegrow==='function') setTimeout(wbNotesRegrow,0);
   Array.prototype.forEach.call(document.querySelectorAll('.wb-ctab'),function(t){
@@ -31794,7 +31804,11 @@ if(typeof updateGoalCounter==='function') updateGoalCounter();
 // short interval is the honest way to stay reasonably current without
 // needing a hook into every module that writes to these stores.
 nx2RefreshModuleActivity();
-setInterval(nx2RefreshModuleActivity, 20000);
+// Disabled: this polled every 20s to repaint the old bento dashboard's
+// module-activity tiles, which no longer exist — 14 of its writes target
+// removed elements. Kept rather than deleted in case the radial hub ever
+// wants live counts on the spokes; call it directly if so.
+// setInterval(nx2RefreshModuleActivity, 20000);
 
 } // end typeof Chart guard
 
@@ -31868,7 +31882,7 @@ setInterval(nx2RefreshModuleActivity, 20000);
             <a class="wb-syg-btn" id="wbSygOpen" href="https://buyer.sellyourgadgets.com/dashboard/inventory" target="_blank" rel="noopener">Open ↗</a>
           </div>
           <div class="wb-syg-frame-wrap">
-            <iframe id="wbSygFrame" title="SYG buyer portal — inventory" referrerpolicy="no-referrer" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads" src="./SYG Nexus_files/saved_resource.html"></iframe>
+            <iframe id="wbSygFrame" title="SYG buyer portal — inventory" referrerpolicy="no-referrer" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads" data-src="https://buyer.sellyourgadgets.com/dashboard/inventory" loading="lazy"></iframe>
             <div class="wb-syg-state" id="wbSygState" hidden="">
               <div class="wb-syg-state-t" id="wbSygStateT"></div>
               <div class="wb-syg-state-b" id="wbSygStateB"></div>
