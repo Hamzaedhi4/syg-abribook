@@ -27140,7 +27140,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   // bundle and bundle size varies by box (25, 15, 10), so each item carries
   // its own size and its Uline model number for reordering.
   var supplies=[],suppliesBound=false;
-  var SUPPLY_SEED_VERSION=3;
+  var SUPPLY_SEED_VERSION=4;
   // Seeded from the Shipping Front count sheet, with Uline model numbers and
   // real bundle sizes off the order history. Blank model = not on that order.
      // ── Uline model codes ─────────────────────────────────────────────
@@ -27187,19 +27187,21 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
        //             '8 rolls/case' and we ordered 3, meaning 3 cases at $76 each.
        // Getting this backwards is the whole ballgame: treating tape as 'each'
        // turns an order for 1 case into 8 cases.
-       {id:'8x4x4',    name:'8 × 4 × 4',    kind:'box', model:'S-4245',  size:25, uline:'each', bundles:0, loose:0},
-       {id:'8x6x4',    name:'8 × 6 × 4',    kind:'box', model:'S-4080',  size:25, uline:'each', bundles:3, loose:0},
-       {id:'10x10x4', name:'10 \u00d7 10 \u00d7 4', kind:'box', model:'S-4346', size:25, uline:'each', bundles:0, loose:0, counted:false},
-       {id:'12x6x6',   name:'12 × 6 × 6',   kind:'box', model:'S-4128',  size:25, uline:'each', bundles:3, loose:0},
-       {id:'12x10x4',  name:'12 × 10 × 4',  kind:'box', model:'S-4119',  size:25, uline:'each', bundles:1, loose:0},
-       {id:'12x10x8', name:'12 \u00d7 10 \u00d7 8', kind:'box', model:'S-4120', size:25, uline:'each', bundles:0, loose:0, counted:false},
-       {id:'16x10x4',  name:'16 × 10 × 4',  kind:'box', model:'S-4944',  size:25, uline:'each', bundles:0, loose:0},
-       {id:'16x10x8', name:'16 \u00d7 10 \u00d7 8', kind:'box', model:'S-4161', size:25, uline:'each', bundles:0, loose:0, counted:false},
-       {id:'16x12x4',  name:'16 × 12 × 4',  kind:'box', model:'S-4363',  size:25, uline:'each', bundles:0, loose:0},
-       {id:'16x16x6',  name:'16 × 16 × 6',  kind:'box', model:'S-4536',        size:25, uline:'each', bundles:1, loose:0},
-       {id:'18x12x6',  name:'18 × 12 × 6',  kind:'box', model:'S-4187',  size:25, uline:'each', bundles:2, loose:0},
-       {id:'20x20x12', name:'20 × 20 × 12', kind:'box', model:'S-4210',  size:15, uline:'each', bundles:0, loose:8},
-       {id:'24x12x24', name:'24 × 12 × 24', kind:'box', model:'S-4114',  size:10, uline:'each', bundles:0, loose:25},
+       {id:'8x4x4',    name:'8 × 4 × 4',    kind:'box', model:'S-4245',  size:25, uline:'each', bundles:0, loose:0, counted:true},
+       {id:'8x6x4',    name:'8 × 6 × 4',    kind:'box', model:'S-4080',  size:25, uline:'each', bundles:3, loose:0, counted:true},
+       {id:'10x10x4', name:'10 \u00d7 10 \u00d7 4', kind:'box', model:'S-4346', size:25, uline:'each', bundles:2, loose:0, counted:true},
+       {id:'12x6x6',   name:'12 × 6 × 6',   kind:'box', model:'S-4128',  size:25, uline:'each', bundles:2, loose:0, counted:true},
+       {id:'12x10x4',  name:'12 × 10 × 4',  kind:'box', model:'S-4119',  size:25, uline:'each', bundles:2, loose:0, counted:true},
+       {id:'12x10x8', name:'12 \u00d7 10 \u00d7 8', kind:'box', model:'S-4120', size:25, uline:'each', bundles:1, loose:0, counted:true},
+       {id:'16x10x4',  name:'16 × 10 × 4',  kind:'box', model:'S-4944',  size:25, uline:'each', bundles:0, loose:0, counted:false},
+       {id:'16x10x8', name:'16 \u00d7 10 \u00d7 8', kind:'box', model:'S-4161', size:25, uline:'each', bundles:1, loose:0, counted:true},
+       {id:'16x12x4',  name:'16 × 12 × 4',  kind:'box', model:'S-4363',  size:25, uline:'each', bundles:1, loose:0, counted:true},
+       {id:'16x12x8',  name:'16 \u00d7 12 \u00d7 8',  kind:'box', model:'', size:25, uline:'each', bundles:2, loose:0, counted:true},
+       {id:'16x16x16', name:'16 \u00d7 16 \u00d7 16', kind:'box', model:'', size:25, uline:'each', bundles:1, loose:0, counted:true},
+       {id:'16x16x6',  name:'16 × 16 × 6',  kind:'box', model:'S-4536',        size:25, uline:'each', bundles:1, loose:0, counted:true},
+       {id:'18x12x6',  name:'18 × 12 × 6',  kind:'box', model:'S-4187',  size:25, uline:'each', bundles:2, loose:0, counted:false},
+       {id:'20x20x12', name:'20 × 20 × 12', kind:'box', model:'S-4210',  size:15, uline:'each', bundles:0, loose:8, counted:false},
+       {id:'24x12x24', name:'24 × 12 × 24', kind:'box', model:'S-4114',  size:10, uline:'each', bundles:1, loose:0, counted:true},
        {id:'24x16x12', name:'24 \u00d7 16 \u00d7 12', kind:'box', model:'S-4162', size:15, uline:'each', bundles:0, loose:0, counted:false},
        {id:'yellow-mailers', name:'Yellow mailers', kind:'supply', model:'', size:1, uline:'pack', bundles:0, loose:19},
        {id:'usps-mailers',   name:'USPS mailers',   kind:'supply', model:'', size:1, uline:'pack', bundles:0, loose:1},
