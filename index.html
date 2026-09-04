@@ -27165,6 +27165,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
        'S-4210':  {desc:'20 x 20 x 12 Corrugated Boxes', per:15,  qtyIs:'each', unit:2.73},
        'S-4162':  {desc:'24 x 16 x 12 Corrugated Boxes', per:15,  qtyIs:'each', unit:2.68},
        'S-4536':  {desc:'16 x 16 x 6 Corrugated Boxes',  per:25,  qtyIs:'each'},
+       'S-4166':  {desc:'16 x 16 x 16 Corrugated Boxes', per:25,  qtyIs:'each'},
        'S-1947':  {desc:'Kraft Tape 3in x 375ft',        per:8,   qtyIs:'pack', unit:76.00},
        'S-13053': {desc:'Anti-Static Bubble Roll 12in x 300ft', per:1, qtyIs:'pack', unit:47.00},
        'S-6802':  {desc:'Desktop Thermal Labels 4 x 6',  per:1,   qtyIs:'pack', unit:10.00},
@@ -27196,8 +27197,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
        {id:'16x10x4',  name:'16 × 10 × 4',  kind:'box', model:'S-4944',  size:25, uline:'each', bundles:0, loose:0, counted:false},
        {id:'16x10x8', name:'16 \u00d7 10 \u00d7 8', kind:'box', model:'S-4161', size:25, uline:'each', bundles:1, loose:0, counted:true},
        {id:'16x12x4',  name:'16 × 12 × 4',  kind:'box', model:'S-4363',  size:25, uline:'each', bundles:1, loose:0, counted:true},
-       {id:'16x12x8',  name:'16 \u00d7 12 \u00d7 8',  kind:'box', model:'', size:25, uline:'each', bundles:2, loose:0, counted:true},
-       {id:'16x16x16', name:'16 \u00d7 16 \u00d7 16', kind:'box', model:'', size:25, uline:'each', bundles:1, loose:0, counted:true},
+       {id:'16x12x8',  name:'16 \u00d7 12 \u00d7 8',  kind:'box', model:'', size:25, uline:'each', bundles:2, loose:0, counted:true, noUline:true},
+       {id:'16x16x16', name:'16 \u00d7 16 \u00d7 16', kind:'box', model:'S-4166', size:25, uline:'each', bundles:1, loose:0, counted:true},
        {id:'16x16x6',  name:'16 × 16 × 6',  kind:'box', model:'S-4536',        size:25, uline:'each', bundles:1, loose:0, counted:true},
        {id:'18x12x6',  name:'18 × 12 × 6',  kind:'box', model:'S-4187',  size:25, uline:'each', bundles:2, loose:0, counted:false},
        {id:'20x20x12', name:'20 × 20 × 12', kind:'box', model:'S-4210',  size:15, uline:'each', bundles:0, loose:8, counted:false},
@@ -27406,7 +27407,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
       .map(function(x){ return x.model+','+ulineQty(x); });
   }
   function ulineMissing(){
-    return supplies.filter(function(x){ return supBuying(x)>0 && !x.model; })
+    // Only items that could have a Uline code but don't. Something Uline
+    // doesn't sell is not an oversight to chase, so it stays off this list.
+    return supplies.filter(function(x){ return supBuying(x)>0 && !x.model && !x.noUline; })
       .map(function(x){return x.name});
   }
   function reorderLines(){
@@ -27576,7 +27579,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     return t;
   }
   function supTypeText(x){
-    if(!x.model) return '<span class="nexus-sup-type none">No Uline number saved \u2014 add it on the site</span>';
+    if(!x.model) return '<span class="nexus-sup-type none">'+
+      (x.noUline ? 'Uline doesn\u2019t stock this size \u2014 source it elsewhere'
+                 : 'No Uline number saved \u2014 add it on the site')+'</span>';
     return '<span class="nexus-sup-type">'+escapeHtml(x.model)+' \u2192 '+ulineQty(x)+' <i>in the Qty box</i></span>';
   }
 
@@ -32568,7 +32573,7 @@ function pullOrders(){
     if(d.ok===false||!d.orders){ $('ocHintS').textContent=(d.error||'failed').slice(0,60); return }
     AWAIT=d.orders;
     $('ocZoneS').classList.add('loaded');
-    $('ocNameS').textContent=d.orders.length+' orders awaiting shipment';
+    $('ocNameS').textContent=ordersLabel(d.orders);
     $('ocHintS').textContent='pulled '+new Date().toLocaleTimeString();
     $('ocRun').disabled=!(EBAY&&AWAIT);
     if(EBAY) run();
@@ -33453,7 +33458,7 @@ function pullOrders(){
     if(d.ok===false||!d.orders){ $('ocHintS').textContent=(d.error||'failed').slice(0,60); return }
     AWAIT=d.orders;
     $('ocZoneS').classList.add('loaded');
-    $('ocNameS').textContent=d.orders.length+' orders awaiting shipment';
+    $('ocNameS').textContent=ordersLabel(d.orders);
     $('ocHintS').textContent='pulled '+new Date().toLocaleTimeString();
     $('ocRun').disabled=!(EBAY&&AWAIT);
     if(EBAY) run();
@@ -33834,6 +33839,24 @@ function parseTable(text,hints){
 // eBay writes order numbers with and without separators depending on which
 // export produced them, so compare on digits only.
 function r_ordNorm(v){ return String(v||'').replace(/[^0-9]/g,''); }
+  // One row per line item is what SKU matching needs; it is not what "orders
+  // awaiting shipment" means. A two-item order yields two rows, which is why
+  // the count read 26 against 18 real orders.
+  function countOrders(rows){
+    var seen={}, n=0;
+    (rows||[]).forEach(function(o){
+      var k=r_ordNorm(o.order||o.ord);
+      if(!k){ n++; return; }              // no order number: count it once, alone
+      if(!seen[k]){ seen[k]=1; n++; }
+    });
+    return n;
+  }
+  function ordersLabel(rows){
+    var o=countOrders(rows), l=(rows||[]).length;
+    return o+' order'+(o===1?'':'s')+' awaiting shipment'+
+           (l!==o ? ' \u00b7 '+l+' line items' : '');
+  }
+
 
 
 // ── Catalog refresh from a Shopify products export ────────────────────
@@ -33966,6 +33989,7 @@ function pick(head,guesses){
    BOTH means that item already went out on an earlier order — this one
    cannot be filled. That is the whole point of the check. */
 var FLAG={
+  CANCELLED:{l:'Cancelled or refunded',c:'ghost'},
   SELFSHIP:{l:'This order already shipped',c:'warn'},
   NOTRACK:{l:'Shipped, no tracking',c:'warn'},
   SHIPPED:{l:'Already shipped',c:'bad'},
@@ -33976,7 +34000,7 @@ var FLAG={
   NOSKU:{l:'No SKU on order',c:'ghost'},
   OK:{l:'Good to ship',c:'ok'}
 };
-var ORDER=['SELFSHIP','NOTRACK','SHIPPED','TITLEDUP','DUPE','SKUREUSE','NOSTOCK','NOSKU','OK'];
+var ORDER=['CANCELLED','SELFSHIP','NOTRACK','SHIPPED','TITLEDUP','DUPE','SKUREUSE','NOSTOCK','NOSKU','OK'];
 
 /* Titles are compared as well as SKUs. A mis-keyed custom label would
    slip past a SKU-only match, and on single-quantity stock the same item
@@ -34057,6 +34081,26 @@ function run(){
     var hitPair =(k&&tk)?shippedPair[k+PAIRSEP+tk]:null;
     var hitSku  =(!hitPair && k)?shippedSku[k]:null;
     var hitTitle=(!hitPair && !hitSku && tk)?shippedTitle[tk]:null;
+    // ── Cancelled, refunded or unpaid ─────────────────────────────
+    // eBay leaves these on the awaiting-shipment page, so they arrive looking
+    // like ordinary work. Nothing downstream is worth computing for an order
+    // nobody is going to pack, and letting one reach 'Good to ship' is how it
+    // gets packed.
+    if(o.status && o.status!=='' ){
+      var SAY={'cancelled':'This order was cancelled.',
+               'cancel-requested':'The buyer has requested cancellation.',
+               'refunded':'This order was refunded.',
+               'return':'A return has been started on this order.',
+               'unpaid':'Payment is on hold or unpaid.'};
+      flag='CANCELLED';
+      issues.push({c:'warn',t:(SAY[o.status]||'eBay flags this order as '+o.status+'.')+
+        ' It is still on the awaiting-shipment page, but it is not yours to pack.'});
+      out.push({flag:flag, ord:o.order, rec:'', sku:o.sku, title:o.title, qty:o.qty,
+        price:o.total, shipped:o.shipBy?'ship by '+o.shipBy:'', track:'',
+        buyer:o.buyer, zip:o.zip, cat:cat[norm(o.sku)]||null, issues:issues});
+      return;
+    }
+
     // ── Same order on both reports ────────────────────────────────
     // The awaiting pull and the shipped export overlap in time, so the very
     // order in front of you can appear on both. That is not a duplicate and
@@ -34529,7 +34573,7 @@ function pullOrders(){
     if(d.ok===false||!d.orders){ $('ocHintS').textContent=(d.error||'failed').slice(0,60); return }
     AWAIT=d.orders;
     $('ocZoneS').classList.add('loaded');
-    $('ocNameS').textContent=d.orders.length+' orders awaiting shipment';
+    $('ocNameS').textContent=ordersLabel(d.orders);
     $('ocHintS').textContent='pulled '+new Date().toLocaleTimeString();
     $('ocRun').disabled=!(EBAY&&AWAIT);
     if(EBAY) run();
