@@ -33686,6 +33686,9 @@ window.offerCheckOpen=function(){
   padding:4px 8px;border-radius:6px;border:1px solid transparent}
 #ocRoot .oc-snapage:hover{opacity:.9;border-color:#cbd2d9}
 #ocRoot .oc-snapage.stale{opacity:1;color:#8A6212;border-color:#8A6212}
+#ocRoot .oc-lk.chk{cursor:pointer;background:transparent;font:inherit;color:#1F4E79;border-color:#1F4E79}
+#ocRoot .oc-lk.chk:hover{background:#1F4E79;color:#fff}
+#ocRoot .oc-lk.chk[disabled]{opacity:.5;cursor:wait}
 #ocRoot .oc-notrack{color:var(--warn,#8A6212)}
 #ocRoot .oc-armed{display:inline-flex;align-items:center;gap:6px;font-size:11px;
   font-weight:600;opacity:.8;cursor:pointer;margin-right:4px}
@@ -34229,6 +34232,11 @@ function drawCard(){
   if(r.shop&&r.shop.id) links.push('<a class="oc-lk shop" href="'+SHOP_ADMIN_ORDER+esc(r.shop.id)+'" target="_blank" rel="noopener">Shopify order \u2197</a>');
   if(r.cat&&r.cat.pid) links.push('<a class="oc-lk shop" href="https://xpp09p-dz.myshopify.com/admin/products/'+esc(r.cat.pid)+'" target="_blank" rel="noopener">Product \u2197</a>');
   if(r.ord) links.push('<a class="oc-lk bay" href="'+EBAY_ORDER+encodeURIComponent(r.ord)+'" target="_blank" rel="noopener">eBay order \u2197</a>');
+  // Ask eBay directly rather than trusting the awaiting-shipment list, which
+  // keeps showing orders after they are cancelled. Available on every row,
+  // including the ones that currently look fine — those are exactly the ones
+  // where a stale "good to ship" costs you a packed box.
+  if(r.ord) links.push('<button type="button" class="oc-lk chk" data-oc-check="'+esc(r.ord)+'">Check status</button>');
   // Cancel and Message are shown only where the unit is genuinely gone
   // (SHIPPED / TITLEDUP). Putting a one-click cancel next to every order,
   // including the healthy ones, is how a good order gets cancelled at 6pm on
@@ -34289,6 +34297,39 @@ function drawCard(){
     arm.addEventListener('change', function(){
       can.classList.toggle('is-locked', !arm.checked);
       can.setAttribute('aria-disabled', arm.checked ? 'false' : 'true');
+    });
+  }
+  var chk=$('ocRoot').querySelector('[data-oc-check]');
+  if(chk && !chk._bound){
+    chk._bound=true;
+    chk.addEventListener('click',function(){
+      var ordNo=chk.getAttribute('data-oc-check');
+      chk.disabled=true; chk.textContent='Checking\u2026';
+      function done(cls,msg){
+        chk.disabled=false; chk.textContent='Check status';
+        var box=$('ocRoot').querySelector('.oc-issues');
+        if(!box) return;
+        var d=document.createElement('div');
+        d.className='oc-issue '+cls;
+        d.textContent=msg;
+        box.appendChild(d);
+      }
+      if(typeof window.nexusAskExtension!=='function'){
+        done('warn','Live check needs the Nexus extension. Open the eBay order link instead.');
+        return;
+      }
+      window.nexusAskExtension('CHECK_EBAY_ORDER',{order:ordNo},45000).then(function(res){
+        if(!res||res.ok===false){ done('warn','Could not read that order: '+((res&&res.error)||'no answer')); return; }
+        var S={good:['ok','eBay still expects this one: '],
+               cancelled:['bad','Cancelled on eBay: '],
+               'cancel-requested':['bad','Cancellation requested on eBay: '],
+               refunded:['bad','Refunded on eBay: '],
+               shipped:['warn','Already shipped per eBay: '],
+               delivered:['warn','Already delivered per eBay: '],
+               unclear:['warn','Could not tell from the order page: ']};
+        var k=S[res.status]||['warn','eBay says: '];
+        done(k[0], k[1]+(res.detail||res.status)+'  \u00b7  order '+ordNo);
+      }).catch(function(e){ done('warn','Live check failed: '+e); });
     });
   }
   $('ocPrev').onclick=function(){ step(-1) };
