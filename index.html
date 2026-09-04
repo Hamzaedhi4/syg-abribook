@@ -33849,15 +33849,20 @@ function r_ordNorm(v){ return String(v||'').replace(/[^0-9]/g,''); }
     var seen={}, n=0;
     (rows||[]).forEach(function(o){
       var k=r_ordNorm(o.order||o.ord);
-      if(!k){ n++; return; }              // no order number: count it once, alone
+      // A row with no order number used to be counted as its own order, which
+      // turned every unreadable line into a phantom. Count them once between
+      // them and say so, rather than inflating the number quietly.
+      if(!k){ seen.__blank = (seen.__blank||0)+1; return; }
       if(!seen[k]){ seen[k]=1; n++; }
     });
     return n;
   }
   function ordersLabel(rows){
     var o=countOrders(rows), l=(rows||[]).length;
+    var blank=(rows||[]).filter(function(x){return !r_ordNorm(x.order||x.ord)}).length;
     return o+' order'+(o===1?'':'s')+' awaiting shipment'+
-           (l!==o ? ' \u00b7 '+l+' line items' : '');
+           (l!==o ? ' \u00b7 '+l+' line items' : '')+
+           (blank ? ' \u00b7 '+blank+' with no order number' : '');
   }
 
 
