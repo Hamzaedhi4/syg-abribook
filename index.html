@@ -32573,8 +32573,17 @@ function pullOrders(){
     if(d.ok===false||!d.orders){ $('ocHintS').textContent=(d.error||'failed').slice(0,60); return }
     AWAIT=d.orders;
     $('ocZoneS').classList.add('loaded');
+    AWAIT_PULLED_AT=Date.now();
     $('ocNameS').textContent=ordersLabel(d.orders);
     $('ocHintS').textContent='pulled '+new Date().toLocaleTimeString();
+    if(!window._ocAgeTimer){
+      window._ocAgeTimer=setInterval(function(){
+        var el=document.getElementById('ocHintS'); if(!el||!AWAIT_PULLED_AT) return;
+        el.textContent='pulled '+new Date(AWAIT_PULLED_AT).toLocaleTimeString()+
+                       ' \u00b7 '+pullAge();
+        el.classList.toggle('oc-stale', pullIsStale());
+      }, 30000);
+    }
     $('ocRun').disabled=!(EBAY&&AWAIT);
     if(EBAY) run();
   }
@@ -33458,8 +33467,17 @@ function pullOrders(){
     if(d.ok===false||!d.orders){ $('ocHintS').textContent=(d.error||'failed').slice(0,60); return }
     AWAIT=d.orders;
     $('ocZoneS').classList.add('loaded');
+    AWAIT_PULLED_AT=Date.now();
     $('ocNameS').textContent=ordersLabel(d.orders);
     $('ocHintS').textContent='pulled '+new Date().toLocaleTimeString();
+    if(!window._ocAgeTimer){
+      window._ocAgeTimer=setInterval(function(){
+        var el=document.getElementById('ocHintS'); if(!el||!AWAIT_PULLED_AT) return;
+        el.textContent='pulled '+new Date(AWAIT_PULLED_AT).toLocaleTimeString()+
+                       ' \u00b7 '+pullAge();
+        el.classList.toggle('oc-stale', pullIsStale());
+      }, 30000);
+    }
     $('ocRun').disabled=!(EBAY&&AWAIT);
     if(EBAY) run();
   }
@@ -33682,6 +33700,8 @@ window.offerCheckOpen=function(){
 #ocCatPanel .occ-foot button{font:600 12px var(--sans);cursor:pointer;background:#fff;
   border:1px solid #cbd2d9;border-radius:6px;padding:5px 12px;color:#14181d}
 #ocCatPanel .occ-note{font-size:11px;opacity:.6;line-height:1.45}
+#ocRoot .oc-stale{color:var(--warn,#8A6212);font-weight:600}
+#ocRoot .oc-vnote{font:600 11.5px var(--sans);opacity:.7;margin-left:10px}
 #ocRoot .oc-snapage{margin-left:auto;font:600 11px var(--sans);opacity:.55;cursor:pointer;
   padding:4px 8px;border-radius:6px;border:1px solid transparent}
 #ocRoot .oc-snapage:hover{opacity:.9;border-color:#cbd2d9}
@@ -33778,6 +33798,10 @@ window.offerCheckOpen=function(){
   #nexusSuppliesPanel .nexus-sup-tag.unk{color:#8D99AC;border-color:var(--line-hi,#334054)}
   #nexusSuppliesPanel .nexus-sup-cellbox.unknown{opacity:.8;border-style:dashed}
   #nexusSuppliesPanel .nexus-sup-row.unknown{opacity:.78}
+
+  .nx-radial .nx-ct.nx-ct-on{display:inline-block;min-width:18px;padding:1px 6px;border-radius:99px;
+    background:var(--nx-s-buy,#8B3A62);color:#fff;font:700 10.5px var(--sans);text-align:center}
+  .nx-radial .nx-ct.nx-ct-unknown{color:var(--nx-faint);font:600 11px var(--sans)}
 </style>
 <script>
 (function(){
@@ -33857,6 +33881,19 @@ function r_ordNorm(v){ return String(v||'').replace(/[^0-9]/g,''); }
     });
     return n;
   }
+  // A snapshot with no age on it gets read as current. These numbers come from
+  // whenever you last pulled, and eBay moves underneath them — an order can be
+  // cancelled thirty seconds after the scrape and the tally will not know.
+  var AWAIT_PULLED_AT = 0;
+  function pullAge(){
+    if(!AWAIT_PULLED_AT) return '';
+    var mins=Math.floor((Date.now()-AWAIT_PULLED_AT)/60000);
+    if(mins<1) return 'just now';
+    if(mins<60) return mins+' min old';
+    var h=Math.floor(mins/60);
+    return h+' hr'+(h===1?'':'s')+' old';
+  }
+  function pullIsStale(){ return AWAIT_PULLED_AT && (Date.now()-AWAIT_PULLED_AT)>20*60000; }
   function ordersLabel(rows){
     var o=countOrders(rows), l=(rows||[]).length;
     var blank=(rows||[]).filter(function(x){return !r_ordNorm(x.order||x.ord)}).length;
@@ -34210,6 +34247,7 @@ function run(){
   drawTally(); drawCard();
   $('ocExport').disabled=false;
   $('ocHandoff').disabled=false;
+  $('ocVerify').disabled=false;
   $('ocTs').textContent=AWAIT.length+' awaiting \u00b7 run '+new Date().toLocaleString();
 }
 
@@ -34571,6 +34609,64 @@ function ocShowReport(txt, n){
   w.querySelector('#ocrClose').onclick=function(){ w.classList.remove('on'); };
 }
 
+
+// ── Verify the doubtful ones against eBay itself ──────────────────────
+// The tallies are built from a scrape of the awaiting-shipment page, which is
+// a snapshot taken when you pulled and is wrong in two directions: eBay leaves
+// cancelled orders sitting on it, and its own wording is not reliable enough
+// to count on. So the number of cancellations shown was never eBay's answer —
+// it was our reading of a stale page.
+//
+// This asks eBay directly for the rows where being wrong actually costs
+// something, and rewrites the flag from the reply. Bounded and sequential on
+// purpose: each check opens a background tab, and firing twenty at once is how
+// you get rate-limited and end up trusting a page of failures.
+var OC_VERIFIED = {};      // order number -> {status, detail, at}
+
+function ocNeedsVerify(r){
+  return r.ord && ['CANCELLED','SHIPPED','NOTRACK','SELFSHIP','TITLEDUP'].indexOf(r.flag)>-1;
+}
+function ocApplyVerdict(r, v){
+  OC_VERIFIED[r_ordNorm(r.ord)] = {status:v.status, detail:v.detail, at:Date.now()};
+  if(v.status==='cancelled'||v.status==='cancel-requested'||v.status==='refunded'){
+    r.flag='CANCELLED';
+    r.issues.push({c:'bad',t:'Confirmed with eBay just now: '+(v.detail||v.status)+'.'});
+  } else if(v.status==='good'){
+    // eBay still wants it shipped. Whatever the reports said, this one is live.
+    r.issues.push({c:'ok',t:'Confirmed with eBay just now: '+(v.detail||'still expected')+
+      '. Treat the report flags above as history, not as a reason to cancel.'});
+  } else if(v.status==='shipped'||v.status==='delivered'){
+    r.flag='SELFSHIP';
+    r.issues.push({c:'warn',t:'Confirmed with eBay just now: '+(v.detail||v.status)+'.'});
+  } else {
+    r.issues.push({c:'warn',t:'eBay could not confirm a status for this order.'});
+  }
+}
+
+async function ocVerifyAll(){
+  if(typeof window.nexusAskExtension!=='function'){
+    ocVerifyNote('Live verification needs the Nexus extension.');
+    return;
+  }
+  var todo=ROWS.filter(ocNeedsVerify);
+  if(!todo.length){ ocVerifyNote('Nothing needed checking.'); return; }
+  for(var i=0;i<todo.length;i++){
+    ocVerifyNote('Checking with eBay \u2014 '+(i+1)+' of '+todo.length+'\u2026');
+    try{
+      var res=await window.nexusAskExtension('CHECK_EBAY_ORDER',{order:todo[i].ord},45000);
+      if(res && res.ok!==false) ocApplyVerdict(todo[i], res);
+      else todo[i].issues.push({c:'warn',t:'Could not reach eBay for this order.'});
+    }catch(e){
+      todo[i].issues.push({c:'warn',t:'Live check failed for this order.'});
+    }
+    drawTally(); render();
+  }
+  ocVerifyNote('Checked '+todo.length+' order'+(todo.length===1?'':'s')+' against eBay just now.');
+}
+function ocVerifyNote(msg){
+  var el=$('ocVerifyNote'); if(el) el.textContent=msg;
+}
+
 function exportCsv(){
   var list=visible();
   function q(v){return '"'+String(v===undefined||v===null?'':v).replace(/"/g,'""')+'"'}
@@ -34619,8 +34715,17 @@ function pullOrders(){
     if(d.ok===false||!d.orders){ $('ocHintS').textContent=(d.error||'failed').slice(0,60); return }
     AWAIT=d.orders;
     $('ocZoneS').classList.add('loaded');
+    AWAIT_PULLED_AT=Date.now();
     $('ocNameS').textContent=ordersLabel(d.orders);
     $('ocHintS').textContent='pulled '+new Date().toLocaleTimeString();
+    if(!window._ocAgeTimer){
+      window._ocAgeTimer=setInterval(function(){
+        var el=document.getElementById('ocHintS'); if(!el||!AWAIT_PULLED_AT) return;
+        el.textContent='pulled '+new Date(AWAIT_PULLED_AT).toLocaleTimeString()+
+                       ' \u00b7 '+pullAge();
+        el.classList.toggle('oc-stale', pullIsStale());
+      }, 30000);
+    }
     $('ocRun').disabled=!(EBAY&&AWAIT);
     if(EBAY) run();
   }
@@ -34654,6 +34759,8 @@ function build(){
       '<button type="button" class="oc-btn go" id="ocRun" disabled>Run check</button>'+
       '<button type="button" class="oc-btn" id="ocExport" disabled>Export CSV</button>'+
       '<button type="button" class="oc-btn" id="ocHandoff" disabled title="Send everything currently filtered to Claude for a per-item verdict">Ask Claude \u2192</button>'+
+      '<button type="button" class="oc-btn" id="ocVerify" disabled title="Ask eBay directly about every flagged order, and rewrite the flags from the answers">Verify with eBay</button>'+
+      '<span class="oc-vnote" id="ocVerifyNote"></span>'+
       '<span class="oc-snapage" id="ocSnapAge"></span>'+
       '<button type="button" class="oc-btn" id="ocSnapUpd" title="How to refresh the catalog from Shopify">Update</button>'+
     '</div>'+
@@ -34667,6 +34774,10 @@ function build(){
   $('ocRun').addEventListener('click',run);
   $('ocExport').addEventListener('click',exportCsv);
   $('ocHandoff').addEventListener('click',handoff);
+  $('ocVerify').addEventListener('click',function(){
+    $('ocVerify').disabled=true;
+    ocVerifyAll().then(function(){ $('ocVerify').disabled=false; });
+  });
   (function(){
     var el=$('ocSnapAge'); if(!el) return;
     el.textContent='Catalog: '+snapLabel();
@@ -34791,6 +34902,10 @@ function nxWheelInit(){
     else document.addEventListener('DOMContentLoaded', fn); }
   ready(function(){
     try{ nxWheelInit(); }catch(e){}
+    // Badges are a read of four eBay pages, so they run once on open rather
+    // than on a timer — four background tabs every few minutes would be rude
+    // to eBay and to the machine.
+    try{ nxRefreshBadges(); }catch(e){}
 
     // Spokes and the "Also" row open modules. Delegated, so it survives the
     // hub being re-rendered.
@@ -35103,6 +35218,68 @@ function wbLoadTesseract(){
     document.head.appendChild(t);
   });
   return _wbTessLoad;
+}
+
+// ── eBay badges on the hub ────────────────────────────────────────────
+// These four numbers now come from the eBay pages that own them, not from
+// anything Nexus computes. Morning Rounds was showing 17 against 7 real
+// messages because nothing was reading eBay at all — the figure was derived
+// from local data and had no relationship to the inbox.
+//
+// Cached figures paint immediately so the hub is never blank; a live read
+// follows and corrects them. A badge that cannot be trusted is worse than no
+// badge, so anything the scrape could not read shows as a dash rather than a
+// zero — "no unread messages" and "we could not check" must not look alike.
+var NX_BADGE_TARGET = {
+  messages:      'morning',    // Morning Rounds — reviews, messages and orders
+  awaiting:      'shipping',   // Shipping Station — what is left to pack
+  cancellations: 'ordercheck',
+  resolutions:   'command'
+};
+
+function nxPaintBadge(mod, value, title){
+  var tag=document.querySelector('[data-nx-tag="'+mod+'"]')
+       || document.querySelector('[data-module="'+mod+'"]');
+  if(!tag) return;
+  var slot=tag.querySelector('.nx-ct');
+  if(!slot) return;
+  if(value===null||value===undefined){ slot.textContent='\u2014'; slot.className='nx-ct nx-ct-unknown'; }
+  else if(value===0){ slot.textContent=''; slot.className='nx-ct'; }   // zero is not news
+  else { slot.textContent=value; slot.className='nx-ct nx-ct-on'; }
+  if(title) tag.setAttribute('title', title);
+}
+
+function nxApplyBadges(b){
+  if(!b) return;
+  function val(x){ return (x && !x.err && typeof x.n==='number') ? x.n : null; }
+  var age=b.at ? Math.floor((Date.now()-b.at)/60000) : null;
+  var when=age===null?'':(age<1?'just now':age+' min ago');
+
+  nxPaintBadge(NX_BADGE_TARGET.messages, val(b.messages),
+    b.messages && b.messages.err ? 'Could not read eBay messages'
+      : 'Unread messages from members \u00b7 '+when);
+  nxPaintBadge(NX_BADGE_TARGET.awaiting, val(b.awaiting),
+    b.awaiting && b.awaiting.err ? 'Could not read the orders page'
+      : 'Orders awaiting shipment \u00b7 '+when);
+  nxPaintBadge(NX_BADGE_TARGET.cancellations, val(b.cancellations),
+    b.cancellations && b.cancellations.err ? 'Could not read the cancellations page'
+      : 'Cancellation requests \u00b7 '+when);
+
+  var r=b.resolutions;
+  nxPaintBadge(NX_BADGE_TARGET.resolutions, val(r),
+    (r && r.err) ? 'Could not read requests and disputes'
+      : 'Needing action now'+(r&&r.awaiting?' \u00b7 '+r.awaiting+' more awaiting eBay\u2019s decision':'')+
+        (r&&r.partial?' \u00b7 only the first page was read':'')+' \u00b7 '+when);
+}
+
+function nxRefreshBadges(){
+  if(typeof window.nexusAskExtension!=='function') return;
+  window.nexusAskExtension('GET_CACHED_EBAY_BADGES',{},8000)
+    .then(function(r){ if(r&&r.badges) nxApplyBadges(r.badges); })
+    .catch(function(){});
+  window.nexusAskExtension('GET_EBAY_BADGES',{},120000)
+    .then(function(r){ if(r&&r.badges) nxApplyBadges(r.badges); })
+    .catch(function(){});
 }
 
 // ── Wan Board keyboard shortcuts ──────────────────────────────────────
