@@ -35663,7 +35663,7 @@ document.addEventListener('click',function(e){
       if(skuKey(cat[i][0])===key){
         // snapshot rows are [sku,title,type,qty,price,pid]; qty at index 3
         return {found:true, qty:Number(cat[i][3]||0), title:cat[i][1], price:cat[i][4],
-                pid:cat[i][5], status:String(cat[i][6]||'').toLowerCase()};
+                pid:cat[i][5], status:String(cat[i][6]||'').toLowerCase(), type:cat[i][2]||''};
       }
     }
     return {found:false};
@@ -35696,7 +35696,7 @@ document.addEventListener('click',function(e){
       else if(sold){ kind='check'; why='On the shipped report, but no tracking'; }
       else if(shopGone){ kind='check'; why='Shopify shows it gone; no eBay sale found'; }
       else return;                                        // live, in stock, unsold → clean
-      PZ.push({sku:sku, name:title, spec:'', price:price, kind:kind, why:why,
+      PZ.push({sku:sku, name:title, spec:'', price:price, kind:kind, why:why, type:(shop.type||''),
         shop: shop.found?((shop.status?shop.status+' · ':'')+'stock '+shop.qty):'no Shopify product',
         ebay:'live · $'+price, avail:avail+(avail>1?' — eBay says '+avail+' left':' — eBay still buyable'),
         sold: sold ? ((/\d/.test(sold.track||'')?'shipped · tracking '+sold.track:'on report · NO tracking')+(sold.when?' · '+sold.when:'')) : 'not on report'});
@@ -35726,7 +35726,7 @@ document.addEventListener('click',function(e){
       if(isNaN(made)){ ageTxt='age unknown'; recent=true; }
       else { var days=Math.floor((now-made)/86400000); if((now-made)>CUTOFF) return; ageTxt='added '+days+' day'+(days===1?'':'s')+' ago'; recent=true; }
       if(!recent) return;
-      PZ.push({sku:sku, name:row[1]||sku, spec:'', price:Number(row[4]||0), kind:'unlisted',
+      PZ.push({sku:sku, name:row[1]||sku, spec:'', price:Number(row[4]||0), kind:'unlisted', type:row[2]||'',
         why:'Active in Shopify with stock, not live on eBay',
         shop:'active · '+qty+' in stock'+(ageTxt?' · '+ageTxt:''),
         ebay:'not listed', avail:'no eBay listing found',
@@ -35742,14 +35742,28 @@ document.addEventListener('click',function(e){
           check:{tag:'CHECK THE SHELF',grp:'Check the shelf first',verd:'<b>Likely phantom.</b> Looks gone, but no carrier scan (or no eBay sale found). Walk over and confirm before killing.'},
           unlisted:{tag:'READY TO LIST',grp:'Prepped but never listed',verd:'<b>Not on eBay yet.</b> Active in Shopify with stock, but no live listing. Prepped and forgotten \u2014 launch it and it starts earning.'},
           ghost:{tag:'GHOST — NO SHOPIFY MATCH',grp:'No Shopify match',verd:'<b>No Shopify match.</b> This SKU isn\'t in the loaded catalog. If lots of items show this, the catalog is stale — click the Shopify catalog badge up top to refresh it. If the catalog is current, it\'s a real SKU typo or a deleted product.'}};
-  var QUERY='';
+  var QUERY='', TYPE='';
   function filtered(){
     var base = FILTER==='all'?PZ:PZ.filter(function(p){return p.kind===FILTER;});
+    if(TYPE) base=base.filter(function(p){return (p.type||'')===TYPE;});
     if(!QUERY) return base;
     var q=QUERY.toLowerCase();
     return base.filter(function(p){
-      return (p.sku+' '+p.name+' '+(p.spec||'')).toLowerCase().indexOf(q)>-1;
+      return (p.sku+' '+p.name+' '+(p.type||'')).toLowerCase().indexOf(q)>-1;
     });
+  }
+  // The dropdown is rebuilt from the current bucket, so it only ever offers
+  // types that are actually there — no dead options, and counts so you can see
+  // where the pile is (102 of the unlisted ones are Video Game).
+  function renderTypes(){
+    var sel=$('pzType'); if(!sel) return;
+    var scope = FILTER==='all'?PZ:PZ.filter(function(p){return p.kind===FILTER;});
+    var counts={}; scope.forEach(function(p){ var t=p.type||'(no type)'; counts[t]=(counts[t]||0)+1; });
+    var keys=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a];});
+    var cur=TYPE;
+    sel.innerHTML='<option value="">All types ('+scope.length+')</option>'+
+      keys.map(function(t){ return '<option value="'+esc(t)+'"'+(t===cur?' selected':'')+'>'+esc(t)+' ('+counts[t]+')</option>'; }).join('');
+    if(cur && keys.indexOf(cur)<0){ TYPE=''; sel.value=''; }
   }
   function tabs(){ var c=function(k){return PZ.filter(function(p){return p.kind===k;}).length;};
     $('pzTAll').textContent=PZ.length; $('pzTPh').textContent=c('phantom'); $('pzTCk').textContent=c('check'); $('pzTGh').textContent=c('ghost'); $('pzTUn').textContent=c('unlisted'); }
@@ -35760,7 +35774,7 @@ document.addEventListener('click',function(e){
     $('pzMRisk').textContent='$'+PZ.filter(function(p){return p.kind!=='unlisted';}).reduce(function(a,p){return a+(p.price||0);},0).toLocaleString();
   }
   function renderList(){
-    tabs(); metrics();
+    tabs(); metrics(); renderTypes();
     var l=$('pzList'), rows=filtered();
     if(!rows.length){ l.innerHTML='<div style="padding:50px 24px;text-align:center;color:var(--nx-muted)"><div style="font-size:38px;margin-bottom:8px">✓</div>Nothing here.</div>'; return; }
     var order=['phantom','check','ghost','unlisted'], html='';
@@ -35770,7 +35784,7 @@ document.addEventListener('click',function(e){
       if(FILTER==='all') html+='<div class="pz-grph">'+KM[k].grp+' ('+grp.length+')</div>';
       grp.forEach(function(p){ var gi=PZ.indexOf(p);
         html+='<div class="pz-row '+(gi===idx?'on':'')+'" data-i="'+gi+'"><span class="pz-dot '+p.kind+'"></span>'+
-          '<span class="pz-nm"><b>'+esc(p.name)+'</b><small>'+esc(p.shop)+'</small></span>'+
+          '<span class="pz-nm"><b>'+esc(p.name)+'</b><small>'+esc((p.type?p.type+' · ':'')+p.shop)+'</small></span>'+
           '<span class="pz-px">$'+(p.price||0)+'</span></div>';
       });
     });
@@ -35844,6 +35858,11 @@ document.addEventListener('click',function(e){
     if(typeof nxPageHeader==='function'){} // header band handled by chrome routing
     if(!z._bound){ z._bound=true;
       $('pzScan').addEventListener('click',scan);
+      $('pzType').addEventListener('change',function(){
+        TYPE=this.value;
+        var f=filtered(); if(f.length) idx=PZ.indexOf(f[0]);
+        renderList(); renderWork();
+      });
       $('pzSearch').addEventListener('input',function(){
         QUERY=this.value.trim();
         var f=filtered(); if(f.length) idx=PZ.indexOf(f[0]);
@@ -35969,9 +35988,13 @@ document.addEventListener('click',function(e){
         <button class="pz-tab k-ghost" data-f="ghost" data-tip="GHOST: live on eBay, no Shopify match — usually a SKU typo."><b id="pzTGh">0</b><span>ghost</span></button>
         <button class="pz-tab k-unlisted" data-f="unlisted" data-tip="READY TO LIST: prepped in Shopify with stock, added in the last 60 days, but never pushed to eBay."><b id="pzTUn">0</b><span>to list</span></button>
       </div>
-      <div style="padding:9px 12px;border-bottom:1px solid var(--nx-line)">
-        <input id="pzSearch" placeholder="Filter by SKU, title or type…" autocomplete="off"
-          style="width:100%;height:32px;border:1px solid var(--nx-line-2);border-radius:7px;padding:0 10px;font:400 12.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card)">
+      <div style="padding:9px 12px;border-bottom:1px solid var(--nx-line);display:flex;gap:6px">
+        <input id="pzSearch" placeholder="Filter by SKU or title…" autocomplete="off"
+          style="flex:1;min-width:0;height:32px;border:1px solid var(--nx-line-2);border-radius:7px;padding:0 10px;font:400 12.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card)">
+        <select id="pzType" data-tip="Narrow to one product type. Built from whatever is actually in the list."
+          style="flex:0 0 140px;height:32px;border:1px solid var(--nx-line-2);border-radius:7px;padding:0 8px;font:500 12.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card);cursor:pointer">
+          <option value="">All types</option>
+        </select>
       </div>
       <div class="pz-list" id="pzList"></div>
       <div class="pz-kb">J / K move &nbsp;·&nbsp; X arm + kill &nbsp;·&nbsp; U undo &nbsp;·&nbsp; 1-4 filter</div>
