@@ -3942,49 +3942,25 @@ html.nx-chrome-off .nx-chrome{display:none}
   z-index:20000 !important;
 }
 
-/* ── Auto-hiding sidebar ───────────────────────────────────────────────
-   Dense modules need the width. The Wan Board is a 250 / 1fr / 250 grid that
-   wants ~1100px on its own, so a permanent 236px rail squeezed its right-hand
-   queue column off-screen entirely. On the home the sidebar stays put; inside
-   a module it rolls up out of the way and comes back when the pointer nears
-   the left edge. Nothing is lost — it's the same nav, just on demand. */
-html.nx-in-module{ --nx-sb-w:0px; }
-
-html.nx-in-module .nx-chrome .nxh-sb{
-  width:236px;
-  transform:translateX(-236px);
-  transition:transform .22s cubic-bezier(.4,0,.2,1), box-shadow .22s ease;
-  box-shadow:none;
-  will-change:transform;
+/* ── Sidebar collapse ──────────────────────────────────────────────────
+   A plain toggle, no hover behaviour. Setting --nx-sb-w to 0 hands the width
+   back to the content automatically, because every framed surface already
+   offsets by that variable — nothing else needs to change. */
+html.nx-sb-off{ --nx-sb-w:0px; }
+html.nx-sb-off .nx-chrome .nxh-sb{ display:none; }
+.nxh-burger{
+  width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:#fff;
+  cursor:pointer;display:grid;place-items:center;flex:none;margin-right:2px;
 }
-/* A thin always-present strip along the left edge is the hover target — the
-   sidebar itself is off-screen, so it can't be its own trigger. */
-html.nx-in-module .nx-edge{
-  position:fixed; top:var(--nx-hd-h); left:0; bottom:0; width:14px;
-  z-index:14001; pointer-events:auto;
-}
-html:not(.nx-in-module) .nx-edge{ display:none; }
-html.nx-in-module.nx-sb-show .nx-chrome .nxh-sb,
-html.nx-in-module.nx-sb-pin  .nx-chrome .nxh-sb{
-  transform:translateX(0);
-  box-shadow:14px 0 34px rgba(0,0,0,.28);
-}
-/* Pinned gets a visible marker so it's obvious why it's staying open. */
-html.nx-in-module.nx-sb-pin .nx-edge::after{ background:var(--nx-blue); height:80px }
-/* A subtle grip so the strip is discoverable rather than a mystery zone. */
-html.nx-in-module .nx-edge::after{
-  content:""; position:absolute; left:3px; top:50%; transform:translateY(-50%);
-  width:3px; height:46px; border-radius:99px; background:var(--nx-line-2); opacity:.7;
-}
-html.nx-in-module .nx-edge:hover::after{ background:var(--nx-blue); opacity:1; }
-
-@media (prefers-reduced-motion:reduce){
-  html.nx-in-module .nx-chrome .nxh-sb{ transition:none }
-}
+.nxh-burger:hover{ background:rgba(255,255,255,.12); }
+.nxh-burger:focus-visible{ outline:2px solid #fff;outline-offset:2px; }
 </style>
 <style id="nx-phantom-css">
-#phantomZone{position:absolute;top:var(--nx-hd-h);left:var(--nx-sb-w);right:0;bottom:0;display:none;
-  flex-direction:column;background:var(--nx-bg);color:var(--nx-ink);font-family:var(--nx-sans);z-index:60;overflow:hidden}
+/* z-index 60 put this UNDER every other module (they sit at 9200-10200), so
+   opening Listing Health and then Phantom Zone left the audit on top and
+   Phantom Zone invisible beneath it. Same band as its peers now. */
+#phantomZone{position:fixed;top:var(--nx-hd-h);left:var(--nx-sb-w);right:0;bottom:0;display:none;
+  flex-direction:column;background:var(--nx-bg);color:var(--nx-ink);font-family:var(--nx-sans);z-index:10035;overflow:hidden}
 #phantomZone.show{display:flex}
 #phantomZone .pz-strip{display:flex;align-items:center;gap:16px;margin:14px 24px 0;padding:12px 16px;background:var(--nx-card);border:1px solid var(--nx-line);border-radius:12px}
 #phantomZone .pz-scan{display:inline-flex;align-items:center;gap:8px;font:600 13.5px var(--nx-sans);color:#fff;background:var(--nx-blue);border:0;border-radius:9px;padding:10px 18px;cursor:pointer}
@@ -4072,8 +4048,8 @@ html.nx-in-module .nx-edge:hover::after{ background:var(--nx-blue); opacity:1; }
 
 </head><body>
 <div id="nxChrome" class="nx-chrome">
-  <div class="nx-edge" id="nxEdge" title="Menu — hover to show, click to pin"></div>
   <header class="nxh-hd">
+    <button type="button" class="nxh-burger" id="nxSbToggle" title="Show or hide the menu (\\)" aria-label="Toggle menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <div class="nxh-brand">
       <span class="nxh-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 7l8-4 8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 17l8 4 8-4"/></svg></span>
       <div><b>SYG Nexus</b><small>PEOPLE · PRODUCTS · PROGRESS</small></div>
@@ -27289,9 +27265,15 @@ function nxCloseAllSurfaces(){
     // to flex. So closing means removing the class and CLEARING any inline
     // display — never setting inline none, which would outrank .show and stop
     // the module ever opening again.
+    // Every module surface, gathered by scanning what the openers actually
+    // reveal — not guessed. Listing Health (#pcWrap) was missing, which is why
+    // opening it and then Phantom Zone left the audit still on top.
+    // Deliberately NOT here: the pc*/nexus*Modal dialogs, which are
+    // children of a module and close themselves.
     ['.haz-wrap','.nexus-shipping','.nexus-pricing','.nexus-command','.morning-backdrop',
      '.nim','.leads-app','.ckay-deck','.nexus-storewide','.nexus-mc-terminal',
-     '#ocRoot','#sygccBackdrop','#phantomZone']
+     '#ocRoot','#sygccBackdrop','#phantomZone','#pcWrap','#hazWrap',
+     '#nexusStoreWide','#nexusDrawer']
       .forEach(function(sel){
         Array.prototype.forEach.call(document.querySelectorAll(sel),function(el){
           el.classList.remove('show','open','active');
@@ -35793,10 +35775,7 @@ var NX_PAGES = {
              root:'#sygccBackdrop'}
 };
 function nxChromeActive(mod){
-  // Home keeps the sidebar; any module hands the width back to the content.
-  var inMod = !!(mod && mod!=='home');
-  document.documentElement.classList.toggle('nx-in-module', inMod);
-  if(!inMod) document.documentElement.classList.remove('nx-sb-pin');
+
   document.querySelectorAll('.nx-chrome .nxh-nav').forEach(function(b){
     b.classList.toggle('on', (b.getAttribute('data-module')||'home')===(mod||'home'));
   });
@@ -35818,10 +35797,6 @@ function nxPageHeader(mod){
   root.insertBefore(el, root.firstChild);
 }
 document.addEventListener('click',function(e){
-  if(e.target && e.target.id==='nxEdge'){
-    document.documentElement.classList.toggle('nx-sb-pin');
-    return;
-  }
   var b=e.target.closest && e.target.closest('.nx-chrome .nxh-nav');
   if(!b) return;
   var m=b.getAttribute('data-module');
@@ -36316,41 +36291,28 @@ function shovoRenderHints(q){
   }
 }
 
-// ── Sidebar reveal controller ─────────────────────────────────────────
-// CSS :hover alone is too twitchy here: the strip and the panel are separate
-// elements, so moving from one to the other flickers, and the panel snaps shut
-// the instant the pointer clips a corner. A tiny controller with a close delay
-// makes it behave like a real menu.
+
+
+// ── Sidebar toggle ────────────────────────────────────────────────────
+// Deliberately a toggle rather than hover-reveal: the hover version needed
+// timers and a hit-strip, and its CSS was where a stray brace broke the whole
+// stylesheet. This is one class on <html> and nothing else.
 (function(){
-  var openT=null, closeT=null;
-  function sb(){ return document.querySelector('.nx-chrome .nxh-sb'); }
-  function inModule(){ return document.documentElement.classList.contains('nx-in-module'); }
-  function show(){
-    clearTimeout(closeT);
-    document.documentElement.classList.add('nx-sb-show');
+  var KEY='nx:sidebar-hidden';
+  function apply(off){
+    document.documentElement.classList.toggle('nx-sb-off', !!off);
+    try{ localStorage.setItem(KEY, off?'1':'0'); }catch(e){}
   }
-  function hide(){
-    clearTimeout(closeT);
-    // Grace period so crossing the gap between strip and panel doesn't close it.
-    closeT=setTimeout(function(){
-      if(!document.documentElement.classList.contains('nx-sb-pin'))
-        document.documentElement.classList.remove('nx-sb-show');
-    }, 260);
-  }
-  document.addEventListener('mouseover',function(e){
-    if(!inModule()) return;
-    var t=e.target;
-    if(t && (t.id==='nxEdge' || (t.closest && t.closest('.nx-chrome .nxh-sb')))) show();
-  });
-  document.addEventListener('mouseout',function(e){
-    if(!inModule()) return;
-    var t=e.target;
-    if(t && (t.id==='nxEdge' || (t.closest && t.closest('.nx-chrome .nxh-sb')))) hide();
-  });
-  // Opening a module from the revealed sidebar should tuck it away again.
+  try{ if(localStorage.getItem(KEY)==='1') apply(true); }catch(e){}
   document.addEventListener('click',function(e){
-    var nav=e.target.closest && e.target.closest('.nx-chrome .nxh-nav');
-    if(nav){ document.documentElement.classList.remove('nx-sb-show','nx-sb-pin'); }
+    var b=e.target.closest && e.target.closest('#nxSbToggle');
+    if(!b) return;
+    apply(!document.documentElement.classList.contains('nx-sb-off'));
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='\\') return;                    // backslash toggles
+    if(/input|textarea|select/i.test((e.target.tagName||''))) return;
+    apply(!document.documentElement.classList.contains('nx-sb-off'));
   });
 })();
 
