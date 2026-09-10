@@ -3883,9 +3883,20 @@ html.nx-chrome-off .nx-chrome{display:none}
 .nexus-home.nx-home,
 .haz-wrap, .nexus-shipping, .nexus-pricing, .nexus-command,
 #ocRoot, #sygccBackdrop, .morning-backdrop,
-#wanToolbar, #wanCanvas{
+#wanToolbar{
   top:var(--nx-hd-h) !important; left:var(--nx-sb-w) !important;
 }
+/* #wanCanvas is absolute with inset:0 against the viewport (its .work-page
+   parent isn't positioned). Forcing top/left on it moved the canvas but left
+   its right/bottom edges pinned, squashing the layout and pushing the queue
+   panel out of view. Give it a positioned box to live in instead: the canvas
+   keeps inset:0 and simply fills the framed area. */
+#wanCanvas{
+  position:fixed !important;
+  top:var(--nx-hd-h) !important; left:var(--nx-sb-w) !important;
+  right:0 !important; bottom:0 !important; inset:auto !important;
+}
+#wanCanvas{ top:var(--nx-hd-h) !important; left:var(--nx-sb-w) !important; }
 /* The Wan toolbar spans the full width by default; keep it inside the frame. */
 #wanToolbar{ width:auto !important; right:0 !important; }
 
@@ -3909,6 +3920,27 @@ html.nx-chrome-off .nx-chrome{display:none}
   display:grid;place-items:center;color:var(--nx-navy);font-weight:700;font-size:13px}
 .nxp-step b{display:block;font-size:11.5px;font-weight:700;line-height:1.2}
 .nxp-step small{display:block;font-size:10.5px;color:var(--nx-muted);line-height:1.3;margin-top:2px}
+
+/* ── Two problems the chrome introduced, found by auditing z-index ────
+   1. MODULE SURFACES that fill the screen but weren't in the framed list:
+      their top 60px and left 236px sit under the header and sidebar, so
+      their own headers and left rails are hidden. They get framed.
+   2. MODALS sit at z-index 9999–10200 but the chrome is at 14000, so the
+      header and sidebar floated ON TOP of dialogs. A modal must cover
+      everything, chrome included. They get lifted above it. */
+
+/* 1 — module surfaces, framed like the rest */
+.nim, .leads-app, .ckay-deck, .nexus-storewide, .nexus-mc-terminal,
+#hazoRoot, #hazoCust{
+  top:var(--nx-hd-h) !important; left:var(--nx-sb-w) !important;
+  right:0 !important; bottom:0 !important; inset:auto !important;
+}
+
+/* 2 — true modals and overlays belong above the chrome */
+.nexus-modal, .nexus-sw-modal, .nim-modal, .nexus-drawer,
+.eos-modal-backdrop, #syg-mobile-overlay, .wb-drag-shield{
+  z-index:20000 !important;
+}
 </style>
 <style id="nx-phantom-css">
 #phantomZone{position:absolute;top:var(--nx-hd-h);left:var(--nx-sb-w);right:0;bottom:0;display:none;
@@ -3988,6 +4020,13 @@ html.nx-chrome-off .nx-chrome{display:none}
 #phantomZone .pz-wtag.k-unlisted{background:var(--nx-ok)}
 #phantomZone .pz-verd.k-unlisted{background:#F0FDF4;color:#166534}
 #phantomZone .pz-kill.pz-launch{background:var(--nx-ok)} #phantomZone .pz-kill.pz-launch:hover{background:#15803D}
+#phantomZone .pz-guide{margin:12px 24px 0;padding:12px 16px;border-radius:10px;display:flex;flex-direction:column;gap:2px;
+  border:1px solid var(--nx-line);background:var(--nx-card)}
+#phantomZone .pz-guide b{font:600 14px var(--nx-sans)}
+#phantomZone .pz-guide span{font-size:12.5px;color:var(--nx-muted);line-height:1.5}
+#phantomZone .pz-guide.wait{background:#EFF6FF;border-color:#BFDBFE} #phantomZone .pz-guide.wait b{color:var(--nx-blue)}
+#phantomZone .pz-guide.go{background:#FEF2F2;border-color:#FECACA} #phantomZone .pz-guide.go b{color:var(--nx-bad)}
+#phantomZone .pz-guide.clear{background:#F0FDF4;border-color:#BBF7D0} #phantomZone .pz-guide.clear b{color:var(--nx-ok)}
 </style>
 
 
@@ -4025,6 +4064,46 @@ html.nx-chrome-off .nx-chrome{display:none}
     <div class="nxh-sbfoot"><b>Same people.</b><br>A smarter tomorrow.</div>
   </nav>
 </div>
+<div id="phantomZone">
+  <div class="pz-strip">
+    <button class="pz-scan" id="pzScan" data-tip="Re-checks the two reports against the Shopify catalog and rebuilds the list. Press after new sales."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Scan</button>
+    <div class="pz-drops">
+      <label class="pz-drop" id="pzDropList" data-tip="Your eBay Active Listings export — everything currently live on eBay. This is what we scan for ghosts."><b>Active Listings</b><small id="pzListInfo">drop CSV</small><input type="file" accept=".csv" hidden></label>
+      <label class="pz-drop" id="pzDropSold" data-tip="Your eBay Paid &amp; Shipped export. If a live listing shows up in here, it already sold — that's a phantom."><b>Paid &amp; Shipped</b><small id="pzSoldInfo">drop CSV</small><input type="file" accept=".csv" hidden></label>
+    </div>
+    <label class="pz-drop" id="pzCatBadge" data-tip="The Shopify product list this tool checks SKUs against. If it's stale, real products show as GHOST. Click to refresh it." style="cursor:pointer"><b>Shopify catalog</b><small id="pzCatInfo">checking…</small></label>
+    <div class="pz-metrics">
+      <div class="pz-metric bad" data-tip="Confirmed phantoms — sold, gone, still live on eBay. Kill these."><b id="pzMPh">0</b><span>to clear</span></div>
+      <div class="pz-metric warn" data-tip="Probably sold, not certain. Check the shelf first."><b id="pzMCk">0</b><span>to check</span></div>
+      <div class="pz-metric ok" data-tip="Phantom listings you've killed this session."><b id="pzMEnd">0</b><span>killed</span></div>
+      <div class="pz-metric" style="border-left:1px solid var(--nx-line);padding-left:24px" data-tip="Total value of every live phantom — what could turn into cancellations and refunds if left up."><b id="pzMRisk">$0</b><span>at risk</span></div>
+    </div>
+  </div>
+  <div class="pz-guide" id="pzGuide"></div>
+  <div class="pz-body">
+    <div class="pz-col">
+      <div class="pz-tabs" id="pzTabs">
+        <button class="pz-tab on" data-f="all" data-tip="Everything flagged."><b id="pzTAll">0</b><span>all</span></button>
+        <button class="pz-tab k-phantom" data-f="phantom" data-tip="CONFIRMED: sold, gone, still live. Safe to kill."><b id="pzTPh">0</b><span>confirmed</span></button>
+        <button class="pz-tab k-check" data-f="check" data-tip="CHECK: probably sold, confirm on the shelf first."><b id="pzTCk">0</b><span>check</span></button>
+        <button class="pz-tab k-ghost" data-f="ghost" data-tip="GHOST: live on eBay, no Shopify match — usually a SKU typo."><b id="pzTGh">0</b><span>ghost</span></button>
+        <button class="pz-tab k-unlisted" data-f="unlisted" data-tip="READY TO LIST: prepped in Shopify with stock, added in the last 60 days, but never pushed to eBay."><b id="pzTUn">0</b><span>to list</span></button>
+      </div>
+      <div style="padding:9px 12px;border-bottom:1px solid var(--nx-line);display:flex;gap:6px">
+        <input id="pzSearch" placeholder="Filter by SKU or title…" autocomplete="off"
+          style="flex:1;min-width:0;height:32px;border:1px solid var(--nx-line-2);border-radius:7px;padding:0 10px;font:400 12.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card)">
+        <select id="pzType" data-tip="Narrow to one product type. Built from whatever is actually in the list."
+          style="flex:0 0 140px;height:32px;border:1px solid var(--nx-line-2);border-radius:7px;padding:0 8px;font:500 12.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card);cursor:pointer">
+          <option value="">All types</option>
+        </select>
+      </div>
+      <div class="pz-list" id="pzList"></div>
+      <div class="pz-kb">J / K move &nbsp;·&nbsp; X arm + kill &nbsp;·&nbsp; U undo &nbsp;·&nbsp; 1-4 filter</div>
+    </div>
+    <div class="pz-col"><div class="pz-work" id="pzWork"></div></div>
+  </div>
+</div>
+
 
 
 <!-- ── Welcome Screen (redesigned 2026-08-24) ── -->
@@ -22681,7 +22760,36 @@ function renderAnswer(q) {
   const customMatch = resolveCustomCmd(q);
   if (customMatch) { renderCustomCmd(customMatch, q); return; }
 
-  // ── 1a. Lock-in by sentence — "im Juan RTL0901" ────────────────
+  // ── 1a. Marketplace Connect by SKU ─────────────────────────────
+  // "find NJ02-123 in mc" / "mc NJ02-123" / "open NJ02-123 in marketplace
+  // connect". The same MC_AUTOFILL_REQUEST hand-off Phantom Zone uses, but
+  // reachable from anywhere — you rarely want the whole phantom worklist just
+  // to look one SKU up.
+  const mcM = /^\s*(?:find|open|search|show|lookup|look\s*up)?\s*([A-Za-z0-9][\w\-\/. ]{3,})\s+(?:in|on)\s+(?:mc|marketplace\s*connect)\s*$/i.exec(q)
+           || /^\s*(?:mc|marketplace\s*connect)\s+([A-Za-z0-9][\w\-\/. ]{3,})\s*$/i.exec(q);
+  if (mcM) {
+    const sku = mcM[1].trim();
+    labelEl.textContent = 'Marketplace Connect';
+    bodyEl.innerHTML = '<div style="font-size:14px;line-height:1.6">Opening Marketplace Connect and searching <b>'+
+      sku.replace(/[<>&]/g,'')+'</b>…</div>';
+    if (typeof window.nexusAskExtension === 'function') {
+      window.nexusAskExtension('MC_AUTOFILL_REQUEST', { sku: sku }, 30000)
+        .then(function(res){
+          bodyEl.innerHTML = (res && res.ok === false)
+            ? '<div style="font-size:14px;line-height:1.6;color:#DC2626">Could not open Marketplace Connect: '+
+              String(res.error||'no response')+'<br><small>Open MC yourself and search '+sku.replace(/[<>&]/g,'')+'.</small></div>'
+            : '<div style="font-size:14px;line-height:1.6">Marketplace Connect is open with <b>'+sku.replace(/[<>&]/g,'')+'</b> searched.</div>';
+        })
+        .catch(function(e){
+          bodyEl.innerHTML = '<div style="font-size:14px;line-height:1.6;color:#DC2626">Could not reach the extension: '+String(e&&e.message?e.message:e)+'</div>';
+        });
+    } else {
+      bodyEl.innerHTML = '<div style="font-size:14px;line-height:1.6;color:#DC2626">The Nexus extension isn\u2019t loaded, so MC can\u2019t be opened from here.</div>';
+    }
+    return;
+  }
+
+  // ── 1b. Lock-in by sentence — "im Juan RTL0901" ────────────────
   // Runs AFTER custom shortcuts so a user-defined command always wins.
   // Deliberately drives the real listerLockBtn instead of setting
   // LISTER_INITIAL/LISTER_BATCH directly: that button also disables the
@@ -22974,9 +23082,17 @@ document.getElementById('gModeAIBackdrop')?.addEventListener('click', closeGMode
 // Input — Enter fires answer, live suggestion toggle
 const gAIInput = document.getElementById('gModeAIInput');
 if (gAIInput) {
+  gAIInput.addEventListener('input', () => { try{ shovoRenderHints(gAIInput.value); }catch(err){} });
   gAIInput.addEventListener('keydown', e => {
+    // Tab completes the top suggestion rather than leaving the field.
+    if (e.key === 'Tab') {
+      const box = document.getElementById('shovoHints');
+      const first = box && box.querySelector('[data-fill]');
+      if (first) { e.preventDefault(); first.click(); return; }
+    }
     if (e.key === 'Enter' && gAIInput.value.trim()) {
       e.preventDefault();
+      const box = document.getElementById('shovoHints'); if (box) box.style.display='none';
       renderAnswer(gAIInput.value.trim());
     }
     if (e.key === 'Escape') closeGModeAI();
@@ -27073,6 +27189,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
   }
 
   function buildHome(){
+    // The dashboard is now real markup in the document, not something this
+    // function paints. It used to overwrite #welcomeBackdrop .nexus-home with
+    // the old hero layout on every init — clobbering the new home, its stat
+    // tiles and its bindings. Leave it alone when the new home is present.
+    if(document.querySelector('.nexus-home.nx-home')) return;
+
     var box=document.querySelector('#welcomeBackdrop .welcome-box');
     if(!box){
       box=document.querySelector('#welcomeBackdrop .nexus-home');
@@ -35880,18 +36002,68 @@ document.addEventListener('click',function(e){
     $('pzEbay').addEventListener('click',function(){ toast('Open the eBay listing for '+p.sku); });
     $('pzKill').addEventListener('click',function(){ if($('pzKill').classList.contains('ready')) kill(); });
   }
-  function render(){ renderList(); renderWork(); }
-  function kill(){
-    var p=PZ[idx];
-    // Both directions land in the same place — MC searched by SKU. Killing and
-    // launching are the same hand-off; only the intent differs.
-    if(typeof window.nexusAskExtension==='function'){
-      window.nexusAskExtension('MC_AUTOFILL_REQUEST',{sku:p.sku},20000).catch(function(){});
+  // The screen showed numbers but never said what to do with them. This bar
+  // always names the next move, based on what's actually loaded — so nobody has
+  // to infer the workflow from a pile of tabs.
+  function renderGuide(){
+    var g=$('pzGuide'); if(!g) return;
+    var haveCat=(typeof catalogRows==='function'?catalogRows():(window.SYGCatalog||[])).length>1500;
+    var step, detail, tone='go';
+    if(!LIST_ROWS){ step='1 · Drop the Active Listings report';
+      detail='Export it from eBay: Seller Hub → Listings → Download report. It tells us what is live right now.'; tone='wait'; }
+    else if(!SOLD_INDEX){ step='2 · Drop the Paid &amp; Shipped report';
+      detail='Same place on eBay. It tells us what already sold, so we can spot listings that should be dead.'; tone='wait'; }
+    else if(!haveCat){ step='3 · Load the Shopify catalog';
+      detail='Click the Shopify catalog badge above and drop the products export. Without it, real products look like ghosts.'; tone='wait'; }
+    else if(!PZ.length){ step='Nothing to do — you are clear';
+      detail='Every live listing has a real unit behind it. Re-scan after the next batch of sales.'; tone='clear'; }
+    else {
+      var ph=PZ.filter(function(p){return p.kind==='phantom';}).length,
+          ck=PZ.filter(function(p){return p.kind==='check';}).length,
+          un=PZ.filter(function(p){return p.kind==='unlisted';}).length;
+      if(ph){ step='Kill '+ph+' phantom listing'+(ph===1?'':'s');
+        detail='These already sold and shipped but are still live on eBay. Pick one on the left, press the red button — it opens Marketplace Connect where you end it. Repeat until the tab reads zero.'; }
+      else if(ck){ step='Check '+ck+' item'+(ck===1?'':'s')+' on the shelf';
+        detail='These look sold but there is no carrier scan. Walk over, confirm the unit is really gone, then kill the listing.'; }
+      else if(un){ step='Launch '+un+' listing'+(un===1?'':'s');
+        detail='These are prepped in Shopify with stock but never went live on eBay. Green button opens Marketplace Connect to publish them.'; }
+      else { step='Review the remaining items'; detail='Work through what is left on the left-hand list.'; }
     }
-    toast('Marketplace Connect — searching '+p.sku+(p.kind==='unlisted'?' to launch':' to end')+' · press U to undo');
-    ended++; LAST={item:p, at:idx};
-    var el=$('pzList').querySelector('.pz-row.on'); if(el) el.classList.add('leaving');
-    setTimeout(function(){ PZ.splice(idx,1); if(idx>=PZ.length) idx=Math.max(0,PZ.length-1); render(); }, 300);
+    g.className='pz-guide '+tone;
+    g.innerHTML='<b>'+step+'</b><span>'+detail+'</span>';
+  }
+  function render(){ renderList(); renderWork(); renderGuide(); }
+  function kill(){
+    var p=PZ[idx], launching=(p.kind==='unlisted');
+    var verb=launching?'launch':'end';
+    // The row used to vanish the instant this was pressed, whether or not
+    // anything actually opened — so a failed hand-off looked identical to a
+    // successful one, and the item was gone from the list either way. Nothing
+    // is removed now until MC has actually been reached.
+    var btn=$('pzKill'); if(btn){ btn.disabled=true; btn.style.opacity='.6'; btn.textContent='Opening Marketplace Connect…'; }
+    function done(){
+      ended++; LAST={item:p, at:idx};
+      var el=$('pzList').querySelector('.pz-row.on'); if(el) el.classList.add('leaving');
+      setTimeout(function(){ PZ.splice(idx,1); if(idx>=PZ.length) idx=Math.max(0,PZ.length-1); render(); }, 300);
+      toast('MC opened for '+p.sku+' — '+verb+' it there · press U to undo');
+    }
+    function failed(why){
+      if(btn){ btn.disabled=false; btn.style.opacity=''; btn.textContent=(launching?'Launch Listing on Marketplace Connect':'Kill Phantom Listing on Marketplace Connect'); }
+      // Keep the row. It hasn't been handled, so it must stay on the list.
+      var box=$('pzWork').querySelector('.pz-hint');
+      if(box){ box.style.color='var(--nx-bad)'; box.textContent='Could not open Marketplace Connect: '+why+
+        '  ·  Open MC yourself and search '+p.sku+'. The item stays on the list until it\u2019s handled.'; }
+      toast('Could not reach Marketplace Connect — item kept on the list');
+    }
+    if(typeof window.nexusAskExtension!=='function'){
+      failed('the Nexus extension isn\u2019t loaded on this page'); return;
+    }
+    window.nexusAskExtension('MC_AUTOFILL_REQUEST',{sku:p.sku},30000)
+      .then(function(res){
+        if(res && res.ok===false) failed((res.error||'MC did not respond'));
+        else done();
+      })
+      .catch(function(e){ failed(String(e&&e.message?e.message:e)); });
   }
   function undo(){ if(!LAST) return; PZ.splice(LAST.at,0,LAST.item); idx=LAST.at; ended=Math.max(0,ended-1); LAST=null; render(); toast('Put back — nothing was ended'); }
 
@@ -35921,6 +36093,14 @@ document.addEventListener('click',function(e){
     var z=$('phantomZone'); if(!z) return;
     z.classList.add('show');
     if(typeof nxPageHeader==='function'){} // header band handled by chrome routing
+    // Bind defensively. This used to run once and assume every element was
+    // there; when the markup wasn't parsed yet, each getElementById returned
+    // null, the first one threw, and every binding after it silently never
+    // happened — a screen that rendered but did nothing. Now each hook is
+    // checked, and binding is retried until the markup really exists.
+    var need=['pzScan','pzSearch','pzType','pzTabs','pzList','pzDropList','pzDropSold'];
+    var ready=need.every(function(id){ return !!$(id); });
+    if(!ready){ setTimeout(window.openPhantomZone, 120); return; }
     if(!z._bound){ z._bound=true;
       $('pzScan').addEventListener('click',scan);
       $('pzType').addEventListener('change',function(){
@@ -35943,8 +36123,18 @@ document.addEventListener('click',function(e){
           else { cb.classList.add('loaded'); }
         }catch(e){ $('pzCatInfo').textContent='catalog loaded'; }
       }
-      $('pzDropList').querySelector('input').addEventListener('change',function(){loadFile(this,'list');});
-      $('pzDropSold').querySelector('input').addEventListener('change',function(){loadFile(this,'sold');});
+      [['pzDropList','list'],['pzDropSold','sold']].forEach(function(pair){
+        var lab=$(pair[0]), inp=lab&&lab.querySelector('input');
+        if(!inp) return;
+        inp.addEventListener('change',function(){ loadFile(this,pair[1]); });
+        // Also accept a real drag-and-drop, since the zone looks droppable.
+        ['dragover','dragenter'].forEach(function(ev){ lab.addEventListener(ev,function(e){e.preventDefault();lab.style.borderColor='var(--nx-blue)';}); });
+        ['dragleave','drop'].forEach(function(ev){ lab.addEventListener(ev,function(e){e.preventDefault();lab.style.borderColor='';}); });
+        lab.addEventListener('drop',function(e){
+          var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+          if(f){ var fake={files:[f]}; loadFile(fake,pair[1]); }
+        });
+      });
       $('pzTabs').addEventListener('click',function(e){ var t=e.target.closest('.pz-tab'); if(!t)return;
         FILTER=t.getAttribute('data-f');
         Array.prototype.forEach.call(document.querySelectorAll('#pzTabs .pz-tab'),function(x){x.classList.toggle('on',x===t);});
@@ -35965,6 +36155,58 @@ document.addEventListener('click',function(e){
     render();
   };
 })();
+
+// ── Shovo command autocomplete ────────────────────────────────────────
+// Commands are only useful if you can discover them. This offers matching
+// commands as you type, with the syntax spelled out, so nobody has to
+// remember the exact phrasing — and Tab/Enter completes the skeleton.
+var SHOVO_CMDS = [
+  {t:'find <sku> in mc',        d:'Open Marketplace Connect and search that SKU', ex:'find NJ02-30-66862 in mc', fill:'find  in mc', caret:5},
+  {t:'mc <sku>',                d:'Same thing, shorter',                          ex:'mc NJ02-0-69544-J59',       fill:'mc ',        caret:3},
+  {t:"im <name> RTL<batch>",    d:'Lock in as a lister for today\u2019s batch',    ex:'im Juan RTL0910',           fill:'im ',        caret:3},
+  {t:'phantom zone',            d:'Open the phantom listing worklist',            ex:'phantom zone',              fill:'phantom zone', caret:12},
+  {t:'order check',             d:'Open Order Check',                             ex:'order check',               fill:'order check', caret:11},
+  {t:'supplies',                d:'Open shelving and supplies',                   ex:'supplies',                  fill:'supplies',   caret:8}
+];
+function shovoMatchCmds(q){
+  q=String(q||'').trim().toLowerCase();
+  if(!q) return [];
+  return SHOVO_CMDS.filter(function(c){
+    var hay=(c.t+' '+c.d+' '+c.ex).toLowerCase();
+    // match on the first word typed, or any word appearing in the command
+    return q.split(/\s+/).every(function(w){ return hay.indexOf(w)>-1; });
+  }).slice(0,5);
+}
+function shovoRenderHints(q){
+  var box=document.getElementById('shovoHints');
+  if(!box){
+    var inp=document.getElementById('gModeAIInput'); if(!inp) return;
+    box=document.createElement('div'); box.id='shovoHints';
+    box.style.cssText='margin-top:8px;display:none;flex-direction:column;gap:2px';
+    (inp.parentNode||document.body).appendChild(box);
+  }
+  var hits=shovoMatchCmds(q);
+  if(!hits.length){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='flex';
+  box.innerHTML=hits.map(function(c,i){
+    return '<button type="button" data-fill="'+String(c.fill).replace(/"/g,'&quot;')+'" data-caret="'+c.caret+'" '+
+      'style="display:flex;gap:10px;align-items:baseline;text-align:left;width:100%;padding:8px 11px;border:0;'+
+      'background:'+(i===0?'rgba(37,99,235,.10)':'transparent')+';border-radius:8px;cursor:pointer;font-family:inherit">'+
+      '<b style="font:600 12.5px monospace;color:#2563EB;white-space:nowrap">'+c.t.replace(/[<>&]/g,function(m){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[m];})+'</b>'+
+      '<span style="font-size:12px;opacity:.65">'+c.d+'</span></button>';
+  }).join('');
+  if(!box._bound){
+    box._bound=true;
+    box.addEventListener('click',function(e){
+      var b=e.target.closest('[data-fill]'); if(!b) return;
+      var inp=document.getElementById('gModeAIInput'); if(!inp) return;
+      inp.value=b.getAttribute('data-fill');
+      var c=+b.getAttribute('data-caret')||inp.value.length;
+      inp.focus(); try{ inp.setSelectionRange(c,c); }catch(err){}
+      shovoRenderHints(inp.value);
+    });
+  }
+}
 
 // ── Wan Board keyboard shortcuts ──────────────────────────────────────
 // Shift+letter is just a capital letter, so these MUST stand down while a
@@ -36029,43 +36271,6 @@ document.addEventListener('click',function(e){
   });
 })();
 </script>
-<div id="phantomZone">
-  <div class="pz-strip">
-    <button class="pz-scan" id="pzScan" data-tip="Re-checks the two reports against the Shopify catalog and rebuilds the list. Press after new sales."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Scan</button>
-    <div class="pz-drops">
-      <label class="pz-drop" id="pzDropList" data-tip="Your eBay Active Listings export — everything currently live on eBay. This is what we scan for ghosts."><b>Active Listings</b><small id="pzListInfo">drop CSV</small><input type="file" accept=".csv" hidden></label>
-      <label class="pz-drop" id="pzDropSold" data-tip="Your eBay Paid &amp; Shipped export. If a live listing shows up in here, it already sold — that's a phantom."><b>Paid &amp; Shipped</b><small id="pzSoldInfo">drop CSV</small><input type="file" accept=".csv" hidden></label>
-    </div>
-    <label class="pz-drop" id="pzCatBadge" data-tip="The Shopify product list this tool checks SKUs against. If it's stale, real products show as GHOST. Click to refresh it." style="cursor:pointer"><b>Shopify catalog</b><small id="pzCatInfo">checking…</small></label>
-    <div class="pz-metrics">
-      <div class="pz-metric bad" data-tip="Confirmed phantoms — sold, gone, still live on eBay. Kill these."><b id="pzMPh">0</b><span>to clear</span></div>
-      <div class="pz-metric warn" data-tip="Probably sold, not certain. Check the shelf first."><b id="pzMCk">0</b><span>to check</span></div>
-      <div class="pz-metric ok" data-tip="Phantom listings you've killed this session."><b id="pzMEnd">0</b><span>killed</span></div>
-      <div class="pz-metric" style="border-left:1px solid var(--nx-line);padding-left:24px" data-tip="Total value of every live phantom — what could turn into cancellations and refunds if left up."><b id="pzMRisk">$0</b><span>at risk</span></div>
-    </div>
-  </div>
-  <div class="pz-body">
-    <div class="pz-col">
-      <div class="pz-tabs" id="pzTabs">
-        <button class="pz-tab on" data-f="all" data-tip="Everything flagged."><b id="pzTAll">0</b><span>all</span></button>
-        <button class="pz-tab k-phantom" data-f="phantom" data-tip="CONFIRMED: sold, gone, still live. Safe to kill."><b id="pzTPh">0</b><span>confirmed</span></button>
-        <button class="pz-tab k-check" data-f="check" data-tip="CHECK: probably sold, confirm on the shelf first."><b id="pzTCk">0</b><span>check</span></button>
-        <button class="pz-tab k-ghost" data-f="ghost" data-tip="GHOST: live on eBay, no Shopify match — usually a SKU typo."><b id="pzTGh">0</b><span>ghost</span></button>
-        <button class="pz-tab k-unlisted" data-f="unlisted" data-tip="READY TO LIST: prepped in Shopify with stock, added in the last 60 days, but never pushed to eBay."><b id="pzTUn">0</b><span>to list</span></button>
-      </div>
-      <div style="padding:9px 12px;border-bottom:1px solid var(--nx-line);display:flex;gap:6px">
-        <input id="pzSearch" placeholder="Filter by SKU or title…" autocomplete="off"
-          style="flex:1;min-width:0;height:32px;border:1px solid var(--nx-line-2);border-radius:7px;padding:0 10px;font:400 12.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card)">
-        <select id="pzType" data-tip="Narrow to one product type. Built from whatever is actually in the list."
-          style="flex:0 0 140px;height:32px;border:1px solid var(--nx-line-2);border-radius:7px;padding:0 8px;font:500 12.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card);cursor:pointer">
-          <option value="">All types</option>
-        </select>
-      </div>
-      <div class="pz-list" id="pzList"></div>
-      <div class="pz-kb">J / K move &nbsp;·&nbsp; X arm + kill &nbsp;·&nbsp; U undo &nbsp;·&nbsp; 1-4 filter</div>
-    </div>
-    <div class="pz-col"><div class="pz-work" id="pzWork"></div></div>
-  </div>
-</div>
+
 
 </body></html>
