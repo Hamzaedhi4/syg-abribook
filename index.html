@@ -34692,6 +34692,12 @@ function ocHandoffPrompt(list){
 // someone where the export button is, then leaving them to hand-edit a 182KB
 // array, is why the catalog went seven days stale in the first place.
 window.ocCatalogPanel = ocCatalogPanel;
+  // Read from other script blocks (Phantom Zone). Without these exports
+  // `typeof catalogRows` was 'undefined' over there and it silently fell back
+  // to the baked 1,404-row snapshot — so a freshly imported 10,000-SKU catalog
+  // was loaded and then ignored, making real products look like ghosts.
+  window.catalogRows   = catalogRows;
+  window.catalogActive = catalogActive;
   window.snapLabel = window.snapLabel || snapLabel;
   window.snapStale = window.snapStale || snapStale;
   function ocCatalogPanel(){
@@ -35832,8 +35838,18 @@ document.addEventListener('click',function(e){
   }
 
   // ── the detection: pure set arithmetic ──
+  // Say which catalog is in play. Falling back to the baked snapshot used to be
+  // invisible — the tool looked like it was working while matching against
+  // 1,404 stale rows instead of the 10,000 just imported.
+  function catalogInUse(){
+    if(typeof window.catalogRows==='function'){
+      var r=window.catalogRows();
+      if(r && r.length) return {rows:r, src:(r.length>2000?'imported':'baked snapshot')};
+    }
+    return {rows:(window.SYGCatalog||[]), src:'baked snapshot (fallback)'};
+  }
   function shopStatus(sku){
-    var cat=(typeof catalogRows==='function')?catalogRows():(window.SYGCatalog||[]);
+    var cat=(typeof window.catalogRows==='function')?window.catalogRows():(window.SYGCatalog||[]);
     var key=skuKey(sku);
     for(var i=0;i<cat.length;i++){
       if(skuKey(cat[i][0])===key){
@@ -35887,7 +35903,7 @@ document.addEventListener('click',function(e){
     // prepped item somebody forgot to push.
     var liveKeys={};
     LIST_ROWS.forEach(function(r){ var k=skuKey(col(r,['custom label','sku'])); if(k) liveKeys[k]=1; });
-    var cat=(typeof catalogRows==='function')?catalogRows():(window.SYGCatalog||[]);
+    var cat=(typeof window.catalogRows==='function')?window.catalogRows():(window.SYGCatalog||[]);
     var CUTOFF=60*86400000, now=Date.now();
     cat.forEach(function(row){
       var sku=row[0]; if(!sku) return;
@@ -36007,7 +36023,7 @@ document.addEventListener('click',function(e){
   // to infer the workflow from a pile of tabs.
   function renderGuide(){
     var g=$('pzGuide'); if(!g) return;
-    var haveCat=(typeof catalogRows==='function'?catalogRows():(window.SYGCatalog||[])).length>1500;
+    var haveCat=((typeof window.catalogRows==='function')?window.catalogRows():(window.SYGCatalog||[])).length>1500;
     var step, detail, tone='go';
     if(!LIST_ROWS){ step='1 · Drop the Active Listings report';
       detail='Export it from eBay: Seller Hub → Listings → Download report. It tells us what is live right now.'; tone='wait'; }
@@ -36118,7 +36134,9 @@ document.addEventListener('click',function(e){
         cb.addEventListener('click',function(){ if(typeof window.ocCatalogPanel==='function') window.ocCatalogPanel(); else toast('Catalog refresh lives on the Order Check screen'); });
         try{
           var info=$('pzCatInfo');
-          if(typeof window.snapLabel==='function'){ info.textContent=window.snapLabel(); }
+          var use=catalogInUse();
+          if(typeof window.snapLabel==='function'){ info.textContent=window.snapLabel()+' · '+use.rows.length+' SKUs'; }
+          if(/fallback|baked/.test(use.src)){ cb.style.borderColor='var(--nx-warn)'; if(info){info.style.color='var(--nx-warn)'; info.textContent=use.rows.length+' SKUs — old built-in list, import a fresh one';} }
           if(typeof window.snapStale==='function' && window.snapStale()){ cb.classList.remove('loaded'); cb.style.borderColor='var(--nx-warn)'; info.style.color='var(--nx-warn)'; }
           else { cb.classList.add('loaded'); }
         }catch(e){ $('pzCatInfo').textContent='catalog loaded'; }
