@@ -3694,8 +3694,8 @@ html:not(.nx-light){
 
 /* ── Shell ─────────────────────────────────────────────────────────── */
 .nexus-home.nx-home{position:absolute;inset:0;display:grid;
-  grid-template-rows:60px 1fr;grid-template-columns:236px 1fr 300px;
-  grid-template-areas:"hd hd hd" "sb main rail";
+  grid-template-rows:1fr;grid-template-columns:1fr 300px;
+  grid-template-areas:"main rail";
   background:var(--nx-bg);color:var(--nx-ink);font-family:var(--nx-sans);
   font-size:14px;line-height:1.45;overflow:hidden}
 .nxh-hd{grid-area:hd;display:flex;align-items:center;gap:18px;padding:0 20px;
@@ -3866,13 +3866,126 @@ html:not(.nx-light){
   .nxh-sb{display:none} .nxh-two{grid-template-columns:1fr} .nxh-search{display:none}
 }
 @media (prefers-reduced-motion:reduce){ .nexus-home.nx-home *{transition:none!important} }
+
+/* ── Persistent chrome ─────────────────────────────────────────────────
+   Header and sidebar live outside every page, so the same frame wraps the
+   dashboard, the Wan canvas and every module overlay. Surfaces that used to
+   fill the viewport are offset to sit inside it; their internals are untouched
+   and migrate to the tokens one module at a time. */
+:root{ --nx-hd-h:60px; --nx-sb-w:236px; }
+.nx-chrome{position:fixed;inset:0;pointer-events:none;z-index:14000;font-family:var(--nx-sans)}
+.nx-chrome .nxh-hd{position:absolute;top:0;left:0;right:0;height:var(--nx-hd-h);pointer-events:auto}
+.nx-chrome .nxh-sb{position:absolute;top:var(--nx-hd-h);left:0;bottom:0;width:var(--nx-sb-w);pointer-events:auto}
+html.nx-chrome-off .nx-chrome{display:none}
+
+/* Everything full-screen moves in under the frame. top/left only, so the
+   right and bottom edges from inset:0 are kept. */
+.nexus-home.nx-home,
+.haz-wrap, .nexus-shipping, .nexus-pricing, .nexus-command,
+#ocRoot, #sygccBackdrop, .morning-backdrop,
+#wanToolbar, #wanCanvas{
+  top:var(--nx-hd-h) !important; left:var(--nx-sb-w) !important;
+}
+/* The Wan toolbar spans the full width by default; keep it inside the frame. */
+#wanToolbar{ width:auto !important; right:0 !important; }
+
+@media (max-width:820px){
+  :root{ --nx-sb-w:0px; }
+  .nx-chrome .nxh-sb{ display:none; }
+}
+
+/* ── Module page header band ───────────────────────────────────────── */
+.nxp-head{background:var(--nx-bg);color:var(--nx-ink);font-family:var(--nx-sans);padding:18px 24px 14px;
+  border-bottom:1px solid var(--nx-line);flex:none}
+.nxp-title{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:12px}
+.nxp-title h1{margin:0;font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.nxp-title p{margin:4px 0 0;color:var(--nx-muted);font-size:14px}
+.nxp-date{color:var(--nx-muted);font-size:13px;white-space:nowrap;padding-top:6px}
+.nxp-steps{display:flex;gap:8px;background:var(--nx-card);border:1px solid var(--nx-line);border-radius:var(--nx-r);padding:12px 14px}
+.nxp-step{flex:1;text-align:center;position:relative;min-width:0}
+.nxp-step:not(:last-child)::after{content:"";position:absolute;right:-6px;top:16px;width:7px;height:7px;
+  border-right:1.5px solid var(--nx-line-2);border-top:1.5px solid var(--nx-line-2);transform:rotate(45deg)}
+.nxp-step .ic{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--nx-line-2);margin:0 auto 6px;
+  display:grid;place-items:center;color:var(--nx-navy);font-weight:700;font-size:13px}
+.nxp-step b{display:block;font-size:11.5px;font-weight:700;line-height:1.2}
+.nxp-step small{display:block;font-size:10.5px;color:var(--nx-muted);line-height:1.3;margin-top:2px}
+</style>
+<style id="nx-phantom-css">
+#phantomZone{position:absolute;top:var(--nx-hd-h);left:var(--nx-sb-w);right:0;bottom:0;display:none;
+  flex-direction:column;background:var(--nx-bg);color:var(--nx-ink);font-family:var(--nx-sans);z-index:60;overflow:hidden}
+#phantomZone.show{display:flex}
+#phantomZone .pz-strip{display:flex;align-items:center;gap:16px;margin:14px 24px 0;padding:12px 16px;background:var(--nx-card);border:1px solid var(--nx-line);border-radius:12px}
+#phantomZone .pz-scan{display:inline-flex;align-items:center;gap:8px;font:600 13.5px var(--nx-sans);color:#fff;background:var(--nx-blue);border:0;border-radius:9px;padding:10px 18px;cursor:pointer}
+#phantomZone .pz-scan:hover{background:var(--nx-blue-dk)}
+#phantomZone .pz-scan svg{width:16px;height:16px}
+#phantomZone .pz-drops{display:flex;gap:8px}
+#phantomZone .pz-drop{display:flex;flex-direction:column;justify-content:center;padding:7px 12px;border-radius:8px;cursor:pointer;border:1.5px dashed var(--nx-line-2);background:var(--nx-bg);min-width:140px}
+#phantomZone .pz-drop.loaded{border-style:solid;border-color:var(--nx-ok);background:#F0FDF4}
+#phantomZone .pz-drop b{font-size:12px;font-weight:600} #phantomZone .pz-drop.loaded b{color:var(--nx-ok)}
+#phantomZone .pz-drop small{font-size:10.5px;color:var(--nx-muted);margin-top:1px}
+#phantomZone .pz-metrics{display:flex;gap:24px;margin-left:4px}
+#phantomZone .pz-metric b{font:600 22px var(--nx-sans);line-height:1;display:block}
+#phantomZone .pz-metric span{font-size:11px;color:var(--nx-muted)}
+#phantomZone .pz-metric.bad b{color:var(--nx-bad)} #phantomZone .pz-metric.warn b{color:var(--nx-warn)} #phantomZone .pz-metric.ok b{color:var(--nx-ok)}
+#phantomZone .pz-body{display:grid;grid-template-columns:400px 1fr;gap:16px;padding:14px 24px 20px;flex:1;min-height:0}
+#phantomZone .pz-col{background:var(--nx-card);border:1px solid var(--nx-line);border-radius:12px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+#phantomZone .pz-tabs{display:flex;padding:10px 12px 0;gap:4px;border-bottom:1px solid var(--nx-line)}
+#phantomZone .pz-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 9px;border:0;background:transparent;cursor:pointer;border-bottom:2px solid transparent;font-family:var(--nx-sans)}
+#phantomZone .pz-tab b{font:600 17px var(--nx-sans);line-height:1} #phantomZone .pz-tab span{font-size:10px;letter-spacing:.04em;color:var(--nx-muted);text-transform:uppercase}
+#phantomZone .pz-tab.on{border-bottom-color:var(--nx-blue)} #phantomZone .pz-tab.on b,#phantomZone .pz-tab.on span{color:var(--nx-blue)}
+#phantomZone .pz-tab.k-phantom.on{border-bottom-color:var(--nx-bad)} #phantomZone .pz-tab.k-phantom.on b,#phantomZone .pz-tab.k-phantom.on span{color:var(--nx-bad)}
+#phantomZone .pz-tab.k-check.on{border-bottom-color:var(--nx-warn)} #phantomZone .pz-tab.k-check.on b,#phantomZone .pz-tab.k-check.on span{color:var(--nx-warn)}
+#phantomZone .pz-tab.k-ghost.on{border-bottom-color:#7C3AED} #phantomZone .pz-tab.k-ghost.on b,#phantomZone .pz-tab.k-ghost.on span{color:#7C3AED}
+#phantomZone .pz-list{overflow:auto;flex:1}
+#phantomZone .pz-grph{position:sticky;top:0;background:var(--nx-bg);padding:7px 15px;font:600 10px var(--nx-sans);letter-spacing:.08em;text-transform:uppercase;color:var(--nx-muted);border-bottom:1px solid var(--nx-line)}
+#phantomZone .pz-row{display:flex;gap:11px;align-items:center;padding:11px 15px;border-bottom:1px solid var(--nx-line);cursor:pointer;position:relative}
+#phantomZone .pz-row:hover{background:var(--nx-bg)} #phantomZone .pz-row.on{background:#EFF6FF}
+#phantomZone .pz-row.on::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--nx-blue)}
+#phantomZone .pz-row.leaving{opacity:0;transform:translateX(-14px);transition:all .3s ease}
+#phantomZone .pz-dot{width:8px;height:8px;border-radius:50%;flex:none}
+#phantomZone .pz-dot.phantom{background:var(--nx-bad)} #phantomZone .pz-dot.check{background:var(--nx-warn)} #phantomZone .pz-dot.ghost{background:#7C3AED}
+#phantomZone .pz-nm{flex:1;min-width:0} #phantomZone .pz-nm b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#phantomZone .pz-nm small{display:block;font-size:11px;color:var(--nx-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#phantomZone .pz-px{font:600 12px 'IBM Plex Mono',monospace;color:var(--nx-muted);flex:none}
+#phantomZone .pz-work{flex:1;overflow:auto;display:flex;flex-direction:column}
+#phantomZone .pz-empty{margin:auto;text-align:center;color:var(--nx-muted);max-width:36ch;padding:40px}
+#phantomZone .pz-empty .big{font-size:44px;margin-bottom:10px}
+#phantomZone .pz-wtop{padding:20px 24px 18px;border-bottom:1px solid var(--nx-line);position:relative}
+#phantomZone .pz-wtop.k-phantom{background:linear-gradient(180deg,#FEF2F2,transparent)}
+#phantomZone .pz-wtop.k-check{background:linear-gradient(180deg,#FFFBEB,transparent)}
+#phantomZone .pz-wtop.k-ghost{background:linear-gradient(180deg,#F5F3FF,transparent)}
+#phantomZone .pz-title{font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.2;padding-right:150px}
+#phantomZone .pz-spec{color:var(--nx-muted);font-size:13px;margin-top:3px}
+#phantomZone .pz-wtag{position:absolute;top:20px;right:24px;font:600 10.5px var(--nx-sans);letter-spacing:.05em;padding:5px 11px;border-radius:99px;color:#fff}
+#phantomZone .pz-wtag.k-phantom{background:var(--nx-bad)} #phantomZone .pz-wtag.k-check{background:var(--nx-warn)} #phantomZone .pz-wtag.k-ghost{background:#7C3AED}
+#phantomZone .pz-wbody{padding:20px 24px;display:flex;flex-direction:column;flex:1}
+#phantomZone .pz-cmp{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+#phantomZone .pz-src{border:1px solid var(--nx-line);border-radius:8px;padding:12px 13px}
+#phantomZone .pz-src .sh{display:flex;align-items:center;gap:7px;font:600 11px var(--nx-sans);letter-spacing:.04em;text-transform:uppercase;color:var(--nx-muted);margin-bottom:8px}
+#phantomZone .pz-src .sh .d{width:7px;height:7px;border-radius:50%;background:var(--nx-faint)}
+#phantomZone .pz-src .val{font-size:13px;font-weight:600;line-height:1.35}
+#phantomZone .pz-src.bad{background:#FEF2F2;border-color:#FECACA} #phantomZone .pz-src.bad .val{color:var(--nx-bad)} #phantomZone .pz-src.bad .sh .d{background:var(--nx-bad)}
+#phantomZone .pz-src.good{background:#F0FDF4;border-color:#BBF7D0} #phantomZone .pz-src.good .val{color:var(--nx-ok)} #phantomZone .pz-src.good .sh .d{background:var(--nx-ok)}
+#phantomZone .pz-src.warnb{background:#FFFBEB;border-color:#FDE68A} #phantomZone .pz-src.warnb .val{color:var(--nx-warn)} #phantomZone .pz-src.warnb .sh .d{background:var(--nx-warn)}
+#phantomZone .pz-verd{display:flex;gap:10px;padding:12px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;line-height:1.5}
+#phantomZone .pz-verd.k-phantom{background:#FEF2F2;color:#991B1B} #phantomZone .pz-verd.k-check{background:#FFFBEB;color:#92400E} #phantomZone .pz-verd.k-ghost{background:#F5F3FF;color:#6D28D9}
+#phantomZone .pz-meta{font-size:12px;color:var(--nx-muted);margin-bottom:16px} #phantomZone .pz-meta .mono{font-family:'IBM Plex Mono',monospace;color:var(--nx-ink)}
+#phantomZone .pz-look{display:flex;gap:10px;margin-bottom:14px}
+#phantomZone .pz-look button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 13px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card);border:1px solid var(--nx-line-2);border-radius:9px;padding:11px;cursor:pointer}
+#phantomZone .pz-look button:hover{border-color:var(--nx-blue);color:var(--nx-blue)} #phantomZone .pz-look svg{width:15px;height:15px}
+#phantomZone .pz-arm{display:flex;align-items:center;gap:9px;padding:12px 14px;background:var(--nx-bg);border:1px solid var(--nx-line);border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:10px;user-select:none}
+#phantomZone .pz-arm input{width:17px;height:17px;accent-color:var(--nx-bad);cursor:pointer}
+#phantomZone .pz-kill{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:9px;font:600 14px var(--nx-sans);color:#fff;background:var(--nx-bad);border:0;border-radius:9px;padding:14px;cursor:pointer;opacity:.4;pointer-events:none;transition:opacity .15s}
+#phantomZone .pz-kill.ready{opacity:1;pointer-events:auto} #phantomZone .pz-kill.ready:hover{background:#B91C1C}
+#phantomZone .pz-hint{margin-top:14px;font-size:12px;color:var(--nx-faint);text-align:center;line-height:1.5}
+#phantomZone .pz-kb{padding:8px 14px;border-top:1px solid var(--nx-line);font-size:10.5px;color:var(--nx-faint);letter-spacing:.03em}
+#phantomZone [data-tip]{position:relative}
+#phantomZone [data-tip]:hover::after{content:attr(data-tip);position:absolute;z-index:9999;left:50%;top:calc(100% + 8px);transform:translateX(-50%);background:#0F172A;color:#fff;font:500 12px/1.5 var(--nx-sans);text-align:left;padding:9px 12px;border-radius:8px;width:max-content;max-width:250px;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;white-space:normal}
 </style>
 
-</head><body>
 
-<!-- ── Welcome Screen (redesigned 2026-08-24) ── -->
-<div class="welcome-backdrop" id="welcomeBackdrop">
-<div class="nexus-home nx-home">
+</head><body>
+<div id="nxChrome" class="nx-chrome">
   <header class="nxh-hd">
     <div class="nxh-brand">
       <span class="nxh-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 7l8-4 8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 17l8 4 8-4"/></svg></span>
@@ -3889,7 +4002,6 @@ html:not(.nx-light){
       <button type="button" class="nxh-theme" id="nxLightBtn" title="Switch theme"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg></button>
     </div>
   </header>
-
   <nav class="nxh-sb" aria-label="Modules">
     <button type="button" class="nxh-nav on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9z"/></svg><span><b>Home</b><small>Your day at a glance</small></span></button>
     <button type="button" class="nxh-nav" data-module="wan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h12M4 11h12M4 16h8"/><path d="M17 16l4-4-4-4"/></svg><span><b>Wan Board</b><small>Describe, assign, list a batch</small></span></button>
@@ -3900,12 +4012,18 @@ html:not(.nx-light){
     <button type="button" class="nxh-nav" data-module="inventory"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg><span><b>Inventory Map</b><small>Find which bin a unit is in</small></span></button>
     <button type="button" class="nxh-nav" data-module="command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V10M10 19V5M16 19v-8M22 19H2"/></svg><span><b>Command Center</b><small>Health trends and what to do next</small></span></button>
     <button type="button" class="nxh-nav" data-module="morning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span><b>Morning Rounds</b><small>Messages, disputes, cancellations</small></span></button>
+    <button type="button" class="nxh-nav" data-module="phantom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3a6 6 0 016 6c0 4-3 6-3 9H6c0-3-3-5-3-9a6 6 0 016-6z"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="13" cy="9" r="1" fill="currentColor"/></svg><span><b>Phantom Zone</b><small>Kill listings that already sold</small></span></button>
     <button type="button" class="nxh-nav" data-module="leads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19a6 6 0 0112 0M14 19a4.5 4.5 0 017 0"/></svg><span><b>Ckay Connect</b><small>Follow up on buying leads</small></span></button>
     <button type="button" class="nxh-nav" data-module="shovo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg><span><b>Ask Shovo</b><small>Ask how anything works</small></span></button>
     <div class="nxh-sbfoot"><b>Same people.</b><br>A smarter tomorrow.</div>
   </nav>
+</div>
 
-  <main class="nxh-main">
+
+<!-- ── Welcome Screen (redesigned 2026-08-24) ── -->
+<div class="welcome-backdrop" id="welcomeBackdrop">
+<div class="nexus-home nx-home">
+    <main class="nxh-main">
     <div class="nxh-title">
       <div><h1>SYG Nexus Home</h1><p>One workspace for buying, listing, checking, pricing, packing and shipping.</p></div>
       <div class="nxh-date"><b id="nxFootDate"></b><span>Elmwood Park, NJ</span></div>
@@ -23136,7 +23254,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      YOUR GADGET NEXUS — prototype experience layer
      ═══════════════════════════════════════════════════════════════ -->
 <style>
-  :root{--nexus-bg:#080b12;--nexus-panel:#111722;--nexus-panel-2:#171f2d;--nexus-line:rgba(255,255,255,.09);--nexus-text:#f4f7fb;--nexus-soft:#8f9aad;--nexus-blue:#6d7cff;--nexus-cyan:#32d6c5;--nexus-gold:#f4bb55;}
+  /* Was a dark palette; remapped to the light dashboard tokens so Shipping,
+   Pricing, Command and Morning Rounds match the home without touching their
+   internal markup. The dark values move under html:not(.nx-light) so the
+   footer switch still flips them back. */
+:root, html.nx-light{
+  --nexus-bg:#F4F6FB; --nexus-panel:#FFFFFF; --nexus-panel-2:#F1F5F9;
+  --nexus-line:#E3E8F0; --nexus-text:#0F172A; --nexus-soft:#64748B;
+  --nexus-blue:#2563EB; --nexus-cyan:#0D9488; --nexus-gold:#D97706;
+}
+html:not(.nx-light){
+  --nexus-bg:#0F141C; --nexus-panel:#161C27; --nexus-panel-2:#1A2130;
+  --nexus-line:#232C3A; --nexus-text:#E5E9F0; --nexus-soft:#94A3B8;
+  --nexus-blue:#6d7cff; --nexus-cyan:#32d6c5; --nexus-gold:#f4bb55;
+}
   /* ── Custom scrollbars for every scrollable Nexus surface ── */
   .nexus-home,.nexus-shipping,.nexus-command,.nexus-pricing,.nexus-storewide,
   .nexus-ship-body,.nexus-command-body,.nexus-price-body,.nexus-sw-body,
@@ -26980,6 +27111,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     btn.addEventListener('click',function(){openModule(btn.dataset.module)});
   });
   function openModule(id){
+    if(id==='phantom'){ if(typeof window.openPhantomZone==='function') window.openPhantomZone(); var w=document.getElementById('welcomeBackdrop'); if(w) w.classList.add('hidden'); return; }
     try{ return _openModule(id) }
     catch(err){ console.error('openModule('+id+') failed:',err); }
   }
@@ -29639,6 +29771,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = NexusSpec;
     });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  // openModule was private to this block; the home's tiles and sidebar call it
+  // from a different <script>, so every one of them was a dead click until this.
+  window.openModule = openModule;
 })();
 </script>
 
@@ -34872,7 +35007,7 @@ function nxWheelInit(){
         var el = ev.target.closest && ev.target.closest('[data-module]');
         if(!el) return;
         var m = el.getAttribute('data-module');
-        if(m && typeof openModule === 'function'){ ev.preventDefault(); openModule(m); }
+        if(m && typeof window.openModule === 'function'){ ev.preventDefault(); window.openModule(m); nxChromeActive(m); }
       });
     }
 
@@ -35388,6 +35523,273 @@ function nxRefreshBadges(){
   });
 })();
 
+
+// ── Sidebar active state + page header bands ──────────────────────────
+// The sidebar is now global, so it needs to know where you are. openModule
+// hides the home and reveals a surface; this marks the matching entry and
+// drops a title band with the module's real workflow into that surface.
+var NX_PAGES = {
+  phantom:  {title:'Phantom Zone', sub:'Listings still live on eBay after the item is gone. Work the list to zero.', steps:[['Drop reports','Active listings + paid/shipped'],['Scan','Match against Shopify'],['Confirm','Shelf-check the maybes'],['Kill','End in Marketplace Connect'],['Clear','Down to zero']], root:'#phantomZone'},
+  wan:      {title:'Wan Board',       sub:'Describe items in plain English, assign SKUs, build and push listings.',
+             steps:[['Intake','Plain-English item, condition, extras'],['Assign SKU','Bin and batch suffix'],['Build','BhaiMode entry, metafields, title'],['Review','Flags, grades, missing info'],['Push','Blitzting to Shopify and eBay']],
+             root:'#wanToolbar', mode:'toolbar'},
+  haz:      {title:'Haz Buying',      sub:'Customer intake, research and offers before anything hits the shelf.',
+             steps:[['Intake','What the customer brought'],['Research','Comps and condition'],['Offer','Range and negotiation'],['PO','Purchase-order prep'],['Hand off','Into the Wan queue']],
+             root:'.haz-wrap'},
+  audit:    {title:'Listing Health',  sub:'Audit live listings, understand deductions, fix and recheck.',
+             steps:[['Import','New or existing listings'],['Scan','Auto-check and score'],['Work on','Drag defects to items'],['Fix','Content, images, details'],['Recheck','Audit again after fixes'],['Publish','Live with a healthier listing']]},
+  pricing:  {title:'Pricing Lab',     sub:'Turn sold comps into clear pricing decisions.',
+             steps:[['Collect comps','Relevant eBay sold listings'],['Market range','Where prices actually land'],['Recommend','Fast, balanced or margin'],['Verdict','Is the current price right'],['Push','Apply and update']],
+             root:'.nexus-pricing'},
+  shipping: {title:'Shipping Station',sub:'Pack in physical order, create labels, keep the sequence.',
+             steps:[['Scan SKU','From the shelf'],['Pull item','Find its orders'],['Pack in order','Preserve the sequence'],['Prefill eBay','Shipping details'],['Labels','Review and reorder PDFs'],['Ship','Mark shipped']],
+             root:'.nexus-shipping'},
+  inventory:{title:'Inventory Map',   sub:'See the floor, find bins, move items.',
+             steps:[['Search SKU','Find the unit'],['Find bin','Exact location'],['Move','Create a relocation'],['Confirm','Mark as moved'],['Update floor','Keep the plan in sync']]},
+  command:  {title:'Command Center',  sub:'See recurring problems, understand impact, decide what to fix upstream.',
+             steps:[['Aggregate','Listing Health data'],['Patterns','Recurring problems'],['Rank','Impact and priority'],['Improve','Upstream fixes'],['Next','Most important listing']],
+             root:'.nexus-command'},
+  morning:  {title:'Morning Rounds',  sub:'Messages, requests and disputes, cancellations — what eBay needs from you today.',
+             steps:[['Messages','Unread from buyers'],['Disputes','Needing a response'],['Cancellations','Waiting on a decision'],['Orders','Ready to pack'],['Clear','Nothing left waiting']],
+             root:'.morning-backdrop'},
+  leads:    {title:'Ckay Connect',    sub:'Follow up on buying leads.', steps:[['Leads','Auto-replied, unsorted'],['Sort','Worth a follow-up'],['Reply','Make the offer'],['Book','Set the pickup'],['Buy','Into Haz']]},
+  ordercheck:{title:'Order Check',    sub:'Catch oversells and cancelled orders before a box gets packed.',
+             steps:[['Pull','Awaiting shipment from eBay'],['Report','Paid and shipped CSV'],['Compare','SKU and title together'],['Verify','Ask eBay directly'],['Act','Pack, cancel or check the shelf']],
+             root:'#ocRoot'},
+  crosscheck:{title:'Crosscheck',     sub:'Shopify against eBay, listing by listing.',
+             steps:[['Snapshot','Catalog export'],['Match','SKU to eBay listing'],['Compare','Price, qty, status'],['Flag','What disagrees'],['Fix','On whichever side is wrong']],
+             root:'#sygccBackdrop'}
+};
+function nxChromeActive(mod){
+  document.querySelectorAll('.nx-chrome .nxh-nav').forEach(function(b){
+    b.classList.toggle('on', (b.getAttribute('data-module')||'home')===(mod||'home'));
+  });
+  if(mod && mod!=='home') nxPageHeader(mod);
+}
+function nxPageHeader(mod){
+  var cfg=NX_PAGES[mod]; if(!cfg||!cfg.root) return;
+  var root=document.querySelector(cfg.root); if(!root) return;
+  if(root.querySelector(':scope > .nxp-head')) return;
+  var steps=(cfg.steps||[]).map(function(st,i){
+    return '<div class="nxp-step"><span class="ic">'+(i+1)+'</span><b>'+st[0]+'</b><small>'+st[1]+'</small></div>';
+  }).join('');
+  var el=document.createElement('div');
+  el.className='nxp-head';
+  el.innerHTML='<div class="nxp-title"><div><h1>'+cfg.title+'</h1><p>'+cfg.sub+'</p></div>'+
+    '<div class="nxp-date">'+new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})+'</div></div>'+
+    (steps?'<div class="nxp-steps">'+steps+'</div>':'');
+  if(cfg.mode==='toolbar'){ return; }          // the Wan canvas has its own header; leave it
+  root.insertBefore(el, root.firstChild);
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest && e.target.closest('.nx-chrome .nxh-nav');
+  if(!b) return;
+  var m=b.getAttribute('data-module');
+  if(!m){
+    // Home: close whatever is open by showing the welcome layer again.
+    var w=document.getElementById('welcomeBackdrop'); if(w) w.classList.remove('hidden');
+    ['.haz-wrap','.nexus-shipping','.nexus-pricing','.nexus-command'].forEach(function(sel){
+      var el=document.querySelector(sel); if(el){ el.classList.remove('show'); if(el.style) el.style.display=''; }
+    });
+    nxChromeActive('home'); return;
+  }
+  if(typeof window.openModule==='function'){ window.openModule(m); nxChromeActive(m); }
+});
+
+// ══ Phantom Zone ══════════════════════════════════════════════════════
+// Finds eBay listings still live after the unit is gone. Detection is pure
+// arithmetic across three sources the user provides — no model in the loop,
+// because we hold every input and there is nothing to interpret:
+//   1. Active Listings CSV  — what's live on eBay right now (has Available qty)
+//   2. Paid & Shipped CSV   — what already sold and shipped (has tracking)
+//   3. Shopify catalog      — status + stock, from the same layer the supplies
+//                             tool uses (window.SYGCatalog / imported CSV)
+// Join key is Custom label (SKU), exact, all three. Kill opens Marketplace
+// Connect with the SKU searched (MC_AUTOFILL_REQUEST) — eBay can't end directly.
+(function(){
+  var PZ=[], idx=0, FILTER='all', ended=0, LAST=null;
+  var LIST_ROWS=null, SOLD_INDEX=null;
+  function $(id){return document.getElementById(id);}
+  function esc(s){var d=document.createElement('div');d.textContent=(s==null?'':s);return d.innerHTML;}
+  function toast(m){ if(typeof window.nxToast==='function') return window.nxToast(m);
+    var t=$('pzToast'); if(!t){t=document.createElement('div');t.id='pzToast';
+      t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;font:600 13px sans-serif;padding:11px 18px;border-radius:10px;z-index:99999;transition:opacity .25s';
+      document.body.appendChild(t);} t.textContent=m; t.style.opacity='1';
+    clearTimeout(t._t); t._t=setTimeout(function(){t.style.opacity='0';},2200); }
+
+  // ── CSV → array of objects, header-mapped. Reuses the app's row splitter. ──
+  function parseCsv(text){
+    var lines=String(text).split(/\r?\n/).filter(function(l){return l.trim();});
+    if(!lines.length) return [];
+    var head=(typeof shovoParseCsvRow==='function')?shovoParseCsvRow(lines[0]):lines[0].split(',');
+    var out=[];
+    for(var i=1;i<lines.length;i++){
+      var cells=(typeof shovoParseCsvRow==='function')?shovoParseCsvRow(lines[i]):lines[i].split(',');
+      if(!cells.length) continue;
+      var o={}; for(var c=0;c<head.length;c++) o[String(head[c]).trim()]=cells[c]!=null?String(cells[c]).trim():'';
+      out.push(o);
+    }
+    return out;
+  }
+  function col(row, names){ for(var i=0;i<names.length;i++){ for(var k in row){ if(k.toLowerCase().indexOf(names[i])>-1) return row[k]; } } return ''; }
+
+  // ── the detection: pure set arithmetic ──
+  function shopStatus(sku){
+    var cat=(typeof catalogRows==='function')?catalogRows():(window.SYGCatalog||[]);
+    var key=String(sku||'').toUpperCase().trim();
+    for(var i=0;i<cat.length;i++){
+      if(String(cat[i][0]||'').toUpperCase().trim()===key){
+        // snapshot rows are [sku,title,type,qty,price,pid]; qty at index 3
+        return {found:true, qty:Number(cat[i][3]||0), title:cat[i][1], price:cat[i][4], pid:cat[i][5]};
+      }
+    }
+    return {found:false};
+  }
+  function scan(){
+    if(!LIST_ROWS){ toast('Drop the Active Listings CSV first'); return; }
+    var soldByKey={};
+    (SOLD_INDEX||[]).forEach(function(r){
+      var sku=col(r,['custom label','sku']); if(!sku) return;
+      var track=col(r,['tracking']);
+      soldByKey[sku.toUpperCase().trim()]={track:track, when:col(r,['shipped','sale date','paid'])};
+    });
+    PZ=[]; 
+    LIST_ROWS.forEach(function(r){
+      var sku=col(r,['custom label','sku']); if(!sku) return;
+      var key=sku.toUpperCase().trim();
+      var avail=Number(col(r,['available quantity','available'])||0);
+      if(avail<=0) return;                              // not actually live/buyable
+      var title=col(r,['title'])||sku;
+      var price=Number(String(col(r,['price'])||'').replace(/[^0-9.]/g,''))||0;
+      var sold=soldByKey[key];
+      var shop=shopStatus(sku);
+      var shopGone = shop.found ? (shop.qty<=0) : null;   // null = no Shopify match
+      var kind=null, why='';
+      if(!shop.found){ kind='ghost'; why='No Shopify product carries this SKU'; }
+      else if(sold && /\d/.test(sold.track||'')){ kind='phantom'; why='Sold and shipped with tracking'; }
+      else if(sold){ kind='check'; why='On the shipped report, but no tracking'; }
+      else if(shopGone){ kind='check'; why='Shopify shows it gone; no eBay sale found'; }
+      else return;                                        // live, in stock, unsold → clean
+      PZ.push({sku:sku, name:title, spec:'', price:price, kind:kind, why:why,
+        shop: shop.found?('stock '+shop.qty):'no Shopify product',
+        ebay:'live · $'+price, avail:avail+(avail>1?' — eBay says '+avail+' left':' — eBay still buyable'),
+        sold: sold ? ((/\d/.test(sold.track||'')?'shipped · tracking '+sold.track:'on report · NO tracking')+(sold.when?' · '+sold.when:'')) : 'not on report'});
+    });
+    var order={phantom:0,check:1,ghost:2};
+    PZ.sort(function(a,b){return order[a.kind]-order[b.kind];});
+    idx=0; render(); toast('Scanned · '+PZ.length+' phantom'+(PZ.length===1?'':'s')+' found');
+  }
+
+  var KM={phantom:{tag:'CONFIRMED PHANTOM',grp:'Confirmed — kill these',verd:'<b>Confirmed phantom.</b> Live on eBay, sold and shipped with tracking, and Shopify shows it gone. Nothing to check — kill it.'},
+          check:{tag:'CHECK THE SHELF',grp:'Check the shelf first',verd:'<b>Likely phantom.</b> Looks gone, but no carrier scan (or no eBay sale found). Walk over and confirm before killing.'},
+          ghost:{tag:'GHOST — NO SHOPIFY MATCH',grp:'No Shopify match',verd:'<b>Ghost.</b> Live and sold on eBay, but no Shopify product has this SKU. A typo or deleted product — check the SKU before killing.'}};
+  function filtered(){ return FILTER==='all'?PZ:PZ.filter(function(p){return p.kind===FILTER;}); }
+  function tabs(){ var c=function(k){return PZ.filter(function(p){return p.kind===k;}).length;};
+    $('pzTAll').textContent=PZ.length; $('pzTPh').textContent=c('phantom'); $('pzTCk').textContent=c('check'); $('pzTGh').textContent=c('ghost'); }
+  function metrics(){
+    $('pzMPh').textContent=PZ.filter(function(p){return p.kind==='phantom';}).length;
+    $('pzMCk').textContent=PZ.filter(function(p){return p.kind==='check'||p.kind==='ghost';}).length;
+    $('pzMEnd').textContent=ended;
+    $('pzMRisk').textContent='$'+PZ.reduce(function(a,p){return a+(p.price||0);},0).toLocaleString();
+  }
+  function renderList(){
+    tabs(); metrics();
+    var l=$('pzList'), rows=filtered();
+    if(!rows.length){ l.innerHTML='<div style="padding:50px 24px;text-align:center;color:var(--nx-muted)"><div style="font-size:38px;margin-bottom:8px">✓</div>Nothing here.</div>'; return; }
+    var order=['phantom','check','ghost'], html='';
+    order.forEach(function(k){
+      if(FILTER!=='all'&&FILTER!==k) return;
+      var grp=rows.filter(function(p){return p.kind===k;}); if(!grp.length) return;
+      if(FILTER==='all') html+='<div class="pz-grph">'+KM[k].grp+' ('+grp.length+')</div>';
+      grp.forEach(function(p){ var gi=PZ.indexOf(p);
+        html+='<div class="pz-row '+(gi===idx?'on':'')+'" data-i="'+gi+'"><span class="pz-dot '+p.kind+'"></span>'+
+          '<span class="pz-nm"><b>'+esc(p.name)+'</b><small>'+esc(p.shop)+'</small></span>'+
+          '<span class="pz-px">$'+(p.price||0)+'</span></div>';
+      });
+    });
+    l.innerHTML=html;
+  }
+  function renderWork(){
+    var w=$('pzWork');
+    if(!PZ.length){ w.innerHTML='<div class="pz-empty"><div class="big">🎉</div><b>All clear.</b><br>Drop the two reports and press Scan to check again.</div>'; return; }
+    if(idx>=PZ.length) idx=PZ.length-1;
+    var p=PZ[idx], km=KM[p.kind];
+    var soldClass=p.kind==='check'?'warnb':(/tracking/i.test(p.sold)&&/\d/.test(p.sold)?'good':'');
+    w.innerHTML=
+      '<div class="pz-wtop k-'+p.kind+'"><div class="pz-title">'+esc(p.name)+'</div><div class="pz-spec">'+esc(p.spec||p.sku)+'</div><span class="pz-wtag k-'+p.kind+'">'+km.tag+'</span></div>'+
+      '<div class="pz-wbody">'+
+        '<div class="pz-cmp">'+
+          '<div class="pz-src '+(p.kind==='ghost'?'':'bad')+'" data-tip="What OUR system thinks. Archived or zero stock = we believe it\u2019s gone."><div class="sh"><span class="d"></span>Shopify</div><div class="val">'+esc(p.shop)+'</div></div>'+
+          '<div class="pz-src good" data-tip="What eBay shows buyers now. Still live = someone can still buy it."><div class="sh"><span class="d"></span>eBay</div><div class="val">'+esc(p.ebay)+'<br>'+esc(p.avail)+'</div></div>'+
+          '<div class="pz-src '+soldClass+'" data-tip="Did it already sell? With tracking = definitely gone. No tracking = check the shelf."><div class="sh"><span class="d"></span>Sold?</div><div class="val">'+esc(p.sold)+'</div></div>'+
+        '</div>'+
+        '<div class="pz-verd k-'+p.kind+'">'+km.verd+'</div>'+
+        '<div class="pz-meta">SKU <span class="mono">'+esc(p.sku)+'</span></div>'+
+        '<div class="pz-look"><button id="pzShop" data-tip="Opens this product in Shopify."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2l1.5 4h9L18 2M4 6h16l-1.5 13a1 1 0 01-1 1H6.5a1 1 0 01-1-1L4 6z"/></svg>Find on Shopify</button>'+
+          '<button id="pzEbay" data-tip="Opens the live eBay listing."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6"/></svg>Open on eBay</button></div>'+
+        '<label class="pz-arm" data-tip="Tick once you\u2019re sure it\u2019s gone. Unlocks the kill button so nothing ends by accident."><input type="checkbox" id="pzArm">'+(p.kind==='check'?'I walked over — it\u2019s not on the shelf':p.kind==='ghost'?'I checked the SKU — this shouldn\u2019t be live':'Confirmed — the unit is gone')+'</label>'+
+        '<button class="pz-kill" id="pzKill" data-tip="Opens Marketplace Connect with this SKU searched, ready to end. eBay can\u2019t end listings directly."><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>Kill Phantom Listing on Marketplace Connect</button>'+
+        '<div class="pz-hint">eBay has no direct end action — this opens Marketplace Connect ready to end. MC syncs, just slowly, so killing here beats waiting.</div>'+
+      '</div>';
+    $('pzArm').addEventListener('change',function(e){ $('pzKill').classList.toggle('ready',e.target.checked); });
+    $('pzShop').addEventListener('click',function(){ var s=shopStatus(p.sku); if(s.found&&s.pid) window.open('https://xpp09p-dz.myshopify.com/admin/products/'+s.pid,'_blank','noopener'); else toast('No Shopify product id for this SKU'); });
+    $('pzEbay').addEventListener('click',function(){ toast('Open the eBay listing for '+p.sku); });
+    $('pzKill').addEventListener('click',function(){ if($('pzKill').classList.contains('ready')) kill(); });
+  }
+  function render(){ renderList(); renderWork(); }
+  function kill(){
+    var p=PZ[idx];
+    // eBay can't end directly — hand the SKU to Marketplace Connect's search.
+    if(typeof window.nexusAskExtension==='function'){
+      window.nexusAskExtension('MC_AUTOFILL_REQUEST',{sku:p.sku},20000).catch(function(){});
+    }
+    toast('Marketplace Connect — searching '+p.sku+' to end · press U to undo');
+    ended++; LAST={item:p, at:idx};
+    var el=$('pzList').querySelector('.pz-row.on'); if(el) el.classList.add('leaving');
+    setTimeout(function(){ PZ.splice(idx,1); if(idx>=PZ.length) idx=Math.max(0,PZ.length-1); render(); }, 300);
+  }
+  function undo(){ if(!LAST) return; PZ.splice(LAST.at,0,LAST.item); idx=LAST.at; ended=Math.max(0,ended-1); LAST=null; render(); toast('Put back — nothing was ended'); }
+
+  function loadFile(input, kind){
+    var f=input.files&&input.files[0]; if(!f) return;
+    var fr=new FileReader();
+    fr.onload=function(){ var rows=parseCsv(fr.result);
+      if(kind==='list'){ LIST_ROWS=rows; $('pzDropList').classList.add('loaded'); $('pzListInfo').textContent=rows.length+' rows'; }
+      else { SOLD_INDEX=rows; $('pzDropSold').classList.add('loaded'); $('pzSoldInfo').textContent=rows.length+' rows'; }
+      if(LIST_ROWS) scan();
+    };
+    fr.readAsText(f);
+  }
+
+  window.openPhantomZone=function(){
+    var z=$('phantomZone'); if(!z) return;
+    z.classList.add('show');
+    if(typeof nxPageHeader==='function'){} // header band handled by chrome routing
+    if(!z._bound){ z._bound=true;
+      $('pzScan').addEventListener('click',scan);
+      $('pzDropList').querySelector('input').addEventListener('change',function(){loadFile(this,'list');});
+      $('pzDropSold').querySelector('input').addEventListener('change',function(){loadFile(this,'sold');});
+      $('pzTabs').addEventListener('click',function(e){ var t=e.target.closest('.pz-tab'); if(!t)return;
+        FILTER=t.getAttribute('data-f');
+        Array.prototype.forEach.call(document.querySelectorAll('#pzTabs .pz-tab'),function(x){x.classList.toggle('on',x===t);});
+        var f=filtered(); if(f.length) idx=PZ.indexOf(f[0]); render(); });
+      $('pzList').addEventListener('click',function(e){ var r=e.target.closest('.pz-row[data-i]'); if(!r)return; idx=+r.getAttribute('data-i'); render(); });
+      document.addEventListener('keydown',function(e){
+        if(!$('phantomZone').classList.contains('show')) return;
+        if(/input|textarea/i.test((e.target.tagName||''))) return;
+        var f=filtered(); if(!f.length && e.key!=='u') return;
+        var pos=f.indexOf(PZ[idx]); if(pos<0) pos=0;
+        if(e.key==='j'||e.key==='ArrowDown'){e.preventDefault();pos=Math.min(f.length-1,pos+1);idx=PZ.indexOf(f[pos]);render();}
+        else if(e.key==='k'||e.key==='ArrowUp'){e.preventDefault();pos=Math.max(0,pos-1);idx=PZ.indexOf(f[pos]);render();}
+        else if(e.key==='x'||e.key==='Enter'){e.preventDefault(); var ck=$('pzArm'); if(ck&&!ck.checked){ck.checked=true;$('pzKill').classList.add('ready');toast('Armed — press X again to kill');} else if(PZ.length) kill();}
+        else if(e.key==='u'){undo();}
+        else if('1234'.indexOf(e.key)>-1){var tb=document.querySelectorAll('#pzTabs .pz-tab')[+e.key-1]; if(tb) tb.click();}
+      });
+    }
+    render();
+  };
+})();
+
 // ── Wan Board keyboard shortcuts ──────────────────────────────────────
 // Shift+letter is just a capital letter, so these MUST stand down while a
 // text field has focus — otherwise typing "Dents" or "No charger" into a
@@ -35451,4 +35853,33 @@ function nxRefreshBadges(){
   });
 })();
 </script>
+<div id="phantomZone">
+  <div class="pz-strip">
+    <button class="pz-scan" id="pzScan" data-tip="Re-checks the two reports against the Shopify catalog and rebuilds the list. Press after new sales."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Scan</button>
+    <div class="pz-drops">
+      <label class="pz-drop" id="pzDropList" data-tip="Your eBay Active Listings export — everything currently live on eBay. This is what we scan for ghosts."><b>Active Listings</b><small id="pzListInfo">drop CSV</small><input type="file" accept=".csv" hidden></label>
+      <label class="pz-drop" id="pzDropSold" data-tip="Your eBay Paid &amp; Shipped export. If a live listing shows up in here, it already sold — that's a phantom."><b>Paid &amp; Shipped</b><small id="pzSoldInfo">drop CSV</small><input type="file" accept=".csv" hidden></label>
+    </div>
+    <div class="pz-metrics">
+      <div class="pz-metric bad" data-tip="Confirmed phantoms — sold, gone, still live on eBay. Kill these."><b id="pzMPh">0</b><span>to clear</span></div>
+      <div class="pz-metric warn" data-tip="Probably sold, not certain. Check the shelf first."><b id="pzMCk">0</b><span>to check</span></div>
+      <div class="pz-metric ok" data-tip="Phantom listings you've killed this session."><b id="pzMEnd">0</b><span>killed</span></div>
+      <div class="pz-metric" style="border-left:1px solid var(--nx-line);padding-left:24px" data-tip="Total value of every live phantom — what could turn into cancellations and refunds if left up."><b id="pzMRisk">$0</b><span>at risk</span></div>
+    </div>
+  </div>
+  <div class="pz-body">
+    <div class="pz-col">
+      <div class="pz-tabs" id="pzTabs">
+        <button class="pz-tab on" data-f="all" data-tip="Everything flagged."><b id="pzTAll">0</b><span>all</span></button>
+        <button class="pz-tab k-phantom" data-f="phantom" data-tip="CONFIRMED: sold, gone, still live. Safe to kill."><b id="pzTPh">0</b><span>confirmed</span></button>
+        <button class="pz-tab k-check" data-f="check" data-tip="CHECK: probably sold, confirm on the shelf first."><b id="pzTCk">0</b><span>check</span></button>
+        <button class="pz-tab k-ghost" data-f="ghost" data-tip="GHOST: live on eBay, no Shopify match — usually a SKU typo."><b id="pzTGh">0</b><span>ghost</span></button>
+      </div>
+      <div class="pz-list" id="pzList"></div>
+      <div class="pz-kb">J / K move &nbsp;·&nbsp; X arm + kill &nbsp;·&nbsp; U undo &nbsp;·&nbsp; 1-4 filter</div>
+    </div>
+    <div class="pz-col"><div class="pz-work" id="pzWork"></div></div>
+  </div>
+</div>
+
 </body></html>
