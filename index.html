@@ -34541,7 +34541,10 @@ function ocHandoffPrompt(list){
 // The instructions and the import live in the same panel on purpose. Telling
 // someone where the export button is, then leaving them to hand-edit a 182KB
 // array, is why the catalog went seven days stale in the first place.
-function ocCatalogPanel(){
+window.ocCatalogPanel = ocCatalogPanel;
+  window.snapLabel = window.snapLabel || snapLabel;
+  window.snapStale = window.snapStale || snapStale;
+  function ocCatalogPanel(){
   var w=document.getElementById('ocCatPanel');
   if(!w){ w=document.createElement('div'); w.id='ocCatPanel'; document.body.appendChild(w); }
   var imp=catalogActive();
@@ -35608,6 +35611,11 @@ document.addEventListener('click',function(e){
 // Connect with the SKU searched (MC_AUTOFILL_REQUEST) — eBay can't end directly.
 (function(){
   var PZ=[], idx=0, FILTER='all', ended=0, LAST=null;
+  // Airtight SKU key. eBay stores labels with spaces/slashes/case that Shopify
+  // doesn't ('A5 BIN1' vs 'A5BIN1', 'i3/bin2' vs 'I3 BIN2'), which threw real
+  // products into GHOST. Collapse everything that only varies by formatting,
+  // but nothing that distinguishes two real SKUs — tested against both.
+  function skuKey(x){ return String(x||'').toUpperCase().replace(/\s+/g,'').replace(/[\/\\]/g,'').replace(/[^A-Z0-9]/g,'').trim(); }
   var LIST_ROWS=null, SOLD_INDEX=null;
   function $(id){return document.getElementById(id);}
   function esc(s){var d=document.createElement('div');d.textContent=(s==null?'':s);return d.innerHTML;}
@@ -35636,9 +35644,9 @@ document.addEventListener('click',function(e){
   // ── the detection: pure set arithmetic ──
   function shopStatus(sku){
     var cat=(typeof catalogRows==='function')?catalogRows():(window.SYGCatalog||[]);
-    var key=String(sku||'').toUpperCase().trim();
+    var key=skuKey(sku);
     for(var i=0;i<cat.length;i++){
-      if(String(cat[i][0]||'').toUpperCase().trim()===key){
+      if(skuKey(cat[i][0])===key){
         // snapshot rows are [sku,title,type,qty,price,pid]; qty at index 3
         return {found:true, qty:Number(cat[i][3]||0), title:cat[i][1], price:cat[i][4], pid:cat[i][5]};
       }
@@ -35651,12 +35659,12 @@ document.addEventListener('click',function(e){
     (SOLD_INDEX||[]).forEach(function(r){
       var sku=col(r,['custom label','sku']); if(!sku) return;
       var track=col(r,['tracking']);
-      soldByKey[sku.toUpperCase().trim()]={track:track, when:col(r,['shipped','sale date','paid'])};
+      soldByKey[skuKey(sku)]={track:track, when:col(r,['shipped','sale date','paid'])};
     });
     PZ=[]; 
     LIST_ROWS.forEach(function(r){
       var sku=col(r,['custom label','sku']); if(!sku) return;
-      var key=sku.toUpperCase().trim();
+      var key=skuKey(sku);
       var avail=Number(col(r,['available quantity','available'])||0);
       if(avail<=0) return;                              // not actually live/buyable
       var title=col(r,['title'])||sku;
@@ -35682,7 +35690,7 @@ document.addEventListener('click',function(e){
 
   var KM={phantom:{tag:'CONFIRMED PHANTOM',grp:'Confirmed — kill these',verd:'<b>Confirmed phantom.</b> Live on eBay, sold and shipped with tracking, and Shopify shows it gone. Nothing to check — kill it.'},
           check:{tag:'CHECK THE SHELF',grp:'Check the shelf first',verd:'<b>Likely phantom.</b> Looks gone, but no carrier scan (or no eBay sale found). Walk over and confirm before killing.'},
-          ghost:{tag:'GHOST — NO SHOPIFY MATCH',grp:'No Shopify match',verd:'<b>Ghost.</b> Live and sold on eBay, but no Shopify product has this SKU. A typo or deleted product — check the SKU before killing.'}};
+          ghost:{tag:'GHOST — NO SHOPIFY MATCH',grp:'No Shopify match',verd:'<b>No Shopify match.</b> This SKU isn\'t in the loaded catalog. If lots of items show this, the catalog is stale — click the Shopify catalog badge up top to refresh it. If the catalog is current, it\'s a real SKU typo or a deleted product.'}};
   function filtered(){ return FILTER==='all'?PZ:PZ.filter(function(p){return p.kind===FILTER;}); }
   function tabs(){ var c=function(k){return PZ.filter(function(p){return p.kind===k;}).length;};
     $('pzTAll').textContent=PZ.length; $('pzTPh').textContent=c('phantom'); $('pzTCk').textContent=c('check'); $('pzTGh').textContent=c('ghost'); }
@@ -35767,6 +35775,16 @@ document.addEventListener('click',function(e){
     if(typeof nxPageHeader==='function'){} // header band handled by chrome routing
     if(!z._bound){ z._bound=true;
       $('pzScan').addEventListener('click',scan);
+      var cb=$('pzCatBadge');
+      if(cb){
+        cb.addEventListener('click',function(){ if(typeof window.ocCatalogPanel==='function') window.ocCatalogPanel(); else toast('Catalog refresh lives on the Order Check screen'); });
+        try{
+          var info=$('pzCatInfo');
+          if(typeof window.snapLabel==='function'){ info.textContent=window.snapLabel(); }
+          if(typeof window.snapStale==='function' && window.snapStale()){ cb.classList.remove('loaded'); cb.style.borderColor='var(--nx-warn)'; info.style.color='var(--nx-warn)'; }
+          else { cb.classList.add('loaded'); }
+        }catch(e){ $('pzCatInfo').textContent='catalog loaded'; }
+      }
       $('pzDropList').querySelector('input').addEventListener('change',function(){loadFile(this,'list');});
       $('pzDropSold').querySelector('input').addEventListener('change',function(){loadFile(this,'sold');});
       $('pzTabs').addEventListener('click',function(e){ var t=e.target.closest('.pz-tab'); if(!t)return;
@@ -35860,6 +35878,7 @@ document.addEventListener('click',function(e){
       <label class="pz-drop" id="pzDropList" data-tip="Your eBay Active Listings export — everything currently live on eBay. This is what we scan for ghosts."><b>Active Listings</b><small id="pzListInfo">drop CSV</small><input type="file" accept=".csv" hidden></label>
       <label class="pz-drop" id="pzDropSold" data-tip="Your eBay Paid &amp; Shipped export. If a live listing shows up in here, it already sold — that's a phantom."><b>Paid &amp; Shipped</b><small id="pzSoldInfo">drop CSV</small><input type="file" accept=".csv" hidden></label>
     </div>
+    <label class="pz-drop" id="pzCatBadge" data-tip="The Shopify product list this tool checks SKUs against. If it's stale, real products show as GHOST. Click to refresh it." style="cursor:pointer"><b>Shopify catalog</b><small id="pzCatInfo">checking…</small></label>
     <div class="pz-metrics">
       <div class="pz-metric bad" data-tip="Confirmed phantoms — sold, gone, still live on eBay. Kill these."><b id="pzMPh">0</b><span>to clear</span></div>
       <div class="pz-metric warn" data-tip="Probably sold, not certain. Check the shelf first."><b id="pzMCk">0</b><span>to check</span></div>
