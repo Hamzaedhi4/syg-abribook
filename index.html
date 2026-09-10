@@ -34063,9 +34063,14 @@ function catalogFromCsv(text){
     }
     return -1;
   }
-  var cSku=col('variant sku'), cTitle=col('title'), cType=col('type','product category'),
-      cQty=col('variant inventory qty'), cPrice=col('variant price');
-  if(cSku<0) throw new Error('no "Variant SKU" column — is this the products export?');
+  // Accept either the raw Shopify products export ("Variant SKU", "Variant
+  // Inventory Qty"...) or an already-trimmed catalog ("SKU", "Qty"...). The
+  // trimmed one was silently rejected before, which left the old snapshot in
+  // place and made every real product look like a ghost.
+  var cSku=col('variant sku','sku'), cTitle=col('title'), cType=col('type','product category'),
+      cQty=col('variant inventory qty','qty'), cPrice=col('variant price','price'),
+      cStat=col('status'), cPid=col('productid','product id');
+  if(cSku<0) throw new Error('no SKU column — expected "Variant SKU" or "SKU"');
 
   // A Shopify export repeats the product title only on the first variant row
   // and leaves it blank on the rest, so carry it down.
@@ -34079,10 +34084,12 @@ function catalogFromCsv(text){
     var key=sku.toUpperCase();
     if(seen[key]) continue;                 // first variant wins, same as the old array
     seen[key]=1;
+    var _stat=(cStat>-1?String(r[cStat]||'').trim():'');
     out.push([sku, lastTitle, lastType,
               parseInt((cQty>-1?r[cQty]:'0')||'0',10)||0,
               parseFloat((cPrice>-1?r[cPrice]:'0')||'0')||0,
-              '']);                          // no product id in a CSV export
+              (cPid>-1?String(r[cPid]||'').trim():''),   // product id when present
+              _stat]);                                   // status: active/draft/archived
   }
   if(!out.length) throw new Error('no rows with a SKU');
   return out;
@@ -35655,7 +35662,8 @@ document.addEventListener('click',function(e){
     for(var i=0;i<cat.length;i++){
       if(skuKey(cat[i][0])===key){
         // snapshot rows are [sku,title,type,qty,price,pid]; qty at index 3
-        return {found:true, qty:Number(cat[i][3]||0), title:cat[i][1], price:cat[i][4], pid:cat[i][5]};
+        return {found:true, qty:Number(cat[i][3]||0), title:cat[i][1], price:cat[i][4],
+                pid:cat[i][5], status:String(cat[i][6]||'').toLowerCase()};
       }
     }
     return {found:false};
@@ -35678,7 +35686,10 @@ document.addEventListener('click',function(e){
       var price=Number(String(col(r,['price'])||'').replace(/[^0-9.]/g,''))||0;
       var sold=soldByKey[key];
       var shop=shopStatus(sku);
-      var shopGone = shop.found ? (shop.qty<=0) : null;   // null = no Shopify match
+      // Status beats quantity. 83% of the real oversells sold while the product
+      // was ARCHIVED — archived/draft is the clearest 'this shouldn't be live'
+      // signal in the whole dataset, and quantity alone missed it.
+      var shopGone = shop.found ? (shop.qty<=0 || shop.status==='archived' || shop.status==='draft') : null;
       var kind=null, why='';
       if(!shop.found){ kind='ghost'; why='No Shopify product carries this SKU'; }
       else if(sold && /\d/.test(sold.track||'')){ kind='phantom'; why='Sold and shipped with tracking'; }
@@ -35686,7 +35697,7 @@ document.addEventListener('click',function(e){
       else if(shopGone){ kind='check'; why='Shopify shows it gone; no eBay sale found'; }
       else return;                                        // live, in stock, unsold → clean
       PZ.push({sku:sku, name:title, spec:'', price:price, kind:kind, why:why,
-        shop: shop.found?('stock '+shop.qty):'no Shopify product',
+        shop: shop.found?((shop.status?shop.status+' · ':'')+'stock '+shop.qty):'no Shopify product',
         ebay:'live · $'+price, avail:avail+(avail>1?' — eBay says '+avail+' left':' — eBay still buyable'),
         sold: sold ? ((/\d/.test(sold.track||'')?'shipped · tracking '+sold.track:'on report · NO tracking')+(sold.when?' · '+sold.when:'')) : 'not on report'});
     });
@@ -35706,6 +35717,8 @@ document.addEventListener('click',function(e){
       var sku=row[0]; if(!sku) return;
       var k=skuKey(sku); if(!k || liveKeys[k]) return;      // already live on eBay
       var qty=Number(row[3]||0); if(qty<=0) return;          // nothing to sell
+      var st=String(row[6]||'').toLowerCase();
+      if(st && st!=='active') return;                        // draft/archived aren't ready to list
       // created date is optional in the catalog layer; when absent we cannot
       // apply the 60-day rule, so say so rather than silently including it.
       var made=row[6]?Date.parse(row[6]):NaN;
@@ -35715,7 +35728,7 @@ document.addEventListener('click',function(e){
       if(!recent) return;
       PZ.push({sku:sku, name:row[1]||sku, spec:'', price:Number(row[4]||0), kind:'unlisted',
         why:'Active in Shopify with stock, not live on eBay',
-        shop:'active · '+qty+' in stock · '+ageTxt,
+        shop:'active · '+qty+' in stock'+(ageTxt?' · '+ageTxt:''),
         ebay:'not listed', avail:'no eBay listing found',
         sold:'n/a — never listed'});
     });
@@ -35729,7 +35742,15 @@ document.addEventListener('click',function(e){
           check:{tag:'CHECK THE SHELF',grp:'Check the shelf first',verd:'<b>Likely phantom.</b> Looks gone, but no carrier scan (or no eBay sale found). Walk over and confirm before killing.'},
           unlisted:{tag:'READY TO LIST',grp:'Prepped but never listed',verd:'<b>Not on eBay yet.</b> Active in Shopify with stock, but no live listing. Prepped and forgotten \u2014 launch it and it starts earning.'},
           ghost:{tag:'GHOST — NO SHOPIFY MATCH',grp:'No Shopify match',verd:'<b>No Shopify match.</b> This SKU isn\'t in the loaded catalog. If lots of items show this, the catalog is stale — click the Shopify catalog badge up top to refresh it. If the catalog is current, it\'s a real SKU typo or a deleted product.'}};
-  function filtered(){ return FILTER==='all'?PZ:PZ.filter(function(p){return p.kind===FILTER;}); }
+  var QUERY='';
+  function filtered(){
+    var base = FILTER==='all'?PZ:PZ.filter(function(p){return p.kind===FILTER;});
+    if(!QUERY) return base;
+    var q=QUERY.toLowerCase();
+    return base.filter(function(p){
+      return (p.sku+' '+p.name+' '+(p.spec||'')).toLowerCase().indexOf(q)>-1;
+    });
+  }
   function tabs(){ var c=function(k){return PZ.filter(function(p){return p.kind===k;}).length;};
     $('pzTAll').textContent=PZ.length; $('pzTPh').textContent=c('phantom'); $('pzTCk').textContent=c('check'); $('pzTGh').textContent=c('ghost'); $('pzTUn').textContent=c('unlisted'); }
   function metrics(){
@@ -35771,7 +35792,7 @@ document.addEventListener('click',function(e){
         '</div>'+
         '<div class="pz-verd k-'+p.kind+'">'+km.verd+'</div>'+
         '<div class="pz-meta">SKU <span class="mono">'+esc(p.sku)+'</span></div>'+
-        '<div class="pz-look"><button id="pzShop" data-tip="Opens this product in Shopify."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2l1.5 4h9L18 2M4 6h16l-1.5 13a1 1 0 01-1 1H6.5a1 1 0 01-1-1L4 6z"/></svg>Find on Shopify</button>'+
+        '<div class="pz-look"><button id="pzShop" data-tip="Opens Shopify in a new tab and searches this SKU."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2l1.5 4h9L18 2M4 6h16l-1.5 13a1 1 0 01-1 1H6.5a1 1 0 01-1-1L4 6z"/></svg>Find on Shopify</button>'+
           '<button id="pzEbay" data-tip="Opens the live eBay listing."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6"/></svg>Open on eBay</button></div>'+
         (p.kind==='unlisted'
           ? '<button class="pz-kill pz-launch ready" id="pzKill" data-tip="Opens Marketplace Connect with this SKU searched, ready to publish it to eBay."><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Launch Listing on Marketplace Connect</button>'+
@@ -35782,7 +35803,12 @@ document.addEventListener('click',function(e){
       '</div>';
     var armEl=$('pzArm');
     if(armEl) armEl.addEventListener('change',function(e){ $('pzKill').classList.toggle('ready',e.target.checked); });
-    $('pzShop').addEventListener('click',function(){ var s=shopStatus(p.sku); if(s.found&&s.pid) window.open('https://xpp09p-dz.myshopify.com/admin/products/'+s.pid,'_blank','noopener'); else toast('No Shopify product id for this SKU'); });
+    // Search by SKU rather than deep-linking by product id: the id is often
+    // absent from a CSV import, and a search always works — it also lands you
+    // somewhere useful when the SKU is the very thing in question.
+    $('pzShop').addEventListener('click',function(){
+      window.open('https://admin.shopify.com/store/xpp09p-dz/products?query='+encodeURIComponent(p.sku),'_blank','noopener');
+    });
     $('pzEbay').addEventListener('click',function(){ toast('Open the eBay listing for '+p.sku); });
     $('pzKill').addEventListener('click',function(){ if($('pzKill').classList.contains('ready')) kill(); });
   }
@@ -35818,6 +35844,11 @@ document.addEventListener('click',function(e){
     if(typeof nxPageHeader==='function'){} // header band handled by chrome routing
     if(!z._bound){ z._bound=true;
       $('pzScan').addEventListener('click',scan);
+      $('pzSearch').addEventListener('input',function(){
+        QUERY=this.value.trim();
+        var f=filtered(); if(f.length) idx=PZ.indexOf(f[0]);
+        renderList(); renderWork();
+      });
       var cb=$('pzCatBadge');
       if(cb){
         cb.addEventListener('click',function(){ if(typeof window.ocCatalogPanel==='function') window.ocCatalogPanel(); else toast('Catalog refresh lives on the Order Check screen'); });
@@ -35937,6 +35968,10 @@ document.addEventListener('click',function(e){
         <button class="pz-tab k-check" data-f="check" data-tip="CHECK: probably sold, confirm on the shelf first."><b id="pzTCk">0</b><span>check</span></button>
         <button class="pz-tab k-ghost" data-f="ghost" data-tip="GHOST: live on eBay, no Shopify match — usually a SKU typo."><b id="pzTGh">0</b><span>ghost</span></button>
         <button class="pz-tab k-unlisted" data-f="unlisted" data-tip="READY TO LIST: prepped in Shopify with stock, added in the last 60 days, but never pushed to eBay."><b id="pzTUn">0</b><span>to list</span></button>
+      </div>
+      <div style="padding:9px 12px;border-bottom:1px solid var(--nx-line)">
+        <input id="pzSearch" placeholder="Filter by SKU, title or type…" autocomplete="off"
+          style="width:100%;height:32px;border:1px solid var(--nx-line-2);border-radius:7px;padding:0 10px;font:400 12.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card)">
       </div>
       <div class="pz-list" id="pzList"></div>
       <div class="pz-kb">J / K move &nbsp;·&nbsp; X arm + kill &nbsp;·&nbsp; U undo &nbsp;·&nbsp; 1-4 filter</div>
