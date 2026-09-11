@@ -4075,6 +4075,21 @@ html.nx-sb-off .nx-chrome .nxh-sb{ display:none; }
 #phantomZone .pz-done.r{background:var(--nx-bad)} #phantomZone .pz-done.r:hover{background:#B91C1C}
 #phantomZone .pz-done.g{background:var(--nx-ok)} #phantomZone .pz-done.g:hover{background:#15803D}
 #phantomZone .pz-go:hover{border-color:var(--nx-blue);color:var(--nx-blue)}
+#phantomZone .pz-actbar{display:flex;flex-direction:column;gap:8px}
+#phantomZone .pz-actlab{font:600 12px var(--nx-sans);color:var(--nx-muted)}
+#phantomZone .pz-actrow{display:flex;gap:8px}
+#phantomZone .pz-act{flex:1;height:42px;border:1px solid var(--nx-line-2);border-radius:9px;padding:0 12px;
+  font:500 13.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card);cursor:pointer}
+#phantomZone .pz-act:focus{outline:2px solid var(--nx-blue);outline-offset:-1px}
+#phantomZone .pz-actgo{flex:0 0 84px;height:42px;border:0;border-radius:9px;background:var(--nx-blue);color:#fff;
+  font:600 13.5px var(--nx-sans);cursor:pointer}
+#phantomZone .pz-actgo:hover{background:var(--nx-blue-dk)}
+#phantomZone .pz-acthint{font-size:12px;color:var(--nx-muted);line-height:1.5;min-height:18px}
+#phantomZone .pz-done{margin-top:6px;width:100%;font:600 13px var(--nx-sans);color:#fff;border:0;border-radius:9px;
+  padding:12px;cursor:pointer;opacity:.55}
+#phantomZone .pz-done.armed,#phantomZone .pz-done.g,#phantomZone .pz-done.v{opacity:1}
+#phantomZone .pz-done.r{background:var(--nx-bad)} #phantomZone .pz-done.g{background:var(--nx-ok)}
+#phantomZone .pz-done.v{background:#7C3AED}
 </style>
 <style id="nx-trace-css">
 #traceZone{position:fixed;top:var(--nx-hd-h);left:var(--nx-sb-w);right:0;bottom:0;display:none;
@@ -22975,14 +22990,14 @@ function renderAnswer(q) {
     }
 
     const n = soldRows ? soldRows.length : 0;
-    const tracked = soldRows ? soldRows.filter(function(r){ return /\d/.test(RC(r,['tracking'])||''); }).length : 0;
+    const tracked = soldRows ? soldRows.filter(function(r){ return /\d/.test(RC(r,['tracking number','tracking'])||''); }).length : 0;
     const avail = liveRow ? Number(RC(liveRow,['available quantity','available'])||0) : 0;
     const isLive = avail > 0;
     const stock = shop ? shop.qty : null;
     const fullSku = (universe[k] && universe[k].raw) || sku;
     const title = (soldRows && RC(soldRows[0],['item title','title'])) || (shop && shop.title) || (liveRow && RC(liveRow,['title'])) || fullSku;
     const last = soldRows ? soldRows[0] : null;
-    const when = last ? (RC(last,['shipped on','sale date','paid on'])||'an unknown date') : '';
+    const when = last ? (RC(last,['shipped on date','sale date','paid on date'])||'an unknown date') : '';
     const who  = last ? (RC(last,['buyer username'])||'a buyer') : '';
 
     // multi-quantity is decided by stock covering the sales — checked BEFORE
@@ -23032,9 +23047,9 @@ function renderAnswer(q) {
              grey:['#64748B','#F1F5F9','#E2E8F0']}[tone];
 
     const timeline = soldRows ? soldRows.slice(0,6).map(function(r){
-      const t=RC(r,['tracking']);
+      const t=RC(r,['tracking number','tracking']);
       return '<div style="display:grid;grid-template-columns:82px 1fr auto;gap:10px;padding:6px 0;border-top:1px solid '+C[2]+';font-size:12.5px">'+
-        '<span style="opacity:.65">'+esc(RC(r,['sale date','paid on'])||'—')+'</span>'+
+        '<span style="opacity:.65">'+esc(RC(r,['sale date','paid on date','paid on'])||'—')+'</span>'+
         '<span><span style="font-family:monospace;font-size:11.5px">'+esc(RC(r,['order number'])||'')+'</span>'+
         '<span style="opacity:.6"> · '+esc(RC(r,['buyer username'])||'')+(t?'':' · no tracking')+'</span></span>'+
         '<span style="font-weight:600">'+esc(RC(r,['sold for','total price'])||'')+'</span></div>';
@@ -36167,11 +36182,21 @@ document.addEventListener('click',function(e){
   }
   // Match on a normalised header so 'Custom label (SKU)' and 'Custom Label'
   // both resolve, and stray punctuation/casing never costs us a column.
+  // Exact match first, substring only as a fallback. Substring-only matching
+  // depends on which key the browser happens to iterate first, so asking for
+  // "shipped" could return "Maximum Estimated Delivery Date" in one export and
+  // "Shipped On Date" in another — silently reporting a delivery estimate as
+  // the ship date. Exact names remove that coin-flip.
   function col(row, names){
     var norm=function(x){ return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,''); };
-    for(var i=0;i<names.length;i++){
+    var i,k;
+    for(i=0;i<names.length;i++){
       var want=norm(names[i]);
-      for(var k in row){ if(norm(k).indexOf(want)>-1) return row[k]; }
+      for(k in row){ if(norm(k)===want && String(row[k]||'').trim()!=='') return row[k]; }
+    }
+    for(i=0;i<names.length;i++){
+      var w2=norm(names[i]);
+      for(k in row){ if(norm(k).indexOf(w2)>-1 && String(row[k]||'').trim()!=='') return row[k]; }
     }
     return '';
   }
@@ -36204,8 +36229,8 @@ document.addEventListener('click',function(e){
     var soldByKey={};
     (SOLD_INDEX||[]).forEach(function(r){
       var sku=col(r,['custom label','sku']); if(!sku) return;
-      var track=col(r,['tracking']);
-      soldByKey[skuKey(sku)]={track:track, when:col(r,['shipped','sale date','paid'])};
+      var track=col(r,['tracking number','tracking']);
+      soldByKey[skuKey(sku)]={track:track, when:col(r,['shipped on date','shipped on','sale date','paid on date'])};
     });
     PZ=[]; 
     LIST_ROWS.forEach(function(r){
@@ -36292,12 +36317,12 @@ document.addEventListener('click',function(e){
     idx=0; render(); toast('Scanned · '+PZ.length+' phantom'+(PZ.length===1?'':'s')+' found');
   }
 
-  var KM={phantom:{tag:'CONFIRMED PHANTOM',grp:'Confirmed — kill these',verd:'<b>Confirmed phantom.</b> Live on eBay, sold and shipped with tracking, and Shopify shows it gone. Nothing to check — kill it.'},
-          check:{tag:'CHECK THE SHELF',grp:'Check the shelf first',verd:'<b>Likely phantom.</b> Looks gone, but no carrier scan (or no eBay sale found). Walk over and confirm before killing.'},
-          phantomstock:{tag:'SOLD \u2014 STOCK NOT UPDATED',grp:'Gone, but Shopify still holds stock',
-            verd:'<b>Do not list this.</b> Shopify shows it active with stock, but the shipped report says it already went out. The sale never came back to Shopify, so the stock is wrong \u2014 fix the quantity instead of listing a unit that is gone.'},
-          unlisted:{tag:'READY TO LIST',grp:'Prepped but never listed',verd:'<b>Not on eBay yet.</b> Active in Shopify with stock, but no live listing. Prepped and forgotten \u2014 launch it and it starts earning.'},
-          ghost:{tag:'GHOST — NO SHOPIFY MATCH',grp:'No Shopify match',verd:'<b>No Shopify match.</b> This SKU isn\'t in the loaded catalog. If lots of items show this, the catalog is stale — click the Shopify catalog badge up top to refresh it. If the catalog is current, it\'s a real SKU typo or a deleted product.'}};
+  var KM={phantom:{tag:'ALREADY SOLD, STILL LISTED',grp:'Already sold — take these down',verd:'<b>This already sold and went out.</b> The buyer has it, but the eBay listing never came down \u2014 so someone else can still buy it. Take the listing down before that happens.'},
+          check:{tag:'GO LOOK ON THE SHELF',grp:'Go look before doing anything',verd:'<b>It looks sold, but we cannot prove it left.</b> There is no carrier scan on it. Walk over to the shelf and see for yourself before taking the listing down \u2014 if it is still there, do nothing.'},
+          phantomstock:{tag:'SOLD, BUT SHOPIFY STILL COUNTS IT',grp:'Sold, but Shopify still thinks you have one',
+            verd:'<b>Do not put this on eBay \u2014 it is already gone.</b> Shopify still shows one in stock, but eBay says it sold and shipped. Shopify never got told about the sale, so the count is wrong. Fix the number instead.'},
+          unlisted:{tag:'READY TO SELL',grp:'Sitting here, never put on eBay',verd:'<b>This is sitting here doing nothing.</b> Shopify has it in stock and nothing has sold it, but it was never put on eBay. Put it up and it can start selling.'},
+          ghost:{tag:'NOT IN SHOPIFY',grp:'This SKU is not in Shopify',verd:'<b>No Shopify match.</b> This SKU isn\'t in the loaded catalog. If lots of items show this, the catalog is stale — click the Shopify catalog badge up top to refresh it. If the catalog is current, it\'s a real SKU typo or a deleted product.'}};
   var QUERY='', TYPE='';
   function filtered(){
     var base = FILTER==='all'?PZ:PZ.filter(function(p){return p.kind===FILTER;});
@@ -36346,6 +36371,48 @@ document.addEventListener('click',function(e){
     });
     l.innerHTML=html;
   }
+
+  // The same handful of moves, offered as a menu rather than a fixed sequence —
+  // you rarely need all of them, and which one you want depends on what you
+  // already know. Ordered per bucket so the most likely one is preselected.
+  var PZ_ACTIONS={
+    mc:      {id:'mc',      label:'Open it in Marketplace Connect',  hint:'Opens MC with this SKU already searched \u2014 where listings actually go up or come down.'},
+    shopify: {id:'shopify', label:'Look it up in Shopify',           hint:'Opens Shopify searched for this SKU, to check or fix the stock count.'},
+    orders:  {id:'orders',  label:'Check if someone ordered it',     hint:'Searches your eBay orders for this SKU \u2014 do this before ending anything.'},
+    msg:     {id:'msg',     label:'Message the buyer',               hint:'Opens the eBay order with the cancellation message ready. Only if there is an order.'},
+    ebay:    {id:'ebay',    label:'See the live eBay listing',       hint:'Opens the listing as buyers see it right now.'},
+    history: {id:'history', label:'Show its full history',           hint:'Opens Trace \u2014 every time this SKU has sold, with dates and tracking.'}
+  };
+  function actionsFor(p){
+    var order;
+    if(p.kind==='phantom')           order=['orders','msg','mc','shopify','ebay','history'];
+    else if(p.kind==='check')        order=['history','orders','ebay','mc','shopify','msg'];
+    else if(p.kind==='ghost')        order=['ebay','history','shopify','mc','orders','msg'];
+    else if(p.kind==='phantomstock') order=['shopify','orders','history','msg','mc'];
+    else                             order=['mc','shopify','history','ebay'];
+    return order.map(function(k){ return PZ_ACTIONS[k]; });
+  }
+  function runAction(id,p){
+    if(id==='mc'){
+      mcOpen(p.sku,function(pre){ if(pre===false) toast('MC opened, but the search wasn\u2019t pre-filled \u2014 extension not loaded'); });
+    } else if(id==='shopify'){
+      window.open('https://admin.shopify.com/store/xpp09p-dz/products?query='+encodeURIComponent(p.sku),'_blank','noopener');
+    } else if(id==='orders'){
+      window.open('https://www.ebay.com/sh/ord/?filter=status:ALL&q='+encodeURIComponent(p.sku),'_blank','noopener');
+    } else if(id==='msg'){
+      if(p.item) window.open('https://www.ebay.com/mesh/ord/details?redirect=true&itemid='+encodeURIComponent(p.item)+'#syg-msg','_blank','noopener');
+      else window.open('https://www.ebay.com/sh/ord/?filter=status:ALL&q='+encodeURIComponent(p.sku),'_blank','noopener');
+    } else if(id==='ebay'){
+      if(p.item) window.open('https://www.ebay.com/itm/'+p.item,'_blank','noopener');
+      else window.open('https://www.ebay.com/sch/i.html?_ssn=gadgetpirates&_nkw='+encodeURIComponent(p.sku),'_blank','noopener');
+    } else if(id==='history'){
+      if(typeof window.openTrace==='function'){
+        if(typeof window.openModule==='function') window.openModule('trace');
+        setTimeout(function(){ var q=document.getElementById('tzQuery'); if(q){ q.value=p.sku; q.dispatchEvent(new Event('input',{bubbles:true})); } },250);
+      } else toast('Trace isn\u2019t available');
+    }
+  }
+
   function renderWork(){
     var w=$('pzWork');
     if(!PZ.length){ w.innerHTML='<div class="pz-empty"><div class="big">🎉</div><b>All clear.</b><br>Drop the two reports and press Scan to check again.</div>'; return; }
@@ -36365,71 +36432,24 @@ document.addEventListener('click',function(e){
           (p.item?'  ·  eBay item <span class="mono">'+esc(p.item)+'</span>':'')+'</div>'+
         '<div class="pz-look"><button id="pzShop" data-tip="Opens Shopify in a new tab and searches this SKU."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2l1.5 4h9L18 2M4 6h16l-1.5 13a1 1 0 01-1 1H6.5a1 1 0 01-1-1L4 6z"/></svg>Find on Shopify</button>'+
           '<button id="pzEbay" data-tip="Opens the live eBay listing."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6"/></svg>Open on eBay</button></div>'+
-        (p.kind==='phantomstock'
-          ? // A sequence, not one button. Getting this wrong in the wrong order
-            // is how a buyer gets a cancellation they did not need — so the
-            // order-check comes before the message, and the message before the
-            // listing is touched.
-            '<div class="pz-steps" id="pzSteps">'+
-              '<div class="pz-step" data-step="1"><span class="n">1</span>'+
-                '<div class="b"><b>Correct the stock in Shopify</b>'+
-                '<small>It already shipped, so set the quantity to what is really on the shelf.</small></div>'+
-                '<button type="button" class="pz-go" data-act="stock">Open Shopify</button></div>'+
-              '<div class="pz-step" data-step="2"><span class="n">2</span>'+
-                '<div class="b"><b>Check for an open order</b>'+
-                '<small>If someone bought it after it was already gone, that order needs handling first.</small></div>'+
-                '<button type="button" class="pz-go" data-act="orders">Check orders</button></div>'+
-              '<div class="pz-step" data-step="3"><span class="n">3</span>'+
-                '<div class="b"><b>Message the buyer, if there is one</b>'+
-                '<small>Only if step 2 found an order. Opens eBay with the cancellation message ready.</small></div>'+
-                '<button type="button" class="pz-go" data-act="msg">Message buyer</button></div>'+
-              '<div class="pz-step" data-step="4"><span class="n">4</span>'+
-                '<div class="b"><b>Open it in Marketplace Connect</b>'+
-                '<small>Last, once stock is right and any order is dealt with.</small></div>'+
-                '<button type="button" class="pz-go" data-act="mc">Open MC</button></div>'+
-              '<button type="button" class="pz-done" data-act="done">Done \u2014 clear it from the list</button>'+
-            '</div>'
-        : p.kind==='unlisted'
-          ? '<div class="pz-steps" id="pzSteps">'+
-              '<div class="pz-step" data-step="1"><span class="n g">1</span>'+
-                '<div class="b"><b>Confirm it is actually here</b>'+
-                '<small>Shopify says in stock and nothing shipped it \u2014 worth a glance before you list it.</small></div>'+
-                '<button type="button" class="pz-go" data-act="stock">Open Shopify</button></div>'+
-              '<div class="pz-step" data-step="2"><span class="n g">2</span>'+
-                '<div class="b"><b>Launch it in Marketplace Connect</b>'+
-                '<small>Publishes it to eBay so it starts earning.</small></div>'+
-                '<button type="button" class="pz-go" data-act="mc">Open MC</button></div>'+
-              '<button type="button" class="pz-done g" data-act="done">Done \u2014 clear it from the list</button>'+
-            '</div>'
-          : // Killing a live listing has an order risk the other paths do not:
-            // the phantom may ALREADY have a buyer on it. So orders are checked
-            // before anything is ended, and the buyer is messaged before the
-            // listing disappears from under them.
-            '<label class="pz-arm" data-tip="Tick once you\u2019re sure it\u2019s gone. Unlocks the steps so nothing ends by accident."><input type="checkbox" id="pzArm">'+(p.kind==='check'?'I walked over — it\u2019s not on the shelf':p.kind==='ghost'?'I checked the SKU — this shouldn\u2019t be live':'Confirmed — the unit is gone')+'</label>'+
-            '<div class="pz-steps locked" id="pzSteps">'+
-              '<div class="pz-step" data-step="1"><span class="n r">1</span>'+
-                '<div class="b"><b>Check for an order on it</b>'+
-                '<small>It is still live, so somebody may already have bought it. Handle that first.</small></div>'+
-                '<button type="button" class="pz-go" data-act="orders">Check orders</button></div>'+
-              '<div class="pz-step" data-step="2"><span class="n r">2</span>'+
-                '<div class="b"><b>Message the buyer, if there is one</b>'+
-                '<small>Only if step 1 found an order. Opens eBay with the cancellation message ready.</small></div>'+
-                '<button type="button" class="pz-go" data-act="msg">Message buyer</button></div>'+
-              '<div class="pz-step" data-step="3"><span class="n r">3</span>'+
-                '<div class="b"><b>Kill the listing in Marketplace Connect</b>'+
-                '<small>eBay has no direct end action \u2014 MC is where it comes down.</small></div>'+
-                '<button type="button" class="pz-go" data-act="mc">Open MC</button></div>'+
-              '<div class="pz-step" data-step="4"><span class="n r">4</span>'+
-                '<div class="b"><b>Set the stock right in Shopify</b>'+
-                '<small>Stops the same unit coming back as a phantom next sync.</small></div>'+
-                '<button type="button" class="pz-go" data-act="stock">Open Shopify</button></div>'+
-              '<button type="button" class="pz-done r" data-act="done">Done \u2014 clear it from the list</button>'+
-            '</div>')+
-      '</div>';
+        '<div class="pz-actbar">'+
+          '<label class="pz-actlab" for="pzAct">What do you want to do?</label>'+
+          '<div class="pz-actrow">'+
+            '<select id="pzAct" class="pz-act">'+
+              actionsFor(p).map(function(a){ return '<option value="'+a.id+'">'+a.label+'</option>'; }).join('')+
+            '</select>'+
+            '<button type="button" class="pz-actgo" id="pzActGo">Go</button>'+
+          '</div>'+
+          '<div class="pz-acthint" id="pzActHint">'+esc(actionsFor(p)[0].hint)+'</div>'+
+          (p.kind==='phantom'||p.kind==='check'||p.kind==='ghost'
+            ? '<label class="pz-arm" data-tip="Tick once you\u2019re sure it\u2019s gone."><input type="checkbox" id="pzArm">'+
+              (p.kind==='check'?'I walked over \u2014 it\u2019s not on the shelf':p.kind==='ghost'?'I checked the SKU \u2014 this shouldn\u2019t be live':'Confirmed \u2014 the unit is gone')+'</label>'
+            : '')+
+          '<button type="button" class="pz-done '+(p.kind==='unlisted'?'g':p.kind==='phantomstock'?'v':'r')+'" id="pzDone">Done \u2014 clear it from the list</button>'+
+        '</div>';
     var armEl=$('pzArm');
     if(armEl) armEl.addEventListener('change',function(e){
-      var kb=$('pzKill'); if(kb) kb.classList.toggle('ready',e.target.checked);
-      var st=$('pzSteps'); if(st) st.classList.toggle('locked', !e.target.checked);
+      var db=$('pzDone'); if(db) db.classList.toggle('armed', e.target.checked);
     });
     // Search by SKU rather than deep-linking by product id: the id is often
     // absent from a CSV import, and a search always works — it also lands you
@@ -36447,31 +36467,24 @@ document.addEventListener('click',function(e){
     var killBtn=$('pzKill');
     if(killBtn) killBtn.addEventListener('click',function(){ if(killBtn.classList.contains('ready')) kill(); });
 
-    var steps=$('pzSteps');
-    if(steps) steps.addEventListener('click',function(ev){
-      var b=ev.target.closest('[data-act]'); if(!b) return;
-      var act=b.getAttribute('data-act');
-      var row=b.closest('.pz-step');
-      function tick(){ if(row){ row.classList.add('done'); } }
-      if(act==='stock'){
-        window.open('https://admin.shopify.com/store/xpp09p-dz/products?query='+encodeURIComponent(p.sku),'_blank','noopener');
-        tick();
-      } else if(act==='orders'){
-        // Search our own eBay orders for this SKU — the quickest way to see
-        // whether anybody is waiting on a unit that is already gone.
-        window.open('https://www.ebay.com/sh/ord/?filter=status:ALL&q='+encodeURIComponent(p.sku),'_blank','noopener');
-        tick();
-      } else if(act==='msg'){
-        if(p.item) window.open('https://www.ebay.com/mesh/ord/details?redirect=true&itemid='+encodeURIComponent(p.item)+'#syg-msg','_blank','noopener');
-        else window.open('https://www.ebay.com/sh/ord/?filter=status:ALL&q='+encodeURIComponent(p.sku),'_blank','noopener');
-        tick();
-      } else if(act==='mc'){
-        mcOpen(p.sku,function(prefilled){
-          tick();
-          if(prefilled===false) toast('MC opened, but the search was not pre-filled \u2014 extension not loaded');
-        });
-      } else if(act==='done'){ pzClear(); }
+    // The menu: change updates the explanation, Go runs it. Nothing is
+    // removed from the list until you say you're done with the item.
+    var sel=$('pzAct'), hint=$('pzActHint');
+    function syncHint(){
+      if(!sel||!hint) return;
+      var a=actionsFor(p).filter(function(x){ return x.id===sel.value; })[0];
+      if(a) hint.textContent=a.hint;
+    }
+    if(sel) sel.addEventListener('change',syncHint);
+    var go=$('pzActGo');
+    if(go) go.addEventListener('click',function(){ if(sel) runAction(sel.value,p); });
+    var doneBtn=$('pzDone');
+    if(doneBtn) doneBtn.addEventListener('click',function(){
+      var ck=$('pzArm');
+      if(ck && !ck.checked){ toast('Tick the confirmation first'); ck.focus(); return; }
+      pzClear();
     });
+
   }
   // The screen showed numbers but never said what to do with them. This bar
   // always names the next move, based on what's actually loaded — so nobody has
@@ -36675,8 +36688,7 @@ document.addEventListener('click',function(e){
           var ck=$('pzArm');
           if(ck && !ck.checked){
             ck.checked=true;
-            var st=$('pzSteps'); if(st) st.classList.remove('locked');
-            toast('Steps unlocked \u2014 press X again to clear this one');
+            toast('Confirmed \u2014 press X again to clear this one');
           } else if(PZ.length){ pzClear(); }
         }
         else if(e.key==='u'){undo();}
@@ -36816,11 +36828,11 @@ function shovoRenderHints(q){
   //       3 sold with no carrier scan · duplicates of one order number
   function verdict(rows, shop){
     var n=rows.length;
-    var tracked=rows.filter(function(r){ return /\d/.test(C(r,['tracking'])||''); }).length;
+    var tracked=rows.filter(function(r){ return /\d/.test(C(r,['tracking number','tracking'])||''); }).length;
     var orders={}; rows.forEach(function(r){ var o=C(r,['order number']); if(o) orders[o]=(orders[o]||0)+1; });
     var dupOrder=Object.keys(orders).filter(function(o){ return orders[o]>1; });
     var last=rows[0];
-    var when=C(last,['shipped on','sale date','paid on'])||'an unknown date';
+    var when=C(last,['shipped on date','sale date','paid on date'])||'an unknown date';
     var who=C(last,['buyer username'])||'a buyer';
 
     // A duplicated order number is a report artefact, not two sales.
@@ -36868,10 +36880,10 @@ function shovoRenderHints(q){
       return String(C(b,['sale date','paid on'])).localeCompare(String(C(a,['sale date','paid on'])));
     });
     var events=sorted.map(function(r,i){
-      var trk=C(r,['tracking']);
+      var trk=C(r,['tracking number','tracking']);
       return '<div class="tz-ev'+(i>0?' dup':'')+'">'+
         '<span class="dot"></span>'+
-        '<time>'+esc(C(r,['sale date','paid on'])||'—')+'</time>'+
+        '<time>'+esc(C(r,['sale date','paid on date','paid on'])||'—')+'</time>'+
         '<span><span class="mono">'+esc(C(r,['order number'])||'')+'</span>'+
           '<span class="who"> · '+esc(C(r,['buyer username'])||'buyer unknown')+
           (trk? ' · tracking '+esc(trk) : ' · <b>no tracking</b>')+'</span></span>'+
