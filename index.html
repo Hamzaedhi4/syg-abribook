@@ -4044,6 +4044,68 @@ html.nx-sb-off .nx-chrome .nxh-sb{ display:none; }
 #phantomZone .pz-guide.go{background:#FEF2F2;border-color:#FECACA} #phantomZone .pz-guide.go b{color:var(--nx-bad)}
 #phantomZone .pz-guide.clear{background:#F0FDF4;border-color:#BBF7D0} #phantomZone .pz-guide.clear b{color:var(--nx-ok)}
 </style>
+<style id="nx-trace-css">
+#traceZone{position:fixed;top:var(--nx-hd-h);left:var(--nx-sb-w);right:0;bottom:0;display:none;
+  flex-direction:column;background:var(--nx-bg);color:var(--nx-ink);font-family:var(--nx-sans);z-index:10036;overflow:hidden}
+#traceZone.show{display:flex}
+#traceZone .tz-strip{display:flex;align-items:center;gap:14px;margin:14px 24px 0;padding:12px 16px;
+  background:var(--nx-card);border:1px solid var(--nx-line);border-radius:12px}
+#traceZone .tz-drop{display:flex;flex-direction:column;justify-content:center;padding:7px 12px;border-radius:8px;
+  cursor:pointer;border:1.5px dashed var(--nx-line-2);background:var(--nx-bg);min-width:150px;flex:none}
+#traceZone .tz-drop.loaded{border-style:solid;border-color:var(--nx-ok);background:#F0FDF4}
+#traceZone .tz-drop b{font-size:12px;font-weight:600} #traceZone .tz-drop.loaded b{color:var(--nx-ok)}
+#traceZone .tz-drop small{font-size:10.5px;color:var(--nx-muted);margin-top:1px}
+#traceZone .tz-searchwrap{flex:1;min-width:0}
+#traceZone .tz-searchwrap input{width:100%;height:40px;border:1px solid var(--nx-line-2);border-radius:9px;
+  padding:0 14px;font:400 14px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card)}
+#traceZone .tz-searchwrap input:focus{outline:2px solid var(--nx-blue);outline-offset:-1px}
+#traceZone .tz-metrics{display:flex;gap:20px;flex:none}
+#traceZone .tz-metric b{font:600 20px var(--nx-sans);line-height:1;display:block}
+#traceZone .tz-metric span{font-size:11px;color:var(--nx-muted)}
+#traceZone .tz-metric.warn b{color:var(--nx-warn)}
+#traceZone .tz-body{flex:1;min-height:0;padding:14px 24px 20px;overflow:auto}
+#traceZone .tz-results{display:flex;flex-direction:column;gap:12px}
+#traceZone .tz-card{background:var(--nx-card);border:1px solid var(--nx-line);border-radius:12px;overflow:hidden}
+#traceZone .tz-head{padding:14px 18px;border-bottom:1px solid var(--nx-line);display:flex;gap:14px;align-items:flex-start}
+#traceZone .tz-head .t{flex:1;min-width:0}
+#traceZone .tz-head b{font-size:15.5px;font-weight:600;display:block}
+#traceZone .tz-head .sku{font:500 12px 'IBM Plex Mono',monospace;color:var(--nx-muted);margin-top:2px;display:block}
+#traceZone .tz-tag{font:600 10px var(--nx-sans);letter-spacing:.05em;padding:4px 10px;border-radius:99px;white-space:nowrap;flex:none}
+#traceZone .tz-tag.once{background:#F0FDF4;color:var(--nx-ok)}
+#traceZone .tz-tag.multi{background:#FEF2F2;color:var(--nx-bad)}
+#traceZone .tz-tag.qty{background:#EFF6FF;color:var(--nx-blue)}
+#traceZone .tz-tag.none{background:var(--nx-bg);color:var(--nx-muted)}
+#traceZone .tz-verdict{padding:11px 18px;font-size:13px;line-height:1.55;background:var(--nx-bg);border-bottom:1px solid var(--nx-line)}
+#traceZone .tz-verdict b{font-weight:700}
+#traceZone .tz-tl{padding:6px 18px 14px}
+#traceZone .tz-ev{display:grid;grid-template-columns:18px 96px 1fr auto;gap:12px;align-items:baseline;
+  padding:9px 0;border-bottom:1px solid var(--nx-line);font-size:13px}
+#traceZone .tz-ev:last-child{border-bottom:0}
+#traceZone .tz-ev .dot{width:9px;height:9px;border-radius:50%;background:var(--nx-blue);margin-top:5px}
+#traceZone .tz-ev.dup .dot{background:var(--nx-bad)}
+#traceZone .tz-ev time{font-size:12px;color:var(--nx-muted);font-variant-numeric:tabular-nums}
+#traceZone .tz-ev .who{color:var(--nx-muted);font-size:12px}
+#traceZone .tz-ev .mono{font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+#traceZone .tz-ev .amt{font-weight:600;white-space:nowrap}
+#traceZone .tz-shop{padding:11px 18px;border-top:1px solid var(--nx-line);font-size:12.5px;color:var(--nx-muted);
+  display:flex;gap:18px;flex-wrap:wrap}
+#traceZone .tz-shop b{color:var(--nx-ink)}
+#traceZone .tz-empty{text-align:center;color:var(--nx-muted);padding:60px 20px;line-height:1.6}
+#traceZone .tz-empty .big{font-size:40px;margin-bottom:10px}
+#traceZone [data-tip]{position:relative}
+#traceZone [data-tip]:hover::after{content:attr(data-tip);position:absolute;z-index:9999;left:50%;top:calc(100% + 8px);
+  transform:translateX(-50%);background:#0F172A;color:#fff;font:500 12px/1.5 var(--nx-sans);text-align:left;
+  padding:9px 12px;border-radius:8px;width:max-content;max-width:250px;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none}
+#traceZone .tz-verdict{display:flex;flex-direction:column;gap:3px}
+#traceZone .tz-head-line{font-size:14px;font-weight:700}
+#traceZone .tz-verdict span{color:var(--nx-muted)}
+#traceZone .tz-card:has(.tz-tag.multi) .tz-head-line{color:var(--nx-bad)}
+#traceZone .tz-card:has(.tz-tag.check) .tz-head-line{color:var(--nx-warn)}
+#traceZone .tz-card:has(.tz-tag.once) .tz-head-line{color:var(--nx-ok)}
+#traceZone .tz-card:has(.tz-tag.qty) .tz-head-line{color:var(--nx-blue)}
+#traceZone .tz-tag.check{background:#FFFBEB;color:var(--nx-warn)}
+</style>
+
 
 
 </head><body>
@@ -4075,12 +4137,27 @@ html.nx-sb-off .nx-chrome .nxh-sb{ display:none; }
     <button type="button" class="nxh-nav" data-module="inventory"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg><span><b>Inventory Map</b><small>Find which bin a unit is in</small></span></button>
     <button type="button" class="nxh-nav" data-module="command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V10M10 19V5M16 19v-8M22 19H2"/></svg><span><b>Command Center</b><small>Health trends and what to do next</small></span></button>
     <button type="button" class="nxh-nav" data-module="morning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span><b>Morning Rounds</b><small>Messages, disputes, cancellations</small></span></button>
+    <button type="button" class="nxh-nav" data-module="trace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M11 8v6M8 11h6"/></svg><span><b>Trace</b><small>What happened to this item</small></span></button>
     <button type="button" class="nxh-nav" data-module="phantom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3a6 6 0 016 6c0 4-3 6-3 9H6c0-3-3-5-3-9a6 6 0 016-6z"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="13" cy="9" r="1" fill="currentColor"/></svg><span><b>Phantom Zone</b><small>Kill listings that already sold</small></span></button>
     <button type="button" class="nxh-nav" data-module="leads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19a6 6 0 0112 0M14 19a4.5 4.5 0 017 0"/></svg><span><b>Ckay Connect</b><small>Follow up on buying leads</small></span></button>
     <button type="button" class="nxh-nav" data-module="shovo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg><span><b>Ask Shovo</b><small>Ask how anything works</small></span></button>
     <div class="nxh-sbfoot"><b>Same people.</b><br>A smarter tomorrow.</div>
   </nav>
 </div>
+<div id="traceZone">
+  <div class="tz-strip">
+    <label class="tz-drop" id="tzDrop" data-tip="Your eBay Paid &amp; Shipped export. Every sale in it becomes searchable history."><b>Paid &amp; Shipped</b><small id="tzInfo">drop CSV</small><input type="file" accept=".csv" hidden></label>
+    <div class="tz-searchwrap">
+      <input id="tzQuery" placeholder="SKU, order number, buyer or title — paste several SKUs at once" autocomplete="off">
+    </div>
+    <div class="tz-metrics">
+      <div class="tz-metric" data-tip="Sales rows loaded from the report."><b id="tzRows">0</b><span>sales on file</span></div>
+      <div class="tz-metric warn" data-tip="SKUs that appear more than once. Some are genuinely multi-quantity; the rest are oversells."><b id="tzMulti">0</b><span>sold more than once</span></div>
+    </div>
+  </div>
+  <div class="tz-body"><div class="tz-results" id="tzResults"></div></div>
+</div>
+
 <div id="phantomZone">
   <div class="pz-strip">
     <button class="pz-scan" id="pzScan" data-tip="Re-checks the two reports against the Shopify catalog and rebuilds the list. Press after new sales."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Scan</button>
@@ -27272,7 +27349,7 @@ function nxCloseAllSurfaces(){
     // children of a module and close themselves.
     ['.haz-wrap','.nexus-shipping','.nexus-pricing','.nexus-command','.morning-backdrop',
      '.nim','.leads-app','.ckay-deck','.nexus-storewide','.nexus-mc-terminal',
-     '#ocRoot','#sygccBackdrop','#phantomZone','#pcWrap','#hazWrap',
+     '#ocRoot','#sygccBackdrop','#phantomZone','#traceZone','#pcWrap','#hazWrap',
      '#nexusStoreWide','#nexusDrawer']
       .forEach(function(sel){
         Array.prototype.forEach.call(document.querySelectorAll(sel),function(el){
@@ -27291,6 +27368,7 @@ function nxCloseAllSurfaces(){
   }
   function openModule(id){
     nxCloseAllSurfaces();
+    if(id==='trace'){ if(typeof window.openTrace==='function') window.openTrace(); var w0=document.getElementById('welcomeBackdrop'); if(w0) w0.classList.add('hidden'); return; }
     if(id==='phantom'){ if(typeof window.openPhantomZone==='function') window.openPhantomZone(); var w=document.getElementById('welcomeBackdrop'); if(w) w.classList.add('hidden'); return; }
     try{ return _openModule(id) }
     catch(err){ console.error('openModule('+id+') failed:',err); }
@@ -35743,6 +35821,7 @@ function nxRefreshBadges(){
 // hides the home and reveals a surface; this marks the matching entry and
 // drops a title band with the module's real workflow into that surface.
 var NX_PAGES = {
+  trace:    {title:'Trace', sub:'Look up any SKU and see everything that happened to it.', steps:[['Drop report','Paid &amp; shipped'],['Search','SKU, order, buyer'],['Read','Every sale, newest first'],['Compare','Against Shopify stock'],['Conclude','Sold once, oversold, or never sold']], root:'#traceZone'},
   phantom:  {title:'Phantom Zone', sub:'Listings still live on eBay after the item is gone. Work the list to zero.', steps:[['Drop reports','Active listings + paid/shipped'],['Scan','Match against Shopify'],['Confirm','Shelf-check the maybes'],['Kill','End in Marketplace Connect'],['Clear','Down to zero']], root:'#phantomZone'},
   wan:      {title:'Wan Board',       sub:'Describe items in plain English, assign SKUs, build and push listings.',
              steps:[['Intake','Plain-English item, condition, extras'],['Assign SKU','Bin and batch suffix'],['Build','BhaiMode entry, metafields, title'],['Review','Flags, grades, missing info'],['Push','Blitzting to Shopify and eBay']],
@@ -36315,6 +36394,189 @@ function shovoRenderHints(q){
     apply(!document.documentElement.classList.contains('nx-sb-off'));
   });
 })();
+
+// ══ Trace — what happened to this item ════════════════════════════════
+// Phantom Zone answers "what should I act on". This answers "what happened to
+// this one unit" — you have a SKU and no idea where it went.
+//
+// The whole value is that it shows EVERY time a SKU appears in the sold
+// report, not just the first. Phantom Zone dedupes; here the repeats ARE the
+// story: 78 SKUs in the current report sold more than once, and telling a
+// genuine multi-quantity item from a real oversell is exactly what this is for.
+(function(){
+  var SOLD=[], BY={}, MULTI=0;
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ var d=document.createElement('div'); d.textContent=(s==null?'':s); return d.innerHTML; }
+  function key(x){ return String(x||'').toUpperCase().replace(/\s+/g,'').replace(/[\/\\]/g,'').replace(/[^A-Z0-9]/g,''); }
+  function P(){ return (typeof parseCsv==='function')?parseCsv:null; }
+  function C(r,names){ return (typeof col==='function')?col(r,names):''; }
+
+  function load(text){
+    var p=P(); if(!p){ alert('CSV parser unavailable'); return; }
+    SOLD=p(text).filter(function(r){ return C(r,['custom label','sku']); });
+    BY={};
+    SOLD.forEach(function(r){
+      var k=key(C(r,['custom label','sku'])); if(!k) return;
+      (BY[k]=BY[k]||[]).push(r);
+    });
+    MULTI=Object.keys(BY).filter(function(k){ return BY[k].length>1; }).length;
+    $('tzDrop').classList.add('loaded');
+    $('tzInfo').textContent=SOLD.length+' rows';
+    $('tzRows').textContent=SOLD.length;
+    $('tzMulti').textContent=MULTI;
+    render($('tzQuery').value);
+  }
+
+  function shopOf(sku){
+    if(typeof window.catalogRows!=='function') return null;
+    var cat=window.catalogRows(), k=key(sku);
+    for(var i=0;i<cat.length;i++) if(key(cat[i][0])===k)
+      return {qty:Number(cat[i][3]||0), status:String(cat[i][6]||'').toLowerCase(), title:cat[i][1], price:cat[i][4]};
+    return null;
+  }
+
+  // One SKU's whole story, told as a conclusion rather than a data dump.
+  // The six situations below are the ones that actually occur in the real
+  // report — counted from it, not imagined:
+  //   1,461 shipped clean · 71 sold but Shopify still shows stock
+  //      73 oversold      ·  5 multi-quantity and fine
+  //       3 sold with no carrier scan · duplicates of one order number
+  function verdict(rows, shop){
+    var n=rows.length;
+    var tracked=rows.filter(function(r){ return /\d/.test(C(r,['tracking'])||''); }).length;
+    var orders={}; rows.forEach(function(r){ var o=C(r,['order number']); if(o) orders[o]=(orders[o]||0)+1; });
+    var dupOrder=Object.keys(orders).filter(function(o){ return orders[o]>1; });
+    var last=rows[0];
+    var when=C(last,['shipped on','sale date','paid on'])||'an unknown date';
+    var who=C(last,['buyer username'])||'a buyer';
+
+    // A duplicated order number is a report artefact, not two sales.
+    if(dupOrder.length) return {cls:'multi', tag:'DUPLICATE ROWS',
+      head:'Looks like a duplicate, not two sales.',
+      text:'Order <b>'+esc(dupOrder[0])+'</b> appears more than once for this SKU. That is usually one sale listed twice in the report rather than the unit going out twice \u2014 check the order before treating it as an oversell.'};
+
+    if(n===1){
+      if(!tracked) return {cls:'check', tag:'SOLD, NOT SHIPPED',
+        head:'Sold, but it never got a tracking scan.',
+        text:'It sold on <b>'+esc(when)+'</b> to '+esc(who)+', but no carrier ever scanned it. <b>This unit is most likely still in the building.</b> Go look on the shelf before assuming it went out.'};
+      if(shop && shop.qty>0) return {cls:'check', tag:'SHIPPED \u2014 STOCK NOT UPDATED',
+        head:'It shipped, but Shopify still thinks you have one.',
+        text:'Shipped <b>'+esc(when)+'</b> to '+esc(who)+'. Shopify still shows <b>'+shop.qty+' in stock</b>, so either you genuinely had more than one, or the stock never came down after the sale \u2014 which is what leaves a listing live and sells it again.'};
+      return {cls:'once', tag:'SHIPPED \u2014 IT IS GONE',
+        head:'This one shipped. It is gone.',
+        text:'Sold and shipped <b>'+esc(when)+'</b> to '+esc(who)+', with a tracking number against it. '+
+          (shop? 'Shopify agrees \u2014 '+(shop.status||'stock '+shop.qty)+'. ':'')+
+          'Nothing to chase here.'};
+    }
+
+    // sold more than once
+    var haveEnough = shop && shop.qty >= n;
+    if(haveEnough) return {cls:'qty', tag:'MULTI-QUANTITY \u2014 NORMAL',
+      head:'Sold '+n+' times, and you had the stock for it.',
+      text:'This is a multi-quantity item. Shopify shows <b>'+shop.qty+'</b> on hand, which covers all '+n+' sales. Nothing wrong here \u2014 it is meant to sell repeatedly.'};
+
+    var had = shop ? shop.qty : 0;
+    var short = n - (had>0?had:0);
+    return {cls:'multi', tag:'OVERSOLD '+n+'\u00d7',
+      head:'Sold '+n+' times with only '+(shop? had : 'no')+' in stock.',
+      text:'The same unit sold <b>'+n+' times</b>'+(shop? ' while Shopify showed <b>'+had+'</b> on hand':' and there is no Shopify product behind it')+
+        '. About <b>'+short+'</b> of those buyers had nothing waiting for them \u2014 this is where the cancellations come from. The listing stayed live after the first sale instead of coming down.'};
+  }
+
+  function card(k){
+    var rows=BY[k]; if(!rows||!rows.length) return '';
+    var first=rows[0];
+    var sku=C(first,['custom label','sku']);
+    var title=C(first,['item title','title'])||sku;
+    var shop=shopOf(sku);
+    var v=verdict(rows, shop);
+    // newest first — the most recent sale is usually the one you're asking about
+    var sorted=rows.slice().sort(function(a,b){
+      return String(C(b,['sale date','paid on'])).localeCompare(String(C(a,['sale date','paid on'])));
+    });
+    var events=sorted.map(function(r,i){
+      var trk=C(r,['tracking']);
+      return '<div class="tz-ev'+(i>0?' dup':'')+'">'+
+        '<span class="dot"></span>'+
+        '<time>'+esc(C(r,['sale date','paid on'])||'—')+'</time>'+
+        '<span><span class="mono">'+esc(C(r,['order number'])||'')+'</span>'+
+          '<span class="who"> · '+esc(C(r,['buyer username'])||'buyer unknown')+
+          (trk? ' · tracking '+esc(trk) : ' · <b>no tracking</b>')+'</span></span>'+
+        '<span class="amt">'+esc(C(r,['sold for','total price'])||'')+'</span>'+
+      '</div>';
+    }).join('');
+    return '<div class="tz-card">'+
+      '<div class="tz-head"><div class="t"><b>'+esc(title)+'</b><span class="sku">'+esc(sku)+'</span></div>'+
+        '<span class="tz-tag '+v.cls+'">'+v.tag+'</span></div>'+
+      '<div class="tz-verdict"><b class="tz-head-line">'+v.head+'</b><span>'+v.text+'</span></div>'+
+      '<div class="tz-tl">'+events+'</div>'+
+      (shop? '<div class="tz-shop"><span>Shopify: <b>'+esc(shop.status||'—')+'</b></span>'+
+             '<span>stock <b>'+shop.qty+'</b></span>'+
+             '<span>listed <b>$'+esc(shop.price||'—')+'</b></span></div>'
+           : '<div class="tz-shop">No Shopify product carries this SKU.</div>')+
+    '</div>';
+  }
+
+  function render(q){
+    var box=$('tzResults');
+    if(!SOLD.length){ box.innerHTML='<div class="tz-empty"><div class="big">\u2191</div>Drop the Paid &amp; Shipped report to build the history, then search any SKU.</div>'; return; }
+    q=String(q||'').trim();
+    if(!q){
+      // Nothing searched: lead with the repeats, since those are the ones
+      // worth explaining.
+      var rep=Object.keys(BY).filter(function(k){return BY[k].length>1;})
+        .sort(function(a,b){return BY[b].length-BY[a].length;}).slice(0,10);
+      box.innerHTML='<div class="tz-empty" style="padding:18px 0 4px">Showing the '+rep.length+' SKUs that sold most often. Search to look up any item.</div>'+
+        rep.map(card).join('');
+      return;
+    }
+    // Accept several SKUs pasted together.
+    var terms=q.split(/[\s,;\n]+/).filter(Boolean);
+    var hits=[];
+    if(terms.length>1){
+      terms.forEach(function(t){ var k=key(t); if(BY[k] && hits.indexOf(k)<0) hits.push(k); });
+    }
+    if(!hits.length){
+      var lq=q.toLowerCase();
+      Object.keys(BY).forEach(function(k){
+        if(hits.length>40) return;
+        var r=BY[k][0];
+        var hay=(C(r,['custom label','sku'])+' '+C(r,['item title','title'])+' '+
+                 C(r,['order number'])+' '+C(r,['buyer username'])).toLowerCase();
+        if(hay.indexOf(lq)>-1) hits.push(k);
+      });
+    }
+    if(!hits.length){
+      box.innerHTML='<div class="tz-empty"><div class="big">\u2205</div><b>Nothing found for \u201c'+esc(q)+'\u201d.</b><br>'+
+        '<b>No eBay sale for this in the period covered.</b><br>So if the unit is missing, it did not leave through eBay \u2014 it either sold in store, sold on Shopify directly, or it is still on the shelf and simply never sold.</div>';
+      return;
+    }
+    hits.sort(function(a,b){ return BY[b].length-BY[a].length; });
+    box.innerHTML=hits.map(card).join('');
+  }
+
+  window.openTrace=function(){
+    var z=$('traceZone'); if(!z) return;
+    if(!$('tzQuery')){ setTimeout(window.openTrace,120); return; }
+    z.classList.add('show');
+    if(!z._bound){ z._bound=true;
+      var inp=$('tzDrop').querySelector('input');
+      inp.addEventListener('change',function(){
+        var f=this.files&&this.files[0]; if(!f) return;
+        var fr=new FileReader(); fr.onload=function(){ load(String(fr.result)); }; fr.readAsText(f);
+      });
+      ['dragover','dragenter'].forEach(function(e){ $('tzDrop').addEventListener(e,function(ev){ev.preventDefault();}); });
+      $('tzDrop').addEventListener('drop',function(ev){
+        ev.preventDefault();
+        var f=ev.dataTransfer&&ev.dataTransfer.files&&ev.dataTransfer.files[0];
+        if(f){ var fr=new FileReader(); fr.onload=function(){ load(String(fr.result)); }; fr.readAsText(f); }
+      });
+      $('tzQuery').addEventListener('input',function(){ render(this.value); });
+    }
+    render($('tzQuery').value);
+  };
+})();
+
 
 // ── Wan Board keyboard shortcuts ──────────────────────────────────────
 // Shift+letter is just a capital letter, so these MUST stand down while a
