@@ -22990,7 +22990,8 @@ function renderAnswer(q) {
     }
 
     const n = soldRows ? soldRows.length : 0;
-    const tracked = soldRows ? soldRows.filter(function(r){ return /\d/.test(RC(r,['tracking number','tracking'])||''); }).length : 0;
+    const HT=function(v){var t=String(v||'').trim(); if(!t||/^(n\/?a|none|-|0)$/i.test(t))return false; return /[0-9]/.test(t)&&t.replace(/[^A-Za-z0-9]/g,'').length>=8; };
+    const tracked = soldRows ? soldRows.filter(function(r){ return HT(RC(r,['tracking number','tracking'])); }).length : 0;
     const avail = liveRow ? Number(RC(liveRow,['available quantity','available'])||0) : 0;
     const isLive = avail > 0;
     const stock = shop ? shop.qty : null;
@@ -23066,6 +23067,15 @@ function renderAnswer(q) {
           '<div style="font-weight:600;font-size:13.5px">'+esc(title)+'</div>'+
           '<div style="font-family:monospace;font-size:11.5px;opacity:.6;margin-top:2px">'+esc(fullSku)+
             (K(fullSku)!==K(sku)? ' <span style="opacity:.7">(matched from \u201c'+esc(sku)+'\u201d)</span>':'')+'</div>'+
+          // Show the raw values the verdict was built from. Every wrong call so
+          // far came from silently reading the wrong column; naming them makes
+          // that visible instead of arguable.
+          (soldRows ? '<div style="margin-top:9px;padding:8px 10px;border:1px dashed '+C[2]+';border-radius:7px;font-size:11.5px;line-height:1.6;opacity:.85">'+
+            '<b>Read from the report:</b><br>'+
+            'Tracking Number = <b>'+(esc(RC(soldRows[0],['tracking number','tracking']))||'<i>empty</i>')+'</b><br>'+
+            'Shipped On Date = <b>'+(esc(RC(soldRows[0],['shipped on date','shipped on']))||'<i>empty</i>')+'</b> &nbsp; '+
+            'Sale Date = <b>'+(esc(RC(soldRows[0],['sale date']))||'<i>empty</i>')+'</b>'+
+          '</div>' : '')+
           '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-size:12px;opacity:.8">'+
             '<span>eBay: <b>'+(isLive? avail+' live':'not listed')+'</b></span>'+
             '<span>Shopify: <b>'+(shop? esc(shop.status)+' · '+stock:'no product')+'</b></span>'+
@@ -36153,29 +36163,45 @@ document.addEventListener('click',function(e){
   //     vs "Custom Label".
   function parseCsv(text){
     var raw=String(text).replace(/^\uFEFF/,'');
-    var lines=raw.split(/\r?\n/);
-    var split=function(l){ return (typeof shovoParseCsvRow==='function')?shovoParseCsvRow(l):l.split(','); };
-    // The header is the first row that actually names columns — skip leading
-    // blank/comma-only rows rather than assuming row 0.
+
+    // Split into RECORDS, not lines. eBay puts real newlines inside quoted
+    // fields — a buyer name like "Vanio Bizno Sn-206566\nSN-206566" is one
+    // value spanning two lines. Splitting on \n first tore that record in half
+    // and shifted every column after it, which is how a row with a tracking
+    // number was read as having none and a date came from the wrong column.
+    // Walking the text once, tracking whether we are inside quotes, is the
+    // only way to get this right.
+    var records=[], row=[], field='', q=false;
+    for(var i=0;i<raw.length;i++){
+      var ch=raw[i];
+      if(q){
+        if(ch==='"'){ if(raw[i+1]==='"'){ field+='"'; i++; } else q=false; }
+        else field+=ch;
+      } else if(ch==='"'){ q=true; }
+      else if(ch===','){ row.push(field); field=''; }
+      else if(ch==='\n'){ row.push(field); field=''; records.push(row); row=[]; }
+      else if(ch!=='\r'){ field+=ch; }
+    }
+    if(field.length||row.length){ row.push(field); records.push(row); }
+
+    // The header is the first record that actually names columns — the Paid &
+    // Shipped export opens with a row of empty commas.
     var hi=-1, head=null;
-    for(var i=0;i<lines.length && i<10;i++){
-      if(!lines[i].trim()) continue;
-      var cells=split(lines[i]);
-      var named=cells.filter(function(c){return String(c||'').trim().length>1;}).length;
-      if(named>=3){ hi=i; head=cells.map(function(c){return String(c||'').replace(/^\uFEFF/,'').trim();}); break; }
+    for(var h=0; h<records.length && h<10; h++){
+      var named=records[h].filter(function(c){ return String(c||'').trim().length>1; }).length;
+      if(named>=3){ hi=h; head=records[h].map(function(c){ return String(c||'').replace(/^\uFEFF/,'').trim(); }); break; }
     }
     if(hi<0) return [];
+
     var out=[];
-    for(var j=hi+1;j<lines.length;j++){
-      var line=lines[j];
-      if(!line.trim()) continue;
-      // Trailer rows eBay appends after the data.
-      if(/record\(s\) downloaded|^Seller ID\s*:/i.test(line)) break;
-      var r=split(line);
-      if(!r.length) continue;
-      var filled=r.filter(function(c){return String(c||'').trim();}).length;
-      if(filled<2) continue;                     // separator / stray row
-      var o={}; for(var c=0;c<head.length;c++) o[head[c]]=r[c]!=null?String(r[c]).trim():'';
+    for(var j=hi+1;j<records.length;j++){
+      var r=records[j];
+      var filled=r.filter(function(c){ return String(c||'').trim(); }).length;
+      if(filled<2) continue;
+      // eBay appends trailer rows after the data.
+      if(/record\(s\) downloaded/i.test(r.join(',')) || /^Seller ID\s*:/i.test(String(r[0]||''))) break;
+      var o={};
+      for(var c=0;c<head.length;c++) o[head[c]] = r[c]!=null ? String(r[c]).trim() : '';
       out.push(o);
     }
     return out;
@@ -36187,6 +36213,16 @@ document.addEventListener('click',function(e){
   // "shipped" could return "Maximum Estimated Delivery Date" in one export and
   // "Shipped On Date" in another — silently reporting a delivery estimate as
   // the ship date. Exact names remove that coin-flip.
+  // A tracking number is a long alphanumeric string. Treating "any digit" as
+  // tracking let values like "0", "-" or "N/A" count, and an empty cell read as
+  // untracked when the real number sat in a neighbouring column. This is the
+  // single test every verdict hangs on, so it is explicit.
+  function hasTracking(v){
+    var t=String(v||'').trim();
+    if(!t) return false;
+    if(/^(n\/?a|none|-|\u2014|0)$/i.test(t)) return false;
+    return /[0-9]/.test(t) && t.replace(/[^A-Za-z0-9]/g,'').length>=8;
+  }
   function col(row, names){
     var norm=function(x){ return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,''); };
     var i,k;
@@ -36287,7 +36323,7 @@ document.addEventListener('click',function(e){
       // those sends someone to find a unit that left the building.
       var soldRows = soldByKey[k];
       if(soldRows){
-        var trk = soldRows.track && /\d/.test(soldRows.track);
+        var trk = hasTracking(soldRows.track);
         PZ.push({sku:sku, name:row[1]||sku, spec:'', price:Number(row[4]||0),
           kind:'phantomstock', type:row[2]||'',
           why: trk ? 'Shopify says in stock, but it already shipped'
@@ -36828,7 +36864,8 @@ function shovoRenderHints(q){
   //       3 sold with no carrier scan · duplicates of one order number
   function verdict(rows, shop){
     var n=rows.length;
-    var tracked=rows.filter(function(r){ return /\d/.test(C(r,['tracking number','tracking'])||''); }).length;
+    var HT2=function(v){var t=String(v||'').trim(); if(!t||/^(n\/?a|none|-|0)$/i.test(t))return false; return /[0-9]/.test(t)&&t.replace(/[^A-Za-z0-9]/g,'').length>=8; };
+    var tracked=rows.filter(function(r){ return HT2(C(r,['tracking number','tracking'])); }).length;
     var orders={}; rows.forEach(function(r){ var o=C(r,['order number']); if(o) orders[o]=(orders[o]||0)+1; });
     var dupOrder=Object.keys(orders).filter(function(o){ return orders[o]>1; });
     var last=rows[0];
