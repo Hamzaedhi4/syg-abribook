@@ -4043,6 +4043,38 @@ html.nx-sb-off .nx-chrome .nxh-sb{ display:none; }
 #phantomZone .pz-guide.wait{background:#EFF6FF;border-color:#BFDBFE} #phantomZone .pz-guide.wait b{color:var(--nx-blue)}
 #phantomZone .pz-guide.go{background:#FEF2F2;border-color:#FECACA} #phantomZone .pz-guide.go b{color:var(--nx-bad)}
 #phantomZone .pz-guide.clear{background:#F0FDF4;border-color:#BBF7D0} #phantomZone .pz-guide.clear b{color:var(--nx-ok)}
+#phantomZone .pz-tab.k-stock.on{border-bottom-color:#7C3AED}
+#phantomZone .pz-tab.k-stock.on b,#phantomZone .pz-tab.k-stock.on span{color:#7C3AED}
+#phantomZone .pz-dot.phantomstock{background:#7C3AED}
+#phantomZone .pz-wtop.k-phantomstock{background:linear-gradient(180deg,#F5F3FF,transparent)}
+#phantomZone .pz-wtag.k-phantomstock{background:#7C3AED}
+#phantomZone .pz-verd.k-phantomstock{background:#F5F3FF;color:#6D28D9}
+#phantomZone .pz-kill.pz-fix{background:#7C3AED} #phantomZone .pz-kill.pz-fix:hover{background:#6D28D9}
+#phantomZone .pz-steps{display:flex;flex-direction:column;gap:8px}
+#phantomZone .pz-step{display:flex;gap:11px;align-items:center;padding:11px 13px;border:1px solid var(--nx-line);
+  border-radius:9px;background:var(--nx-card)}
+#phantomZone .pz-step .n{width:22px;height:22px;border-radius:50%;background:#7C3AED;color:#fff;flex:none;
+  font:700 11px/22px var(--nx-sans);text-align:center}
+#phantomZone .pz-step .b{flex:1;min-width:0}
+#phantomZone .pz-step .b b{display:block;font-size:13.5px;font-weight:600}
+#phantomZone .pz-step .b small{display:block;font-size:11.5px;color:var(--nx-muted);margin-top:2px;line-height:1.45}
+#phantomZone .pz-go{font:600 12.5px var(--nx-sans);color:var(--nx-ink);background:var(--nx-card);
+  border:1px solid var(--nx-line-2);border-radius:8px;padding:8px 13px;cursor:pointer;white-space:nowrap;flex:none}
+#phantomZone .pz-go:hover{border-color:#7C3AED;color:#7C3AED}
+#phantomZone .pz-step.done{border-color:var(--nx-ok);background:#F0FDF4}
+#phantomZone .pz-step.done .n{background:var(--nx-ok)}
+#phantomZone .pz-step.done .n::after{content:"\2713"}
+#phantomZone .pz-step.done .n{font-size:0}
+#phantomZone .pz-step.done .n::after{font-size:12px}
+#phantomZone .pz-done{margin-top:4px;width:100%;font:600 13px var(--nx-sans);color:#fff;background:#7C3AED;
+  border:0;border-radius:9px;padding:12px;cursor:pointer}
+#phantomZone .pz-done:hover{background:#6D28D9}
+#phantomZone .pz-steps.locked{opacity:.45;pointer-events:none}
+#phantomZone .pz-step .n.r{background:var(--nx-bad)}
+#phantomZone .pz-step .n.g{background:var(--nx-ok)}
+#phantomZone .pz-done.r{background:var(--nx-bad)} #phantomZone .pz-done.r:hover{background:#B91C1C}
+#phantomZone .pz-done.g{background:var(--nx-ok)} #phantomZone .pz-done.g:hover{background:#15803D}
+#phantomZone .pz-go:hover{border-color:var(--nx-blue);color:var(--nx-blue)}
 </style>
 <style id="nx-trace-css">
 #traceZone{position:fixed;top:var(--nx-hd-h);left:var(--nx-sb-w);right:0;bottom:0;display:none;
@@ -4181,6 +4213,7 @@ html.nx-sb-off .nx-chrome .nxh-sb{ display:none; }
         <button class="pz-tab k-phantom" data-f="phantom" data-tip="CONFIRMED: sold, gone, still live. Safe to kill."><b id="pzTPh">0</b><span>confirmed</span></button>
         <button class="pz-tab k-check" data-f="check" data-tip="CHECK: probably sold, confirm on the shelf first."><b id="pzTCk">0</b><span>check</span></button>
         <button class="pz-tab k-ghost" data-f="ghost" data-tip="GHOST: live on eBay, no Shopify match — usually a SKU typo."><b id="pzTGh">0</b><span>ghost</span></button>
+        <button class="pz-tab k-stock" data-f="phantomstock" data-tip="SOLD BUT STOCK NOT UPDATED: Shopify still shows stock, but the shipped report says it already went out. Fix the quantity, don't list it."><b id="pzTSt">0</b><span>stock wrong</span></button>
         <button class="pz-tab k-unlisted" data-f="unlisted" data-tip="READY TO LIST: prepped in Shopify with stock, added in the last 60 days, but never pushed to eBay."><b id="pzTUn">0</b><span>to list</span></button>
       </div>
       <div style="padding:9px 12px;border-bottom:1px solid var(--nx-line);display:flex;gap:6px">
@@ -36221,6 +36254,25 @@ document.addEventListener('click',function(e){
       var qty=Number(row[3]||0); if(qty<=0) return;          // nothing to sell
       var st=String(row[6]||'').toLowerCase();
       if(st && st!=='active') return;                        // draft/archived aren't ready to list
+
+      // Cross-check against the shipped report before calling anything "ready
+      // to list". Shopify saying active-with-stock only means Shopify thinks
+      // so — 30 items in the real data look ready but already shipped with
+      // tracking, because the sale never came back to Shopify. Listing one of
+      // those sends someone to find a unit that left the building.
+      var soldRows = soldByKey[k];
+      if(soldRows){
+        var trk = soldRows.track && /\d/.test(soldRows.track);
+        PZ.push({sku:sku, name:row[1]||sku, spec:'', price:Number(row[4]||0),
+          kind:'phantomstock', type:row[2]||'',
+          why: trk ? 'Shopify says in stock, but it already shipped'
+                   : 'Shopify says in stock, but it appears on the shipped report',
+          shop:'active \u00b7 '+qty+' in stock (Shopify)',
+          ebay:'not listed', avail:'no live eBay listing',
+          sold: trk ? ('shipped \u00b7 tracking '+soldRows.track+(soldRows.when?' \u00b7 '+soldRows.when:''))
+                    : ('on the shipped report'+(soldRows.when?' \u00b7 '+soldRows.when:'')+' \u00b7 NO tracking')});
+        return;
+      }
       // created date is optional in the catalog layer; when absent we cannot
       // apply the 60-day rule, so say so rather than silently including it.
       var made=row[6]?Date.parse(row[6]):NaN;
@@ -36235,13 +36287,15 @@ document.addEventListener('click',function(e){
         sold:'n/a — never listed'});
     });
 
-    var order={phantom:0,check:1,ghost:2,unlisted:3};
+    var order={phantom:0,phantomstock:1,check:2,ghost:3,unlisted:4};
     PZ.sort(function(a,b){return order[a.kind]-order[b.kind];});
     idx=0; render(); toast('Scanned · '+PZ.length+' phantom'+(PZ.length===1?'':'s')+' found');
   }
 
   var KM={phantom:{tag:'CONFIRMED PHANTOM',grp:'Confirmed — kill these',verd:'<b>Confirmed phantom.</b> Live on eBay, sold and shipped with tracking, and Shopify shows it gone. Nothing to check — kill it.'},
           check:{tag:'CHECK THE SHELF',grp:'Check the shelf first',verd:'<b>Likely phantom.</b> Looks gone, but no carrier scan (or no eBay sale found). Walk over and confirm before killing.'},
+          phantomstock:{tag:'SOLD \u2014 STOCK NOT UPDATED',grp:'Gone, but Shopify still holds stock',
+            verd:'<b>Do not list this.</b> Shopify shows it active with stock, but the shipped report says it already went out. The sale never came back to Shopify, so the stock is wrong \u2014 fix the quantity instead of listing a unit that is gone.'},
           unlisted:{tag:'READY TO LIST',grp:'Prepped but never listed',verd:'<b>Not on eBay yet.</b> Active in Shopify with stock, but no live listing. Prepped and forgotten \u2014 launch it and it starts earning.'},
           ghost:{tag:'GHOST — NO SHOPIFY MATCH',grp:'No Shopify match',verd:'<b>No Shopify match.</b> This SKU isn\'t in the loaded catalog. If lots of items show this, the catalog is stale — click the Shopify catalog badge up top to refresh it. If the catalog is current, it\'s a real SKU typo or a deleted product.'}};
   var QUERY='', TYPE='';
@@ -36268,7 +36322,7 @@ document.addEventListener('click',function(e){
     if(cur && keys.indexOf(cur)<0){ TYPE=''; sel.value=''; }
   }
   function tabs(){ var c=function(k){return PZ.filter(function(p){return p.kind===k;}).length;};
-    $('pzTAll').textContent=PZ.length; $('pzTPh').textContent=c('phantom'); $('pzTCk').textContent=c('check'); $('pzTGh').textContent=c('ghost'); $('pzTUn').textContent=c('unlisted'); }
+    $('pzTAll').textContent=PZ.length; $('pzTPh').textContent=c('phantom'); $('pzTCk').textContent=c('check'); $('pzTGh').textContent=c('ghost'); $('pzTUn').textContent=c('unlisted'); var e=$('pzTSt'); if(e) e.textContent=c('phantomstock'); }
   function metrics(){
     $('pzMPh').textContent=PZ.filter(function(p){return p.kind==='phantom';}).length;
     $('pzMCk').textContent=PZ.filter(function(p){return p.kind==='check'||p.kind==='ghost';}).length;
@@ -36279,7 +36333,7 @@ document.addEventListener('click',function(e){
     tabs(); metrics(); renderTypes();
     var l=$('pzList'), rows=filtered();
     if(!rows.length){ l.innerHTML='<div style="padding:50px 24px;text-align:center;color:var(--nx-muted)"><div style="font-size:38px;margin-bottom:8px">✓</div>Nothing here.</div>'; return; }
-    var order=['phantom','check','ghost','unlisted'], html='';
+    var order=['phantom','phantomstock','check','ghost','unlisted'], html='';
     order.forEach(function(k){
       if(FILTER!=='all'&&FILTER!==k) return;
       var grp=rows.filter(function(p){return p.kind===k;}); if(!grp.length) return;
@@ -36311,15 +36365,72 @@ document.addEventListener('click',function(e){
           (p.item?'  ·  eBay item <span class="mono">'+esc(p.item)+'</span>':'')+'</div>'+
         '<div class="pz-look"><button id="pzShop" data-tip="Opens Shopify in a new tab and searches this SKU."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2l1.5 4h9L18 2M4 6h16l-1.5 13a1 1 0 01-1 1H6.5a1 1 0 01-1-1L4 6z"/></svg>Find on Shopify</button>'+
           '<button id="pzEbay" data-tip="Opens the live eBay listing."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6"/></svg>Open on eBay</button></div>'+
-        (p.kind==='unlisted'
-          ? '<button class="pz-kill pz-launch ready" id="pzKill" data-tip="Opens Marketplace Connect with this SKU searched, ready to publish it to eBay."><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Launch Listing on Marketplace Connect</button>'+
-            '<div class="pz-hint">This one is prepped and sitting in Shopify with stock, but was never pushed to eBay. Launch it and it starts earning.</div>'
-          : '<label class="pz-arm" data-tip="Tick once you\u2019re sure it\u2019s gone. Unlocks the kill button so nothing ends by accident."><input type="checkbox" id="pzArm">'+(p.kind==='check'?'I walked over — it\u2019s not on the shelf':p.kind==='ghost'?'I checked the SKU — this shouldn\u2019t be live':'Confirmed — the unit is gone')+'</label>'+
-            '<button class="pz-kill" id="pzKill" data-tip="Opens Marketplace Connect with this SKU searched, ready to end. eBay can\u2019t end listings directly."><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>Kill Phantom Listing on Marketplace Connect</button>'+
-            '<div class="pz-hint">eBay has no direct end action — this opens Marketplace Connect ready to end. MC syncs, just slowly, so killing here beats waiting.</div>')+
+        (p.kind==='phantomstock'
+          ? // A sequence, not one button. Getting this wrong in the wrong order
+            // is how a buyer gets a cancellation they did not need — so the
+            // order-check comes before the message, and the message before the
+            // listing is touched.
+            '<div class="pz-steps" id="pzSteps">'+
+              '<div class="pz-step" data-step="1"><span class="n">1</span>'+
+                '<div class="b"><b>Correct the stock in Shopify</b>'+
+                '<small>It already shipped, so set the quantity to what is really on the shelf.</small></div>'+
+                '<button type="button" class="pz-go" data-act="stock">Open Shopify</button></div>'+
+              '<div class="pz-step" data-step="2"><span class="n">2</span>'+
+                '<div class="b"><b>Check for an open order</b>'+
+                '<small>If someone bought it after it was already gone, that order needs handling first.</small></div>'+
+                '<button type="button" class="pz-go" data-act="orders">Check orders</button></div>'+
+              '<div class="pz-step" data-step="3"><span class="n">3</span>'+
+                '<div class="b"><b>Message the buyer, if there is one</b>'+
+                '<small>Only if step 2 found an order. Opens eBay with the cancellation message ready.</small></div>'+
+                '<button type="button" class="pz-go" data-act="msg">Message buyer</button></div>'+
+              '<div class="pz-step" data-step="4"><span class="n">4</span>'+
+                '<div class="b"><b>Open it in Marketplace Connect</b>'+
+                '<small>Last, once stock is right and any order is dealt with.</small></div>'+
+                '<button type="button" class="pz-go" data-act="mc">Open MC</button></div>'+
+              '<button type="button" class="pz-done" data-act="done">Done \u2014 clear it from the list</button>'+
+            '</div>'
+        : p.kind==='unlisted'
+          ? '<div class="pz-steps" id="pzSteps">'+
+              '<div class="pz-step" data-step="1"><span class="n g">1</span>'+
+                '<div class="b"><b>Confirm it is actually here</b>'+
+                '<small>Shopify says in stock and nothing shipped it \u2014 worth a glance before you list it.</small></div>'+
+                '<button type="button" class="pz-go" data-act="stock">Open Shopify</button></div>'+
+              '<div class="pz-step" data-step="2"><span class="n g">2</span>'+
+                '<div class="b"><b>Launch it in Marketplace Connect</b>'+
+                '<small>Publishes it to eBay so it starts earning.</small></div>'+
+                '<button type="button" class="pz-go" data-act="mc">Open MC</button></div>'+
+              '<button type="button" class="pz-done g" data-act="done">Done \u2014 clear it from the list</button>'+
+            '</div>'
+          : // Killing a live listing has an order risk the other paths do not:
+            // the phantom may ALREADY have a buyer on it. So orders are checked
+            // before anything is ended, and the buyer is messaged before the
+            // listing disappears from under them.
+            '<label class="pz-arm" data-tip="Tick once you\u2019re sure it\u2019s gone. Unlocks the steps so nothing ends by accident."><input type="checkbox" id="pzArm">'+(p.kind==='check'?'I walked over — it\u2019s not on the shelf':p.kind==='ghost'?'I checked the SKU — this shouldn\u2019t be live':'Confirmed — the unit is gone')+'</label>'+
+            '<div class="pz-steps locked" id="pzSteps">'+
+              '<div class="pz-step" data-step="1"><span class="n r">1</span>'+
+                '<div class="b"><b>Check for an order on it</b>'+
+                '<small>It is still live, so somebody may already have bought it. Handle that first.</small></div>'+
+                '<button type="button" class="pz-go" data-act="orders">Check orders</button></div>'+
+              '<div class="pz-step" data-step="2"><span class="n r">2</span>'+
+                '<div class="b"><b>Message the buyer, if there is one</b>'+
+                '<small>Only if step 1 found an order. Opens eBay with the cancellation message ready.</small></div>'+
+                '<button type="button" class="pz-go" data-act="msg">Message buyer</button></div>'+
+              '<div class="pz-step" data-step="3"><span class="n r">3</span>'+
+                '<div class="b"><b>Kill the listing in Marketplace Connect</b>'+
+                '<small>eBay has no direct end action \u2014 MC is where it comes down.</small></div>'+
+                '<button type="button" class="pz-go" data-act="mc">Open MC</button></div>'+
+              '<div class="pz-step" data-step="4"><span class="n r">4</span>'+
+                '<div class="b"><b>Set the stock right in Shopify</b>'+
+                '<small>Stops the same unit coming back as a phantom next sync.</small></div>'+
+                '<button type="button" class="pz-go" data-act="stock">Open Shopify</button></div>'+
+              '<button type="button" class="pz-done r" data-act="done">Done \u2014 clear it from the list</button>'+
+            '</div>')+
       '</div>';
     var armEl=$('pzArm');
-    if(armEl) armEl.addEventListener('change',function(e){ $('pzKill').classList.toggle('ready',e.target.checked); });
+    if(armEl) armEl.addEventListener('change',function(e){
+      var kb=$('pzKill'); if(kb) kb.classList.toggle('ready',e.target.checked);
+      var st=$('pzSteps'); if(st) st.classList.toggle('locked', !e.target.checked);
+    });
     // Search by SKU rather than deep-linking by product id: the id is often
     // absent from a CSV import, and a search always works — it also lands you
     // somewhere useful when the SKU is the very thing in question.
@@ -36333,7 +36444,34 @@ document.addEventListener('click',function(e){
       window.open('https://www.ebay.com/sch/i.html?_ssn=gadgetpirates&_nkw='+encodeURIComponent(p.sku),'_blank','noopener');
       toast('No item number on this row — searched your listings for the SKU instead');
     });
-    $('pzKill').addEventListener('click',function(){ if($('pzKill').classList.contains('ready')) kill(); });
+    var killBtn=$('pzKill');
+    if(killBtn) killBtn.addEventListener('click',function(){ if(killBtn.classList.contains('ready')) kill(); });
+
+    var steps=$('pzSteps');
+    if(steps) steps.addEventListener('click',function(ev){
+      var b=ev.target.closest('[data-act]'); if(!b) return;
+      var act=b.getAttribute('data-act');
+      var row=b.closest('.pz-step');
+      function tick(){ if(row){ row.classList.add('done'); } }
+      if(act==='stock'){
+        window.open('https://admin.shopify.com/store/xpp09p-dz/products?query='+encodeURIComponent(p.sku),'_blank','noopener');
+        tick();
+      } else if(act==='orders'){
+        // Search our own eBay orders for this SKU — the quickest way to see
+        // whether anybody is waiting on a unit that is already gone.
+        window.open('https://www.ebay.com/sh/ord/?filter=status:ALL&q='+encodeURIComponent(p.sku),'_blank','noopener');
+        tick();
+      } else if(act==='msg'){
+        if(p.item) window.open('https://www.ebay.com/mesh/ord/details?redirect=true&itemid='+encodeURIComponent(p.item)+'#syg-msg','_blank','noopener');
+        else window.open('https://www.ebay.com/sh/ord/?filter=status:ALL&q='+encodeURIComponent(p.sku),'_blank','noopener');
+        tick();
+      } else if(act==='mc'){
+        mcOpen(p.sku,function(prefilled){
+          tick();
+          if(prefilled===false) toast('MC opened, but the search was not pre-filled \u2014 extension not loaded');
+        });
+      } else if(act==='done'){ pzClear(); }
+    });
   }
   // The screen showed numbers but never said what to do with them. This bar
   // always names the next move, based on what's actually loaded — so nobody has
@@ -36366,8 +36504,42 @@ document.addEventListener('click',function(e){
     g.innerHTML='<b>'+step+'</b><span>'+detail+'</span>';
   }
   function render(){ renderList(); renderWork(); renderGuide(); }
+  // One way in to Marketplace Connect, used by every button that needs it.
+  function mcOpen(sku, cb){
+    if(typeof window.nexusAskExtension==='function'){
+      window.nexusAskExtension('MC_AUTOFILL_REQUEST',{sku:sku},30000)
+        .then(function(res){ cb(!(res && res.ok===false)); })
+        .catch(function(){ fallback(); });
+      return;
+    }
+    fallback();
+    function fallback(){
+      window.open('https://admin.shopify.com/store/xpp09p-dz/apps/shopify-marketplace-connect/626007/listings','_blank','noopener');
+      cb(false);
+    }
+  }
+
+  // Removing the current item from the worklist. The step buttons do the real
+  // work in Shopify/eBay/MC; this just records that it's handled.
+  function pzClear(){
+    if(!PZ.length) return;
+    var p=PZ[idx];
+    ended++; LAST={item:p, at:idx};
+    var el=$('pzList').querySelector('.pz-row.on'); if(el) el.classList.add('leaving');
+    setTimeout(function(){ PZ.splice(idx,1); if(idx>=PZ.length) idx=Math.max(0,PZ.length-1); render(); },300);
+    toast('Cleared '+p.sku+' \u00b7 press U to undo');
+  }
+
   function kill(){
     var p=PZ[idx], launching=(p.kind==='unlisted');
+    if(p.kind==='phantomstock'){
+      window.open('https://admin.shopify.com/store/xpp09p-dz/products?query='+encodeURIComponent(p.sku),'_blank','noopener');
+      ended++; LAST={item:p, at:idx};
+      var el0=$('pzList').querySelector('.pz-row.on'); if(el0) el0.classList.add('leaving');
+      setTimeout(function(){ PZ.splice(idx,1); if(idx>=PZ.length) idx=Math.max(0,PZ.length-1); render(); }, 300);
+      toast('Shopify opened \u2014 correct the quantity for '+p.sku+' \u00b7 press U to undo');
+      return;
+    }
     var verb=launching?'launch':'end';
     // The row used to vanish the instant this was pressed, whether or not
     // anything actually opened — so a failed hand-off looked identical to a
@@ -36388,17 +36560,19 @@ document.addEventListener('click',function(e){
         '  ·  Open MC yourself and search '+p.sku+'. The item stays on the list until it\u2019s handled.'; }
       toast('Could not reach Marketplace Connect — item kept on the list');
     }
-    // Open Marketplace Connect ourselves so a tab ALWAYS appears, then ask the
-    // extension to type the SKU into its search. Relying on the extension alone
-    // meant that when it wasn't loaded nothing opened at all and the button
-    // looked dead. The tab is the guarantee; the autofill is the convenience.
-    var MC_URL='https://admin.shopify.com/store/xpp09p-dz/apps/shopify-marketplace-connect/626007/listings';
-    var win=window.open(MC_URL,'_blank','noopener');
-    if(!win){ failed('the browser blocked the new tab \u2014 allow pop-ups for Nexus'); return; }
-    if(typeof window.nexusAskExtension==='function'){
-      window.nexusAskExtension('MC_AUTOFILL_REQUEST',{sku:p.sku},30000).catch(function(){});
-    }
-    done();
+    // The extension opens MC *and* types the SKU into its search, reusing an
+    // existing MC tab if there is one. Opening a tab ourselves first was the
+    // bug: it produced a second, empty tab and the extension filled the other
+    // one. So ask the extension FIRST, and only open a plain tab if it isn't
+    // there — in which case say plainly that the search won't be pre-filled.
+    mcOpen(p.sku, function(prefilled){
+      if(prefilled===false){
+        var box=$('pzWork').querySelector('.pz-hint');
+        if(box){ box.style.color='var(--nx-warn)';
+          box.textContent='Marketplace Connect opened, but the search was not pre-filled \u2014 the Nexus extension is not loaded. Paste '+p.sku+' into MC\u2019s search yourself.'; }
+      }
+      done();
+    });
   }
   function undo(){ if(!LAST) return; PZ.splice(LAST.at,0,LAST.item); idx=LAST.at; ended=Math.max(0,ended-1); LAST=null; render(); toast('Put back — nothing was ended'); }
 
@@ -36494,7 +36668,17 @@ document.addEventListener('click',function(e){
         var pos=f.indexOf(PZ[idx]); if(pos<0) pos=0;
         if(e.key==='j'||e.key==='ArrowDown'){e.preventDefault();pos=Math.min(f.length-1,pos+1);idx=PZ.indexOf(f[pos]);render();}
         else if(e.key==='k'||e.key==='ArrowUp'){e.preventDefault();pos=Math.max(0,pos-1);idx=PZ.indexOf(f[pos]);render();}
-        else if(e.key==='x'||e.key==='Enter'){e.preventDefault(); var ck=$('pzArm'); if(ck&&!ck.checked){ck.checked=true;$('pzKill').classList.add('ready');toast('Armed — press X again to kill');} else if(PZ.length) kill();}
+        else if(e.key==='x'||e.key==='Enter'){
+          e.preventDefault();
+          // The single kill button is gone — every path is a step flow now, so
+          // X arms the steps, then clears the item once they're unlocked.
+          var ck=$('pzArm');
+          if(ck && !ck.checked){
+            ck.checked=true;
+            var st=$('pzSteps'); if(st) st.classList.remove('locked');
+            toast('Steps unlocked \u2014 press X again to clear this one');
+          } else if(PZ.length){ pzClear(); }
+        }
         else if(e.key==='u'){undo();}
         else if('1234'.indexOf(e.key)>-1){var tb=document.querySelectorAll('#pzTabs .pz-tab')[+e.key-1]; if(tb) tb.click();}
       });
