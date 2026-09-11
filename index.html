@@ -6,7 +6,7 @@
 <title>SYG Nexus</title>
 <link rel="preconnect" href="https://fonts.googleapis.com/">
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
-<link href="./SYG Nexus_files/css2" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#F4F4F2; --surface:#FFFFFF; --surface-2:#FAFAF8;
@@ -3667,7 +3667,7 @@
      charts — the first external script dependency this file has had.
      Needs real internet access at load time; everything else in this
      page has always been fully self-contained. -->
-<script src="./SYG Nexus_files/chart.umd.min.js.download"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style id="nx-home-css">
 /* ── Nexus design tokens ──────────────────────────────────────────────
    The palette the whole app is meant to converge on. The home is the first
@@ -4693,7 +4693,7 @@ html.nx-sb-off .nx-chrome .nxh-sb{ display:none; }
   <div class="pld-body">
     <div class="pld-gallery">
       <div class="pld-image-wrap">
-        <img id="pldImage" src="./SYG Nexus_files/SYG Nexus.html" alt="">
+        <img id="pldImage" src="" alt="" style="display:none">
         <button class="pld-arrow left" id="pldPrevImg">‹</button>
         <button class="pld-arrow right" id="pldNextImg">›</button>
       </div>
@@ -25637,8 +25637,8 @@ Sarah Thompson 1443 Roosevelt Ave Carteret NJ 07008"></textarea></div>
   </div>
 </div>
 
-<script src="./SYG Nexus_files/pdf.min.js.download"></script>
-<script src="./SYG Nexus_files/pdf-lib.min.js.download"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script>
 /* ══════════════════ NEXUS PRICING · SPEC MATCH ENGINE ══════════════════
    Pure, side-effect-free. Detects item category, parses specs from free
@@ -35828,7 +35828,7 @@ function wbLoadTesseract(){
   if(_wbTessLoad) return _wbTessLoad;
   _wbTessLoad = new Promise(function(res){
     var t=document.createElement('script');
-    t.src='./SYG Nexus_files/tesseract.min.js.download';
+    t.src='https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js';
     t.onload=function(){ res(!!window.Tesseract); };
     t.onerror=function(){ _wbTessLoad=null; res(false); };
     document.head.appendChild(t);
