@@ -22854,6 +22854,133 @@ function renderAnswer(q) {
   const customMatch = resolveCustomCmd(q);
   if (customMatch) { renderCustomCmd(customMatch, q); return; }
 
+  // ── 1a0. "sold? <sku>" — the whole story of one unit ───────────────
+  // Answers across all three sources at once: the Paid & Shipped report, the
+  // Active Listings report, and the Shopify catalog. The eight outcomes below
+  // are the ones that actually occur — counted across the real reports, not
+  // imagined — and the multi-quantity case is kept separate on purpose so a
+  // legitimate repeat seller is never called an oversell.
+  const soldM = /^\s*(?:sold\??|what\s+happened\s+(?:to|with))\s+(.+?)\s*$/i.exec(q);
+  if (soldM) {
+    const sku = soldM[1].trim();
+    const K = function(x){ return String(x||'').toUpperCase().replace(/\s+/g,'').replace(/[\/\\]/g,'').replace(/[^A-Z0-9]/g,''); };
+    const k = K(sku);
+    const RC = (typeof window.reportCol==='function') ? window.reportCol : function(){ return ''; };
+    const pz = (typeof window.pzData==='function') ? window.pzData() : {};
+    const tr = (typeof window.traceData==='function') ? window.traceData() : {};
+
+    // sold rows: prefer Trace's index, fall back to Phantom Zone's
+    let soldRows = (tr.by && tr.by[k]) || null;
+    if(!soldRows && pz.sold){
+      soldRows = pz.sold.filter(function(r){ return K(RC(r,['custom label','sku']))===k; });
+      if(!soldRows.length) soldRows=null;
+    }
+    // still live on eBay?
+    let liveRow=null;
+    if(pz.listings) liveRow = pz.listings.find(function(r){ return K(RC(r,['custom label','sku']))===k; }) || null;
+    // shopify
+    let shop=null;
+    if(typeof window.catalogRows==='function'){
+      const cat=window.catalogRows();
+      for(let i=0;i<cat.length;i++) if(K(cat[i][0])===k){
+        shop={qty:Number(cat[i][3]||0), status:String(cat[i][6]||'').toLowerCase(), title:cat[i][1], price:cat[i][4]};
+        break;
+      }
+    }
+
+    if(!soldRows && !liveRow && !shop){
+      labelEl.textContent='Sold?';
+      bodyEl.innerHTML='<div style="font-size:14px;line-height:1.6">Nothing on file for <b>'+esc(sku)+'</b>.<br>'+
+        '<span style="opacity:.7">Load the reports first — drop them in Phantom Zone or Trace — then ask again.</span></div>';
+      return;
+    }
+
+    const n = soldRows ? soldRows.length : 0;
+    const tracked = soldRows ? soldRows.filter(function(r){ return /\d/.test(RC(r,['tracking'])||''); }).length : 0;
+    const avail = liveRow ? Number(RC(liveRow,['available quantity','available'])||0) : 0;
+    const isLive = avail > 0;
+    const stock = shop ? shop.qty : null;
+    const title = (soldRows && RC(soldRows[0],['item title','title'])) || (shop && shop.title) || (liveRow && RC(liveRow,['title'])) || sku;
+    const last = soldRows ? soldRows[0] : null;
+    const when = last ? (RC(last,['shipped on','sale date','paid on'])||'an unknown date') : '';
+    const who  = last ? (RC(last,['buyer username'])||'a buyer') : '';
+
+    // multi-quantity is decided by stock covering the sales — checked BEFORE
+    // any oversell conclusion so a genuine repeat seller is never mislabelled.
+    const multiOk = (stock!==null && n>1 && stock >= n);
+
+    let tone, head, body;
+    if(n===0 && !isLive){
+      tone='grey'; head='Never sold, and it is not listed.';
+      body='No sale for this in the report, and it is not live on eBay right now.'+
+        (shop? ' Shopify has it as <b>'+esc(shop.status)+'</b> with <b>'+stock+'</b> in stock.' : ' No Shopify product either — check the SKU.');
+    } else if(n===0 && isLive){
+      if(stock!==null && stock<=0){
+        tone='red'; head='Listed on eBay with nothing behind it.';
+        body='It is live and buyable on eBay, but Shopify shows <b>'+stock+'</b> in stock. It has not sold yet — <b>end it before someone buys it.</b>';
+      } else {
+        tone='green'; head='Still for sale. Nothing has happened to it.';
+        body='Live on eBay with <b>'+avail+'</b> available and <b>'+stock+'</b> in stock. It simply has not sold yet.';
+      }
+    } else if(multiOk){
+      tone='blue'; head='Sold '+n+' times — and that is fine.';
+      body='This is a multi-quantity item. Shopify shows <b>'+stock+'</b> on hand, which covers all '+n+' sales. '+
+        (isLive? 'It is still live, which is correct for an item you stock in depth.' : 'It is no longer live.');
+    } else if(n>0 && isLive){
+      tone='red'; head='Sold already, but the listing is STILL LIVE.';
+      body='It sold '+(n>1?'<b>'+n+' times</b>':'on <b>'+esc(when)+'</b> to '+esc(who))+
+        ', yet eBay still shows <b>'+avail+'</b> available'+(stock!==null?' and Shopify has <b>'+stock+'</b>':'')+
+        '. <b>This is a phantom — end the listing now</b>, before it sells again.';
+    } else if(n>1){
+      tone='red'; head='Oversold — it sold '+n+' times.';
+      body='Sold <b>'+n+' times</b>'+(stock!==null?' with only <b>'+stock+'</b> in stock':'')+
+        '. Everyone after the first had nothing waiting for them. The listing is down now, so the damage is done rather than ongoing.';
+    } else if(!tracked){
+      tone='amber'; head='Sold, but it never got a tracking scan.';
+      body='Sold on <b>'+esc(when)+'</b> to '+esc(who)+', but no carrier scanned it. <b>It is probably still in the building</b> — go check the shelf.';
+    } else if(stock!==null && stock>0){
+      tone='amber'; head='It shipped, but Shopify still thinks you have one.';
+      body='Shipped <b>'+esc(when)+'</b> to '+esc(who)+'. Shopify still shows <b>'+stock+'</b> in stock — either you had more than one, or the stock never came down, which is what leaves a listing live and sells it again.';
+    } else {
+      tone='green'; head='It shipped. It is gone.';
+      body='Sold and shipped <b>'+esc(when)+'</b> to '+esc(who)+', with tracking against it.'+
+        (shop? ' Shopify agrees — <b>'+esc(shop.status)+'</b>.':'')+' Nothing to chase.';
+    }
+
+    const C={green:['#16A34A','#F0FDF4','#BBF7D0'],red:['#DC2626','#FEF2F2','#FECACA'],
+             amber:['#D97706','#FFFBEB','#FDE68A'],blue:['#2563EB','#EFF6FF','#BFDBFE'],
+             grey:['#64748B','#F1F5F9','#E2E8F0']}[tone];
+
+    const timeline = soldRows ? soldRows.slice(0,6).map(function(r){
+      const t=RC(r,['tracking']);
+      return '<div style="display:grid;grid-template-columns:82px 1fr auto;gap:10px;padding:6px 0;border-top:1px solid '+C[2]+';font-size:12.5px">'+
+        '<span style="opacity:.65">'+esc(RC(r,['sale date','paid on'])||'—')+'</span>'+
+        '<span><span style="font-family:monospace;font-size:11.5px">'+esc(RC(r,['order number'])||'')+'</span>'+
+        '<span style="opacity:.6"> · '+esc(RC(r,['buyer username'])||'')+(t?'':' · no tracking')+'</span></span>'+
+        '<span style="font-weight:600">'+esc(RC(r,['sold for','total price'])||'')+'</span></div>';
+    }).join('') : '';
+
+    labelEl.textContent='Sold?';
+    bodyEl.innerHTML=
+      '<div style="border:1px solid '+C[2]+';border-radius:12px;overflow:hidden">'+
+        '<div style="background:'+C[1]+';padding:14px 16px">'+
+          '<div style="font:700 15px var(--sans);color:'+C[0]+'">'+head+'</div>'+
+          '<div style="font-size:13.5px;line-height:1.6;margin-top:5px">'+body+'</div>'+
+        '</div>'+
+        '<div style="padding:12px 16px">'+
+          '<div style="font-weight:600;font-size:13.5px">'+esc(title)+'</div>'+
+          '<div style="font-family:monospace;font-size:11.5px;opacity:.6;margin-top:2px">'+esc(sku)+'</div>'+
+          '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-size:12px;opacity:.8">'+
+            '<span>eBay: <b>'+(isLive? avail+' live':'not listed')+'</b></span>'+
+            '<span>Shopify: <b>'+(shop? esc(shop.status)+' · '+stock:'no product')+'</b></span>'+
+            '<span>Sales: <b>'+n+'</b></span>'+
+          '</div>'+
+          timeline+
+        '</div>'+
+      '</div>';
+    return;
+  }
+
   // ── 1a. Marketplace Connect by SKU ─────────────────────────────
   // "find NJ02-123 in mc" / "mc NJ02-123" / "open NJ02-123 in marketplace
   // connect". The same MC_AUTOFILL_REQUEST hand-off Phantom Zone uses, but
@@ -36249,6 +36376,16 @@ document.addEventListener('click',function(e){
     }
     if(LIST_ROWS) scan();
   };
+  // These two do the real work of reading eBay's exports — the header-offset,
+  // BOM and trailer handling that took several passes to get right. Trace needs
+  // exactly the same treatment, and duplicating them would mean fixing every
+  // future quirk twice. Shared rather than copied.
+  window.parseCsv = window.parseCsv || parseCsv;
+  window.reportCol = window.reportCol || col;
+  // Shovo's "sold?" command answers across all three sources. Rather than
+  // reload the reports, it reads whatever Phantom Zone already has.
+  window.pzData = function(){ return { listings: LIST_ROWS, sold: SOLD_INDEX }; };
+
   window.openPhantomZone=function(){
     var z=$('phantomZone'); if(!z) return;
     z.classList.add('show');
@@ -36323,6 +36460,7 @@ document.addEventListener('click',function(e){
 // commands as you type, with the syntax spelled out, so nobody has to
 // remember the exact phrasing — and Tab/Enter completes the skeleton.
 var SHOVO_CMDS = [
+  {t:'sold? <sku>',            d:'What happened to this item \u2014 shipped, still here, oversold', ex:'sold? NJ02-0-69544-J59', fill:'sold? ', caret:6},
   {t:'find <sku> in mc',        d:'Open Marketplace Connect and search that SKU', ex:'find NJ02-30-66862 in mc', fill:'find  in mc', caret:5},
   {t:'mc <sku>',                d:'Same thing, shorter',                          ex:'mc NJ02-0-69544-J59',       fill:'mc ',        caret:3},
   {t:"im <name> RTL<batch>",    d:'Lock in as a lister for today\u2019s batch',    ex:'im Juan RTL0910',           fill:'im ',        caret:3},
@@ -36408,11 +36546,14 @@ function shovoRenderHints(q){
   function $(id){ return document.getElementById(id); }
   function esc(s){ var d=document.createElement('div'); d.textContent=(s==null?'':s); return d.innerHTML; }
   function key(x){ return String(x||'').toUpperCase().replace(/\s+/g,'').replace(/[\/\\]/g,'').replace(/[^A-Z0-9]/g,''); }
-  function P(){ return (typeof parseCsv==='function')?parseCsv:null; }
-  function C(r,names){ return (typeof col==='function')?col(r,names):''; }
+  // parseCsv and col live inside the Phantom Zone closure, so they are not
+  // visible here — reach for the exported copies instead.
+  function P(){ return (typeof window.parseCsv==='function')?window.parseCsv:null; }
+  function C(r,names){ return (typeof window.reportCol==='function')?window.reportCol(r,names):''; }
 
   function load(text){
-    var p=P(); if(!p){ alert('CSV parser unavailable'); return; }
+    var p=P();
+    if(!p){ alert('The report reader is not loaded yet. Open Phantom Zone once, then come back \u2014 or reload the page.'); return; }
     SOLD=p(text).filter(function(r){ return C(r,['custom label','sku']); });
     BY={};
     SOLD.forEach(function(r){
@@ -36555,6 +36696,7 @@ function shovoRenderHints(q){
     box.innerHTML=hits.map(card).join('');
   }
 
+  window.traceData = function(){ return { rows: SOLD, by: BY }; };
   window.openTrace=function(){
     var z=$('traceZone'); if(!z) return;
     if(!$('tzQuery')){ setTimeout(window.openTrace,120); return; }
